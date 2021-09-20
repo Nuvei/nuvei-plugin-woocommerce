@@ -39,7 +39,7 @@ class Nuvei_Payment extends Nuvei_Request {
 			return array(
 				'status'            => 'ERROR',
 				'transactionStatus' => 'ERROR',
-				'reason'            => __('Nuvei_Payment Error - can not verify WP Nonce.', 'nuvei_woocommerce'),
+				'reason'            => __('Nuvei_Payment Error - can not verify WP Nonce.', 'nuvei_checkout_woocommerce'),
 			);
 		}
 		

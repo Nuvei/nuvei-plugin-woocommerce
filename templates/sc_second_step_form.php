@@ -16,7 +16,7 @@
 			<div class="sc_content">
 				<h3>
 					<img src="<?php echo esc_attr($plugin_url); ?>assets/icons/loader.gif" alt="loading..." />
-					<?php echo esc_html_e('Processing your Payment...', 'nuvei_woocommerce'); ?>
+					<?php echo esc_html_e('Processing your Payment...', 'nuvei_checkout_woocommerce'); ?>
 				</h3>
 			</div>
 		</div>
@@ -25,11 +25,11 @@
 	<ul id="nuvei_apple_pay"></ul>
 
 	<h3 id="upos_list_title">
-		<?php echo esc_html_e('Choose from yours preferred payment methods', 'nuvei_woocommerce'); ?>
+		<?php echo esc_html_e('Choose from yours preferred payment methods', 'nuvei_checkout_woocommerce'); ?>
 	</h3>
 	<ul id="sc_upos_list"></ul>
 
-	<h3><?php echo esc_html_e('Choose from the payment options', 'nuvei_woocommerce'); ?></h3>
+	<h3><?php echo esc_html_e('Choose from the payment options', 'nuvei_checkout_woocommerce'); ?></h3>
 	<ul id="sc_apms_list"></ul>
 	
 	<?php wp_nonce_field('sc_checkout', 'sc_nonce'); ?>

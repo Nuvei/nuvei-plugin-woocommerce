@@ -6,7 +6,7 @@
  * Version: 4.2.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
- * Text Domain: nuvei_woocommerce
+ * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
  * Tested up to: 5.8.1
@@ -33,7 +33,7 @@ add_action('plugins_loaded', 'nuvei_init', 0);
 function nuvei_admin_init() {
 	// check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin
 	$path_to_nuvei_plugin = dirname(plugin_dir_path(__FILE__)) . DIRECTORY_SEPARATOR
-		. 'nuvei_woocommerce_plugin' . DIRECTORY_SEPARATOR . 'index.php';
+		. 'nuvei_checkout_woocommerce' . DIRECTORY_SEPARATOR . 'index.php';
 	
 	if (strpos(basename(dirname(__FILE__)), 'safecharge') !== false && file_exists($path_to_nuvei_plugin)) {
 		deactivate_plugins(plugin_basename( __FILE__ ));
@@ -86,9 +86,9 @@ function nuvei_admin_init() {
 	if ($git_version > $curr_version) {
 		add_action('admin_notices', function() {
 			$class     = 'notice notice-info is-dismissible';
-			$url       = 'https://github.com/SafeChargeInternational/nuvei_woocommerce_plugin/blob/main/changelog.txt';
-			$message_1 = __('There is a new version of Nuvei Plugin available.', 'nuvei_woocommerce' );
-			$message_2 = __('View version details.', 'nuvei_woocommerce' );
+			$url       = 'https://github.com/SafeChargeInternational/nuvei_checkout_woocommerce/blob/main/changelog.txt';
+			$message_1 = __('There is a new version of Nuvei Plugin available.', 'nuvei_checkout_woocommerce' );
+			$message_2 = __('View version details.', 'nuvei_checkout_woocommerce' );
 			
 			printf(
 				'<div class="%1$s"><p>%2$s <a href="%3$s" target="_blank">%4$s</a></p></div>',
@@ -108,7 +108,7 @@ function nuvei_init() {
 	}
 	
 	load_plugin_textdomain(
-		'nuvei_woocommerce',
+		'nuvei_checkout_woocommerce',
 		false,
 		dirname( plugin_basename( __FILE__ ) ) . '/languages/'
 	);
@@ -188,7 +188,7 @@ function nuvei_init() {
 					&& is_order_received_page()
 					&& get_the_ID() === $id
 				) {
-					$title = esc_html__('Order error', 'nuvei_woocommerce');
+					$title = esc_html__('Order error', 'nuvei_checkout_woocommerce');
 				}
 
 				return $title;
@@ -198,7 +198,7 @@ function nuvei_init() {
 				'woocommerce_thankyou_order_received_text',
 
 				function ( $str, $order) {
-					return esc_html__(' There is an error with your order. Please check your Order status for more information.', 'nuvei_woocommerce');
+					return esc_html__(' There is an error with your order. Please check your Order status for more information.', 'nuvei_checkout_woocommerce');
 				}, 10, 2);
 		} elseif ('canceled' === strtolower(Nuvei_Http::get_request_status())) {
 			add_filter('the_title', function ( $title, $id) {
@@ -207,14 +207,14 @@ function nuvei_init() {
 					&& is_order_received_page()
 					&& get_the_ID() === $id
 				) {
-					$title = esc_html__('Order canceled', 'nuvei_woocommerce');
+					$title = esc_html__('Order canceled', 'nuvei_checkout_woocommerce');
 				}
 
 				return $title;
 			}, 10, 2);
 
 			add_filter('woocommerce_thankyou_order_received_text', function ( $str, $order) {
-				return esc_html__('Please, check the order for details!', 'nuvei_woocommerce');
+				return esc_html__('Please, check the order for details!', 'nuvei_checkout_woocommerce');
 			}, 10, 2);
 		}
 	}
@@ -309,7 +309,7 @@ function nuvei_ajax_action() {
 		$wc_nuvei->get_today_log();
 	}
 	
-	wp_send_json_error(__('Not recognized Ajax call.', 'nuvei_woocommerce'));
+	wp_send_json_error(__('Not recognized Ajax call.', 'nuvei_checkout_woocommerce'));
 	wp_die();
 }
 
@@ -422,27 +422,27 @@ function nuvei_load_styles_scripts( $styles) {
 			'paymentGatewayName'    => NUVEI_GATEWAY_NAME,
 			
 			// translations
-			'paymentDeclined'	=> __('Your Payment was DECLINED.', 'nuvei_woocommerce'),
-			'paymentError'      => __('Error with your Payment.', 'nuvei_woocommerce'),
-			'unexpectedError'	=> __('Unexpected error.', 'nuvei_woocommerce'),
-			'choosePM'          => __('Please, choose payment method, and fill all fields!', 'nuvei_woocommerce'),
-			'fillFields'        => __('Please fill all fields marked with * !', 'nuvei_woocommerce'),
-			'errorWithPMs'      => __('Error when try to get the Payment Methods. Please try again later or use different Payment Option!', 'nuvei_woocommerce'),
-			'errorWithSToken'	=> __('Error when try to get the Session Token.', 'nuvei_woocommerce'),
-			'goBack'            => __('Go back', 'nuvei_woocommerce'),
-			'CCNameIsEmpty'     => __('Card Holder Name is empty.', 'nuvei_woocommerce'),
-			'CCNumError'        => __('Card Number is empty or wrong.', 'nuvei_woocommerce'),
-			'CCExpDateError'    => __('Card Expiry Date is not correct.', 'nuvei_woocommerce'),
-			'CCCvcError'        => __('Card CVC is not correct.', 'nuvei_woocommerce'),
-			'AskDeleteUpo'      => __('Do you want to delete this UPO?', 'nuvei_woocommerce'),
-			'ConfirmSaveUpo'	=> __('Would you like Nuvei to keep the selected payment method as Preferred?', 'nuvei_woocommerce'),
-			'RequestFail'       => __('Request fail.', 'nuvei_woocommerce'),
-			'ApplePayError'     => __('Unexpected session error.', 'nuvei_woocommerce'),
-			'TryAgainLater'     => __('Please try again later!', 'nuvei_woocommerce'),
-			'TryAnotherPM'      => __('Please try another payment method!', 'nuvei_woocommerce'),
-			'Pay'               => __('Pay', 'nuvei_woocommerce'),
-			'PlaceOrder'        => __('Place order', 'nuvei_woocommerce'),
-			'CardHolderName'    => __('Card Holder Name', 'nuvei_woocommerce'),
+			'paymentDeclined'	=> __('Your Payment was DECLINED.', 'nuvei_checkout_woocommerce'),
+			'paymentError'      => __('Error with your Payment.', 'nuvei_checkout_woocommerce'),
+			'unexpectedError'	=> __('Unexpected error.', 'nuvei_checkout_woocommerce'),
+			'choosePM'          => __('Please, choose payment method, and fill all fields!', 'nuvei_checkout_woocommerce'),
+			'fillFields'        => __('Please fill all fields marked with * !', 'nuvei_checkout_woocommerce'),
+			'errorWithPMs'      => __('Error when try to get the Payment Methods. Please try again later or use different Payment Option!', 'nuvei_checkout_woocommerce'),
+			'errorWithSToken'	=> __('Error when try to get the Session Token.', 'nuvei_checkout_woocommerce'),
+			'goBack'            => __('Go back', 'nuvei_checkout_woocommerce'),
+			'CCNameIsEmpty'     => __('Card Holder Name is empty.', 'nuvei_checkout_woocommerce'),
+			'CCNumError'        => __('Card Number is empty or wrong.', 'nuvei_checkout_woocommerce'),
+			'CCExpDateError'    => __('Card Expiry Date is not correct.', 'nuvei_checkout_woocommerce'),
+			'CCCvcError'        => __('Card CVC is not correct.', 'nuvei_checkout_woocommerce'),
+			'AskDeleteUpo'      => __('Do you want to delete this UPO?', 'nuvei_checkout_woocommerce'),
+			'ConfirmSaveUpo'	=> __('Would you like Nuvei to keep the selected payment method as Preferred?', 'nuvei_checkout_woocommerce'),
+			'RequestFail'       => __('Request fail.', 'nuvei_checkout_woocommerce'),
+			'ApplePayError'     => __('Unexpected session error.', 'nuvei_checkout_woocommerce'),
+			'TryAgainLater'     => __('Please try again later!', 'nuvei_checkout_woocommerce'),
+			'TryAnotherPM'      => __('Please try another payment method!', 'nuvei_checkout_woocommerce'),
+			'Pay'               => __('Pay', 'nuvei_checkout_woocommerce'),
+			'PlaceOrder'        => __('Place order', 'nuvei_checkout_woocommerce'),
+			'CardHolderName'    => __('Card Holder Name', 'nuvei_checkout_woocommerce'),
 		)
 	);
 
@@ -499,10 +499,10 @@ function nuvei_load_admin_styles_scripts( $hook) {
 			'nuveiPaymentPlans'     => $plans_list,
 
 			// translations
-			'refundQuestion'		=> __('Are you sure about this Refund?', 'nuvei_woocommerce'),
-			'LastDownload'			=> __('Last Download', 'nuvei_woocommerce'),
-			'RefreshLog'			=> __('Refresh Log', 'nuvei_woocommerce'),
-			'RefreshLogError'       => __('Getting log faild, please check the console for more information!', 'nuvei_woocommerce'),
+			'refundQuestion'		=> __('Are you sure about this Refund?', 'nuvei_checkout_woocommerce'),
+			'LastDownload'			=> __('Last Download', 'nuvei_checkout_woocommerce'),
+			'RefreshLog'			=> __('Refresh Log', 'nuvei_checkout_woocommerce'),
+			'RefreshLogError'       => __('Getting log faild, please check the console for more information!', 'nuvei_checkout_woocommerce'),
 		)
 	);
 
@@ -607,7 +607,7 @@ function nuvei_add_buttons( $order) {
 		) {
 			$question = sprintf(
 				/* translators: %d is replaced with "decimal" */
-				__('Are you sure, you want to Cancel Order #%d?', 'nuvei_woocommerce'),
+				__('Are you sure, you want to Cancel Order #%d?', 'nuvei_checkout_woocommerce'),
 				$order_id
 			);
 			
@@ -615,14 +615,14 @@ function nuvei_add_buttons( $order) {
 				'<button id="sc_void_btn" type="button" onclick="settleAndCancelOrder(\''
 					. esc_html($question) . '\', \'void\', ' . esc_html($order_id)
 					. ')" class="button generate-items">'
-					. esc_html__('Void', 'nuvei_woocommerce') . '</button>';
+					. esc_html__('Void', 'nuvei_checkout_woocommerce') . '</button>';
 		}
 		
 		// show SETTLE button ONLY if P3D resonse transaction_type IS Auth
 		if ('pending' == $order_status && 'Auth' == $order->get_meta(NUVEI_RESP_TRANS_TYPE)) {
 			$question = sprintf(
 				/* translators: %d is replaced with "decimal" */
-				__('Are you sure, you want to Settle Order #%d?', 'nuvei_woocommerce'),
+				__('Are you sure, you want to Settle Order #%d?', 'nuvei_checkout_woocommerce'),
 				$order_id
 			);
 			
@@ -630,7 +630,7 @@ function nuvei_add_buttons( $order) {
 				'<button id="sc_settle_btn" type="button" onclick="settleAndCancelOrder(\''
 					. esc_html($question)
 					. '\', \'settle\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
-					. esc_html__('Settle', 'nuvei_woocommerce') . '</button>';
+					. esc_html__('Settle', 'nuvei_checkout_woocommerce') . '</button>';
 		}
 		
 		// add loading screen
@@ -730,7 +730,7 @@ function nuvei_change_title_order_received( $title, $id) {
 		&& is_order_received_page()
 		&& get_the_ID() === $id
 	) {
-		$title = esc_html__('Order error', 'nuvei_woocommerce');
+		$title = esc_html__('Order error', 'nuvei_checkout_woocommerce');
 	}
 	
 	return $title;
@@ -867,7 +867,7 @@ function nuvei_fill_custom_column( $column) {
 	if ('order_number' === $column && !empty($order->get_meta(NUVEI_ORDER_SUBSCR_IDS))) { 
 		?>
 		<mark class="order-status status-processing tips" style="float: right;">
-			<span><?php echo esc_html__('Nuvei Subscription', 'nuvei_woocommerce'); ?></span>
+			<span><?php echo esc_html__('Nuvei Subscription', 'nuvei_checkout_woocommerce'); ?></span>
 		</mark>
 		<?php 
 	}
@@ -884,7 +884,7 @@ function nuvei_edit_my_account_orders_col( $order) {
 	echo '<a href="' . esc_url( $order->get_view_order_url() ) . '"';
 	
 	if (!empty($order->get_meta(NUVEI_ORDER_SUBSCR_IDS))) {
-		echo ' class="nuvei_plan_order" title="' . esc_attr__('Nuvei Payment Plan Order', 'nuvei_woocommerce') . '"';
+		echo ' class="nuvei_plan_order" title="' . esc_attr__('Nuvei Payment Plan Order', 'nuvei_checkout_woocommerce') . '"';
 	}
 	
 	echo '>#' . esc_html($order->get_order_number()) . '</a>';
@@ -903,7 +903,7 @@ function nuvei_get_file_form_git( $file) {
 	curl_setopt(
 		$ch,
 		CURLOPT_URL,
-		'https://raw.githubusercontent.com/SafeChargeInternational/nuvei_woocommerce_plugin/main/index.php'
+		'https://raw.githubusercontent.com/SafeChargeInternational/nuvei_checkout_woocommerce/main/index.php'
 	);
 
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
