@@ -476,7 +476,7 @@ abstract class Nuvei_Request {
 			
 			$resp_array	= json_decode($resp, true);
 			// return base params to the sender
-			$resp_array['request_base_params'] = $this->request_base_params;
+//			$resp_array['request_params'] = $all_params;
 			
 			Nuvei_Logger::write($resp_array, 'Nuvei Request response:');
 

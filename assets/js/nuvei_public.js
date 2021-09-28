@@ -37,6 +37,10 @@ var fieldsStyle = {
 //var scOrderAmount, scOrderCurr,
 var scMerchantId, scMerchantSiteId, scOpenOrderToken, webMasterId, scUserTokenId, locale;
 
+function nuveiCheckoutCallback() {
+	console.log('nuveiCheckoutCallback');
+}
+
 /**
  * Function scUpdateCart
  * The first step of the checkout validation
@@ -399,321 +403,25 @@ function getNewSessionToken() {
 		});
 }
 
-function deleteScUpo(upoId) {
-	if(confirm(scTrans.AskDeleteUpo)) {
-		jQuery('#sc_remove_upo_' + upoId).hide();
-		jQuery('#sc_loader_background').show();
-
-		jQuery.ajax({
-			type: "POST",
-			dataType: "json",
-			url: scTrans.ajaxurl,
-			data: {
-				action      : 'sc-ajax-action',
-				security	: scTrans.security,
-				scUpoId		: upoId
-			}
-		})
-		.done(function(res) {
-			console.log('delete UPO response', res);
-
-			if(typeof res.status != 'undefined') {
-				if('success' == res.status) {
-					jQuery('#upo_cont_' + upoId).remove();
-				}
-				else {
-					scFormFalse(res.msg);
-				}
-			}
-			else {
-				jQuery('#sc_remove_upo_' + upoId).show();
-			}
-		})
-		.fail(function(e) {
-			jQuery('#sc_remove_upo_' + upoId).show();
-		});
-		
-		closeScLoadingModal();
-	}
-}
-
-function scPrintApms(data) {
-	console.log('scPrintApms()');
+function showNuveiCheckout(params) {
+	console.log(params, 'showNuveiCheckout()');
+	
+	checkout(params);
 	
 	if(jQuery('.wpmc-step-payment').length > 0) { // multi-step checkout
 		console.log('multi-step checkout');
 		
-		jQuery("form.woocommerce-checkout .wpmc-step-payment *:not(form.woocommerce-checkout, #sc_second_step_form *, #sc_checkout_messages), .woocommerce-form-coupon-toggle").hide();
+		jQuery("form.woocommerce-checkout .wpmc-step-payment *:not(form.woocommerce-checkout, #nuvei_checkout_container *, #sc_checkout_messages), .woocommerce-form-coupon-toggle").hide();
 	}
 	else { // default checkout
 		console.log('default checkout');
 		
-		jQuery("form.woocommerce-checkout *:not(form.woocommerce-checkout, #sc_second_step_form *, #sc_checkout_messages), .woocommerce-form-coupon-toggle").hide();
+		jQuery("form.woocommerce-checkout *:not(form.woocommerce-checkout, #nuvei_checkout_container *, #sc_checkout_messages), .woocommerce-form-coupon-toggle").hide();
 	}
 	
-	jQuery("form.woocommerce-checkout #sc_second_step_form").show();
+	jQuery("form.woocommerce-checkout #nuvei_checkout_container").show();
 	
 	jQuery(window).scrollTop(0);
-	jQuery('#lst').val(data.sessonToken);
-	
-	scOpenOrderToken			= data.sessonToken;
-	scUserTokenId				= data.userTokenId;
-	scData.sessionToken			= data.sessonToken;
-	scData.sourceApplication	= scTrans.webMasterId;
-	// for Apple pay
-	currencyCode				= data.currencyCode;
-	countryCode					= data.countryCode;
-	orderAmount					= data.orderAmount;
-	applePayLabel				= data.applePayLabel;
-	
-	// Apple Pay
-	if(typeof window.ApplePaySession == 'function' 
-		&& typeof data.applePay == 'object' 
-		&& Object.keys(data.applePay).length > 0
-	) {
-		var applePayHtml	= '';
-		var pmMsg			= '';
-			
-		if (data.applePay['paymentMethodDisplayName'].hasOwnProperty(0)
-			&& data.applePay['paymentMethodDisplayName'][0].hasOwnProperty('message')
-		) {
-			pmMsg = data.applePay['paymentMethodDisplayName'][0]['message'];
-		}
-		// fix when there is no display name
-		else if ('' != data.applePay['paymentMethod']) {
-			pmMsg = data.applePay['paymentMethod'].replace('apmgw_', '');
-			pmMsg = pmMsg.replace('_', ' ');
-		}
-
-		var newImg = pmMsg;
-
-		if (data.applePay.hasOwnProperty('logoURL')
-			&& data.applePay['logoURL'] != ''
-		) {
-			newImg = '<img src="' + data.applePay['logoURL'].replace('/svg/', '/svg/solid-white/')
-				+ '" alt="' + pmMsg + '" />';
-		}
-		else {
-			newImg = '<img src="' + data.pluginUrl + 'assets/icons/applepay.svg" alt="' + pmMsg + '" style="height: 36px;" />';
-		}
-
-		applePayHtml +=
-				'<li class="apm_container">'
-					+ '<label class="apm_title">'
-						+ '<input id="sc_payment_method_' + data.applePay['paymentMethod'] + '" type="radio" class="input-radio sc_payment_method_field" name="sc_payment_method" value="' + data.applePay['paymentMethod'] + '" data-nuvei-is-direct="'
-							+ ( typeof data.applePay['isDirect'] != 'undefined' ? data.applePay['isDirect'] : 'false' ) + '" />&nbsp;'
-						+ newImg
-					+ '</label>';
-
-		applePayHtml += 
-			'<div class="apm_fields">'
-				+ '<button type="button" id="nuvei-apple-pay-button" onclick="scUpdateCart()">'
-					+ '<img src="' + data.pluginUrl + 'assets/icons/ApplePay-Button.png" />'
-				+ '</button>'
-				+ '<span id="nuvei-apple-pay-error">You can not use Apple Pay. Please try another payment method!</span>'
-			+ '</div>'
-		+ '</li>';
-		
-		jQuery('#sc_second_step_form #nuvei_apple_pay').html(applePayHtml);
-	}
-	else {
-		jQuery('#upos_list_title, #nuvei_apple_pay').hide();
-	}
-	
-	// UPOs
-	if(Object.keys(data.upos).length > 0) {
-		var upoHtml = '';
-		
-		jQuery('#upos_list_title, #sc_upos_list').show();
-		
-		for(var i in data.upos) {
-			if ('cc_card' == data.upos[i]['paymentMethodName']) {
-				var img = '<img src="' + data.pluginUrl + 'assets/icons/visa_mc_maestro.svg" alt="'
-					+ data.upos[i]['name'] + '" style="height: 36px;" />';
-			} else {
-				var img = '<img src="' + data.upos[i].logoURL.replace('/svg/', '/svg/solid-white/')
-					+ '" alt="' + data.upos[i]['name'] + '" />';
-			}
-			
-			upoHtml +=
-				'<li class="upo_container" id="upo_cont_' + data.upos[i]['userPaymentOptionId'] + '">'
-					+ '<label class="apm_title">'
-						+ '<input id="sc_payment_method_' + data.upos[i]['userPaymentOptionId'] + '" type="radio" class="input-radio sc_payment_method_field" name="sc_payment_method" value="' + data.upos[i]['userPaymentOptionId'] + '" data-upo-name="' + data.upos[i]['paymentMethodName'] + '" />&nbsp;'
-						+ img + '&nbsp;&nbsp;'
-						+ '<span>';
-			
-			// add upo identificator
-			if ('cc_card' == data.upos[i]['paymentMethodName']) {
-				upoHtml += data.upos[i]['upoData']['ccCardNumber'];
-			} else if ('' != data.upos[i]['upoName']) {
-				upoHtml += data.upos[i]['upoName'];
-			}
-
-			upoHtml +=
-						'</span>&nbsp;&nbsp;';
-				
-			// add remove icon
-			upoHtml +=
-						'<span id="#sc_remove_upo_' + data.upos[i]['userPaymentOptionId'] + '" class="dashicons dashicons-trash" data-upo-id="' + data.upos[i]['userPaymentOptionId'] + '"></span>'
-					+ '</label>';
-			
-			if ('cc_card' === data.upos[i]['paymentMethodName']) {
-					upoHtml +=
-						'<div class="apm_fields" id="sc_' + data.upos[i]['userPaymentOptionId'] + '">'
-							+ '<div id="sc_upo_' + data.upos[i]['userPaymentOptionId'] + '_cvc"></div>'
-						+ '</div>';
-				}
-				
-				upoHtml +=
-					'</li>';
-		}
-		
-		jQuery('#sc_second_step_form #sc_upos_list').html(upoHtml);
-	}
-	else {
-		jQuery('#upos_list_title, #sc_upos_list').hide();
-	}
-	
-	// APMs
-	if(Object.keys(data.apms).length > 0) {
-		var apmHmtl = '';
-		
-		for(var j in data.apms) {
-			var pmMsg = '';
-			
-			if (
-				data.apms[j]['paymentMethodDisplayName'].hasOwnProperty(0)
-				&& data.apms[j]['paymentMethodDisplayName'][0].hasOwnProperty('message')
-			) {
-				pmMsg = data.apms[j]['paymentMethodDisplayName'][0]['message'];
-			} else if ('' != data.apms[j]['paymentMethod']) {
-				// fix when there is no display name
-				pmMsg = data.apms[j]['paymentMethod'].replace('apmgw_', '');
-				pmMsg = pmMsg.replace('_', ' ');
-			}
-			
-			var newImg = pmMsg;
-			
-			if ('cc_card' == data.apms[j]['paymentMethod']) {
-				newImg = '<img src="' + data.pluginUrl + 'assets/icons/visa_mc_maestro.svg" alt="'
-					+ pmMsg + '" style="height: 36px;" />';
-			}
-			else if (data.apms[j].hasOwnProperty('logoURL')
-				&& data.apms[j]['logoURL'] != ''
-			) {
-				newImg = '<img src="' + data.apms[j]['logoURL'].replace('/svg/', '/svg/solid-white/')
-					+ '" alt="' + pmMsg + '" />';
-			}
-			else {
-				newImg = '<img src="#" alt="' + pmMsg + '" />';
-			}
-			
-			apmHmtl +=
-					'<li class="apm_container">'
-						+ '<label class="apm_title">'
-							+ '<input id="sc_payment_method_' + data.apms[j]['paymentMethod'] + '" type="radio" class="input-radio sc_payment_method_field" name="sc_payment_method" value="' + data.apms[j]['paymentMethod'] + '" data-nuvei-is-direct="'
-								+ ( typeof data.apms[j]['isDirect'] != 'undefined' ? data.apms[j]['isDirect'] : 'false' ) + '" />&nbsp;'
-							+ newImg;
-			
-			// optional set APM label
-			if(1 == scTrans.showApmsNames) {
-				apmHmtl += '&nbsp;&nbsp;';
-				
-				if(typeof data.apms[j]['paymentMethodDisplayName'][0]['message'] != 'undefined' 
-					&& '' != data.apms[j]['paymentMethodDisplayName'][0]['message']
-				) {
-					apmHmtl += data.apms[j]['paymentMethodDisplayName'][0]['message'];
-				}
-				else {
-					var nuveiApmName = data.apms[j]['paymentMethod'];
-					
-					nuveiApmName = nuveiApmName.replace('apmgw_', '');
-					nuveiApmName = nuveiApmName.replace('ppp_', '');
-					nuveiApmName = nuveiApmName.replace('_', ' ');
-					
-					apmHmtl += nuveiApmName;
-				}
-			}
-			
-			apmHmtl +=
-						'</label>';
-			
-			// CC
-			if ('cc_card' == data.apms[j]['paymentMethod']) {
-				apmHmtl +=
-						'<div class="apm_fields" id="sc_' + data.apms[j]['paymentMethod'] + '">'
-							+ '<input type="text" id="sc_card_holder_name" name="' + data.apms[j]['paymentMethod'] + '[cardHolderName]" placeholder="' + scTrans.CardHolderName + '" />'
-
-							+ '<div id="sc_card_number"></div>'
-							+ '<div id="sc_card_expiry"></div>'
-							+ '<div id="sc_card_cvc"></div>';
-			}
-			// APM with fields
-			else if (data.apms[j]['fields'].length > 0) {
-				apmHmtl +=
-						'<div class="apm_fields">';
-
-				for (var f in data.apms[j]['fields']) {
-					var pattern = '';
-					if ('' != data.apms[j]['fields'][f]['regex']) {
-						pattern = data.apms[j]['fields'][f]['regex'];
-					}
-
-					var placeholder = '';
-					if (
-						data.apms[j]['fields'][f]['caption'].hasOwnProperty(0)
-						&& data.apms[j]['fields'][f]['caption'][0].hasOwnProperty('message')
-						&& '' != data.apms[j]['fields'][f]['caption'][0]['message']
-					) {
-						placeholder = data.apms[j]['fields'][f]['caption'][0]['message'];
-					} else {
-						placeholder = data.apms[j]['fields'][f]['name'].replaceAll('_', ' ');
-					}
-					
-					var field_type = data.apms[j]['fields'][f]['type'];
-					if('apmgw_Neteller' == data.apms[j]['paymentMethod']) {
-						field_type	= 'email';
-						placeholder	= placeholder.replace(/netteler/ig, 'neteller');
-					}
-					
-					apmHmtl +=
-							'<input id="' + data.apms[j]['paymentMethod'] + '_' + data.apms[j]['fields'][f]['name']
-								+ '" name="' + data.apms[j]['paymentMethod'] + '[' + data.apms[j]['fields'][f]['name'] + ']'
-								+ '" type="' + field_type
-								+ '" pattern="' + pattern
-								+ '" placeholder="' + placeholder
-								+ '" autocomplete="new-password" />';
-				}
-				
-				apmHmtl +=
-						'</div>';
-			}
-			
-			// Apple Pay
-			if('ppp_ApplePay' == data.apms[j]['paymentMethod']) {
-				apmHmtl += '<div class="apm_fields">'
-					+ '<button type="button" id="nuvei-apple-pay-button" onclick="scUpdateCart()">Pay</button>'
-					+ '<span id="nuvei-apple-pay-error">You can not use Apple Pay. Please try another payment method!</span>'
-				+ '</div>';
-			}
-			
-			apmHmtl +=
-					'</li>';
-		}
-		
-		// save UPO checkout
-		if(1 == scTrans.useUpos && 1 == scTrans.isUserLogged) {
-			apmHmtl +=
-					'<li class="apm_container" id="nuvei_save_upo_li">'
-						+ '<label class="apm_title">'
-							+ '<input type="checkbox" name="nuvei_save_upo" id="nuvei_save_upo" value="0" />&nbsp;&nbsp;'
-							+ scTrans.ConfirmSaveUpo
-						+ '</label>'
-					+ '</li>';
-		}
-		
-		jQuery('#sc_second_step_form #sc_apms_list').html(apmHmtl);
-	}
 }
 
 jQuery(function() {

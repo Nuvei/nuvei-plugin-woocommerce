@@ -219,9 +219,7 @@ function nuvei_show_hide_rest_settings() {
 		disabled = true;
 	}
 	
-	console.log('nuvei_show_hide_rest_settings()', disabled);
-	
-	jQuery('#woocommerce_nuvei_payment_action, #woocommerce_nuvei_show_apms_names, #woocommerce_nuvei_apple_pay_label, #woocommerce_nuvei_merchant_style')
+	jQuery('#woocommerce_nuvei_payment_action, #woocommerce_nuvei_show_apms_names, #woocommerce_nuvei_apple_pay_label, #woocommerce_nuvei_merchant_style, #woocommerce_nuvei_use_dcc, #woocommerce_nuvei_blocked_cards')
 		.attr('disabled', disabled);
 
 	// hide-show the only Cashier setting
@@ -229,7 +227,23 @@ function nuvei_show_hide_rest_settings() {
 		.attr('disabled', disabled ? false : true);
 }
 
+function switchNuveiTabs() {
+	if('' == window.location.hash) {
+		jQuery('#nuvei_base_settings_tab').addClass('nav-tab-active');
+		jQuery('#nuvei_base_settings_cont').show();
+	}
+	else {
+		jQuery('.nuvei_settings_tabs').removeClass('nav-tab-active');
+		jQuery('.nuvei_checkout_settings_cont').hide();
+		
+		jQuery(window.location.hash + '_tab').addClass('nav-tab-active');
+		jQuery(window.location.hash + '_cont').show();
+	}
+}
+
 jQuery(function() {
+	switchNuveiTabs();
+	
 	// set the flags
 	if (jQuery('#sc_settle_btn').length == 1) {
 		scSettleBtn = jQuery('#sc_settle_btn');
@@ -338,3 +352,7 @@ jQuery(function() {
 	});
 });
 // document ready function END
+
+window.onhashchange = function() {
+	switchNuveiTabs();
+}

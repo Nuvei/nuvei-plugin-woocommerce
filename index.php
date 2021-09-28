@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Checkout for Woocommerce
  * Plugin URI: https://github.com/SafeChargeInternational/nuvei_checkout_woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 4.2.0
+ * Version: 1.0.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
@@ -148,7 +148,7 @@ function nuvei_init() {
 			if (isset($wc_nuvei->settings['use_cashier'])
 				&& 1 != $wc_nuvei->settings['use_cashier']
 			) {
-				$wc_nuvei->get_payment_methods();
+				$wc_nuvei->call_checkout();
 			}
 		}
 	}, 9999, 2);
@@ -350,26 +350,26 @@ function nuvei_load_styles_scripts( $styles) {
 		'nuvei_style',
 		$plugin_url . 'assets/css/nuvei_style.css',
 		'',
-		'2.2',
+		'1',
 		'all'
 	);
 	wp_enqueue_style('nuvei_style');
 	
-	// WebSDK URL for integration and production
+	// Checkout SDK URL for integration and production
 	wp_register_script(
-		'sc_websdk',
-		'https://cdn.safecharge.com/safecharge_resources/v1/websdk/safecharge.js',
+		'nuvei_checkout_sdk',
+		'https://cdn.safecharge.com/safecharge_resources/v1/checkout/checkout.js',
 		array('jquery'),
 		'1'
 	);
-	wp_enqueue_script('sc_websdk');
+	wp_enqueue_script('nuvei_checkout_sdk');
 
 	// main JS
 	wp_register_script(
 		'nuvei_js_public',
 		$plugin_url . 'assets/js/nuvei_public.js',
 		array('jquery'),
-		'1.9'
+		'1'
 	);
 	
 	// reorder js
@@ -465,7 +465,7 @@ function nuvei_load_admin_styles_scripts( $hook) {
 			'nuvei_admin_style',
 			$plugin_url . 'assets/css/nuvei_admin_style.css',
 			'',
-			1.1,
+			1,
 			'all'
 		);
 		wp_enqueue_style('nuvei_admin_style');
@@ -476,7 +476,7 @@ function nuvei_load_admin_styles_scripts( $hook) {
 		'nuvei_js_admin',
 		$plugin_url . 'assets/js/nuvei_admin.js',
 		array('jquery'),
-		'1.4'
+		'1'
 	);
 
 	$nuvei_plans_path       = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
@@ -914,6 +914,10 @@ function nuvei_get_file_form_git( $file) {
 
 	preg_match('/(\s?\*\s?Version\s?:\s?)(.*\s?)(\n)/', $file_text, $matches);
 
+    if(!isset($matches[2])) {
+        return [];
+    }
+    
 	$array = array(
 		'date'  => gmdate('Y-m-d H:i:s', time()),
 		'git_v' => (int) str_replace('.', '', trim($matches[2])),
