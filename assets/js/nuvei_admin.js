@@ -213,18 +213,15 @@ function nuveiGetTodayLog() {
 function nuvei_show_hide_rest_settings() {
 	console.log('nuvei_show_hide_rest_settings()');
 	
-	var disabled = false;
+	var _disabled = false;
 	
 	if(1 == jQuery('#woocommerce_nuvei_use_cashier').val()) {
-		disabled = true;
+		_disabled = true;
 	}
 	
-	jQuery('#woocommerce_nuvei_payment_action, #woocommerce_nuvei_show_apms_names, #woocommerce_nuvei_apple_pay_label, #woocommerce_nuvei_merchant_style, #woocommerce_nuvei_use_dcc, #woocommerce_nuvei_blocked_cards')
-		.attr('disabled', disabled);
-
+	jQuery('.nuvei_checkout_setting').attr('disabled', _disabled);
 	// hide-show the only Cashier setting
-	jQuery('#woocommerce_nuvei_combine_cashier_products')
-		.attr('disabled', disabled ? false : true);
+	jQuery('.nuvei_cashier_setting').attr('disabled', _disabled ? false : true);
 }
 
 function switchNuveiTabs() {

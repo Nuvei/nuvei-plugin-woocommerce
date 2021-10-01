@@ -131,19 +131,16 @@ function nuvei_init() {
 	add_action('wp_ajax_sc-ajax-action', 'nuvei_ajax_action');
 	add_action('wp_ajax_nopriv_sc-ajax-action', 'nuvei_ajax_action');
 	
-	// add the APMs step with the custom merchant style, if any
-	add_action( 'woocommerce_checkout_after_order_review', array($wc_nuvei, 'add_apms_step'), 10, 1 );
-	
 	// if validation success get order details
 	add_action('woocommerce_after_checkout_validation', function( $data, $errors) {
 		global $wc_nuvei;
 		
-		//        Nuvei_Logger::write($errors->errors, 'woocommerce_after_checkout_validation errors');
-		//        Nuvei_Logger::write($_POST, 'woocommerce_after_checkout_validation post params');
+        Nuvei_Logger::write($errors->errors, 'woocommerce_after_checkout_validation errors');
+        Nuvei_Logger::write($_POST, 'woocommerce_after_checkout_validation post params');
 		
-		if (empty( $errors->errors ) 
+		if (empty($errors->errors) 
 			&& NUVEI_GATEWAY_NAME == $data['payment_method'] 
-			&& empty(Nuvei_Http::get_param('sc_payment_method'))
+			&& empty(Nuvei_Http::get_param('nuvei_transaction_id'))
 		) {
 			if (isset($wc_nuvei->settings['use_cashier'])
 				&& 1 != $wc_nuvei->settings['use_cashier']
@@ -168,11 +165,6 @@ function nuvei_init() {
 			add_filter('woocommerce_get_checkout_order_received_url', 'nuvei_wpml_thank_you_page', 10, 2);
 		}
 
-		// if the merchant needs to rewrite the DMN URL
-		if (isset($wc_nuvei->settings['rewrite_dmn']) && 'yes' == $wc_nuvei->settings['rewrite_dmn']) {
-			add_action('template_redirect', 'nuvei_rewrite_return_url'); // need WC_SC
-		}
-		
 		// For the custom column in the Order list
 		add_action( 'manage_shop_order_posts_custom_column', 'nuvei_fill_custom_column' );
 		// for the Store > My Account > Orders list
@@ -181,7 +173,9 @@ function nuvei_init() {
 	
 	// change Thank-you page title and text
 	if (!is_admin()) {
-		if ('error' === strtolower(Nuvei_Http::get_request_status())) {
+		if ('error' === strtolower(Nuvei_Http::get_request_status())
+            || 'fail' === strtolower(Nuvei_Http::get_param('ppp_status'))
+        ) {
 			add_filter('the_title', function ( $title, $id) {
 				if (
 					function_exists('is_order_received_page')
@@ -252,18 +246,13 @@ function nuvei_ajax_action() {
 	
 	global $wc_nuvei;
 	
-	if (empty($wc_nuvei->test)) {
+	if (empty($wc_nuvei->settings['test'])) {
 		wp_send_json_error(__('Invalid site mode.'));
 		wp_die('Invalid site mode.');
 	}
 	
 	$order_id = Nuvei_Http::get_param('orderId', 'int');
 	
-	$payment_method_sc = '';
-	if (!empty(Nuvei_Http::get_param('payment_method_sc'))) {
-		$payment_method_sc = sanitize_text_field(Nuvei_Http::get_param('payment_method_sc'));
-	}
-
 	# recognize the action:
 	// Void (Cancel)
 	if (Nuvei_Http::get_param('cancelOrder', 'int') == 1 && $order_id > 0) {
@@ -284,14 +273,12 @@ function nuvei_ajax_action() {
 	}
 	
 	// when we use the REST - Open order and get APMs
-	if (in_array(Nuvei_Http::get_param('sc_request'), array('OpenOrder', 'updateOrder'))) {
-		$oo_obj = new Nuvei_Open_Order($wc_nuvei->settings, true);
-		$oo_obj->process();
-	}
-	
-	// delete UPO
-	if (Nuvei_Http::get_param('scUpoId', 'int') > 0) {
-		$wc_nuvei->delete_user_upo();
+//	if (in_array(Nuvei_Http::get_param('sc_request'), array('OpenOrder', 'updateOrder'))) {
+//		$oo_obj = new Nuvei_Open_Order($wc_nuvei->settings, true);
+//		$oo_obj->process();
+//	}
+	if (in_array(Nuvei_Http::get_param('sc_request'), array('OpenOrder'))) {
+        $wc_nuvei->call_checkout(true);
 	}
 	
 	// when Reorder
@@ -359,7 +346,7 @@ function nuvei_load_styles_scripts( $styles) {
 	wp_register_script(
 		'nuvei_checkout_sdk',
 		'https://cdn.safecharge.com/safecharge_resources/v1/checkout/checkout.js',
-		array('jquery'),
+        array('jquery'),
 		'1'
 	);
 	wp_enqueue_script('nuvei_checkout_sdk');
@@ -422,27 +409,18 @@ function nuvei_load_styles_scripts( $styles) {
 			'paymentGatewayName'    => NUVEI_GATEWAY_NAME,
 			
 			// translations
-			'paymentDeclined'	=> __('Your Payment was DECLINED.', 'nuvei_checkout_woocommerce'),
+			'paymentDeclined'	=> __('Your Payment was DECLINED. Please, try another payment option!', 'nuvei_checkout_woocommerce'),
 			'paymentError'      => __('Error with your Payment.', 'nuvei_checkout_woocommerce'),
-			'unexpectedError'	=> __('Unexpected error.', 'nuvei_checkout_woocommerce'),
-			'choosePM'          => __('Please, choose payment method, and fill all fields!', 'nuvei_checkout_woocommerce'),
+			'unexpectedError'	=> __('Unexpected error. Please, try another payment option!', 'nuvei_checkout_woocommerce'),
 			'fillFields'        => __('Please fill all fields marked with * !', 'nuvei_checkout_woocommerce'),
-			'errorWithPMs'      => __('Error when try to get the Payment Methods. Please try again later or use different Payment Option!', 'nuvei_checkout_woocommerce'),
 			'errorWithSToken'	=> __('Error when try to get the Session Token.', 'nuvei_checkout_woocommerce'),
 			'goBack'            => __('Go back', 'nuvei_checkout_woocommerce'),
-			'CCNameIsEmpty'     => __('Card Holder Name is empty.', 'nuvei_checkout_woocommerce'),
-			'CCNumError'        => __('Card Number is empty or wrong.', 'nuvei_checkout_woocommerce'),
-			'CCExpDateError'    => __('Card Expiry Date is not correct.', 'nuvei_checkout_woocommerce'),
-			'CCCvcError'        => __('Card CVC is not correct.', 'nuvei_checkout_woocommerce'),
-			'AskDeleteUpo'      => __('Do you want to delete this UPO?', 'nuvei_checkout_woocommerce'),
-			'ConfirmSaveUpo'	=> __('Would you like Nuvei to keep the selected payment method as Preferred?', 'nuvei_checkout_woocommerce'),
 			'RequestFail'       => __('Request fail.', 'nuvei_checkout_woocommerce'),
 			'ApplePayError'     => __('Unexpected session error.', 'nuvei_checkout_woocommerce'),
 			'TryAgainLater'     => __('Please try again later!', 'nuvei_checkout_woocommerce'),
 			'TryAnotherPM'      => __('Please try another payment method!', 'nuvei_checkout_woocommerce'),
 			'Pay'               => __('Pay', 'nuvei_checkout_woocommerce'),
 			'PlaceOrder'        => __('Place order', 'nuvei_checkout_woocommerce'),
-			'CardHolderName'    => __('Card Holder Name', 'nuvei_checkout_woocommerce'),
 		)
 	);
 

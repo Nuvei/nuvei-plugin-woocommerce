@@ -27,7 +27,7 @@
 </div>
 
 <div id="nuvei_advanced_settings_cont" class="nuvei_checkout_settings_cont" style="display: none;">
-    <h3><?php _e('Checkout Settings', 'nuvei_checkout_woocommerce'); ?>:</h3>
+    <h3><?php _e('Checkout SDK Settings', 'nuvei_checkout_woocommerce'); ?>:</h3>
     <table class="form-table">
         <?php
             $this->init_form_advanced_fields_checkout();
@@ -45,14 +45,6 @@
         ?>
     </table>
     <hr/>
-    
-    <h3><?php _e('Other Settings', 'nuvei_checkout_woocommerce'); ?>:</h3>
-    <table class="form-table">
-        <?php
-            $this->init_form_advanced_fields();
-            $this->generate_settings_html();
-        ?>
-    </table>
 </div>
 
 <div id="nuvei_tools_cont" class="nuvei_checkout_settings_cont" style="display: none;">
