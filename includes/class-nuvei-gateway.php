@@ -412,63 +412,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		return;
 	}
 	
-	public function delete_user_upo() {
-		$upo_id = Nuvei_Http::get_param('scUpoId', 'int', false);
-		
-		if (!$upo_id) {
-			wp_send_json(
-				array(
-				'status' => 'error',
-				'msg' => __('Invalid UPO ID parameter.', 'nuvei_checkout_woocommerce')
-				)
-			);
-
-			exit;
-		}
-		
-		if (!is_user_logged_in()) {
-			wp_send_json(
-				array(
-				'status' => 'error',
-				'msg' => 'The user in not logged in.'
-				)
-			);
-
-			exit;
-		}
-		
-		$curr_user = wp_get_current_user();
-		
-		if (empty($curr_user->user_email)) {
-			wp_send_json(array(
-				'status' => 'error',
-				'msg' => 'The user email is not valid.'
-			));
-
-			exit;
-		}
-		
-		$ndu_obj = new Nuvei_Delete_Upo($this->settings);
-		$resp    = $ndu_obj->process(array(
-			'email'     => $curr_user->user_email,
-			'upo_id'    => $upo_id
-		));
-		
-		if (empty($resp['status']) || 'SUCCESS' != $resp['status']) {
-			$msg = !empty($resp['reason']) ? $resp['reason'] : '';
-			
-			wp_send_json(array(
-				'status' => 'error',
-				'msg' => $msg
-			));
-
-			exit;
-		}
-		
-		wp_send_json(array('status' => 'success'));
-		exit;
-	}
-	
 	public function reorder() {
 		global $woocommerce;
 		
@@ -789,8 +732,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
             'amount'                => (string) number_format((float) $cart->total, 2, '.', ''),
             'renderTo'              => '#nuvei_checkout',
 //            'onResult'              => nuveiCheckoutCallback, // pass it in the JS, showNuveiCheckout()
-            'userTokenId'           => $ord_details['billingAddress']['email'],
-            'useDCC'                => 'yes' == $this->get_setting['use_dcc'] ? true : false,
+//            'userTokenId'           => $ord_details['billingAddress']['email'],
+            'useDCC'                =>  $this->get_setting('use_dcc', 'enable'),
             'strict'                => false,
             'savePM'                => (bool) $this->get_setting('use_upos'), // for UPO
 //            'subMethod'           => '',
@@ -824,6 +767,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$resp_data['nuveiPluginUrl']     = plugin_dir_url(NUVEI_PLUGIN_FILE);
 		$resp_data['nuveiSiteUrl']       = get_site_url();
 			
+        Nuvei_Logger::write($this->get_setting('use_dcc'));
         Nuvei_Logger::write($checkout_data);
         
         if($is_ajax) {
@@ -1112,14 +1056,19 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
         $fields = array(
             'use_dcc' => [
                 'title'         => __('Use currency conversion', 'nuvei_checkout_woocommerce'),
-				'type'          => 'checkbox',
-				'label'         => __('Enable currency conversion.', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+                'options'       => [
+                    'enable'        => __('Enabled', 'nuvei_checkout_woocommerce'),
+                    'force'         => __('Enabled and expanded', 'nuvei_checkout_woocommerce'),
+                    'false'         => __('Disabled', 'nuvei_checkout_woocommerce'),
+                ],
+//				'label'         => __('Enable currency conversion.', 'nuvei_checkout_woocommerce'),
                 'description'   => sprintf(
                     '<a href="%s" class="class">%s</a>',
                     esc_html('https://docs.safecharge.com/documentation/guides/currency-conversion-features/dynamic-currency-conversion-dcc/'),
                     __('Check the Documentation.', 'nuvei_checkout_woocommerce')
                 ),
-				'default'       => 'no',
+				'default'       => 'enabled',
 				'class'         => 'nuvei_checkout_setting'
             ],
             'blocked_cards' => [

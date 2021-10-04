@@ -1,60 +1,3 @@
-'use strict';
-
-var sfc					= null;
-var scFields			= null;
-var scData				= {};
-var selectedPM			= '';
-var orderAmount			= 0;
-
-//var scOrderAmount, scOrderCurr,
-var scOpenOrderToken, locale;
-
-/**
- * Function scUpdateCart
- * The first step of the checkout validation
- */
-function scUpdateCart() {
-	console.log('scUpdateCart()');
-	
-	jQuery.ajax({
-		type: "POST",
-		url: scTrans.ajaxurl,
-		data: {
-			action			: 'sc-ajax-action',
-			security		: scTrans.security,
-			sc_request		: 'updateOrder'
-		},
-		dataType: 'json'
-	})
-		.fail(function(){
-			scValidateAPMFields();
-		})
-		.done(function(resp) {
-			console.log(resp);
-			
-			if(resp.hasOwnProperty('sessionToken')
-				&& '' != resp.sessionToken
-				&& resp.sessionToken != scData.sessionToken
-			) {
-				scData.sessionToken = resp.sessionToken;
-				jQuery('#lst').val(resp.sessionToken);
-				
-				sfc			= SafeCharge(scData);
-				scFields	= sfc.fields({ locale: locale });
-				
-				nuveiShowErrorMsg(scTrans.paymentError + ' ' + scTrans.TryAgainLater);
-				
-				jQuery('#sc_second_step_form .input-radio').prop('checked', false);
-			}
-			else if (resp.hasOwnProperty('reload_checkout')) {
-				window.location = window.location.hash;
-				return;
-			}
-			
-			scValidateAPMFields();
-		});
-}
-
 /**
  * 
  * @param {type} resp
@@ -65,7 +8,7 @@ function afterSdkResponse(resp) {
 	
 	if (typeof resp.result == 'undefined') {
 		console.error('Error with Checkout SDK response: ' + resp);
-		getNewSessionToken();
+		nuveiShowErrorMsg(scTrans.unexpectedError);
 		return;
 	}
 	
@@ -87,43 +30,6 @@ function afterSdkResponse(resp) {
 	return;
 }
  
-function getNewSessionToken() {
-	console.log('getNewSessionToken()');
-	
-	jQuery.ajax({
-		type: "POST",
-		url: scTrans.ajaxurl,
-		data: {
-			action      : 'sc-ajax-action',
-			security    : scTrans.security,
-			sc_request	: 'OpenOrder',
-		},
-		dataType: 'json'
-	})
-		.fail(function(){
-			console.log('openOrder request fail.')
-			nuveiShowErrorMsg(scTrans.unexpectedError);
-			return;
-		})
-		.done(function(resp) {
-			console.log('getNewSessionToken()', resp);
-	
-			try {
-				if(resp.sessionToken) {
-					showNuveiCheckout(resp);
-					return;
-				}
-				
-				window.location.reload();
-				return;
-			}
-			catch(error) {
-				window.location.reload();
-				return;
-			}
-		});
-}
-
 function showNuveiCheckout(params) {
 	console.log(params, 'showNuveiCheckout()');
 	
