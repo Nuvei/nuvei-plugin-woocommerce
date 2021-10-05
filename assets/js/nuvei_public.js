@@ -1,3 +1,5 @@
+const onReady = function (result) { console.log('onReady', result) };
+
 /**
  * 
  * @param {type} resp
@@ -31,10 +33,9 @@ function afterSdkResponse(resp) {
 }
  
 function showNuveiCheckout(params) {
-	console.log(params, 'showNuveiCheckout()');
+	console.log('showNuveiCheckout()', params);
 	
 	params.onResult = afterSdkResponse;
-	
 	checkout(params);
 	
 	if(jQuery('.wpmc-step-payment').length > 0) { // multi-step checkout

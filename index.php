@@ -135,8 +135,8 @@ function nuvei_init() {
 	add_action('woocommerce_after_checkout_validation', function( $data, $errors) {
 		global $wc_nuvei;
 		
-        Nuvei_Logger::write($errors->errors, 'woocommerce_after_checkout_validation errors');
-        Nuvei_Logger::write($_POST, 'woocommerce_after_checkout_validation post params');
+//        Nuvei_Logger::write($errors->errors, 'woocommerce_after_checkout_validation errors');
+//        Nuvei_Logger::write($_POST, 'woocommerce_after_checkout_validation post params');
 		
 		if (empty($errors->errors) 
 			&& NUVEI_GATEWAY_NAME == $data['payment_method'] 

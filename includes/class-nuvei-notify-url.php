@@ -351,16 +351,17 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		} while ($tries <= $max_tries && empty($res[0]->post_id));
 
 		if (empty($res[0]->post_id)) {
-			Nuvei_Logger::write(
-				array(
-					'trans_id' => $trans_id,
-					'tries' => $tries
-				),
-				'The DMN didn\'t wait for the Order creation. Exit.'
-			);
-			
-			echo wp_json_encode('The DMN didn\'t wait for the Order creation. Exit.');
-			exit;
+            Nuvei_Logger::write(
+                [
+                    'trans_id' => $trans_id,
+                    'order data' => $res
+                ],
+                'The searched Order does not exists.'
+            );
+            
+            http_response_code(400);
+            echo wp_json_encode('The searched Order does not exists.');
+            exit;
 		}
 
 		return $res[0]->post_id;

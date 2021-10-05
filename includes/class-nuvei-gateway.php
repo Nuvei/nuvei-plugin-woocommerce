@@ -165,7 +165,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		);
 		
 		if ($order->get_payment_method() != NUVEI_GATEWAY_NAME) {
-			Nuvei_Logger::write('Process payment Error - Order payment gateway is not ' . NUVEI_GATEWAY_NAME);
+			Nuvei_Logger::write('Process payment Error - Order payment does not belongs to ' . NUVEI_GATEWAY_NAME);
 			
 			return array(
 				'result'    => 'success',
@@ -739,16 +739,16 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 //            'subMethod'           => '',
             'pmWhitelist'           => [],
 //            'pmBlacklist'         => [],
-            'blockCards'            => $this->get_setting('blocked_cards', []),
+//            'blockCards'            => $this->get_setting('blocked_cards', []), set it later
             'alwaysCollectCvv'      => true,
             'fullName'              => $ord_details['billingAddress']['firstName'] . ' ' . $oo_data['billingAddress']['lastName'],
             'email'                 => $ord_details['billingAddress']['email'],
             'payButton'             => $this->get_setting('pay_button', 'amountButton'),
             'showResponseMessage'   => false, // shows/hide the response popups
-            'locale'                => get_locale(),
+            'locale'                => substr(get_locale(), 0, 2),
             'autoOpenPM'            => (bool) $this->get_setting('auto_open_pm', 1),
             'logLevel'              => $this->get_setting('log_level'),
-            'i18n'                  => '',
+//            'i18n'                  => $this->get_setting('translation', ''), // set it later
         );
 		
 		// check for product with a plan
@@ -763,11 +763,36 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			}
 		}
 		// check for product with a plan END
-		
+        
+        // blocked_cards
+        $blocked_cards      = [];
+        $blocked_cards_str  = $this->get_setting('blocked_cards', '');
+        
+        if(empty($blocked_cards_str)) {
+            $checkout_data['blockCards'] = [];
+        } else {
+            $blockCards_sets = explode(';', $blocked_cards_str);
+
+            if(count($blockCards_sets) == 1) {
+                $blocked_cards = explode(',', current($blockCards_sets));
+            } else {
+                foreach($blockCards_sets as $elements) {
+                    $blocked_cards[] = explode(',', $elements);
+                }
+            }
+
+            $checkout_data['blockCards'] = $blocked_cards;
+        }
+        // blocked_cards END
+        
+        // i18n
+        $i18n_arr               = $this->prepare_checkout_translations();
+        $checkout_data['i18n']  = !empty($i18n_arr[$checkout_data['locale']])
+            ? $i18n_arr[$checkout_data['locale']] : [];
+        
 		$resp_data['nuveiPluginUrl']     = plugin_dir_url(NUVEI_PLUGIN_FILE);
 		$resp_data['nuveiSiteUrl']       = get_site_url();
 			
-        Nuvei_Logger::write($this->get_setting('use_dcc'));
         Nuvei_Logger::write($checkout_data);
         
         if($is_ajax) {
@@ -784,6 +809,45 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 		exit;
 	}
+    
+    private function prepare_checkout_translations() {
+        $i18n = [];
+        
+        try {
+            $i18n_sets = explode(';', $this->get_setting('translation', ''));
+            
+            if(count($i18n_sets) == 1) {
+                $lang_translations  = explode(':', current($i18n_sets));
+                $translations       = explode(',', $lang_translations[1]);
+
+                foreach($translations as $data) {
+                    $key_text = explode('=', $data);
+
+                    $i18n[(string) trim($lang_translations[0])][(string) trim($key_text[0])] = (string) $key_text[1];
+                }
+                
+                Nuvei_Logger::write($i18n, 'prepare_checkout_translations() $i18n');
+                return $i18n;
+            }
+            
+            foreach($i18n_sets as $data_set) {
+                $lang_translations  = explode(':', current($data_set));
+                $translations       = explode(',', $lang_translations[1]);
+
+                foreach($translations as $data) {
+                    $key_text = explode('=', $data);
+
+                    $i18n[(string) trim($lang_translations[0])][(string) trim($key_text[0])] = (string) $key_text[1];
+                }
+            }
+            
+            Nuvei_Logger::write($i18n, 'prepare_checkout_translations() $i18n');
+            return $i18n;
+        } catch(Exception $e) {
+            Nuvei_Logger::write($e->getMessage(), 'prepare_checkout_translations() Exception');
+            return [];
+        }
+    }
 	
 	/**
 	 * Get a plugin setting by its key.
@@ -1075,11 +1139,13 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
                 'title'         => __('Block Cards', 'nuvei_checkout_woocommerce'),
 				'type'          => 'text',
                 'description'   => sprintf(
-                    '<a href="%s" class="class">%s</a>',
+                    __('Please separate the sets with ";" and the elements in the sets with ",". For examples', 'nuvei_checkout_woocommerce')
+                        . ' <a href="%s" class="class">%s</a>',
                     esc_html('https://preprod-docs-safecharge.gw-4u.com/documentation/features/blocking-cards/'),
-                    __('Check the Documentation.', 'nuvei_checkout_woocommerce')
+                    __('check the Documentation.', 'nuvei_checkout_woocommerce')
                 ),
-                'class'         => 'nuvei_checkout_setting'
+                'class'         => 'nuvei_checkout_setting',
+                'placeholder'   => "visa,credit,corporate;amex,GB"
             ],
             'use_upos' => array(
 				'title'         => __('Allow client to use UPOs', 'nuvei_checkout_woocommerce'),
@@ -1128,20 +1194,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
             ],
             'translation' => [
                 'title'         => __('Translations', 'nuvei_checkout_woocommerce'),
-                'description'   => __('This filed is the only way to translate Checkout SDK strings.', 'nuvei_checkout_woocommerce'),
+                'description'   => sprintf(
+                    __('This filed is the only way to translate Checkout SDK strings. Separate sets with ";", separate the language and the translations with ":", separate the key from the translated value with "=". For examples', 'nuvei_checkout_woocommerce')
+                        . ' <a href="%s" class="class">%s</a>',
+                    esc_html('https://docs.safecharge.com/documentation/accept-payment/checkout-sdk/advanced-styling/#i18n-styling'),
+                    __('check the Documentation.', 'nuvei_checkout_woocommerce')
+                ),
                 'type'          => 'textarea',
                 'class'         => 'nuvei_checkout_setting',
-                'placeholder'   => 'Example:
-{
-    de: {
-        "doNotHonor"    : "you dont have enough money, dude",
-        "DECLINE"       : "declined from error_i18"
-    },
-    es: {
-        "doNotHonor"    : "you dont have enough money, dude",
-        "DECLINE"       : "declined from error_i18"
-    }
-}',
+                'placeholder'   => 
+'de:doNotHonor=you dont have enough money,DECLINE=declined from error_i18;
+es:doNotHonor=you dont have enough money,DECLINE=declined from error_i18',
             ],
         );
          
