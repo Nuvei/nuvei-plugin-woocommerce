@@ -7,7 +7,7 @@
 
 <nav class="nav-tab-wrapper woo-nav-tab-wrapper">
     <a href="#nuvei_base_settings" class="nuvei_settings_tabs nav-tab" id="nuvei_base_settings_tab">
-        <?php _e('Base Settings', 'nuvei_checkout_woocommerce'); ?>
+        <?php _e('General Settings', 'nuvei_checkout_woocommerce'); ?>
     </a>
     <a href="#nuvei_advanced_settings" class="nuvei_settings_tabs nav-tab "id="nuvei_advanced_settings_tab">
         <?php _e('Advanced Settings', 'nuvei_checkout_woocommerce'); ?>
@@ -37,7 +37,7 @@
     </table>
     <hr/>
     
-    <h3><?php _e('Cashier Settings', 'nuvei_checkout_woocommerce'); ?>:</h3>
+    <h3><?php _e('Redirect Payment Page Settings', 'nuvei_checkout_woocommerce'); ?>:</h3>
     <table class="form-table">
         <?php
             $this->init_form_advanced_fields_cashier();

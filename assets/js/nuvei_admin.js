@@ -211,8 +211,6 @@ function nuveiGetTodayLog() {
 }
 
 function nuvei_show_hide_rest_settings() {
-	console.log('nuvei_show_hide_rest_settings()');
-	
 	var _disabled = false;
 	
 	if(1 == jQuery('#woocommerce_nuvei_use_cashier').val()) {
@@ -238,7 +236,20 @@ function switchNuveiTabs() {
 	}
 }
 
+/**
+ * Get the merchant Payment Methods and list them
+ * in the Block Payment methods menu
+ */
+function getNuveiMerchantPMs() {
+	
+}
+
 jQuery(function() {
+	if(typeof notNuveiOrder != 'undefined' && notNuveiOrder) {
+		return;
+	}
+
+	jQuery('#woocommerce_nuvei_pm_black_list').attr('multiple', true);
 	switchNuveiTabs();
 	
 	// set the flags

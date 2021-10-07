@@ -526,12 +526,11 @@ function nuvei_enqueue( $hook) {
  * @return type
  */
 function nuvei_add_buttons( $order) {
-	Nuvei_Logger::write('nuvei_add_buttons()');
 	
 	if (empty($order->get_payment_method())
 		|| !in_array($order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))
 	) {
-		Nuvei_Logger::write('nuvei_add_buttons() - this is not Nuvei Order.');
+        echo '<script type="text/javascript">var notNuveiOrder = true;</script>';
 		return false;
 	}
 	

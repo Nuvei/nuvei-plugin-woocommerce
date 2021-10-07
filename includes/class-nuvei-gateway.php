@@ -20,11 +20,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$this->icon                 = plugin_dir_url(NUVEI_PLUGIN_FILE) . 'assets/icons/nuvei.png';
 		$this->has_fields           = false;
 
+        $this->init_settings();
         $this->init_form_base_fields();
         $this->init_form_advanced_fields_checkout(true);
         $this->init_form_advanced_fields_cashier(true);
         $this->init_form_tools_fields(true);
-		$this->init_settings();
+		
 		
 		// required for the Store
 		$this->title       = $this->get_setting('title') ?: NUVEI_GATEWAY_TITLE;
@@ -369,17 +370,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	}
 	
 	public function return_settle_btn( $and_taxes, $order) {
-		Nuvei_Logger::write('return_settle_btn()');
-		
 		if (!method_exists($order, 'get_payment_method')
 			|| empty($order->get_payment_method())
 			|| !in_array($order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))
 		) {
-			Nuvei_Logger::write(
-				$order,
-				'return_settle_btn() - this is not Nuvei Order or there is no Payment Method.'
-			);
-			
 			return false;
 		}
 		
@@ -737,8 +731,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
             'strict'                => false,
             'savePM'                => (bool) $this->get_setting('use_upos'), // for UPO
 //            'subMethod'           => '',
-            'pmWhitelist'           => [],
-//            'pmBlacklist'         => [],
+//            'pmWhitelist'           => [],
+            'pmBlacklist'         => [], // as menu
 //            'blockCards'            => $this->get_setting('blocked_cards', []), set it later
             'alwaysCollectCvv'      => true,
             'fullName'              => $ord_details['billingAddress']['firstName'] . ' ' . $oo_data['billingAddress']['lastName'],
@@ -748,6 +742,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
             'locale'                => substr(get_locale(), 0, 2),
             'autoOpenPM'            => (bool) $this->get_setting('auto_open_pm', 1),
             'logLevel'              => $this->get_setting('log_level'),
+            'maskCvv'               => true,
 //            'i18n'                  => $this->get_setting('translation', ''), // set it later
         );
 		
@@ -1080,7 +1075,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
     private function init_form_advanced_fields_cashier($fields_append = false) {
         $fields = array(
             'use_cashier' => array(
-				'title'         => __('Use Cashier instead REST API', 'nuvei_checkout_woocommerce'),
+				'title'         => __('Use Redirect Payment Page instead of Checkout SDK', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
 				'description'   => __('The Checkout SDK is recommended.', 'nuvei_checkout_woocommerce'),
 				'options'       => array(
@@ -1088,7 +1083,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					1 => __('Yes', 'nuvei_checkout_woocommerce'),
 				),
                 'default'       => 0,
-                'class'         => 'nuvei_cashier_setting'
 			),
 			'combine_cashier_products' => array(
 				'title'         => __('Combine Cashier products into one', 'nuvei_checkout_woocommerce'),
@@ -1117,6 +1111,26 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
      * @param bool $fields_append - use it when load the fields. In this case we want all fields in same array.
      */
     private function init_form_advanced_fields_checkout($fields_append = false) {
+        # prepare the list with Payment methods
+        $get_st_obj     = new Nuvei_Get_Session_Token($this->settings);
+        $resp           = $get_st_obj->process();
+        $session_token  = !empty($resp['sessionToken']) ? $resp['sessionToken'] : '';
+        
+        $pms            = ['' => __('Select payment methods...', 'nuvei_checkout_woocommerce')];
+        $get_apms_obj   = new Nuvei_Get_Apms($this->settings);
+        $resp           = $get_apms_obj->process(['sessionToken' => $session_token]);
+        
+        if(!empty($resp['paymentMethods']) && is_array($resp['paymentMethods'])) {
+            foreach($resp['paymentMethods'] as $data) {
+                if(!empty($data['paymentMethodDisplayName'][0]['message'])) {
+                    $pms[$data['paymentMethod']] = $data['paymentMethodDisplayName'][0]['message'];
+                } else {
+                    $pms[$data['paymentMethod']] = $data['paymentMethod'];
+                }
+            }
+        }
+        # prepare the list with Payment methods END
+        
         $fields = array(
             'use_dcc' => [
                 'title'         => __('Use currency conversion', 'nuvei_checkout_woocommerce'),
@@ -1126,7 +1140,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
                     'force'         => __('Enabled and expanded', 'nuvei_checkout_woocommerce'),
                     'false'         => __('Disabled', 'nuvei_checkout_woocommerce'),
                 ],
-//				'label'         => __('Enable currency conversion.', 'nuvei_checkout_woocommerce'),
                 'description'   => sprintf(
                     '<a href="%s" class="class">%s</a>',
                     esc_html('https://docs.safecharge.com/documentation/guides/currency-conversion-features/dynamic-currency-conversion-dcc/'),
@@ -1147,6 +1160,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
                 'class'         => 'nuvei_checkout_setting',
                 'placeholder'   => "visa,credit,corporate;amex,GB"
             ],
+            'pm_black_list' => [
+                'title'         => __('Block Payment methods', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+				'options'       => $pms,
+				'default'       => '',
+                'class'         => 'nuvei_checkout_setting',
+                'multiple'      => '',
+            ],
             'use_upos' => array(
 				'title'         => __('Allow client to use UPOs', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
@@ -1155,6 +1176,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					1 => 'Yes',
 				),
                 'default'       => 0,
+                'class'         => 'nuvei_checkout_setting',
 			),
             'pay_button' => [
                 'title'         => __('Choose the Text on the Pay button', 'nuvei_checkout_woocommerce'),
@@ -1224,7 +1246,7 @@ es:doNotHonor=you dont have enough money,DECLINE=declined from error_i18',
     private function init_form_tools_fields($fields_append = false) {
         $fields = array(
             'get_plans_btn' => array(
-				'title' => __('Download Payment Plans', 'nuvei_checkout_woocommerce'),
+				'title' => __('Sync Payment Plans', 'nuvei_checkout_woocommerce'),
 				'type' => 'button',
 			),
             'notify_url' => array(
@@ -1235,9 +1257,9 @@ es:doNotHonor=you dont have enough money,DECLINE=declined from error_i18',
 				'type' => 'hidden'
 			),
             'today_log' => array(
-				'title' => __('Today log', 'nuvei_checkout_woocommerce'),
+				'title' => __('View today\'s log', 'nuvei_checkout_woocommerce'),
 				'type' => 'textarea',
-				'description' => __('Please, use with caution! The Production log files can be enormous.', 'nuvei_checkout_woocommerce'),
+				'description' => 'бутона да е най-отгоре и лога да се зарежда в контейнер а не в ареа, чак след като се цъкне на бутона' . __('Please, use with caution! The Production log files can be enormous.', 'nuvei_checkout_woocommerce'),
 			),
         );
         
