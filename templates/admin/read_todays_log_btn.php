@@ -13,16 +13,15 @@
 			</legend>
 
 			<button class="<?php echo esc_attr($data['class']); ?>" 
+                    id="woocommerce_nuvei_today_log" 
 					type="button" 
-					id="<?php echo esc_attr($field); ?>" 
 					style="<?php echo esc_attr($data['css']); ?>" 
-                    onclick="nuveiSyncPaymentPlans()" 
-					<?php echo esc_attr($this->get_custom_attribute_html($data)); ?>
+                    onclick="nuveiGetTodayLog()" 
 			>
-				<?php echo esc_html($data['title']); ?>
+                <?php echo esc_html($data['title_btn']); ?>
 			</button>
-
-            <span class="dashicons dashicons-yes-alt" style="display: none;"></span>
+            
+            <textarea rows="10" cols="20" class="input-text wide-input nuvei_checkout_setting" type="textarea" id="woocommerce_nuvei_today_log_area" style="margin-top: 10px; display: none;"></textarea>
             
             <p class="description"><?php echo wp_kses_post($data['description']); ?></p>
 		</fieldset>

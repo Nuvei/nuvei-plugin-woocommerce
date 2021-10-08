@@ -456,15 +456,15 @@ function nuvei_load_admin_styles_scripts( $hook) {
 		array('jquery'),
 		'1'
 	);
+    
+    // get the list of the plans
+    $nuvei_plans_path   = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
+    $plans_list         = [];
 
-	$nuvei_plans_path       = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
-	$sc_plans_last_mod_time = '';
-	$plans_list             = array();
-
-	if (is_readable($nuvei_plans_path)) { 
-		$sc_plans_last_mod_time = gmdate('Y-m-d H:i:s', filemtime($nuvei_plans_path));
-		$plans_list             = stripslashes(file_get_contents($nuvei_plans_path));
-	}
+    if (is_readable($nuvei_plans_path)) { 
+        $plans_list             = stripslashes(file_get_contents($nuvei_plans_path));
+    }
+    // get the list of the plans end
 
 	// put translations here into the array
 	wp_localize_script(
@@ -473,13 +473,12 @@ function nuvei_load_admin_styles_scripts( $hook) {
 		array(
 			'ajaxurl'				=> admin_url('admin-ajax.php'),
 			'security'				=> wp_create_nonce('sc-security-nonce'),
-			'scPlansLastModTime'	=> $sc_plans_last_mod_time,
 			'nuveiPaymentPlans'     => $plans_list,
 
 			// translations
 			'refundQuestion'		=> __('Are you sure about this Refund?', 'nuvei_checkout_woocommerce'),
 			'LastDownload'			=> __('Last Download', 'nuvei_checkout_woocommerce'),
-			'RefreshLog'			=> __('Refresh Log', 'nuvei_checkout_woocommerce'),
+			'ReadLog'               => __('Read Log', 'nuvei_checkout_woocommerce'),
 			'RefreshLogError'       => __('Getting log faild, please check the console for more information!', 'nuvei_checkout_woocommerce'),
 		)
 	);

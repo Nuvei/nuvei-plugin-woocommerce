@@ -1,6 +1,5 @@
 var scSettleBtn		= null;
 var scVoidBtn		= null;
-//var nuveiPlansList	= JSON.parse(scTrans.nuveiPaymentPlans);
 
 // when the admin select to Settle or Void the Order
 function settleAndCancelOrder(question, action, orderId) {
@@ -163,7 +162,7 @@ function scCreateRefund(question) {
 function nuveiGetTodayLog() {
 	console.log('nuveiGetTodayLog');
 	
-	var logTd		= jQuery('#woocommerce_nuvei_doday_log').closest('td');
+	var logTd		= jQuery('#woocommerce_nuvei_today_log').closest('td');
 	var thisLoader	= logTd.find('.custom_loader');
 	
 	thisLoader.show();
@@ -181,7 +180,8 @@ function nuveiGetTodayLog() {
 		dataType	: 'json'
 	})
 		.fail(function( jqXHR, textStatus, errorThrown) {
-			jQuery('#woocommerce_nuvei_doday_log').text(scTrans.RefreshLogError);
+			jQuery('#woocommerce_nuvei_today_log_area').text(scTrans.RefreshLogError);
+			jQuery('#woocommerce_nuvei_today_log_area').css('display', 'block');
 			
 			thisLoader.hide();
 
@@ -189,21 +189,23 @@ function nuveiGetTodayLog() {
 			console.error(errorThrown)
 		})
 		.done(function(resp) {
-			console.log(resp);
-
 			if (resp && typeof resp.status != 'undefined' && resp.data != 'undefined') {
 				if (resp.status == 0) {
-					jQuery('#woocommerce_nuvei_doday_log').text(resp.msg);
+					jQuery('#woocommerce_nuvei_today_log_area').text(resp.msg);
+					jQuery('#woocommerce_nuvei_today_log_area').css('display', 'block');
 				}
 				else if(resp.hasOwnProperty('data')) {
-					jQuery('#woocommerce_nuvei_doday_log').text(resp.data);
+					jQuery('#woocommerce_nuvei_today_log_area').text(resp.data);
+					jQuery('#woocommerce_nuvei_today_log_area').css('display', 'block');
 				}
 				else {
-					jQuery('#woocommerce_nuvei_doday_log').text(scTrans.RefreshLogError);
+					jQuery('#woocommerce_nuvei_today_log_area').text(scTrans.RefreshLogError);
+					jQuery('#woocommerce_nuvei_today_log_area').css('display', 'block');
 				}
 			}
 			else {
-				jQuery('#woocommerce_nuvei_doday_log').text(scTrans.RefreshLogError);
+				jQuery('#woocommerce_nuvei_today_log_area').text(scTrans.RefreshLogError);
+				jQuery('#woocommerce_nuvei_today_log_area').css('display', 'block');
 			}
 			
 			thisLoader.hide();
@@ -236,15 +238,49 @@ function switchNuveiTabs() {
 	}
 }
 
-/**
- * Get the merchant Payment Methods and list them
- * in the Block Payment methods menu
- */
-function getNuveiMerchantPMs() {
+function nuveiSyncPaymentPlans() {
+	var butonTd = jQuery('#woocommerce_nuvei_get_plans_btn').closest('td');
 	
+	butonTd.find('.custom_loader').show();
+			
+	jQuery.ajax({
+		type: "POST",
+		url: scTrans.ajaxurl,
+		data: {
+			action			: 'sc-ajax-action',
+			downloadPlans	: 1,
+			security		: scTrans.security,
+		},
+		dataType: 'json'
+	})
+	.fail(function(jqXHR, textStatus, errorThrown){
+		alert(scTrans.RequestFail);
+
+		console.error(textStatus);
+		console.error(errorThrown);
+
+		butonTd.find('.custom_loader').hide();
+	})
+	.done(function(resp) {
+		console.log(resp);
+
+		if (resp.hasOwnProperty('status') && 1 == resp.status) {
+			butonTd.find('fieldset span.dashicons.dashicons-yes-alt').css({
+				display :'inline',
+				color : 'green'
+			});
+
+			butonTd.find('fieldset p.description').html(scTrans.LastDownload +': '+ resp.time);
+		} else {
+			alert('Response error.');
+		}
+
+		butonTd.find('.custom_loader').hide();
+	});
 }
 
 jQuery(function() {
+	// if the Order does not belongs to Nuvei stop here.
 	if(typeof notNuveiOrder != 'undefined' && notNuveiOrder) {
 		return;
 	}
@@ -282,76 +318,6 @@ jQuery(function() {
 		.attr('onclick', "scCreateRefund('"+ scTrans.refundQuestion +"');")
 		.removeClass('do-api-refund');
 
-	// actions about "Download Subscriptions plans" button in Plugin's settings
-	if(jQuery('#woocommerce_nuvei_get_plans_btn').length > 0) {
-		var butonTd = jQuery('#woocommerce_nuvei_get_plans_btn').closest('td');
-		butonTd.find('.custom_loader').hide();
-		butonTd.find('fieldset').append('<span class="dashicons dashicons-yes-alt" style="display: none;"></span>');
-
-		if('' != scTrans.scPlansLastModTime) {
-			butonTd.find('fieldset').append('<p class="description">'+ scTrans.LastDownload 
-				+': '+ scTrans.scPlansLastModTime +'</p>');
-		}
-		else {
-			butonTd.find('fieldset').append('<p class="description"></p>');
-		}
-
-		jQuery('#woocommerce_nuvei_get_plans_btn').on('click', function() {
-			butonTd.find('.custom_loader').show();
-			butonTd.find('fieldset').css('opacity', 0.5);
-			
-			jQuery.ajax({
-				type: "POST",
-				url: scTrans.ajaxurl,
-				data: {
-					action			: 'sc-ajax-action',
-					downloadPlans	: 1,
-					security		: scTrans.security,
-				},
-				dataType: 'json'
-			})
-			.fail(function(jqXHR, textStatus, errorThrown){
-				alert(scTrans.RequestFail);
-				
-				console.error(textStatus);
-				console.error(errorThrown);
-				
-				butonTd.find('.custom_loader').hide();
-				butonTd.find('fieldset').css('opacity', 1);
-			})
-			.done(function(resp) {
-				console.log(resp);
-				
-				if (resp.hasOwnProperty('status') && 1 == resp.status) {
-					butonTd.find('fieldset span.dashicons.dashicons-yes-alt').css({
-						display :'inline',
-						color : 'green'
-					});
-					
-					butonTd.find('fieldset p.description').html(scTrans.LastDownload +': '+ resp.time);
-				} else {
-					alert('Response error.');
-				}
-				
-				butonTd.find('.custom_loader').hide();
-				butonTd.find('fieldset').css('opacity', 1);
-			});
-		});
-	}
-	
-	// about print daily log
-	var logTd = jQuery('#woocommerce_nuvei_doday_log').closest('td');
-	
-	if(logTd.find('button').length < 1) {
-		logTd.css('position', 'relative');
-		
-		logTd.append(
-			'<br/><button id="nuvei_get_log_btn" class="button-secondary" type="button" onclick="nuveiGetTodayLog()">' + scTrans.RefreshLog + '</button>'
-			+ '<div class="blockUI blockOverlay custom_loader" style="height: 100%; position: absolute; width: 100%; top: 0px; display: none;"></div>'
-		);
-	}
-	// about print daily log END
-	
 	// for the Use Cashier... setting
 	nuvei_show_hide_rest_settings();
 	

@@ -63,6 +63,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	 * Generate Button HTML.
 	 * Custom function to generate beautiful button in admin settings.
 	 * Thanks to https://gist.github.com/BFTrick/31de2d2235b924e853b0
+     * 
+     * This function catch the type of the settings element we want
+     * to create. Example - element type button1 -> generate_button1_html
 	 *
 	 * @param mixed $key
 	 * @param mixed $data
@@ -71,9 +74,49 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	 *
 	 * @return string
 	 */
-	public function generate_button_html( $key, $data) {
-		Nuvei_Logger::write($key);
-		Nuvei_Logger::write($data);
+	public function generate_payment_plans_btn_html( $key, $data) {
+		$defaults = array(
+			'class'             => 'button-secondary',
+			'css'               => '',
+			'custom_attributes' => array(),
+			'desc_tip'          => false,
+			'description'       => '',
+			'title'             => '',
+		);
+        
+        $nuvei_plans_path = dirname(dirname(__FILE__)) . '/tmp/sc_plans.json';
+
+        if (is_readable($nuvei_plans_path)) { 
+            $defaults['description'] = __('Last download: ', 'nuvei_checkout_woocommerce')
+                . gmdate('Y-m-d H:i:s', filemtime($nuvei_plans_path));
+        }
+
+		ob_start();
+		
+		$data = wp_parse_args($data, $defaults);
+		require_once dirname(NUVEI_PLUGIN_FILE) . '/templates/admin/download_payments_plans_btn.php';
+		
+		return ob_get_clean();
+	}
+    
+	/**
+	 * Generate Button HTML.
+	 * Custom function to generate beautiful button in admin settings.
+	 * Thanks to https://gist.github.com/BFTrick/31de2d2235b924e853b0
+     * 
+     * This function catch the type of the settings element we want
+     * to create. Example - element type button1 -> generate_button1_html
+	 *
+	 * @param mixed $key
+	 * @param mixed $data
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string
+	 */
+	public function generate_todays_log_btn_html( $key, $data) {
+//		Nuvei_Logger::write($key);
+//		Nuvei_Logger::write($data);
 		
 		$defaults = array(
 			'class'             => 'button-secondary',
@@ -83,11 +126,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			'description'       => '',
 			'title'             => '',
 		);
-
+        
+        $data['title_btn']      = __('Read log', 'nuvei_checkout_woocommerce');
+        $data['description']    = __('Please, use with caution! The Production log files can be enormous.', 'nuvei_checkout_woocommerce');
+        
 		ob_start();
 		
 		$data = wp_parse_args($data, $defaults);
-		require_once dirname(NUVEI_PLUGIN_FILE) . '/templates/admin/download_payments_plans_btn.php';
+		require_once dirname(NUVEI_PLUGIN_FILE) . '/templates/admin/read_todays_log_btn.php';
 		
 		return ob_get_clean();
 	}
@@ -743,7 +789,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
             'autoOpenPM'            => (bool) $this->get_setting('auto_open_pm', 1),
             'logLevel'              => $this->get_setting('log_level'),
             'maskCvv'               => true,
-//            'i18n'                  => $this->get_setting('translation', ''), // set it later
+            'i18n'                  => json_decode($this->get_setting('translation', ''), true),
         );
 		
 		// check for product with a plan
@@ -759,9 +805,15 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		}
 		// check for product with a plan END
         
-        // blocked_cards
+        # blocked_cards
         $blocked_cards      = [];
         $blocked_cards_str  = $this->get_setting('blocked_cards', '');
+        // clean the string from brakets and quotes
+        $blocked_cards_str  = str_replace('],[', ';', $blocked_cards_str);
+        $blocked_cards_str  = str_replace('[', '', $blocked_cards_str);
+        $blocked_cards_str  = str_replace(']', '', $blocked_cards_str);
+        $blocked_cards_str  = str_replace('"', '', $blocked_cards_str);
+        $blocked_cards_str  = str_replace("'", '', $blocked_cards_str);
         
         if(empty($blocked_cards_str)) {
             $checkout_data['blockCards'] = [];
@@ -778,12 +830,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
             $checkout_data['blockCards'] = $blocked_cards;
         }
-        // blocked_cards END
-        
-        // i18n
-        $i18n_arr               = $this->prepare_checkout_translations();
-        $checkout_data['i18n']  = !empty($i18n_arr[$checkout_data['locale']])
-            ? $i18n_arr[$checkout_data['locale']] : [];
+        # blocked_cards END
         
 		$resp_data['nuveiPluginUrl']     = plugin_dir_url(NUVEI_PLUGIN_FILE);
 		$resp_data['nuveiSiteUrl']       = get_site_url();
@@ -805,45 +852,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		exit;
 	}
     
-    private function prepare_checkout_translations() {
-        $i18n = [];
-        
-        try {
-            $i18n_sets = explode(';', $this->get_setting('translation', ''));
-            
-            if(count($i18n_sets) == 1) {
-                $lang_translations  = explode(':', current($i18n_sets));
-                $translations       = explode(',', $lang_translations[1]);
-
-                foreach($translations as $data) {
-                    $key_text = explode('=', $data);
-
-                    $i18n[(string) trim($lang_translations[0])][(string) trim($key_text[0])] = (string) $key_text[1];
-                }
-                
-                Nuvei_Logger::write($i18n, 'prepare_checkout_translations() $i18n');
-                return $i18n;
-            }
-            
-            foreach($i18n_sets as $data_set) {
-                $lang_translations  = explode(':', current($data_set));
-                $translations       = explode(',', $lang_translations[1]);
-
-                foreach($translations as $data) {
-                    $key_text = explode('=', $data);
-
-                    $i18n[(string) trim($lang_translations[0])][(string) trim($key_text[0])] = (string) $key_text[1];
-                }
-            }
-            
-            Nuvei_Logger::write($i18n, 'prepare_checkout_translations() $i18n');
-            return $i18n;
-        } catch(Exception $e) {
-            Nuvei_Logger::write($e->getMessage(), 'prepare_checkout_translations() Exception');
-            return [];
-        }
-    }
-	
 	/**
 	 * Get a plugin setting by its key.
 	 * If key does not exists, return default value.
@@ -1152,13 +1160,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
                 'title'         => __('Block Cards', 'nuvei_checkout_woocommerce'),
 				'type'          => 'text',
                 'description'   => sprintf(
-                    __('Please separate the sets with ";" and the elements in the sets with ",". For examples', 'nuvei_checkout_woocommerce')
+                    __('For examples', 'nuvei_checkout_woocommerce')
                         . ' <a href="%s" class="class">%s</a>',
                     esc_html('https://preprod-docs-safecharge.gw-4u.com/documentation/features/blocking-cards/'),
                     __('check the Documentation.', 'nuvei_checkout_woocommerce')
                 ),
                 'class'         => 'nuvei_checkout_setting',
-                'placeholder'   => "visa,credit,corporate;amex,GB"
             ],
             'pm_black_list' => [
                 'title'         => __('Block Payment methods', 'nuvei_checkout_woocommerce'),
@@ -1217,16 +1224,23 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
             'translation' => [
                 'title'         => __('Translations', 'nuvei_checkout_woocommerce'),
                 'description'   => sprintf(
-                    __('This filed is the only way to translate Checkout SDK strings. Separate sets with ";", separate the language and the translations with ":", separate the key from the translated value with "=". For examples', 'nuvei_checkout_woocommerce')
+                    __('This filed is the only way to translate Checkout SDK strings. Put the translations for all desired languages as shown in the placeholder. For examples', 'nuvei_checkout_woocommerce')
                         . ' <a href="%s" class="class">%s</a>',
                     esc_html('https://docs.safecharge.com/documentation/accept-payment/checkout-sdk/advanced-styling/#i18n-styling'),
                     __('check the Documentation.', 'nuvei_checkout_woocommerce')
                 ),
                 'type'          => 'textarea',
                 'class'         => 'nuvei_checkout_setting',
-                'placeholder'   => 
-'de:doNotHonor=you dont have enough money,DECLINE=declined from error_i18;
-es:doNotHonor=you dont have enough money,DECLINE=declined from error_i18',
+                'placeholder'   => '{
+    "de": { 
+        "doNotHonor": "you dont have enough money",
+        "DECLINE": "declined"
+    },
+    "es": { 
+        "doNotHonor": "you dont have enough money",
+        "DECLINE": "declined"
+    }
+}',
             ],
         );
          
@@ -1247,19 +1261,19 @@ es:doNotHonor=you dont have enough money,DECLINE=declined from error_i18',
         $fields = array(
             'get_plans_btn' => array(
 				'title' => __('Sync Payment Plans', 'nuvei_checkout_woocommerce'),
-				'type' => 'button',
+				'type'  => 'payment_plans_btn',
 			),
             'notify_url' => array(
-				'title' => __('Notify URL', 'nuvei_checkout_woocommerce'),
-				'type' => 'text',
-				'default' => '',
-				'description' => Nuvei_String::get_notify_url($this->settings),
-				'type' => 'hidden'
+				'title'         => __('Notify URL', 'nuvei_checkout_woocommerce'),
+				'type'          => 'text',
+				'default'       => '',
+				'description'   => Nuvei_String::get_notify_url($this->settings),
+				'type'          => 'hidden'
 			),
             'today_log' => array(
-				'title' => __('View today\'s log', 'nuvei_checkout_woocommerce'),
-				'type' => 'textarea',
-				'description' => 'бутона да е най-отгоре и лога да се зарежда в контейнер а не в ареа, чак след като се цъкне на бутона' . __('Please, use with caution! The Production log files can be enormous.', 'nuvei_checkout_woocommerce'),
+				'title'         => __('View today\'s log', 'nuvei_checkout_woocommerce'),
+				'title_btn'     => __('Read log', 'nuvei_checkout_woocommerce'),
+				'type'          => 'todays_log_btn',
 			),
         );
         
