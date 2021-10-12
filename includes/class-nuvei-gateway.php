@@ -115,9 +115,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	 * @return string
 	 */
 	public function generate_todays_log_btn_html( $key, $data) {
-//		Nuvei_Logger::write($key);
-//		Nuvei_Logger::write($data);
-		
 		$defaults = array(
 			'class'             => 'button-secondary',
 			'css'               => '',
@@ -134,6 +131,58 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		
 		$data = wp_parse_args($data, $defaults);
 		require_once dirname(NUVEI_PLUGIN_FILE) . '/templates/admin/read_todays_log_btn.php';
+		
+		return ob_get_clean();
+	}
+    
+	public function generate_nuvei_multiselect_html($key, $data) {
+        # prepare the list with Payment methods
+        $get_st_obj     = new Nuvei_Get_Session_Token($this->settings);
+        $resp           = $get_st_obj->process();
+        $session_token  = !empty($resp['sessionToken']) ? $resp['sessionToken'] : '';
+        
+        $nuvei_blocked_pms_visible  = [];
+        $nuvei_blocked_pms          = explode(',', $this->get_setting('pm_black_list', ''));
+        $pms                        = [
+            '' => __('Select payment methods...', 'nuvei_checkout_woocommerce')
+        ];
+        
+        $get_apms_obj   = new Nuvei_Get_Apms($this->settings);
+        $resp           = $get_apms_obj->process(['sessionToken' => $session_token]);
+        
+        if(!empty($resp['paymentMethods']) && is_array($resp['paymentMethods'])) {
+            foreach($resp['paymentMethods'] as $data) {
+                // the array for the select menu
+                if(!empty($data['paymentMethodDisplayName'][0]['message'])) {
+                    $pms[$data['paymentMethod']] = $data['paymentMethodDisplayName'][0]['message'];
+                } else {
+                    $pms[$data['paymentMethod']] = $data['paymentMethod'];
+                }
+                
+                // generate visible list
+                if(in_array($data['paymentMethod'], $nuvei_blocked_pms)) {
+                    $nuvei_blocked_pms_visible[] = $pms[$data['paymentMethod']];
+                }
+            }
+        }
+        # prepare the list with Payment methods END
+        
+		$defaults = array(
+            'title'                     => __('Block Payment methods', 'nuvei_checkout_woocommerce'),
+			'class'                     => 'nuvei_checkout_setting',
+			'css'                       => '',
+			'custom_attributes'         => array(),
+			'desc_tip'                  => false,
+			'description'               => '',
+            'merchant_pms'              => $pms,
+            'nuvei_blocked_pms'         => $nuvei_blocked_pms,
+            'nuvei_blocked_pms_visible' => implode(', ', $nuvei_blocked_pms_visible),
+		);
+        
+		ob_start();
+		
+		$data = wp_parse_args($data, $defaults);
+		require_once dirname(NUVEI_PLUGIN_FILE) . '/templates/admin/block_pms_select.php';
 		
 		return ob_get_clean();
 	}
@@ -730,10 +779,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	}
 	
 	/**
-	 * @param bool $is_ajax
 	 * @global type $woocommerce
 	 */
-	public function call_checkout($is_ajax = false) {
+	public function call_checkout() {
 		global $woocommerce;
 		
 		# OpenOrder
@@ -741,11 +789,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$oo_data = $oo_obj->process();
 		
 		if (!$oo_data || empty($oo_data['sessionToken'])) {
-            if($is_ajax) {
-                wp_send_json(array('status'	=> 'error'));
-                exit;
-            }
-            
 			wp_send_json(array(
 				'result'	=> 'failure',
 				'refresh'	=> false,
@@ -778,7 +821,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
             'savePM'                => (bool) $this->get_setting('use_upos'), // for UPO
 //            'subMethod'           => '',
 //            'pmWhitelist'           => [],
-            'pmBlacklist'         => [], // as menu
+            'pmBlacklist'           => explode(',', $this->get_setting('pm_black_list', [])),
 //            'blockCards'            => $this->get_setting('blocked_cards', []), set it later
             'alwaysCollectCvv'      => true,
             'fullName'              => $ord_details['billingAddress']['firstName'] . ' ' . $oo_data['billingAddress']['lastName'],
@@ -836,11 +879,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$resp_data['nuveiSiteUrl']       = get_site_url();
 			
         Nuvei_Logger::write($checkout_data);
-        
-        if($is_ajax) {
-            wp_send_json($checkout_data);
-            exit;
-        }
         
 		wp_send_json(array(
 			'result'	=> 'failure', // this is just to stop WC send the form, and show APMs
@@ -1119,26 +1157,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
      * @param bool $fields_append - use it when load the fields. In this case we want all fields in same array.
      */
     private function init_form_advanced_fields_checkout($fields_append = false) {
-        # prepare the list with Payment methods
-        $get_st_obj     = new Nuvei_Get_Session_Token($this->settings);
-        $resp           = $get_st_obj->process();
-        $session_token  = !empty($resp['sessionToken']) ? $resp['sessionToken'] : '';
-        
-        $pms            = ['' => __('Select payment methods...', 'nuvei_checkout_woocommerce')];
-        $get_apms_obj   = new Nuvei_Get_Apms($this->settings);
-        $resp           = $get_apms_obj->process(['sessionToken' => $session_token]);
-        
-        if(!empty($resp['paymentMethods']) && is_array($resp['paymentMethods'])) {
-            foreach($resp['paymentMethods'] as $data) {
-                if(!empty($data['paymentMethodDisplayName'][0]['message'])) {
-                    $pms[$data['paymentMethod']] = $data['paymentMethodDisplayName'][0]['message'];
-                } else {
-                    $pms[$data['paymentMethod']] = $data['paymentMethod'];
-                }
-            }
-        }
-        # prepare the list with Payment methods END
-        
         $fields = array(
             'use_dcc' => [
                 'title'         => __('Use currency conversion', 'nuvei_checkout_woocommerce'),
@@ -1168,12 +1186,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
                 'class'         => 'nuvei_checkout_setting',
             ],
             'pm_black_list' => [
-                'title'         => __('Block Payment methods', 'nuvei_checkout_woocommerce'),
-				'type'          => 'select',
-				'options'       => $pms,
-				'default'       => '',
-                'class'         => 'nuvei_checkout_setting',
-                'multiple'      => '',
+				'type' => 'nuvei_multiselect',
             ],
             'use_upos' => array(
 				'title'         => __('Allow client to use UPOs', 'nuvei_checkout_woocommerce'),

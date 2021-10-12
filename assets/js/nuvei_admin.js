@@ -279,13 +279,46 @@ function nuveiSyncPaymentPlans() {
 	});
 }
 
+function nuveiDisablePm(_code, _name) {
+	var selectedPMs			= jQuery('#woocommerce_nuvei_pm_black_list').val();
+	var selectedPMsVisible	= jQuery('#woocommerce_nuvei_pm_black_list_visible').val();
+	
+	// fill the hidden input
+	if('' == selectedPMs) {
+		selectedPMs += _code;
+	}
+	else {
+		selectedPMs += ',' + _code;
+	}
+	
+	// fill the visible input
+	if('' == selectedPMsVisible) {
+		selectedPMsVisible += _name;
+	}
+	else {
+		selectedPMsVisible += ', ' + _name;
+	}
+	
+	document.getElementById('nuvei_block_pms_multiselect').selectedIndex  = 0;
+	
+	jQuery('#woocommerce_nuvei_pm_black_list').val(selectedPMs);
+	jQuery('#woocommerce_nuvei_pm_black_list_visible').val(selectedPMsVisible);
+}
+
+function nuveiCleanBlockedPMs() {
+	jQuery('#woocommerce_nuvei_pm_black_list, #woocommerce_nuvei_pm_black_list_visible').val('');
+	jQuery('#nuvei_block_pms_multiselect option').show();
+}
+
 jQuery(function() {
 	// if the Order does not belongs to Nuvei stop here.
 	if(typeof notNuveiOrder != 'undefined' && notNuveiOrder) {
 		return;
 	}
 
-	jQuery('#woocommerce_nuvei_pm_black_list').attr('multiple', true);
+	document.getElementById('nuvei_block_pms_multiselect').selectedIndex  = 0;
+	jQuery('#woocommerce_nuvei_blocked_pms').val('');
+	
 	switchNuveiTabs();
 	
 	// set the flags
@@ -323,6 +356,21 @@ jQuery(function() {
 	
 	jQuery('#woocommerce_nuvei_use_cashier').on('change', function() {
 		nuvei_show_hide_rest_settings();
+	});
+	
+	// for the disable/enable PM select
+	jQuery('#nuvei_block_pms_multiselect').on('change', function() {
+		if('' == jQuery('#nuvei_block_pms_multiselect').val()) {
+			return;
+		}
+		
+		nuveiDisablePm(
+			jQuery('#nuvei_block_pms_multiselect').val(), 
+			jQuery('#nuvei_block_pms_multiselect option:selected').text()
+		);
+
+		// hide the selected option
+		jQuery('#nuvei_block_pms_multiselect option:selected').hide();
 	});
 });
 // document ready function END

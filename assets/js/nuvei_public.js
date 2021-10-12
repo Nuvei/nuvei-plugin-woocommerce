@@ -50,7 +50,6 @@ function showNuveiCheckout(params) {
 	}
 	
 	jQuery("#nuvei_checkout_container").show();
-	
 	jQuery(window).scrollTop(0);
 }
 

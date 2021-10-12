@@ -277,9 +277,9 @@ function nuvei_ajax_action() {
 //		$oo_obj = new Nuvei_Open_Order($wc_nuvei->settings, true);
 //		$oo_obj->process();
 //	}
-	if (in_array(Nuvei_Http::get_param('sc_request'), array('OpenOrder'))) {
-        $wc_nuvei->call_checkout(true);
-	}
+//	if (in_array(Nuvei_Http::get_param('sc_request'), array('OpenOrder'))) {
+//        $wc_nuvei->call_checkout(true);
+//	}
 	
 	// when Reorder
 	if (Nuvei_Http::get_param('sc_request') == 'scReorder') {
