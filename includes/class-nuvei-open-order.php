@@ -72,11 +72,11 @@ class Nuvei_Open_Order extends Nuvei_Request {
 			'transactionType'   => $this->plugin_settings['payment_action'],
 			'paymentOption'     => array('card' => array('threeD' => array('isDynamic3D' => 1))),
 		);
-        
-        if (1 == $this->plugin_settings['use_upos']) {
-            $oo_params['userTokenId'] = $addresses['billingAddress']['email'];
-        }
-        
+		
+		if (1 == $this->plugin_settings['use_upos']) {
+			$oo_params['userTokenId'] = $addresses['billingAddress']['email'];
+		}
+		
 		$resp = $this->call_rest_api('openOrder', $oo_params);
 		
 		if (empty($resp['status'])
@@ -97,12 +97,12 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		// set them to session for the check before submit the data to the webSDK
 		$nuvei_last_open_order_details = array(
 			'amount'			=> $oo_params['amount'],
-//			'merchantDetails'	=> $resp['request_base_params']['merchantDetails'],
+		//          'merchantDetails'   => $resp['request_base_params']['merchantDetails'],
 			'sessionToken'		=> $resp['sessionToken'],
-//			'clientRequestId'	=> $resp['request_base_params']['clientRequestId'],
+		//          'clientRequestId'   => $resp['request_base_params']['clientRequestId'],
 			'orderId'			=> $resp['orderId'],
 			'billingAddress'	=> $oo_params['billingAddress'],
-//			'cart_string'       => json_encode(WC()->session->cart), // stringify the Cart
+		//          'cart_string'       => json_encode(WC()->session->cart), // stringify the Cart
 		);
 		
 		WC()->session->set('nuvei_last_open_order_details', $nuvei_last_open_order_details);

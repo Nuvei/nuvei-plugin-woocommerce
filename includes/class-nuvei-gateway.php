@@ -13,22 +13,22 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	
 	public function __construct() {
 		# settings to get/save options
-		$this->id                   = NUVEI_GATEWAY_NAME;
-		$this->method_title         = __('Nuvei Checkout', 'nuvei_checkout_woocommerce' );
-		$this->method_description   = 'Pay with ' . NUVEI_GATEWAY_TITLE . '.';
-		$this->method_name          = NUVEI_GATEWAY_TITLE;
-		$this->icon                 = plugin_dir_url(NUVEI_PLUGIN_FILE) . 'assets/icons/nuvei.png';
-		$this->has_fields           = false;
+		$this->id                 = NUVEI_GATEWAY_NAME;
+		$this->method_title       = __('Nuvei Checkout', 'nuvei_checkout_woocommerce' );
+		$this->method_description = 'Pay with ' . NUVEI_GATEWAY_TITLE . '.';
+		$this->method_name        = NUVEI_GATEWAY_TITLE;
+		$this->icon               = plugin_dir_url(NUVEI_PLUGIN_FILE) . 'assets/icons/nuvei.png';
+		$this->has_fields         = false;
 
-        $this->init_settings();
-        $this->init_form_base_fields();
-        $this->init_form_advanced_fields_checkout(true);
-        $this->init_form_advanced_fields_cashier(true);
-        $this->init_form_tools_fields(true);
+		$this->init_settings();
+		$this->init_form_base_fields();
+		$this->init_form_advanced_fields_checkout(true);
+		$this->init_form_advanced_fields_cashier(true);
+		$this->init_form_tools_fields(true);
 		
 		
 		// required for the Store
-		$this->title       = $this->get_setting('title') ?: NUVEI_GATEWAY_TITLE;
+		$this->title       = $this->get_setting('title', NUVEI_GATEWAY_TITLE);
 		$this->description = $this->get_setting('description', $this->method_description);
 		$this->plugin_data = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . DIRECTORY_SEPARATOR . 'index.php');
 		
@@ -63,9 +63,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	 * Generate Button HTML.
 	 * Custom function to generate beautiful button in admin settings.
 	 * Thanks to https://gist.github.com/BFTrick/31de2d2235b924e853b0
-     * 
-     * This function catch the type of the settings element we want
-     * to create. Example - element type button1 -> generate_button1_html
+	 * 
+	 * This function catch the type of the settings element we want
+	 * to create. Example - element type button1 -> generate_button1_html
 	 *
 	 * @param mixed $key
 	 * @param mixed $data
@@ -83,13 +83,13 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			'description'       => '',
 			'title'             => '',
 		);
-        
-        $nuvei_plans_path = dirname(dirname(__FILE__)) . '/tmp/sc_plans.json';
+		
+		$nuvei_plans_path = dirname(dirname(__FILE__)) . '/tmp/sc_plans.json';
 
-        if (is_readable($nuvei_plans_path)) { 
-            $defaults['description'] = __('Last download: ', 'nuvei_checkout_woocommerce')
-                . gmdate('Y-m-d H:i:s', filemtime($nuvei_plans_path));
-        }
+		if (is_readable($nuvei_plans_path)) { 
+			$defaults['description'] = __('Last download: ', 'nuvei_checkout_woocommerce')
+				. gmdate('Y-m-d H:i:s', filemtime($nuvei_plans_path));
+		}
 
 		ob_start();
 		
@@ -98,14 +98,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		
 		return ob_get_clean();
 	}
-    
+	
 	/**
 	 * Generate Button HTML.
 	 * Custom function to generate beautiful button in admin settings.
 	 * Thanks to https://gist.github.com/BFTrick/31de2d2235b924e853b0
-     * 
-     * This function catch the type of the settings element we want
-     * to create. Example - element type button1 -> generate_button1_html
+	 * 
+	 * This function catch the type of the settings element we want
+	 * to create. Example - element type button1 -> generate_button1_html
 	 *
 	 * @param mixed $key
 	 * @param mixed $data
@@ -123,10 +123,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			'description'       => '',
 			'title'             => '',
 		);
-        
-        $data['title_btn']      = __('Read log', 'nuvei_checkout_woocommerce');
-        $data['description']    = __('Please, use with caution! The Production log files can be enormous.', 'nuvei_checkout_woocommerce');
-        
+		
+		$data['title_btn']   = __('Read log', 'nuvei_checkout_woocommerce');
+		$data['description'] = __('Please, use with caution! The Production log files can be enormous.', 'nuvei_checkout_woocommerce');
+		
 		ob_start();
 		
 		$data = wp_parse_args($data, $defaults);
@@ -134,51 +134,51 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		
 		return ob_get_clean();
 	}
-    
-	public function generate_nuvei_multiselect_html($key, $data) {
-        # prepare the list with Payment methods
-        $get_st_obj     = new Nuvei_Get_Session_Token($this->settings);
-        $resp           = $get_st_obj->process();
-        $session_token  = !empty($resp['sessionToken']) ? $resp['sessionToken'] : '';
-        
-        $nuvei_blocked_pms_visible  = [];
-        $nuvei_blocked_pms          = explode(',', $this->get_setting('pm_black_list', ''));
-        $pms                        = [
-            '' => __('Select payment methods...', 'nuvei_checkout_woocommerce')
-        ];
-        
-        $get_apms_obj   = new Nuvei_Get_Apms($this->settings);
-        $resp           = $get_apms_obj->process(['sessionToken' => $session_token]);
-        
-        if(!empty($resp['paymentMethods']) && is_array($resp['paymentMethods'])) {
-            foreach($resp['paymentMethods'] as $data) {
-                // the array for the select menu
-                if(!empty($data['paymentMethodDisplayName'][0]['message'])) {
-                    $pms[$data['paymentMethod']] = $data['paymentMethodDisplayName'][0]['message'];
-                } else {
-                    $pms[$data['paymentMethod']] = $data['paymentMethod'];
-                }
-                
-                // generate visible list
-                if(in_array($data['paymentMethod'], $nuvei_blocked_pms)) {
-                    $nuvei_blocked_pms_visible[] = $pms[$data['paymentMethod']];
-                }
-            }
-        }
-        # prepare the list with Payment methods END
-        
+	
+	public function generate_nuvei_multiselect_html( $key, $data) {
+		# prepare the list with Payment methods
+		$get_st_obj    = new Nuvei_Get_Session_Token($this->settings);
+		$resp          = $get_st_obj->process();
+		$session_token = !empty($resp['sessionToken']) ? $resp['sessionToken'] : '';
+		
+		$nuvei_blocked_pms_visible = array();
+		$nuvei_blocked_pms         = explode(',', $this->get_setting('pm_black_list', ''));
+		$pms                       = array(
+			'' => __('Select payment methods...', 'nuvei_checkout_woocommerce')
+		);
+		
+		$get_apms_obj = new Nuvei_Get_Apms($this->settings);
+		$resp         = $get_apms_obj->process(array('sessionToken' => $session_token));
+		
+		if (!empty($resp['paymentMethods']) && is_array($resp['paymentMethods'])) {
+			foreach ($resp['paymentMethods'] as $data) {
+				// the array for the select menu
+				if (!empty($data['paymentMethodDisplayName'][0]['message'])) {
+					$pms[$data['paymentMethod']] = $data['paymentMethodDisplayName'][0]['message'];
+				} else {
+					$pms[$data['paymentMethod']] = $data['paymentMethod'];
+				}
+				
+				// generate visible list
+				if (in_array($data['paymentMethod'], $nuvei_blocked_pms)) {
+					$nuvei_blocked_pms_visible[] = $pms[$data['paymentMethod']];
+				}
+			}
+		}
+		# prepare the list with Payment methods END
+		
 		$defaults = array(
-            'title'                     => __('Block Payment methods', 'nuvei_checkout_woocommerce'),
+			'title'                     => __('Block Payment methods', 'nuvei_checkout_woocommerce'),
 			'class'                     => 'nuvei_checkout_setting',
 			'css'                       => '',
 			'custom_attributes'         => array(),
 			'desc_tip'                  => false,
 			'description'               => '',
-            'merchant_pms'              => $pms,
-            'nuvei_blocked_pms'         => $nuvei_blocked_pms,
-            'nuvei_blocked_pms_visible' => implode(', ', $nuvei_blocked_pms_visible),
+			'merchant_pms'              => $pms,
+			'nuvei_blocked_pms'         => $nuvei_blocked_pms,
+			'nuvei_blocked_pms_visible' => implode(', ', $nuvei_blocked_pms_visible),
 		);
-        
+		
 		ob_start();
 		
 		$data = wp_parse_args($data, $defaults);
@@ -189,9 +189,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 	// Generate the HTML For the settings form.
 	public function admin_options() {
-        ob_start();
-        require_once dirname(NUVEI_PLUGIN_FILE) . '/templates/admin/settings.php';
-        echo ob_get_clean();
+		require_once dirname(NUVEI_PLUGIN_FILE) . '/templates/admin/settings.php';
 	}
 
 	/**
@@ -321,8 +319,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			
 			$order->add_order_note($msg);
 			$order->save();
-            
-            Nuvei_Logger::write('There is no response for the Order.');
+			
+			Nuvei_Logger::write('There is no response for the Order.');
 			
 			return array(
 				'result'    => 'success',
@@ -335,8 +333,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			
 			$order->add_order_note($msg);
 			$order->save();
-            
-            Nuvei_Logger::write('There is no Status for the Order.');
+			
+			Nuvei_Logger::write('There is no Status for the Order.');
 			
 			return array(
 				'result'    => 'success',
@@ -361,8 +359,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			$order->add_order_note($msg);
 			$order->save();
 			
-            Nuvei_Logger::write('There is no Transaction Status for the Order.');
-            
+			Nuvei_Logger::write('There is no Transaction Status for the Order.');
+			
 			return array(
 				'result'    => 'success',
 				'redirect'  => $return_error_url
@@ -375,7 +373,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			$order->add_order_note(__('Order Declined.', 'nuvei_checkout_woocommerce'));
 			$order->set_status('cancelled');
 			$order->save();
-            
+			
 			return array(
 				'result'    => 'success',
 				'redirect'  => $return_error_url
@@ -779,6 +777,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	}
 	
 	/**
+	 * Call the Nuvei Checkout SDK form here and pass all parameters.
+	 * 
 	 * @global type $woocommerce
 	 */
 	public function call_checkout() {
@@ -799,41 +799,41 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			exit;
 		}
 		# OpenOrder END
-        $cart           = $woocommerce->cart;
-        $cart_items     = $cart->get_cart();
-        $time           = gmdate('Ymdhis');
-        $ord_details    = WC()->session->get('nuvei_last_open_order_details');
-        
+		$cart        = $woocommerce->cart;
+		$cart_items  = $cart->get_cart();
+		$time        = gmdate('Ymdhis');
+		$ord_details = WC()->session->get('nuvei_last_open_order_details');
+		
 		Nuvei_Logger::write($ord_details);
-        $checkout_data  = array( // use it in the template
-            'sessionToken'          => $oo_data['sessionToken'],
-            'env'                   => 'yes' == $this->get_setting('test') ? 'test' : 'prod',
-            'merchantId'            => $this->get_setting('merchantId'),
-            'merchantSiteId'        => $this->get_setting('merchantSiteId'),
-            'country'               => $ord_details['billingAddress']['country'],
-            'currency'              => get_woocommerce_currency(),
-            'amount'                => (string) number_format((float) $cart->total, 2, '.', ''),
-            'renderTo'              => '#nuvei_checkout',
-//            'onResult'              => nuveiCheckoutCallback, // pass it in the JS, showNuveiCheckout()
-//            'userTokenId'           => $ord_details['billingAddress']['email'],
-            'useDCC'                =>  $this->get_setting('use_dcc', 'enable'),
-            'strict'                => false,
-            'savePM'                => (bool) $this->get_setting('use_upos'), // for UPO
-//            'subMethod'           => '',
-//            'pmWhitelist'           => [],
-            'pmBlacklist'           => explode(',', $this->get_setting('pm_black_list', [])),
-//            'blockCards'            => $this->get_setting('blocked_cards', []), set it later
-            'alwaysCollectCvv'      => true,
-            'fullName'              => $ord_details['billingAddress']['firstName'] . ' ' . $oo_data['billingAddress']['lastName'],
-            'email'                 => $ord_details['billingAddress']['email'],
-            'payButton'             => $this->get_setting('pay_button', 'amountButton'),
-            'showResponseMessage'   => false, // shows/hide the response popups
-            'locale'                => substr(get_locale(), 0, 2),
-            'autoOpenPM'            => (bool) $this->get_setting('auto_open_pm', 1),
-            'logLevel'              => $this->get_setting('log_level'),
-            'maskCvv'               => true,
-            'i18n'                  => json_decode($this->get_setting('translation', ''), true),
-        );
+		$checkout_data = array( // use it in the template
+			'sessionToken'          => $oo_data['sessionToken'],
+			'env'                   => 'yes' == $this->get_setting('test') ? 'test' : 'prod',
+			'merchantId'            => $this->get_setting('merchantId'),
+			'merchantSiteId'        => $this->get_setting('merchantSiteId'),
+			'country'               => $ord_details['billingAddress']['country'],
+			'currency'              => get_woocommerce_currency(),
+			'amount'                => (string) number_format((float) $cart->total, 2, '.', ''),
+			'renderTo'              => '#nuvei_checkout',
+		//            'onResult'              => nuveiCheckoutCallback, // pass it in the JS, showNuveiCheckout()
+		//            'userTokenId'           => $ord_details['billingAddress']['email'],
+			'useDCC'                =>  $this->get_setting('use_dcc', 'enable'),
+			'strict'                => false,
+			'savePM'                => (bool) $this->get_setting('use_upos'), // for UPO
+		//            'subMethod'           => '',
+		//            'pmWhitelist'           => [],
+			'pmBlacklist'           => explode(',', $this->get_setting('pm_black_list', array())),
+		//            'blockCards'            => $this->get_setting('blocked_cards', []), set it later
+			'alwaysCollectCvv'      => true,
+			'fullName'              => $ord_details['billingAddress']['firstName'] . ' ' . $oo_data['billingAddress']['lastName'],
+			'email'                 => $ord_details['billingAddress']['email'],
+			'payButton'             => $this->get_setting('pay_button', 'amountButton'),
+			'showResponseMessage'   => false, // shows/hide the response popups
+			'locale'                => substr(get_locale(), 0, 2),
+			'autoOpenPM'            => (bool) $this->get_setting('auto_open_pm', 1),
+			'logLevel'              => $this->get_setting('log_level'),
+			'maskCvv'               => true,
+			'i18n'                  => json_decode($this->get_setting('translation', ''), true),
+		);
 		
 		// check for product with a plan
 		foreach ($cart_items as $values) {
@@ -842,44 +842,44 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			
 			// if there is a plan, remove all APMs
 			if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
-				$checkout_data['pmWhitelist'][] = ['cc_card'];
-                break;
+				$checkout_data['pmWhitelist'][] = array('cc_card');
+				break;
 			}
 		}
 		// check for product with a plan END
-        
-        # blocked_cards
-        $blocked_cards      = [];
-        $blocked_cards_str  = $this->get_setting('blocked_cards', '');
-        // clean the string from brakets and quotes
-        $blocked_cards_str  = str_replace('],[', ';', $blocked_cards_str);
-        $blocked_cards_str  = str_replace('[', '', $blocked_cards_str);
-        $blocked_cards_str  = str_replace(']', '', $blocked_cards_str);
-        $blocked_cards_str  = str_replace('"', '', $blocked_cards_str);
-        $blocked_cards_str  = str_replace("'", '', $blocked_cards_str);
-        
-        if(empty($blocked_cards_str)) {
-            $checkout_data['blockCards'] = [];
-        } else {
-            $blockCards_sets = explode(';', $blocked_cards_str);
+		
+		# blocked_cards
+		$blocked_cards     = array();
+		$blocked_cards_str = $this->get_setting('blocked_cards', '');
+		// clean the string from brakets and quotes
+		$blocked_cards_str = str_replace('],[', ';', $blocked_cards_str);
+		$blocked_cards_str = str_replace('[', '', $blocked_cards_str);
+		$blocked_cards_str = str_replace(']', '', $blocked_cards_str);
+		$blocked_cards_str = str_replace('"', '', $blocked_cards_str);
+		$blocked_cards_str = str_replace("'", '', $blocked_cards_str);
+		
+		if (empty($blocked_cards_str)) {
+			$checkout_data['blockCards'] = array();
+		} else {
+			$blockCards_sets = explode(';', $blocked_cards_str);
 
-            if(count($blockCards_sets) == 1) {
-                $blocked_cards = explode(',', current($blockCards_sets));
-            } else {
-                foreach($blockCards_sets as $elements) {
-                    $blocked_cards[] = explode(',', $elements);
-                }
-            }
+			if (count($blockCards_sets) == 1) {
+				$blocked_cards = explode(',', current($blockCards_sets));
+			} else {
+				foreach ($blockCards_sets as $elements) {
+					$blocked_cards[] = explode(',', $elements);
+				}
+			}
 
-            $checkout_data['blockCards'] = $blocked_cards;
-        }
-        # blocked_cards END
-        
-		$resp_data['nuveiPluginUrl']     = plugin_dir_url(NUVEI_PLUGIN_FILE);
-		$resp_data['nuveiSiteUrl']       = get_site_url();
+			$checkout_data['blockCards'] = $blocked_cards;
+		}
+		# blocked_cards END
+		
+		$resp_data['nuveiPluginUrl'] = plugin_dir_url(NUVEI_PLUGIN_FILE);
+		$resp_data['nuveiSiteUrl']   = get_site_url();
 			
-        Nuvei_Logger::write($checkout_data);
-        
+		Nuvei_Logger::write($checkout_data);
+		
 		wp_send_json(array(
 			'result'	=> 'failure', // this is just to stop WC send the form, and show APMs
 			'refresh'	=> false,
@@ -889,7 +889,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 		exit;
 	}
-    
+	
 	/**
 	 * Get a plugin setting by its key.
 	 * If key does not exists, return default value.
@@ -1028,16 +1028,16 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		return $url;
 	}
 	
-    /**
-     * Instead of override init_form_fields() split the settings in three
-     * groups and put them in different tabs.
-     */
-    private function init_form_base_fields() {
-        $this->form_fields = array(
+	/**
+	 * Instead of override init_form_fields() split the settings in three
+	 * groups and put them in different tabs.
+	 */
+	private function init_form_base_fields() {
+		$this->form_fields = array(
 			'enabled' => array(
 				'title' => __('Enable/Disable', 'nuvei_checkout_woocommerce'),
 				'type' => 'checkbox',
-				'label' => __('Enable ' . 'Nuvei Checkout.', 'nuvei_checkout_woocommerce'),
+				'label' => __('Enable Nuvei Checkout.', 'nuvei_checkout_woocommerce'),
 				'default' => 'no'
 			),
 		   'title' => array(
@@ -1100,8 +1100,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					'Sale' => 'Authorize and Capture',
 					'Auth' => 'Authorize',
 				),
-                'class'     => 'nuvei_checkout_setting',
-                'description'   => __('This option is for Nuvei Checkout SDK.', 'nuvei_checkout_woocommerce'),
+				'class'     => 'nuvei_checkout_setting',
+				'description'   => __('This option is for Nuvei Checkout SDK.', 'nuvei_checkout_woocommerce'),
 			),
 			'save_logs' => array(
 				'title' => __('Save logs', 'nuvei_checkout_woocommerce'),
@@ -1110,17 +1110,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				'default' => 'yes'
 			),
 		);
-    }
-    
-    /**
-     * Instead of override init_form_fields() split the settings in three
-     * groups and put them in different tabs.
-     * 
-     * @param bool $fields_append - use it when load the fields. In this case we want all fields in same array.
-     */
-    private function init_form_advanced_fields_cashier($fields_append = false) {
-        $fields = array(
-            'use_cashier' => array(
+	}
+	
+	/**
+	 * Instead of override init_form_fields() split the settings in three
+	 * groups and put them in different tabs.
+	 * 
+	 * @param bool $fields_append - use it when load the fields. In this case we want all fields in same array.
+	 */
+	private function init_form_advanced_fields_cashier( $fields_append = false) {
+		$fields = array(
+			'use_cashier' => array(
 				'title'         => __('Use Redirect Payment Page instead of Checkout SDK', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
 				'description'   => __('The Checkout SDK is recommended.', 'nuvei_checkout_woocommerce'),
@@ -1128,7 +1128,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					0 => __('No', 'nuvei_checkout_woocommerce'),
 					1 => __('Yes', 'nuvei_checkout_woocommerce'),
 				),
-                'default'       => 0,
+				'default'       => 0,
 			),
 			'combine_cashier_products' => array(
 				'title'         => __('Combine Cashier products into one', 'nuvei_checkout_woocommerce'),
@@ -1139,112 +1139,112 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					1 => __('Yes', 'nuvei_checkout_woocommerce'),
 					0 => __('No', 'nuvei_checkout_woocommerce'),
 				),
-                'class'         => 'nuvei_cashier_setting'
+				'class'         => 'nuvei_cashier_setting'
 			),
-        );
-        
-        if($fields_append) {
-            $this->form_fields = array_merge($this->form_fields, $fields);
-        } else {
-            $this->form_fields = $fields;
-        }
-    }
-    
-    /**
-     * Instead of override init_form_fields() split the settings in three
-     * groups and put them in different tabs.
-     * 
-     * @param bool $fields_append - use it when load the fields. In this case we want all fields in same array.
-     */
-    private function init_form_advanced_fields_checkout($fields_append = false) {
-        $fields = array(
-            'use_dcc' => [
-                'title'         => __('Use currency conversion', 'nuvei_checkout_woocommerce'),
+		);
+		
+		if ($fields_append) {
+			$this->form_fields = array_merge($this->form_fields, $fields);
+		} else {
+			$this->form_fields = $fields;
+		}
+	}
+	
+	/**
+	 * Instead of override init_form_fields() split the settings in three
+	 * groups and put them in different tabs.
+	 * 
+	 * @param bool $fields_append - use it when load the fields. In this case we want all fields in same array.
+	 */
+	private function init_form_advanced_fields_checkout( $fields_append = false) {
+		$fields = array(
+			'use_dcc' => array(
+				'title'         => __('Use currency conversion', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
-                'options'       => [
-                    'enable'        => __('Enabled', 'nuvei_checkout_woocommerce'),
-                    'force'         => __('Enabled and expanded', 'nuvei_checkout_woocommerce'),
-                    'false'         => __('Disabled', 'nuvei_checkout_woocommerce'),
-                ],
-                'description'   => sprintf(
-                    '<a href="%s" class="class">%s</a>',
-                    esc_html('https://docs.safecharge.com/documentation/guides/currency-conversion-features/dynamic-currency-conversion-dcc/'),
-                    __('Check the Documentation.', 'nuvei_checkout_woocommerce')
-                ),
+				'options'       => array(
+					'enable'        => __('Enabled', 'nuvei_checkout_woocommerce'),
+					'force'         => __('Enabled and expanded', 'nuvei_checkout_woocommerce'),
+					'false'         => __('Disabled', 'nuvei_checkout_woocommerce'),
+				),
+				'description'   => sprintf(
+					'<a href="%s" class="class">%s</a>',
+					esc_html('https://docs.safecharge.com/documentation/guides/currency-conversion-features/dynamic-currency-conversion-dcc/'),
+					__('Check the Documentation.', 'nuvei_checkout_woocommerce')
+				),
 				'default'       => 'enabled',
 				'class'         => 'nuvei_checkout_setting'
-            ],
-            'blocked_cards' => [
-                'title'         => __('Block Cards', 'nuvei_checkout_woocommerce'),
+			),
+			'blocked_cards' => array(
+				'title'         => __('Block Cards', 'nuvei_checkout_woocommerce'),
 				'type'          => 'text',
-                'description'   => sprintf(
-                    __('For examples', 'nuvei_checkout_woocommerce')
-                        . ' <a href="%s" class="class">%s</a>',
-                    esc_html('https://preprod-docs-safecharge.gw-4u.com/documentation/features/blocking-cards/'),
-                    __('check the Documentation.', 'nuvei_checkout_woocommerce')
-                ),
-                'class'         => 'nuvei_checkout_setting',
-            ],
-            'pm_black_list' => [
+				'description'   => sprintf(
+					__('For examples', 'nuvei_checkout_woocommerce')
+						. ' <a href="%s" class="class">%s</a>',
+					esc_html('https://preprod-docs-safecharge.gw-4u.com/documentation/features/blocking-cards/'),
+					__('check the Documentation.', 'nuvei_checkout_woocommerce')
+				),
+				'class'         => 'nuvei_checkout_setting',
+			),
+			'pm_black_list' => array(
 				'type' => 'nuvei_multiselect',
-            ],
-            'use_upos' => array(
+			),
+			'use_upos' => array(
 				'title'         => __('Allow client to use UPOs', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
 				'options'       => array(
 					0 => 'No',
 					1 => 'Yes',
 				),
-                'default'       => 0,
-                'class'         => 'nuvei_checkout_setting',
+				'default'       => 0,
+				'class'         => 'nuvei_checkout_setting',
 			),
-            'pay_button' => [
-                'title'         => __('Choose the Text on the Pay button', 'nuvei_checkout_woocommerce'),
+			'pay_button' => array(
+				'title'         => __('Choose the Text on the Pay button', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
-                'options'       => [
-                    'amountButton'  => __('Shows the amount', 'nuvei_checkout_woocommerce'),
-                    'textButton'    => __('Shows the payment method', 'nuvei_checkout_woocommerce'),
-                ],
-                'default'       => 'amountButton',
-                'class'         => 'nuvei_checkout_setting'
-            ],
-            'auto_open_pm' => [
-                'title'         => __('Auto expand PMs', 'nuvei_checkout_woocommerce'),
+				'options'       => array(
+					'amountButton'  => __('Shows the amount', 'nuvei_checkout_woocommerce'),
+					'textButton'    => __('Shows the payment method', 'nuvei_checkout_woocommerce'),
+				),
+				'default'       => 'amountButton',
+				'class'         => 'nuvei_checkout_setting'
+			),
+			'auto_open_pm' => array(
+				'title'         => __('Auto expand PMs', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
-                'options'       => [
-                    1   => __('Yes', 'nuvei_checkout_woocommerce'),
-                    0   => __('No', 'nuvei_checkout_woocommerce'),
-                ],
-                'default'       => 1,
-                'class'         => 'nuvei_checkout_setting'
-            ],
-            'log_level' => [
-                'title'         => __('Checkout Log level', 'nuvei_checkout_woocommerce'),
+				'options'       => array(
+					1   => __('Yes', 'nuvei_checkout_woocommerce'),
+					0   => __('No', 'nuvei_checkout_woocommerce'),
+				),
+				'default'       => 1,
+				'class'         => 'nuvei_checkout_setting'
+			),
+			'log_level' => array(
+				'title'         => __('Checkout Log level', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
-                'options'       => [
-                    0 => 0,
-                    1 => 1,
-                    2 => 2,
-                    3 => 3,
-                    4 => 4,
-                    5 => 5,
-                    6 => 6,
-                ],
-                'default'       => 0,
-                'description'   => '0 ' . __('for "No logging".', 'nuvei_checkout_woocommerce'),
-                'class'         => 'nuvei_checkout_setting'
-            ],
-            'translation' => [
-                'title'         => __('Translations', 'nuvei_checkout_woocommerce'),
-                'description'   => sprintf(
-                    __('This filed is the only way to translate Checkout SDK strings. Put the translations for all desired languages as shown in the placeholder. For examples', 'nuvei_checkout_woocommerce')
-                        . ' <a href="%s" class="class">%s</a>',
-                    esc_html('https://docs.safecharge.com/documentation/accept-payment/checkout-sdk/advanced-styling/#i18n-styling'),
-                    __('check the Documentation.', 'nuvei_checkout_woocommerce')
-                ),
-                'type'          => 'textarea',
-                'class'         => 'nuvei_checkout_setting',
-                'placeholder'   => '{
+				'options'       => array(
+					0 => 0,
+					1 => 1,
+					2 => 2,
+					3 => 3,
+					4 => 4,
+					5 => 5,
+					6 => 6,
+				),
+				'default'       => 0,
+				'description'   => '0 ' . __('for "No logging".', 'nuvei_checkout_woocommerce'),
+				'class'         => 'nuvei_checkout_setting'
+			),
+			'translation' => array(
+				'title'         => __('Translations', 'nuvei_checkout_woocommerce'),
+				'description'   => sprintf(
+					__('This filed is the only way to translate Checkout SDK strings. Put the translations for all desired languages as shown in the placeholder. For examples', 'nuvei_checkout_woocommerce')
+						. ' <a href="%s" class="class">%s</a>',
+					esc_html('https://docs.safecharge.com/documentation/accept-payment/checkout-sdk/advanced-styling/#i18n-styling'),
+					__('check the Documentation.', 'nuvei_checkout_woocommerce')
+				),
+				'type'          => 'textarea',
+				'class'         => 'nuvei_checkout_setting',
+				'placeholder'   => '{
     "de": { 
         "doNotHonor": "you dont have enough money",
         "DECLINE": "declined"
@@ -1254,47 +1254,47 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
         "DECLINE": "declined"
     }
 }',
-            ],
-        );
-         
-        if($fields_append) {
-            $this->form_fields = array_merge($this->form_fields, $fields);
-        } else {
-            $this->form_fields = $fields;
-        }
-    }
-    
-    /**
-     * Instead of override init_form_fields() split the settings in three
-     * groups and put them in different tabs.
-     * 
-     * @param bool $fields_append - use it when load the fields. In this case we want all fields in same array.
-     */
-    private function init_form_tools_fields($fields_append = false) {
-        $fields = array(
-            'get_plans_btn' => array(
+			),
+		);
+		  
+		if ($fields_append) {
+			$this->form_fields = array_merge($this->form_fields, $fields);
+		} else {
+			$this->form_fields = $fields;
+		}
+	}
+	
+	/**
+	 * Instead of override init_form_fields() split the settings in three
+	 * groups and put them in different tabs.
+	 * 
+	 * @param bool $fields_append - use it when load the fields. In this case we want all fields in same array.
+	 */
+	private function init_form_tools_fields( $fields_append = false) {
+		$fields = array(
+			'get_plans_btn' => array(
 				'title' => __('Sync Payment Plans', 'nuvei_checkout_woocommerce'),
 				'type'  => 'payment_plans_btn',
 			),
-            'notify_url' => array(
+			'notify_url' => array(
 				'title'         => __('Notify URL', 'nuvei_checkout_woocommerce'),
 				'type'          => 'text',
 				'default'       => '',
 				'description'   => Nuvei_String::get_notify_url($this->settings),
 				'type'          => 'hidden'
 			),
-            'today_log' => array(
+			'today_log' => array(
 				'title'         => __('View today\'s log', 'nuvei_checkout_woocommerce'),
 				'title_btn'     => __('Read log', 'nuvei_checkout_woocommerce'),
 				'type'          => 'todays_log_btn',
 			),
-        );
-        
-        if($fields_append) {
-            $this->form_fields = array_merge($this->form_fields, $fields);
-        } else {
-            $this->form_fields = $fields;
-        }
-    }
-    
+		);
+		
+		if ($fields_append) {
+			$this->form_fields = array_merge($this->form_fields, $fields);
+		} else {
+			$this->form_fields = $fields;
+		}
+	}
+	
 }

@@ -316,7 +316,10 @@ jQuery(function() {
 		return;
 	}
 
-	document.getElementById('nuvei_block_pms_multiselect').selectedIndex  = 0;
+	if(jQuery('#nuvei_block_pms_multiselect').length > 0) {
+		document.getElementById('nuvei_block_pms_multiselect').selectedIndex  = 0;
+	}
+	
 	jQuery('#woocommerce_nuvei_blocked_pms').val('');
 	
 	switchNuveiTabs();

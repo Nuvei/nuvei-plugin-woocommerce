@@ -16,15 +16,15 @@
 					type="button" 
 					id="<?php echo esc_attr($field); ?>" 
 					style="<?php echo esc_attr($data['css']); ?>" 
-                    onclick="nuveiSyncPaymentPlans()" 
+					onclick="nuveiSyncPaymentPlans()" 
 					<?php echo esc_attr($this->get_custom_attribute_html($data)); ?>
 			>
 				<?php echo esc_html($data['title']); ?>
 			</button>
 
-            <span class="dashicons dashicons-yes-alt" style="display: none;"></span>
-            
-            <p class="description"><?php echo wp_kses_post($data['description']); ?></p>
+			<span class="dashicons dashicons-yes-alt" style="display: none;"></span>
+			
+			<p class="description"><?php echo wp_kses_post($data['description']); ?></p>
 		</fieldset>
 
 		<div class="blockUI blockOverlay custom_loader" style="height: 100%; position: absolute; width: 100%; top: 0px; display: none;"></div>

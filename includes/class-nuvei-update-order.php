@@ -24,15 +24,15 @@ class Nuvei_Update_Order extends Nuvei_Request {
 			$nuvei_last_open_order_details = WC()->session->get('nuvei_last_open_order_details');
 		}
 		
-//		Nuvei_Logger::write(
-//			isset($nuvei_last_open_order_details) ? $nuvei_last_open_order_details : '',
-//			'update_order() - session[nuvei_last_open_order_details]'
-//		);
+		//      Nuvei_Logger::write(
+		//          isset($nuvei_last_open_order_details) ? $nuvei_last_open_order_details : '',
+		//          'update_order() - session[nuvei_last_open_order_details]'
+		//      );
 		
 		if (empty($nuvei_last_open_order_details)
 			|| empty($nuvei_last_open_order_details['sessionToken'])
 			|| empty($nuvei_last_open_order_details['orderId'])
-//			|| empty($nuvei_last_open_order_details['clientRequestId'])
+		//          || empty($nuvei_last_open_order_details['clientRequestId'])
 		) {
 			Nuvei_Logger::write($nuvei_last_open_order_details, 'update_order() - Missing last Order session data.');
 			
@@ -93,19 +93,19 @@ class Nuvei_Update_Order extends Nuvei_Request {
 		
 		# Success
 		if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
-			$nuvei_last_open_order_details['amount']					= $cart_amount;
-//			$nuvei_last_open_order_details['merchantDetails']			= $resp['request_base_params']['merchantDetails'];
+			$nuvei_last_open_order_details['amount'] = $cart_amount;
+			//          $nuvei_last_open_order_details['merchantDetails']           = $resp['request_base_params']['merchantDetails'];
 			$nuvei_last_open_order_details['billingAddress']['country']	= $params['billingAddress']['country'];
 			
 			// put the new data in the session
 			$nuvei_last_open_order_details = array(
 				'amount'			=> $params['amount'],
-//				'merchantDetails'	=> $resp['request_base_params']['merchantDetails'],
+			//              'merchantDetails'   => $resp['request_base_params']['merchantDetails'],
 				'sessionToken'		=> $resp['sessionToken'],
-//				'clientRequestId'	=> $resp['request_base_params']['clientRequestId'],
+			//              'clientRequestId'   => $resp['request_base_params']['clientRequestId'],
 				'orderId'			=> $resp['orderId'],
 				'billingAddress'	=> $params['billingAddress'],
-//				'cart_string'       => json_encode(WC()->session->cart), // stringify the Cart
+			//              'cart_string'       => json_encode(WC()->session->cart), // stringify the Cart
 			);
 
 			WC()->session->set('nuvei_last_open_order_details', $nuvei_last_open_order_details);

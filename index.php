@@ -135,8 +135,8 @@ function nuvei_init() {
 	add_action('woocommerce_after_checkout_validation', function( $data, $errors) {
 		global $wc_nuvei;
 		
-//        Nuvei_Logger::write($errors->errors, 'woocommerce_after_checkout_validation errors');
-//        Nuvei_Logger::write($_POST, 'woocommerce_after_checkout_validation post params');
+		//        Nuvei_Logger::write($errors->errors, 'woocommerce_after_checkout_validation errors');
+		//        Nuvei_Logger::write($_POST, 'woocommerce_after_checkout_validation post params');
 		
 		if (empty($errors->errors) 
 			&& NUVEI_GATEWAY_NAME == $data['payment_method'] 
@@ -174,8 +174,8 @@ function nuvei_init() {
 	// change Thank-you page title and text
 	if (!is_admin()) {
 		if ('error' === strtolower(Nuvei_Http::get_request_status())
-            || 'fail' === strtolower(Nuvei_Http::get_param('ppp_status'))
-        ) {
+			|| 'fail' === strtolower(Nuvei_Http::get_param('ppp_status'))
+		) {
 			add_filter('the_title', function ( $title, $id) {
 				if (
 					function_exists('is_order_received_page')
@@ -273,13 +273,13 @@ function nuvei_ajax_action() {
 	}
 	
 	// when we use the REST - Open order and get APMs
-//	if (in_array(Nuvei_Http::get_param('sc_request'), array('OpenOrder', 'updateOrder'))) {
-//		$oo_obj = new Nuvei_Open_Order($wc_nuvei->settings, true);
-//		$oo_obj->process();
-//	}
-//	if (in_array(Nuvei_Http::get_param('sc_request'), array('OpenOrder'))) {
-//        $wc_nuvei->call_checkout(true);
-//	}
+	//  if (in_array(Nuvei_Http::get_param('sc_request'), array('OpenOrder', 'updateOrder'))) {
+	//      $oo_obj = new Nuvei_Open_Order($wc_nuvei->settings, true);
+	//      $oo_obj->process();
+	//  }
+	//  if (in_array(Nuvei_Http::get_param('sc_request'), array('OpenOrder'))) {
+	//        $wc_nuvei->call_checkout(true);
+	//  }
 	
 	// when Reorder
 	if (Nuvei_Http::get_param('sc_request') == 'scReorder') {
@@ -346,7 +346,7 @@ function nuvei_load_styles_scripts( $styles) {
 	wp_register_script(
 		'nuvei_checkout_sdk',
 		'https://cdn.safecharge.com/safecharge_resources/v1/checkout/checkout.js',
-        array('jquery'),
+		array('jquery'),
 		'1'
 	);
 	wp_enqueue_script('nuvei_checkout_sdk');
@@ -456,15 +456,15 @@ function nuvei_load_admin_styles_scripts( $hook) {
 		array('jquery'),
 		'1'
 	);
-    
-    // get the list of the plans
-    $nuvei_plans_path   = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
-    $plans_list         = [];
+	
+	// get the list of the plans
+	$nuvei_plans_path = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
+	$plans_list       = array();
 
-    if (is_readable($nuvei_plans_path)) { 
-        $plans_list             = stripslashes(file_get_contents($nuvei_plans_path));
-    }
-    // get the list of the plans end
+	if (is_readable($nuvei_plans_path)) { 
+		$plans_list = stripslashes(file_get_contents($nuvei_plans_path));
+	}
+	// get the list of the plans end
 
 	// put translations here into the array
 	wp_localize_script(
@@ -529,7 +529,7 @@ function nuvei_add_buttons( $order) {
 	if (empty($order->get_payment_method())
 		|| !in_array($order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))
 	) {
-        echo '<script type="text/javascript">var notNuveiOrder = true;</script>';
+		echo '<script type="text/javascript">var notNuveiOrder = true;</script>';
 		return false;
 	}
 	
@@ -890,10 +890,10 @@ function nuvei_get_file_form_git( $file) {
 
 	preg_match('/(\s?\*\s?Version\s?:\s?)(.*\s?)(\n)/', $file_text, $matches);
 
-    if(!isset($matches[2])) {
-        return [];
-    }
-    
+	if (!isset($matches[2])) {
+		return array();
+	}
+	
 	$array = array(
 		'date'  => gmdate('Y-m-d H:i:s', time()),
 		'git_v' => (int) str_replace('.', '', trim($matches[2])),

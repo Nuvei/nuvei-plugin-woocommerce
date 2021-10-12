@@ -14,7 +14,7 @@ class Nuvei_Get_Apms extends Nuvei_Request {
 	 * @return array|false
 	 */
 	public function process() {
-		$args                          = current(func_get_args());
+		$args = current(func_get_args());
 		
 		$apms_params = array(
 			'sessionToken'      => $args['sessionToken'],

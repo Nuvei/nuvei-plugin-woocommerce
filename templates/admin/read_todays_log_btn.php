@@ -13,17 +13,17 @@
 			</legend>
 
 			<button class="<?php echo esc_attr($data['class']); ?>" 
-                    id="woocommerce_nuvei_today_log" 
+					id="woocommerce_nuvei_today_log" 
 					type="button" 
 					style="<?php echo esc_attr($data['css']); ?>" 
-                    onclick="nuveiGetTodayLog()" 
+					onclick="nuveiGetTodayLog()" 
 			>
-                <?php echo esc_html($data['title_btn']); ?>
+				<?php echo esc_html($data['title_btn']); ?>
 			</button>
-            
-            <textarea rows="10" cols="20" class="input-text wide-input nuvei_checkout_setting" type="textarea" id="woocommerce_nuvei_today_log_area" style="margin-top: 10px; display: none;"></textarea>
-            
-            <p class="description"><?php echo wp_kses_post($data['description']); ?></p>
+			
+			<textarea rows="10" cols="20" class="input-text wide-input nuvei_checkout_setting" type="textarea" id="woocommerce_nuvei_today_log_area" style="margin-top: 10px; display: none;"></textarea>
+			
+			<p class="description"><?php echo wp_kses_post($data['description']); ?></p>
 		</fieldset>
 
 		<div class="blockUI blockOverlay custom_loader" style="height: 100%; position: absolute; width: 100%; top: 0px; display: none;"></div>
