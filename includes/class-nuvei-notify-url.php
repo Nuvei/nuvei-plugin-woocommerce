@@ -513,10 +513,12 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		);
 		
 		$gw_data = '<br/>' 
-			. __('<b>Status:</b> ', 'nuvei_checkout_woocommerce') . $req_status . '<br/>' 
-			. __('<b>PPP Transaction ID:</b> ', 'nuvei_checkout_woocommerce') . Nuvei_Http::get_param('PPP_TransactionID', 'int') . '<br/>' 
-			. __('<b>Transaction Type:</b> ', 'nuvei_checkout_woocommerce') . $transactionType . '<br/>' 
-			. __('<b>Transaction ID:</b> ', 'nuvei_checkout_woocommerce') . Nuvei_Http::get_param('TransactionID', 'int') . ',<br/>' 
+			. __('<b>Status:</b> ', 'nuvei_checkout_woocommerce') . $req_status . ',<br/>' 
+            . __('<b>PPP Transaction ID:</b> ', 'nuvei_checkout_woocommerce') 
+                . Nuvei_Http::get_param('PPP_TransactionID', 'int') . ',<br/>' 
+			. __('<b>Transaction Type:</b> ', 'nuvei_checkout_woocommerce') . $transactionType . ',<br/>' 
+			. __('<b>Transaction ID:</b> ', 'nuvei_checkout_woocommerce') 
+                . Nuvei_Http::get_param('TransactionID', 'int') . ',<br/>' 
 			. __('<b>Payment Method:</b> ', 'nuvei_checkout_woocommerce') . Nuvei_Http::get_param('payment_method');
 		
 		$message = '';
