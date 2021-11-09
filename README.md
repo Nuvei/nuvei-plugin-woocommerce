@@ -28,17 +28,17 @@ Please note, this gateway requires WooCommerce 3.0 and above.
 
 To do an automatic install of, log in to your WordPress dashboard, navigate to the Plugins menu and click Add New.
 
-Upload the provided archive and install it. As a final step you should activate the plugin. 
+Upload the provided archive and install it. As a final step you should activate the plugin.
 
 ## Manual installation
 1. Backup your site completely before proceeding.
 2. To install a WordPress Plugin manually:
 3. Download your WordPress Plugin to your desktop.
 4. If you have installed Nuvei Woocommerce Plugin - deactivate it!
-5. If downloaded as a zip archive, install it from WordPress > Plugins > Add New. Go to point 8.
+5. If downloaded as a zip archive, extract the plugin and rename the folder as "nuvei_checkout_woocommerce", then add it to a ZIP archive. Install the archive from WordPress > Plugins > Add New. Go to point 8.
 6. If the plugin is extracted or prefer this way - continue.
 7. Read through the "readme" file thoroughly to ensure you follow the installation instructions.
-8. With your FTP program, upload the Plugin folder (nuvei_checkout_woocommerce) to the wp-content/plugins folder in your WordPress directory online.
+8. With your FTP program, upload the Plugin folder (recommended name is - nuvei_checkout_woocommerce) to the wp-content/plugins folder in your WordPress directory online.
 9. Go to Plugins screen and find the newly uploaded Plugin in the list.
 10. Click Activate to activate it.
 
