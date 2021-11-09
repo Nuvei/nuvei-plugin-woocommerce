@@ -3,6 +3,9 @@
 ---
 
 ## Requirements
+PHP: 
+  - Enabled cURL support
+
 Wordpress: 
   - minimum v4.7
   - tested up to v5.8.1
