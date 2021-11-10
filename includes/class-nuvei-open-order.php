@@ -112,7 +112,8 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		if ($this->is_ajax) {
 			wp_send_json(array(
 				'status'        => 1,
-				'sessionToken'    => $resp['sessionToken']
+				'sessionToken'  => $resp['sessionToken'],
+                'amount'        => $oo_params['amount']
 			));
 			exit;
 		}

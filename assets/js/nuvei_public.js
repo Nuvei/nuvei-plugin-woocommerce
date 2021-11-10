@@ -1,4 +1,8 @@
-const onReady = function (result) { console.log('onReady', result) };
+const onReady = function (result) { 
+	console.log('onReady', result) 
+};
+
+var nuveiCheckoutSdkParams = {};
 
 /**
  * 
@@ -32,11 +36,15 @@ function afterSdkResponse(resp) {
 	return;
 }
  
-function showNuveiCheckout(params) {
-	console.log('showNuveiCheckout()', params);
+function showNuveiCheckout(_params) {
+	console.log('showNuveiCheckout()', _params);
 	
-	params.onResult = afterSdkResponse;
-	checkout(params);
+	nuveiCheckoutSdkParams = _params;
+	
+	nuveiCheckoutSdkParams.prePayment	= prePayment;
+	nuveiCheckoutSdkParams.onResult		= afterSdkResponse;
+	
+	checkout(nuveiCheckoutSdkParams);
 	
 	if(jQuery('.wpmc-step-payment').length > 0) { // multi-step checkout
 		console.log('multi-step checkout');
@@ -71,6 +79,49 @@ function nuveiShowErrorMsg(text) {
 	);
 	
 	jQuery(window).scrollTop(0);
+}
+
+function prePayment(paymentDetails) {
+	console.log('prePayment details', paymentDetails);
+	
+	return new Promise((resolve, reject) => {
+//		if (+paymentDetails.amount < 5000 ) {
+//			resolve();
+//		} else {
+//			reject('the amount is too small');
+//		}
+	
+		jQuery.ajax({
+			type: "POST",
+			url: scTrans.ajaxurl,
+			data: {
+				action			: 'sc-ajax-action',
+				security		: scTrans.security,
+				updateOrder		: 1
+			},
+			dataType: 'json'
+		})
+			.fail(function(){
+				reject(scTrans.unexpectedError);
+			})
+			.done(function(resp) {
+				console.log(resp);
+
+				if(resp.hasOwnProperty('sessionToken') && '' != resp.sessionToken) {
+					if(resp.sessionToken != nuveiCheckoutSdkParams.sessionToken) {
+						nuveiCheckoutSdkParams.sessionToken	= resp.sessionToken;
+						nuveiCheckoutSdkParams.amount		= resp.amount;
+
+						jQuery('#lst').val(resp.sessionToken);
+					}
+				}
+				else {
+					reject(scTrans.unexpectedError);
+				}
+
+				resolve();
+			});
+	}); // => reject payment
 }
 
 jQuery(function() {

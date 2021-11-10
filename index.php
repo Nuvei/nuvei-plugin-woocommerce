@@ -59,7 +59,9 @@ function nuvei_admin_init() {
 	}
 	
 	// read file if need to
-	if (0 == $date_check || 0 == $git_version) {
+	if (is_readable($file) 
+        && (0 == $date_check || 0 == $git_version)
+    ) {
 		$version_file_data = json_decode(file_get_contents($file), true);
 		
 		if (!empty($version_file_data['date'])) {
@@ -272,14 +274,11 @@ function nuvei_ajax_action() {
 		$nuvei_refund->create_refund_request(Nuvei_Http::get_param('postId', 'int'), Nuvei_Http::get_param('refAmount', 'float'));
 	}
 	
-	// when we use the REST - Open order and get APMs
-	//  if (in_array(Nuvei_Http::get_param('sc_request'), array('OpenOrder', 'updateOrder'))) {
-	//      $oo_obj = new Nuvei_Open_Order($wc_nuvei->settings, true);
-	//      $oo_obj->process();
-	//  }
-	//  if (in_array(Nuvei_Http::get_param('sc_request'), array('OpenOrder'))) {
-	//        $wc_nuvei->call_checkout(true);
-	//  }
+    // Update Order before submit
+    if (Nuvei_Http::get_param('updateOrder', 'int') == 1) {
+        $oo_obj = new Nuvei_Open_Order($wc_nuvei->settings, true);
+        $oo_obj->process();
+    }
 	
 	// when Reorder
 	if (Nuvei_Http::get_param('sc_request') == 'scReorder') {

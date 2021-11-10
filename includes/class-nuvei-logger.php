@@ -74,7 +74,7 @@ class Nuvei_Logger {
 		$string .= $d . "\r\n\r\n";
 		
 		file_put_contents(
-			$logs_path . gmdate('Y-m-d', time()) . '.txt',
+			$logs_path . gmdate('Y-m-d', time()) . '.log',
 			gmdate('H:i:s', time()) . ': ' . $string,
 			FILE_APPEND
 		);

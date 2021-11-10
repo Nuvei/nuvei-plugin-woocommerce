@@ -878,7 +878,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$resp_data['nuveiPluginUrl'] = plugin_dir_url(NUVEI_PLUGIN_FILE);
 		$resp_data['nuveiSiteUrl']   = get_site_url();
 			
-		Nuvei_Logger::write($checkout_data);
+		Nuvei_Logger::write($checkout_data, '$checkout_data');
 		
 		wp_send_json(array(
 			'result'	=> 'failure', // this is just to stop WC send the form, and show APMs
