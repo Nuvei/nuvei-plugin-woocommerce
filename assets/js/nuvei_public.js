@@ -82,15 +82,9 @@ function nuveiShowErrorMsg(text) {
 }
 
 function prePayment(paymentDetails) {
-	console.log('prePayment details', paymentDetails);
-	
 	return new Promise((resolve, reject) => {
-//		if (+paymentDetails.amount < 5000 ) {
-//			resolve();
-//		} else {
-//			reject('the amount is too small');
-//		}
-	
+		var errorMsg = scTrans.paymentError + ' ' + scTrans.TryAgainLater;
+		
 		jQuery.ajax({
 			type: "POST",
 			url: scTrans.ajaxurl,
@@ -102,7 +96,7 @@ function prePayment(paymentDetails) {
 			dataType: 'json'
 		})
 			.fail(function(){
-				reject(scTrans.unexpectedError);
+				reject(errorMsg);
 			})
 			.done(function(resp) {
 				console.log(resp);
@@ -116,12 +110,12 @@ function prePayment(paymentDetails) {
 					}
 				}
 				else {
-					reject(scTrans.unexpectedError);
+					reject(errorMsg);
 				}
 
 				resolve();
 			});
-	}); // => reject payment
+	});
 }
 
 jQuery(function() {
