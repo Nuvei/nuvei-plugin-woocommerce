@@ -1041,10 +1041,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				'default' => 'no'
 			),
 		   'title' => array(
-				'title' => __('Default title', 'nuvei_checkout_woocommerce'),
-				'type'=> 'text',
-				'description' => __('This is the payment method which the user sees during checkout.', 'nuvei_checkout_woocommerce'),
-				'default' => __('Secure Payments with Nuvei', 'nuvei_checkout_woocommerce')
+				'title'         => __('Default title', 'nuvei_checkout_woocommerce'),
+				'type'          => 'text',
+				'description'   => __('This is the payment method which the user sees during checkout.', 'nuvei_checkout_woocommerce'),
+				'default'       => __('Secure Payments with Nuvei', 'nuvei_checkout_woocommerce')
 			),
 			'description' => array(
 				'title' => __('Description', 'nuvei_checkout_woocommerce'),
@@ -1167,7 +1167,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					'false'         => __('Disabled', 'nuvei_checkout_woocommerce'),
 				),
 				'description'   => sprintf(
-					'<a href="%s" class="class">%s</a>',
+					'<a href="%s" class="class" target="_blank">%s</a>',
 					esc_html('https://docs.safecharge.com/documentation/guides/currency-conversion-features/dynamic-currency-conversion-dcc/'),
 					__('Check the Documentation.', 'nuvei_checkout_woocommerce')
 				),
@@ -1179,8 +1179,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				'type'          => 'text',
 				'description'   => sprintf(
 					__('For examples', 'nuvei_checkout_woocommerce')
-						. ' <a href="%s" class="class">%s</a>',
-					esc_html('https://preprod-docs-safecharge.gw-4u.com/documentation/features/blocking-cards/'),
+						. ' <a href="%s" class="class" target="_blank">%s</a>',
+					esc_html('https://docs.safecharge.com/documentation/features/blocking-cards/'),
 					__('check the Documentation.', 'nuvei_checkout_woocommerce')
 				),
 				'class'         => 'nuvei_checkout_setting',
@@ -1279,9 +1279,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			'notify_url' => array(
 				'title'         => __('Notify URL', 'nuvei_checkout_woocommerce'),
 				'type'          => 'text',
-				'default'       => '',
-				'description'   => Nuvei_String::get_notify_url($this->settings),
-				'type'          => 'hidden'
+				'description'   => '<b>' . __('Default URL: ', 'nuvei_checkout_woocommerce') . '</b>'
+                    . Nuvei_String::get_notify_url($this->settings, '', true) . '<br/>'
+                    . __('To use the Default URL leave the field empty.', 'nuvei_checkout_woocommerce'),
 			),
 			'today_log' => array(
 				'title'         => __('View today\'s log', 'nuvei_checkout_woocommerce'),

@@ -402,6 +402,15 @@ abstract class Nuvei_Request {
 	 * @return mixed
 	 */
 	protected function call_rest_api( $method, $params) {
+        if(empty($this->plugin_settings['hash_type'])
+            || empty($this->plugin_settings['secret'])
+        ) {
+            return array(
+                'status'    => 'ERROR',
+                'message'   => 'Missing Plugin hash_type and secret params.'
+            );
+        }
+        
 		$concat = '';
 		$resp   = false;
 		$url    = $this->get_endpoint_base() . $method . '.do';
