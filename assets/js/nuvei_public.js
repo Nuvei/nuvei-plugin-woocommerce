@@ -39,7 +39,9 @@ function afterSdkResponse(resp) {
 function showNuveiCheckout(_params) {
 	console.log('showNuveiCheckout()', _params);
 	
-	nuveiCheckoutSdkParams = _params;
+	if(typeof _params != 'undefined') {
+		nuveiCheckoutSdkParams = _params;
+	}
 	
 	nuveiCheckoutSdkParams.prePayment	= prePayment;
 	nuveiCheckoutSdkParams.onResult		= afterSdkResponse;
@@ -102,18 +104,20 @@ function prePayment(paymentDetails) {
 				console.log(resp);
 
 				if(resp.hasOwnProperty('sessionToken') && '' != resp.sessionToken) {
-					if(resp.sessionToken != nuveiCheckoutSdkParams.sessionToken) {
-						nuveiCheckoutSdkParams.sessionToken	= resp.sessionToken;
-						nuveiCheckoutSdkParams.amount		= resp.amount;
-
-						jQuery('#lst').val(resp.sessionToken);
+					jQuery('#lst').val(resp.sessionToken);
+					
+					if(resp.sessionToken == nuveiCheckoutSdkParams.sessionToken) {
+						resolve();
 					}
+					
+					// reload the Checkout
+					nuveiCheckoutSdkParams.sessionToken	= resp.sessionToken;
+					nuveiCheckoutSdkParams.amount		= resp.amount;
+					
+					showNuveiCheckout();
 				}
-				else {
-					reject(errorMsg);
-				}
-
-				resolve();
+				
+				reject(errorMsg);
 			});
 	});
 }

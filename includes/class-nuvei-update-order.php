@@ -113,7 +113,7 @@ class Nuvei_Update_Order extends Nuvei_Request {
 			Nuvei_Logger::write($nuvei_last_open_order_details, 'Update Order Class - nuvei_last_open_order_details');
 			// put the new data in the session END
 			
-			return array_merge($resp, $params);
+			return array_merge($params, $resp);
 		}
 		
 		Nuvei_Logger::write('Nuvei_Update_Order - Order update was not successful.');
