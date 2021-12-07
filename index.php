@@ -406,6 +406,7 @@ function nuvei_load_styles_scripts( $styles) {
 			'showApmsNames'         => $wc_nuvei->show_apms_names(),
 			'isUserLogged'          => is_user_logged_in() ? 1 : 0,
 			'paymentGatewayName'    => NUVEI_GATEWAY_NAME,
+            'isPluginActive'        => $wc_nuvei->settings['enabled'],
 			
 			// translations
 			'paymentDeclined'	=> __('Your Payment was DECLINED. Please, try another payment option!', 'nuvei_checkout_woocommerce'),

@@ -1,6 +1,6 @@
-const onReady = function (result) { 
-	console.log('onReady', result) 
-};
+//const onReady = function (result) { 
+//	console.log('onReady', result) 
+//};
 
 var nuveiCheckoutSdkParams = {};
 
@@ -51,7 +51,7 @@ function showNuveiCheckout(_params) {
 	if(jQuery('.wpmc-step-payment').length > 0) { // multi-step checkout
 		console.log('multi-step checkout');
 		
-		jQuery("form.woocommerce-checkout .wpmc-step-payment *:not(form.woocommerce-checkout, #nuvei_checkout_container *, #sc_checkout_messages), .woocommerce-form-coupon-toggle").hide();
+		jQuery("form.woocommerce-checkout .wpmc-step-payment *:not(form.woocommerce-checkout, #nuvei_checkout_container *), .woocommerce-form-coupon-toggle").hide();
 	}
 	else { // default checkout
 		console.log('default checkout');
@@ -123,6 +123,10 @@ function prePayment(paymentDetails) {
 }
 
 jQuery(function() {
+	if('no' == scTrans.isPluginActive) {
+		return;
+	}
+	
 	// place Checkout container out of the forms
 	if(jQuery('form.woocommerce-checkout').length == 1) {
 		if(jQuery('.woocommerce #nuvei_checkout_container').length == 0) {
@@ -131,9 +135,6 @@ jQuery(function() {
 					'<div id="nuvei_checkout_container" style="display: none;">'
 						+ '<div id="nuvei_checkout_errors"></div>'
 						+ '<div id="nuvei_checkout">Loading...</div>'
-						+ '<div class="link">'
-							+ '<a href="'+ window.location.hash +'">'+ scTrans.goBack +'</a>'
-						+ '</div>'
 					+ '</div>'
 				);
 		}
@@ -154,15 +155,21 @@ jQuery(function() {
 		}
 	});
 	
-	// when on multistep checkout -> APMs view, someone click on previous button
-	jQuery('body').on('click', '#wpmc-prev', function() {
-		if(jQuery('#sc_second_step_form').css('display') == 'block') {
-			jQuery("form.woocommerce-checkout .wpmc-step-payment *:not(.payment_box, form.woocommerce-checkout, #sc_second_step_form *, #sc_checkout_messages), .woocommerce-form-coupon-toggle").show('slow');
-			
-			jQuery("form.woocommerce-checkout #sc_second_step_form").hide();
-			
+	// when on multistep checkout -> Checkout SDK view, someone click on previous/next button
+	jQuery('body').on('click', '#wpmc-prev', function(e) {
+		if(jQuery('#nuvei_checkout_container').css('display') == 'block') {
+			jQuery("#nuvei_checkout_container").hide();
 			jQuery('input[name="payment_method"]').prop('checked', false);
 		}
 	});
+	
+	jQuery('body').on('click', '#wpmc-next', function(e) {
+		if(jQuery('.wpmc-tab-item.wpmc-payment').hasClass('current')
+			&& !jQuery('.wpmc-step-item.wpmc-step-payment #payment').is(':visible')
+		) {
+			jQuery("form.woocommerce-checkout .wpmc-step-payment *:not(.payment_box, form.woocommerce-checkout, #nuvei_checkout_container, script), .woocommerce-form-coupon-toggle").show();
+		}
+	});
+	// when on multistep checkout -> Checkout SDK view, someone click on previous/next button END
 });
 // document ready function END
