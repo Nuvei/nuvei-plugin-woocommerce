@@ -9,8 +9,8 @@ var nuveiCheckoutSdkParams = {};
  * @param {type} resp
  * @returns {undefined}
  */
-function afterSdkResponse(resp) {
-	console.log('afterSdkResponse', resp);
+function nuveiAfterSdkResponse(resp) {
+	console.log('nuveiAfterSdkResponse', resp);
 	
 	if (typeof resp.result == 'undefined') {
 		console.error('Error with Checkout SDK response: ' + resp);
@@ -43,8 +43,8 @@ function showNuveiCheckout(_params) {
 		nuveiCheckoutSdkParams = _params;
 	}
 	
-	nuveiCheckoutSdkParams.prePayment	= prePayment;
-	nuveiCheckoutSdkParams.onResult		= afterSdkResponse;
+	nuveiCheckoutSdkParams.prePayment	= nuveiPrePayment;
+	nuveiCheckoutSdkParams.onResult		= nuveiAfterSdkResponse;
 	
 	checkout(nuveiCheckoutSdkParams);
 	
@@ -83,7 +83,9 @@ function nuveiShowErrorMsg(text) {
 	jQuery(window).scrollTop(0);
 }
 
-function prePayment(paymentDetails) {
+function nuveiPrePayment(paymentDetails) {
+	console.log('nuveiPrePayment');
+	
 	return new Promise((resolve, reject) => {
 		var errorMsg = scTrans.paymentError + ' ' + scTrans.TryAgainLater;
 		
@@ -108,6 +110,7 @@ function prePayment(paymentDetails) {
 					
 					if(resp.sessionToken == nuveiCheckoutSdkParams.sessionToken) {
 						resolve();
+						return;
 					}
 					
 					// reload the Checkout
