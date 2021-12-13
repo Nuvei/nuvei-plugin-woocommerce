@@ -14,7 +14,11 @@
 
 			<select class="<?php echo esc_attr($data['class']); ?>" id="nuvei_block_pms_multiselect">
 				<?php foreach ($data['merchant_pms'] as $val => $name) : ?>
-					<option value="<?php echo esc_attr($val); ?>" <?php if (in_array($val, $data['nuvei_blocked_pms'])) : ?> style="display: none;"<?php endif; ?>><?php echo wp_kses_post($name); ?></option>
+					<option value="<?php echo esc_attr($val); ?>" 
+											  <?php 
+												if (in_array($val, $data['nuvei_blocked_pms'])) :
+													?>
+						 style="display: none;"<?php endif; ?>><?php echo wp_kses_post($name); ?></option>
 				<?php endforeach; ?>
 			</select>
 			<br/>

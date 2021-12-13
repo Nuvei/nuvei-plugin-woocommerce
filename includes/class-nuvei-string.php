@@ -10,17 +10,17 @@ class Nuvei_String {
 	/**
 	 * Generate base of the Notify URL.
 	 * 
-     * @param array $plugin_settings
-     * @param int $order_id
-     * @param bool $use_default Use default DMN URL or use the one from the settings
-     * 
+	 * @param array $plugin_settings
+	 * @param int $order_id
+	 * @param bool $use_default Use default DMN URL or use the one from the settings
+	 * 
 	 * @return string
 	 */
 	public static function get_notify_url( $plugin_settings, $order_id = '', $use_default = false) {
-        if(!$use_default && !empty($plugin_settings['notify_url'])) {
-            return $plugin_settings['notify_url'];
-        }
-        
+		if (!$use_default && !empty($plugin_settings['notify_url'])) {
+			return $plugin_settings['notify_url'];
+		}
+		
 		$url_part  = get_site_url();
 		$save_logs = isset($plugin_settings['save_logs']) ? $plugin_settings['save_logs'] : 'no';  
 		$test_mode = isset($plugin_settings['test']) ? $plugin_settings['test'] : 'yes';

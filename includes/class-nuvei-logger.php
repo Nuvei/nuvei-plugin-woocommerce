@@ -19,12 +19,12 @@ class Nuvei_Logger {
 		if (!empty($_GET['test_mode'])) {
 			$test_mode = filter_var($_GET['test_mode'], FILTER_SANITIZE_STRING);
 		}
-        
+		
 		// path is different fore each plugin
 		if (!is_dir($logs_path) || 'yes' != $save_logs) {
 			return;
 		}
-        
+		
 		$d		= $data;
 		$string	= '';
 

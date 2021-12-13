@@ -799,18 +799,18 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			exit;
 		}
 		# OpenOrder END
-		$cart           = $woocommerce->cart;
-		$cart_items     = $cart->get_cart();
-		$time           = gmdate('Ymdhis');
-		$ord_details    = WC()->session->get('nuvei_last_open_order_details');
-        $pm_black_list  = trim($this->get_setting('pm_black_list', ''));
-            
-        if(!empty($pm_black_list)) {
-            $pm_black_list = explode(',', $pm_black_list);
-        }
-            
+		$cart          = $woocommerce->cart;
+		$cart_items    = $cart->get_cart();
+		$time          = gmdate('Ymdhis');
+		$ord_details   = WC()->session->get('nuvei_last_open_order_details');
+		$pm_black_list = trim($this->get_setting('pm_black_list', ''));
+			
+		if (!empty($pm_black_list)) {
+			$pm_black_list = explode(',', $pm_black_list);
+		}
+			
 		Nuvei_Logger::write($ord_details);
-        
+		
 		$checkout_data = array( // use it in the template
 			'sessionToken'          => $oo_data['sessionToken'],
 			'env'                   => 'yes' == $this->get_setting('test') ? 'test' : 'prod',
@@ -826,7 +826,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			'strict'                => false,
 			'savePM'                => (bool) $this->get_setting('use_upos'), // for UPO
 		//            'subMethod'           => '',
-            'pmWhitelist'           => null,
+			'pmWhitelist'           => null,
 			'pmBlacklist'           => $pm_black_list,
 		//            'blockCards'            => $this->get_setting('blocked_cards', []), set it later
 			'alwaysCollectCvv'      => true,
@@ -849,14 +849,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			// if there is a plan, remove all APMs
 			if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
 				$checkout_data['pmWhitelist'][] = array('cc_card');
-				$checkout_data['pmBlacklist']   = [];
+				$checkout_data['pmBlacklist']   = array();
 				break;
 			}
 		}
 		// check for product with a plan END
 		
-        Nuvei_Logger::write($checkout_data, '$checkout_data');
-        
+		Nuvei_Logger::write($checkout_data, '$checkout_data');
+		
 		# blocked_cards
 		$blocked_cards     = array();
 		$blocked_cards_str = $this->get_setting('blocked_cards', '');
@@ -1289,8 +1289,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				'title'         => __('Notify URL', 'nuvei_checkout_woocommerce'),
 				'type'          => 'text',
 				'description'   => '<b>' . __('Default URL: ', 'nuvei_checkout_woocommerce') . '</b>'
-                    . Nuvei_String::get_notify_url($this->settings, '', true) . '<br/>'
-                    . __('To use the Default URL leave the field empty.', 'nuvei_checkout_woocommerce'),
+					. Nuvei_String::get_notify_url($this->settings, '', true) . '<br/>'
+					. __('To use the Default URL leave the field empty.', 'nuvei_checkout_woocommerce'),
 			),
 			'today_log' => array(
 				'title'         => __('View today\'s log', 'nuvei_checkout_woocommerce'),
