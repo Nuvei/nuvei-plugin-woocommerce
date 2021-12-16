@@ -12,7 +12,7 @@ Wordpress:
 
 WooCommerce: 
   - minimum v 3.0
-  - tested up to v5.9.0
+  - tested up to v6.0.0
 
 Stable tag: main
 

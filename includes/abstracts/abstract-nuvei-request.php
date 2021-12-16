@@ -618,14 +618,22 @@ abstract class Nuvei_Request {
 				continue;
 			}
 
-			Nuvei_Logger::write($item['variation_id'], 'item variation id');
-			Nuvei_Logger::write($item['variation'], 'item variation');
+			$taxonomy_name          = wc_attribute_taxonomy_name(Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME));
+            $nvei_plan_variation    = 'attribute_' . $taxonomy_name;
+
+			Nuvei_Logger::write(
+                [
+                    'item variation id' => $item['variation_id'],
+                    'item variation'    => $item['variation'],
+                    '$taxonomy_name'    => $taxonomy_name,
+                ],
+                'Variation details'
+            );
 			
-			$taxonomy_name = wc_attribute_taxonomy_name(Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME));
-			$term          = get_term_by('slug', current($item['variation']), $taxonomy_name);
+			$term = get_term_by('slug', $item['variation'][$nvei_plan_variation], $taxonomy_name);
 
 			if (is_wp_error($term) || empty($term->term_id)) {
-				Nuvei_Logger::write($item['variation'], 'Error when try to get Term by Slug:');
+				Nuvei_Logger::write($item['variation'][$nvei_plan_variation], 'Error when try to get Term by Slug:');
 				continue;
 			}
 			
