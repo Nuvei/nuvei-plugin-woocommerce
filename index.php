@@ -237,9 +237,10 @@ function nuvei_init() {
 	add_action( 'created_pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME), 'nuvei_save_term_meta', 10, 2 );
 	// edit Term meta data
 	add_action( 'edited_pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME), 'nuvei_edit_term_meta', 10, 2 );
-	
 	// before add a product to the cart
 	add_filter( 'woocommerce_add_to_cart_validation', array($wc_nuvei, 'add_to_cart_validation'), 10, 3 );
+    // Show/hide payment gateways in case of product with Nuvei Payment plan in the Cart
+    add_filter( 'woocommerce_available_payment_gateways', array($wc_nuvei, 'hide_payment_gateways'), 100, 1 );
 }
 
 /**
@@ -397,40 +398,20 @@ function nuvei_load_styles_scripts( $styles) {
 	}
 	
 	// put translations here into the array
-	wp_localize_script(
-		'nuvei_js_public',
-		'scTrans',
-		array(
-			'ajaxurl'               => admin_url('admin-ajax.php'),
-			'security'              => wp_create_nonce('sc-security-nonce'),
-			'webMasterId'           => 'WooCommerce ' . WOOCOMMERCE_VERSION,
-			'sourceApplication'     => NUVEI_SOURCE_APPLICATION,
-			'plugin_dir_url'        => plugin_dir_url(__FILE__),
-			'wcThSep'               => $wcThSep,
-			'wcDecSep'              => $wcDecSep,
-			'useUpos'               => $wc_nuvei->can_use_upos(),
-			'showApmsNames'         => $wc_nuvei->show_apms_names(),
-			'isUserLogged'          => is_user_logged_in() ? 1 : 0,
-			'paymentGatewayName'    => NUVEI_GATEWAY_NAME,
-			'isPluginActive'        => $wc_nuvei->settings['enabled'],
-			
-			// translations
-			'paymentDeclined'	=> __('Your Payment was DECLINED. Please, try another payment option!', 'nuvei_checkout_woocommerce'),
-			'paymentError'      => __('Error with your Payment.', 'nuvei_checkout_woocommerce'),
-			'unexpectedError'	=> __('Unexpected error. Please, try another payment option!', 'nuvei_checkout_woocommerce'),
-			'fillFields'        => __('Please fill all fields marked with * !', 'nuvei_checkout_woocommerce'),
-			'errorWithSToken'	=> __('Error when try to get the Session Token.', 'nuvei_checkout_woocommerce'),
-			'goBack'            => __('Go back', 'nuvei_checkout_woocommerce'),
-			'RequestFail'       => __('Request fail.', 'nuvei_checkout_woocommerce'),
-			'ApplePayError'     => __('Unexpected session error.', 'nuvei_checkout_woocommerce'),
-			'TryAgainLater'     => __('Please try again later!', 'nuvei_checkout_woocommerce'),
-			'TryAnotherPM'      => __('Please try another payment method!', 'nuvei_checkout_woocommerce'),
-			'Pay'               => __('Pay', 'nuvei_checkout_woocommerce'),
-			'PlaceOrder'        => __('Place order', 'nuvei_checkout_woocommerce'),
-		)
-	);
-
-	// connect the translations with some of the JS files
+    $localizations = array_merge(
+        NUVEI_JS_LOCALIZATIONS,
+        [
+            'security'          => wp_create_nonce('sc-security-nonce'),
+            'wcThSep'           => $wcThSep,
+            'wcDecSep'          => $wcDecSep,
+            'useUpos'           => $wc_nuvei->can_use_upos(),
+            'showApmsNames'     => $wc_nuvei->show_apms_names(),
+            'isUserLogged'      => is_user_logged_in() ? 1 : 0,
+            'isPluginActive'    => $wc_nuvei->settings['enabled'],
+        ]
+    );
+    
+	wp_localize_script('nuvei_js_public', 'scTrans', $localizations);
 	wp_enqueue_script('nuvei_js_public');
 	
 	return $styles;
@@ -473,22 +454,15 @@ function nuvei_load_admin_styles_scripts( $hook) {
 	// get the list of the plans end
 
 	// put translations here into the array
-	wp_localize_script(
-		'nuvei_js_admin',
-		'scTrans',
-		array(
-			'ajaxurl'				=> admin_url('admin-ajax.php'),
-			'security'				=> wp_create_nonce('sc-security-nonce'),
-			'nuveiPaymentPlans'     => $plans_list,
-
-			// translations
-			'refundQuestion'		=> __('Are you sure about this Refund?', 'nuvei_checkout_woocommerce'),
-			'LastDownload'			=> __('Last Download', 'nuvei_checkout_woocommerce'),
-			'ReadLog'               => __('Read Log', 'nuvei_checkout_woocommerce'),
-			'RefreshLogError'       => __('Getting log faild, please check the console for more information!', 'nuvei_checkout_woocommerce'),
-		)
-	);
-
+    $localizations = array_merge(
+        NUVEI_JS_LOCALIZATIONS,
+        [
+            'security'          => wp_create_nonce('sc-security-nonce'),
+            'nuveiPaymentPlans' => $plans_list,
+        ]
+    );
+    
+	wp_localize_script('nuvei_js_admin', 'scTrans', $localizations);
 	wp_enqueue_script('nuvei_js_admin');
 }
 

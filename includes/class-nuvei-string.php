@@ -26,7 +26,8 @@ class Nuvei_String {
 		$test_mode = isset($plugin_settings['test']) ? $plugin_settings['test'] : 'yes';
 		$use_http  = isset($plugin_settings['use_http']) ? $plugin_settings['use_http'] : 'yes';
 		$url       = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' ) . 'wc-api=nuvei_listener'
-			. '&save_logs=' . $save_logs . '&test_mode=' . $test_mode . '&stop_dmn=' . NUVEI_STOP_DMN;
+			. '&save_logs=' . $save_logs . '&test_mode=' . $test_mode . '&stop_dmn='
+            . (defined('NUVEI_STOP_DMN') ? NUVEI_STOP_DMN : 0);
 		
 		// use this when receive a Cashier DMN
 		if (!empty($order_id)) {

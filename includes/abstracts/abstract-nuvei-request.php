@@ -12,113 +12,7 @@ abstract class Nuvei_Request {
 	protected $request_base_params;
 	protected $sc_order;
 	
-	// array details to validate request parameters
-	private $params_validation = array(
-		// deviceDetails
-		'deviceType' => array(
-			'length' => 10,
-			'flag'    => FILTER_SANITIZE_STRING
-		),
-		'deviceName' => array(
-			'length' => 255,
-			'flag'    => FILTER_DEFAULT
-		),
-		'deviceOS' => array(
-			'length' => 255,
-			'flag'    => FILTER_DEFAULT
-		),
-		'browser' => array(
-			'length' => 255,
-			'flag'    => FILTER_DEFAULT
-		),
-		// deviceDetails END
-		
-		// userDetails, shippingAddress, billingAddress
-		'firstName' => array(
-			'length' => 30,
-			'flag'    => FILTER_DEFAULT
-		),
-		'lastName' => array(
-			'length' => 40,
-			'flag'    => FILTER_DEFAULT
-		),
-		'address' => array(
-			'length' => 60,
-			'flag'    => FILTER_DEFAULT
-		),
-		'cell' => array(
-			'length' => 18,
-			'flag'    => FILTER_DEFAULT
-		),
-		'phone' => array(
-			'length' => 18,
-			'flag'    => FILTER_DEFAULT
-		),
-		'zip' => array(
-			'length' => 10,
-			'flag'    => FILTER_DEFAULT
-		),
-		'city' => array(
-			'length' => 30,
-			'flag'    => FILTER_DEFAULT
-		),
-		'country' => array(
-			'length' => 20,
-			'flag'    => FILTER_SANITIZE_STRING
-		),
-		'state' => array(
-			'length' => 2,
-			'flag'    => FILTER_SANITIZE_STRING
-		),
-		'county' => array(
-			'length' => 255,
-			'flag'    => FILTER_DEFAULT
-		),
-		// userDetails, shippingAddress, billingAddress END
-		
-		// specific for shippingAddress
-		'shippingCounty' => array(
-			'length' => 255,
-			'flag'    => FILTER_DEFAULT
-		),
-		'addressLine2' => array(
-			'length' => 50,
-			'flag'    => FILTER_DEFAULT
-		),
-		'addressLine3' => array(
-			'length' => 50,
-			'flag'    => FILTER_DEFAULT
-		),
-		// specific for shippingAddress END
-		
-		// urlDetails
-		'successUrl' => array(
-			'length' => 1000,
-			'flag'    => FILTER_VALIDATE_URL
-		),
-		'failureUrl' => array(
-			'length' => 1000,
-			'flag'    => FILTER_VALIDATE_URL
-		),
-		'pendingUrl' => array(
-			'length' => 1000,
-			'flag'    => FILTER_VALIDATE_URL
-		),
-		'notificationUrl' => array(
-			'length' => 1000,
-			'flag'    => FILTER_VALIDATE_URL
-		),
-		// urlDetails END
-	);
-	
-	private $params_validation_email = array(
-		'length'    => 79,
-		'flag'      => FILTER_VALIDATE_EMAIL
-	);
-	
-	private $devices_os   = array('iphone', 'ipad', 'android', 'silk', 'blackberry', 'touch', 'linux', 'windows', 'mac');
-	private $browsers     = array('ucbrowser', 'firefox', 'chrome', 'opera', 'msie', 'edge', 'safari', 'blackberry', 'trident');
-	private $device_types = array('macintosh', 'tablet', 'mobile', 'tv', 'windows', 'linux', 'tv', 'smarttv', 'googletv', 'appletv', 'hbbtv', 'pov_tv', 'netcast.tv', 'bluray');
+	private $device_types = array();
 	
 	abstract public function process();
 	abstract protected function get_checksum_params();
@@ -531,7 +425,7 @@ abstract class Nuvei_Request {
 		
 		$device_details['deviceName'] = $user_agent;
 
-		foreach ($this->device_types as $d) {
+		foreach (NUVEI_DEVICES_TYPES_LIST as $d) {
 			if (strstr($user_agent, $d) !== false) {
 				if (in_array($d, array('linux', 'windows', 'macintosh'), true)) {
 					$device_details['deviceType'] = 'DESKTOP';
@@ -547,14 +441,14 @@ abstract class Nuvei_Request {
 			}
 		}
 
-		foreach ($this->devices_os as $d) {
+		foreach (NUVEI_DEVICES_LIST as $d) {
 			if (strstr($user_agent, $d) !== false) {
 				$device_details['deviceOS'] = $d;
 				break;
 			}
 		}
 
-		foreach ($this->browsers as $b) {
+		foreach (NUVEI_BROWSERS_LIST as $b) {
 			if (strstr($user_agent, $b) !== false) {
 				$device_details['browser'] = $b;
 				break;
@@ -681,10 +575,10 @@ abstract class Nuvei_Request {
 	 */
 	private function get_endpoint_base() {
 		if ('yes' == $this->plugin_settings['test']) {
-			return 'https://ppp-test.safecharge.com/ppp/api/v1/';
+			return NUVEI_REST_ENDPOINT_INT;
 		}
 		
-		return 'https://secure.safecharge.com/ppp/api/v1/';
+		return NUVEI_REST_ENDPOINT_PROD;
 	}
 	
 	/**
@@ -696,7 +590,7 @@ abstract class Nuvei_Request {
 	private function validate_parameters( $params) {
 		// directly check the mails
 		if (isset($params['billingAddress']['email'])) {
-			if (!filter_var($params['billingAddress']['email'], $this->params_validation_email['flag'])) {
+			if (!filter_var($params['billingAddress']['email'], NUVEI_PARAMS_VALIDATION_EMAIL['flag'])) {
 				
 				return array(
 					'status' => 'ERROR',
@@ -704,56 +598,56 @@ abstract class Nuvei_Request {
 				);
 			}
 			
-			if (strlen($params['billingAddress']['email']) > $this->params_validation_email['length']) {
+			if (strlen($params['billingAddress']['email']) > NUVEI_PARAMS_VALIDATION_EMAIL['length']) {
 				return array(
 					'status' => 'ERROR',
 					'message' => 'REST API ERROR: The parameter Billing Address Email must be maximum '
-						. $this->params_validation_email['length'] . ' symbols.'
+						. NUVEI_PARAMS_VALIDATION_EMAIL['length'] . ' symbols.'
 				);
 			}
 		}
 		
 		if (isset($params['shippingAddress']['email'])) {
-			if (!filter_var($params['shippingAddress']['email'], $this->params_validation_email['flag'])) {
+			if (!filter_var($params['shippingAddress']['email'], NUVEI_PARAMS_VALIDATION_EMAIL['flag'])) {
 				return array(
 					'status' => 'ERROR',
 					'message' => 'REST API ERROR: The parameter Shipping Address Email is not valid.'
 				);
 			}
 			
-			if (strlen($params['shippingAddress']['email']) > $this->params_validation_email['length']) {
+			if (strlen($params['shippingAddress']['email']) > NUVEI_PARAMS_VALIDATION_EMAIL['length']) {
 				return array(
 					'status' => 'ERROR',
 					'message' => 'REST API ERROR: The parameter Shipping Address Email must be maximum '
-						. $this->params_validation_email['length'] . ' symbols.'
+						. NUVEI_PARAMS_VALIDATION_EMAIL['length'] . ' symbols.'
 				);
 			}
 		}
 		// directly check the mails END
 		
 		foreach ($params as $key1 => $val1) {
-			if (!is_array($val1) && !empty($val1) && array_key_exists($key1, $this->params_validation)) {
+			if (!is_array($val1) && !empty($val1) && array_key_exists($key1, NUVEI_PARAMS_VALIDATION)) {
 				$new_val = $val1;
 				
-				if (mb_strlen($val1) > $this->params_validation[$key1]['length']) {
-					$new_val = mb_substr($val1, 0, $this->params_validation[$key1]['length']);
+				if (mb_strlen($val1) > NUVEI_PARAMS_VALIDATION[$key1]['length']) {
+					$new_val = mb_substr($val1, 0, NUVEI_PARAMS_VALIDATION[$key1]['length']);
 				}
 				
-				$params[$key1] = filter_var($new_val, $this->params_validation[$key1]['flag']);
+				$params[$key1] = filter_var($new_val, NUVEI_PARAMS_VALIDATION[$key1]['flag']);
 				
 				if (!$params[$key1]) {
 					$params[$key1] = 'The value is not valid.';
 				}
 			} elseif (is_array($val1) && !empty($val1)) {
 				foreach ($val1 as $key2 => $val2) {
-					if (!is_array($val2) && !empty($val2) && array_key_exists($key2, $this->params_validation)) {
+					if (!is_array($val2) && !empty($val2) && array_key_exists($key2, NUVEI_PARAMS_VALIDATION)) {
 						$new_val = $val2;
 
-						if (mb_strlen($val2) > $this->params_validation[$key2]['length']) {
-							$new_val = mb_substr($val2, 0, $this->params_validation[$key2]['length']);
+						if (mb_strlen($val2) > NUVEI_PARAMS_VALIDATION[$key2]['length']) {
+							$new_val = mb_substr($val2, 0, NUVEI_PARAMS_VALIDATION[$key2]['length']);
 						}
 
-						$params[$key1][$key2] = filter_var($new_val, $this->params_validation[$key2]['flag']);
+						$params[$key1][$key2] = filter_var($new_val, NUVEI_PARAMS_VALIDATION[$key2]['flag']);
 						
 						if (!$params[$key1][$key2]) {
 							$params[$key1][$key2] = 'The value is not valid.';
