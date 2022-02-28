@@ -26,7 +26,6 @@ define('NUVEI_REST_ENDPOINT_PROD',  'https://secure.safecharge.com/ppp/api/v1/')
 
 define('NUVEI_JS_LOCALIZATIONS', [
     'ajaxurl'               => admin_url('admin-ajax.php'),
-    'webMasterId'           => 'WooCommerce ' . WOOCOMMERCE_VERSION,
     'sourceApplication'     => NUVEI_SOURCE_APPLICATION,
     'plugin_dir_url'        => plugin_dir_url(__FILE__),
     'paymentGatewayName'    => NUVEI_GATEWAY_NAME,

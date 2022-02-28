@@ -1,7 +1,3 @@
-//const onReady = function (result) { 
-//	console.log('onReady', result) 
-//};
-
 var nuveiCheckoutSdkParams = {};
 
 /**
@@ -35,7 +31,7 @@ function nuveiAfterSdkResponse(resp) {
 	nuveiShowErrorMsg(scTrans.unexpectedError);
 	return;
 }
- 
+
 function showNuveiCheckout(_params) {
 	console.log('showNuveiCheckout()', _params);
 	

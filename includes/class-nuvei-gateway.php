@@ -32,15 +32,15 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$this->description = $this->get_setting('description', $this->method_description);
 		$this->plugin_data = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . DIRECTORY_SEPARATOR . 'index.php');
 		
-		$nuvei_vars = array(
-			'save_logs' => $this->get_setting('save_logs'),
-			'test_mode' => $this->get_setting('test'),
-		);
-		
-		if (!is_admin() && !empty(WC()->session)) {
-			WC()->session->set('nuvei_vars', $nuvei_vars);
-		}
-		
+//		$nuvei_vars = array(
+//			'save_logs' => $this->get_setting('save_logs'),
+//			'test_mode' => $this->get_setting('test'),
+//		);
+//		
+//		if (!is_admin() && !empty(WC()->session)) {
+//			WC()->session->set('nuvei_vars', $nuvei_vars);
+//		}
+//		
 		$this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page']) 
 			? $this->settings['use_wpml_thanks_page'] : 'no';
 		
@@ -799,6 +799,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			exit;
 		}
 		# OpenOrder END
+        
 		$cart          = $woocommerce->cart;
 		$cart_items    = $cart->get_cart();
 		$time          = gmdate('Ymdhis');
@@ -810,6 +811,13 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		}
 			
 		Nuvei_Logger::write($ord_details);
+        
+        // for UPO
+        $save_pm = (bool) $this->get_setting('use_upos'); 
+        
+        if(null !== WC()->session->get('nuvei_force_upo')) {
+            $save_pm = 'always';
+        }
 		
 		$checkout_data = array( // use it in the template
 			'sessionToken'          => $oo_data['sessionToken'],
@@ -824,7 +832,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		//            'userTokenId'           => $ord_details['billingAddress']['email'],
 			'useDCC'                =>  $this->get_setting('use_dcc', 'enable'),
 			'strict'                => false,
-			'savePM'                => (bool) $this->get_setting('use_upos'), // for UPO
+			'savePM'                => $save_pm,
 		//            'subMethod'           => '',
 			'pmWhitelist'           => null,
 			'pmBlacklist'           => $pm_black_list,
@@ -919,7 +927,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					&& ! empty( $available_gateways[ NUVEI_GATEWAY_NAME ] )
 				) {
 					$filtred_gws[ NUVEI_GATEWAY_NAME ] = $available_gateways[ NUVEI_GATEWAY_NAME ];
-					return $filtred_gws;
+                    
+                    WC()->session->set('nuvei_force_upo', true);
+					
+                    return $filtred_gws;
 				}
 			}
 		}

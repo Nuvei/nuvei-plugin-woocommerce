@@ -408,6 +408,7 @@ function nuvei_load_styles_scripts( $styles) {
             'showApmsNames'     => $wc_nuvei->show_apms_names(),
             'isUserLogged'      => is_user_logged_in() ? 1 : 0,
             'isPluginActive'    => $wc_nuvei->settings['enabled'],
+            'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION,
         ]
     );
     
@@ -459,6 +460,7 @@ function nuvei_load_admin_styles_scripts( $hook) {
         [
             'security'          => wp_create_nonce('sc-security-nonce'),
             'nuveiPaymentPlans' => $plans_list,
+            'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION,
         ]
     );
     
