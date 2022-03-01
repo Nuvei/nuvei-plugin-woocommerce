@@ -46,12 +46,10 @@ function showNuveiCheckout(_params) {
 	
 	if(jQuery('.wpmc-step-payment').length > 0) { // multi-step checkout
 		console.log('multi-step checkout');
-		
 		jQuery("form.woocommerce-checkout .wpmc-step-payment *:not(form.woocommerce-checkout, #nuvei_checkout_container *), .woocommerce-form-coupon-toggle").hide();
 	}
 	else { // default checkout
 		console.log('default checkout');
-		
 		jQuery("form.woocommerce-checkout *, .woocommerce-form-coupon-toggle").hide();
 	}
 	

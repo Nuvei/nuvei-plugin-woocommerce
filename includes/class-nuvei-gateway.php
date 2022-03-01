@@ -804,20 +804,16 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$cart_items    = $cart->get_cart();
 		$time          = gmdate('Ymdhis');
 		$ord_details   = WC()->session->get('nuvei_last_open_order_details');
-		$pm_black_list = trim($this->get_setting('pm_black_list', ''));
-			
-		if (!empty($pm_black_list)) {
-			$pm_black_list = explode(',', $pm_black_list);
-		}
+		$pm_black_list = trim($this->get_setting('pm_black_list', null));
 			
 		Nuvei_Logger::write($ord_details);
         
         // for UPO
         $save_pm = (bool) $this->get_setting('use_upos'); 
-        
-        if(null !== WC()->session->get('nuvei_force_upo')) {
-            $save_pm = 'always';
-        }
+        // TODO uncomment this when sdk team is reay
+//        if(null !== WC()->session->get('nuvei_force_upo')) {
+//            $save_pm = 'always';
+//        }
 		
 		$checkout_data = array( // use it in the template
 			'sessionToken'          => $oo_data['sessionToken'],
@@ -835,7 +831,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			'savePM'                => $save_pm,
 		//            'subMethod'           => '',
 			'pmWhitelist'           => null,
-			'pmBlacklist'           => $pm_black_list,
+//			'pmBlacklist'           => $pm_black_list,
 		//            'blockCards'            => $this->get_setting('blocked_cards', []), set it later
 			'alwaysCollectCvv'      => true,
 			'fullName'              => $ord_details['billingAddress']['firstName'] . ' ' . $oo_data['billingAddress']['lastName'],
@@ -848,6 +844,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			'maskCvv'               => true,
 			'i18n'                  => json_decode($this->get_setting('translation', ''), true),
 		);
+        
+        if (null !== $pm_black_list) {
+			$checkout_data['pmBlacklist'] = explode(',', $pm_black_list);
+		}
 		
 		// check for product with a plan
 		foreach ($cart_items as $values) {
@@ -857,13 +857,15 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			// if there is a plan, remove all APMs
 			if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
 				$checkout_data['pmWhitelist'][] = array('cc_card');
-				$checkout_data['pmBlacklist']   = array();
+                
+                if(isset($checkout_data['pmBlacklist'])) {
+                    unset($checkout_data['pmBlacklist']);
+                }
+                
 				break;
 			}
 		}
 		// check for product with a plan END
-		
-		Nuvei_Logger::write($checkout_data, '$checkout_data');
 		
 		# blocked_cards
 		$blocked_cards     = array();
@@ -875,9 +877,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$blocked_cards_str = str_replace('"', '', $blocked_cards_str);
 		$blocked_cards_str = str_replace("'", '', $blocked_cards_str);
 		
-		if (empty($blocked_cards_str)) {
-			$checkout_data['blockCards'] = array();
-		} else {
+//		if (empty($blocked_cards_str)) {
+//			$checkout_data['blockCards'] = array();
+//		} else {
+        if (!empty($blocked_cards_str)) {
 			$blockCards_sets = explode(';', $blocked_cards_str);
 
 			if (count($blockCards_sets) == 1) {
