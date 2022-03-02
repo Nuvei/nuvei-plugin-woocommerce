@@ -351,7 +351,7 @@ function nuvei_load_styles_scripts( $styles) {
 	// Checkout SDK URL for integration and production
 	wp_register_script(
 		'nuvei_checkout_sdk',
-		'https://cdn.safecharge.com/safecharge_resources/v1/checkout/checkout.js',
+		($wc_nuvei->settings['sdk_version'] == 'prod' ? NUVEI_SDK_URL_PROD : NUVEI_SDK_URL_INT),
 		array('jquery'),
 		'1'
 	);

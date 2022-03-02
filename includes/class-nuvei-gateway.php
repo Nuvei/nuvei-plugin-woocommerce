@@ -5,9 +5,8 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Main class for the Nuvei Plugin
  */
-
-class Nuvei_Gateway extends WC_Payment_Gateway {
-
+class Nuvei_Gateway extends WC_Payment_Gateway
+{
 	private $plugin_data  = array();
 	private $subscr_units = array('year', 'month', 'day');
 	
@@ -26,21 +25,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$this->init_form_advanced_fields_cashier(true);
 		$this->init_form_tools_fields(true);
 		
-		
 		// required for the Store
 		$this->title       = $this->get_setting('title', NUVEI_GATEWAY_TITLE);
 		$this->description = $this->get_setting('description', $this->method_description);
 		$this->plugin_data = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . DIRECTORY_SEPARATOR . 'index.php');
 		
-//		$nuvei_vars = array(
-//			'save_logs' => $this->get_setting('save_logs'),
-//			'test_mode' => $this->get_setting('test'),
-//		);
-//		
-//		if (!is_admin() && !empty(WC()->session)) {
-//			WC()->session->set('nuvei_vars', $nuvei_vars);
-//		}
-//		
 		$this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page']) 
 			? $this->settings['use_wpml_thanks_page'] : 'no';
 		
@@ -804,7 +793,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$cart_items    = $cart->get_cart();
 		$time          = gmdate('Ymdhis');
 		$ord_details   = WC()->session->get('nuvei_last_open_order_details');
-		$pm_black_list = trim($this->get_setting('pm_black_list', null));
+		$pm_black_list = trim($this->get_setting('pm_black_list', ''));
+			
+		if (!empty($pm_black_list)) {
+			$pm_black_list = explode(',', $pm_black_list);
+		}
 			
 		Nuvei_Logger::write($ord_details);
         
@@ -814,6 +807,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 //        if(null !== WC()->session->get('nuvei_force_upo')) {
 //            $save_pm = 'always';
 //        }
+		
+        if(null !== WC()->session->get('nuvei_force_upo')) {
+            $save_pm = 'always';
+        }
 		
 		$checkout_data = array( // use it in the template
 			'sessionToken'          => $oo_data['sessionToken'],
@@ -831,7 +828,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			'savePM'                => $save_pm,
 		//            'subMethod'           => '',
 			'pmWhitelist'           => null,
-//			'pmBlacklist'           => $pm_black_list,
+			'pmBlacklist'           => $pm_black_list,
 		//            'blockCards'            => $this->get_setting('blocked_cards', []), set it later
 			'alwaysCollectCvv'      => true,
 			'fullName'              => $ord_details['billingAddress']['firstName'] . ' ' . $oo_data['billingAddress']['lastName'],
@@ -845,10 +842,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			'i18n'                  => json_decode($this->get_setting('translation', ''), true),
 		);
         
-        if (null !== $pm_black_list) {
-			$checkout_data['pmBlacklist'] = explode(',', $pm_black_list);
-		}
-		
 		// check for product with a plan
 		foreach ($cart_items as $values) {
 			$product    = wc_get_product($values['data']->get_id());
@@ -856,12 +849,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			
 			// if there is a plan, remove all APMs
 			if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
-				$checkout_data['pmWhitelist'][] = array('cc_card');
-                
-                if(isset($checkout_data['pmBlacklist'])) {
-                    unset($checkout_data['pmBlacklist']);
-                }
-                
+				$checkout_data['pmWhitelist'][] = 'cc_card';
+                unset($checkout_data['pmBlacklist']);
 				break;
 			}
 		}
@@ -877,10 +866,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$blocked_cards_str = str_replace('"', '', $blocked_cards_str);
 		$blocked_cards_str = str_replace("'", '', $blocked_cards_str);
 		
-//		if (empty($blocked_cards_str)) {
-//			$checkout_data['blockCards'] = array();
-//		} else {
-        if (!empty($blocked_cards_str)) {
+		if (empty($blocked_cards_str)) {
+			$checkout_data['blockCards'] = array();
+		} else {
 			$blockCards_sets = explode(';', $blocked_cards_str);
 
 			if (count($blockCards_sets) == 1) {
@@ -1209,6 +1197,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	 */
 	private function init_form_advanced_fields_checkout( $fields_append = false) {
 		$fields = array(
+            'sdk_version' => [
+                'title'         => __('SDK version', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+				'options'       => array(
+					'prod'        => __('Prod (Recommended)', 'nuvei_checkout_woocommerce'),
+					'dev'         => __('Dev', 'nuvei_checkout_woocommerce'),
+				),
+				'description'   => __('It is not recommended to use Dev version on Production sites.', 'nuvei_checkout_woocommerce'),
+				'default'       => 'prod',
+				'class'         => 'nuvei_checkout_setting'
+            ],
 			'use_dcc' => array(
 				'title'         => __('Use currency conversion', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
