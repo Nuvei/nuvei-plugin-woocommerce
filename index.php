@@ -127,10 +127,10 @@ function nuvei_init() {
 	add_action('init', 'nuvei_enqueue');
 	
 	// load WC styles
-	add_filter('woocommerce_enqueue_styles', 'nuvei_load_styles_scripts');
+    add_filter('woocommerce_enqueue_styles', 'nuvei_load_styles_scripts');
 	
 	// add admin style
-	add_filter('admin_enqueue_scripts', 'nuvei_load_admin_styles_scripts');
+    add_filter('admin_enqueue_scripts', 'nuvei_load_admin_styles_scripts');
 	
 	// add void and/or settle buttons to completed orders
 	add_action('woocommerce_order_item_add_action_buttons', 'nuvei_add_buttons', 10, 1);
@@ -346,7 +346,6 @@ function nuvei_load_styles_scripts( $styles) {
 		'1',
 		'all'
 	);
-	wp_enqueue_style('nuvei_style');
 	
 	// Checkout SDK URL for integration and production
 	wp_register_script(
@@ -355,16 +354,7 @@ function nuvei_load_styles_scripts( $styles) {
 		array('jquery'),
 		'1'
 	);
-	wp_enqueue_script('nuvei_checkout_sdk');
 
-	// main JS
-	wp_register_script(
-		'nuvei_js_public',
-		$plugin_url . 'assets/js/nuvei_public.js',
-		array('jquery'),
-		'1'
-	);
-	
 	// reorder js
 	wp_register_script(
 		'nuvei_js_reorder',
@@ -372,7 +362,6 @@ function nuvei_load_styles_scripts( $styles) {
 		array('jquery'),
 		'1'
 	);
-	wp_enqueue_script('nuvei_js_reorder');
 	
 	// get selected WC price separators
 	$wcThSep  = '';
@@ -412,10 +401,24 @@ function nuvei_load_styles_scripts( $styles) {
         ]
     );
     
-	wp_localize_script('nuvei_js_public', 'scTrans', $localizations);
-	wp_enqueue_script('nuvei_js_public');
+    // main JS
+	wp_register_script(
+		'nuvei_js_public',
+		$plugin_url . 'assets/js/nuvei_public.js',
+		array('jquery'),
+		'1'
+	);
 	
-	return $styles;
+    if(is_checkout()) {
+        wp_enqueue_style('nuvei_style');
+        wp_enqueue_script('nuvei_checkout_sdk');
+        wp_enqueue_script('nuvei_js_reorder');
+        
+        wp_localize_script('nuvei_js_public', 'scTrans', $localizations);
+        wp_enqueue_script('nuvei_js_public');
+    }
+    
+	//return $styles;
 }
 
 /**
