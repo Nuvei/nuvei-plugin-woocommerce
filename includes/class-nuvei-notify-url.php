@@ -28,6 +28,11 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			exit;
 		}
 		
+        if (!$this->validate_checksum()) {
+			echo wp_json_encode('DMN Error - Checksum validation problem!');
+			exit;
+		}
+        
 		// santitized get variables
 		$clientUniqueId       = $this->get_cuid();
 		$transactionType      = Nuvei_Http::get_param('transactionType');
@@ -44,7 +49,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			echo wp_json_encode('DMN Error - the Status is empty!');
 			exit;
 		}
-		
+        
 		# Subscription State DMN
 		if ('subscription' == $dmnType) {
 			$subscriptionState = Nuvei_Http::get_param('subscriptionState');
@@ -100,11 +105,6 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		if (empty($TransactionID)) {
 			Nuvei_Logger::write('DMN error - The TransactionID is empty!');
 			echo wp_json_encode('DMN error - The TransactionID is empty!');
-			exit;
-		}
-		
-		if (!$this->check_advanced_checksum()) {
-			echo wp_json_encode('DMN Error - Checksum validation problem!');
 			exit;
 		}
 		
@@ -260,7 +260,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	 *
 	 * @return boolean
 	 */
-	private function check_advanced_checksum() {
+	private function validate_checksum() {
 		$advanceResponseChecksum = Nuvei_Http::get_param('advanceResponseChecksum');
 		$responsechecksum        = Nuvei_Http::get_param('responsechecksum');
 		
@@ -502,46 +502,55 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	/**
 	 * Change the status of the order.
 	 *
-	 * @param int $order_id
-	 * @param string $req_status
-	 * @param string $transactionType
+	 * @param int    $order_id The Order Id.
+	 * @param string $req_status The Status of the request.
+	 * @param string $transaction_type The type of the transaction.
 	 */
-	private function change_order_status( $order_id, $req_status, $transactionType) {
+	private function change_order_status( $order_id, $req_status, $transaction_type ) {
 		Nuvei_Logger::write(
 			'Order ' . $order_id . ' was ' . $req_status,
 			'Nuvei change_order_status()'
 		);
-		
-		$gw_data = '<br/>' 
-			. __('<b>Status:</b> ', 'nuvei_checkout_woocommerce') . $req_status . ',<br/>' 
-			. __('<b>PPP Transaction ID:</b> ', 'nuvei_checkout_woocommerce') 
-				. Nuvei_Http::get_param('PPP_TransactionID', 'int') . ',<br/>' 
-			. __('<b>Transaction Type:</b> ', 'nuvei_checkout_woocommerce') . $transactionType . ',<br/>' 
-			. __('<b>Transaction ID:</b> ', 'nuvei_checkout_woocommerce') 
-				. Nuvei_Http::get_param('TransactionID', 'int') . ',<br/>' 
-			. __('<b>Payment Method:</b> ', 'nuvei_checkout_woocommerce') . Nuvei_Http::get_param('payment_method');
-		
+        
+        $msg_transaction = '<b>';
+                
+//        if($this->is_partial_settle === true) {
+//            $msg_transaction .= __("Partial ");
+//        }
+
+        $msg_transaction .= __( Nuvei_Http::get_param( 'transactionType' ), 'nuvei_checkout_woocommerce' ) 
+                . ' </b> ' . __( 'request', 'nuvei_checkout_woocommerce' ) . '.<br/>';
+
+		$gw_data = $msg_transaction
+			. __( 'Response status: ', 'nuvei_checkout_woocommerce' ) . '<b>' . $req_status . '</b>.<br/>'
+			. __( 'Payment Method: ', 'nuvei_checkout_woocommerce' ) . Nuvei_Http::get_param( 'payment_method' ) . '.<br/>'
+            . __( 'Transaction ID: ', 'nuvei_checkout_woocommerce' ) . Nuvei_Http::get_param( 'TransactionID', 'int' ) . '.<br/>'
+            . __( 'Related Transaction ID: ', 'nuvei_checkout_woocommerce' ) 
+                . Nuvei_Http::get_param( 'relatedTransactionId', 'int' ) . '.<br/>'
+            . __( 'Transaction Amount: ', 'nuvei_checkout_woocommerce' ) 
+                . number_format(Nuvei_Http::get_param( 'totalAmount', 'float' ), 2, '.', '') 
+                . ' ' . Nuvei_Http::get_param( 'currency') . '.';
+
 		$message = '';
 		$status  = $this->sc_order->get_status();
-		
+        
 		switch ($req_status) {
 			case 'CANCELED':
-				$message            = __('Your action was <b>Canceld</b>.', 'nuvei_checkout_woocommerce') . $gw_data;
+				$message            = $gw_data;
 				$this->msg['class'] = 'woocommerce_message';
 				
-				if (in_array($transactionType, array('Auth', 'Settle', 'Sale'))) {
+				if (in_array($transaction_type, array('Auth', 'Settle', 'Sale'))) {
 					$status = 'failed';
 				}
 				break;
 
 			case 'APPROVED':
-				if ('Void' === $transactionType) {
-					$message = __('DMN Void message', 'nuvei_checkout_woocommerce')
-						. $gw_data . '<br/>' . __('Plsese check your stock!', 'nuvei_checkout_woocommerce');
-					
+				if ( 'Void' === $transaction_type ) {
+					$message = $gw_data;
+
 					$status = 'cancelled';
-				} elseif (in_array($transactionType, array('Credit', 'Refund'), true)) {
-					$message = __('DMN Refund message', 'nuvei_checkout_woocommerce') . $gw_data;
+				} elseif ( in_array( $transaction_type, array( 'Credit', 'Refund' ), true ) ) {
+					$message = $gw_data;
 					$status  = 'completed';
 					
 					// get current refund amount
@@ -550,33 +559,32 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 					$currency_symbol = get_woocommerce_currency_symbol( $currency_code );
 					
 					if (isset($refunds[Nuvei_Http::get_param('TransactionID', 'int')]['refund_amount'])) {
-						$message .= '<br/>' . __('<b>Refund Amount:</b>') . ' ' . $currency_symbol
-							. number_format($refunds[Nuvei_Http::get_param('TransactionID', 'int')]['refund_amount'], 2, '.', '')
-							. '<br/>' . __('<b>Refund:</b>') . ' #' 
+						$message .= '<br/><b>' . __('<b>Refund Amount: ') . '</b>' 
+							. number_format($refunds[Nuvei_Http::get_param('TransactionID', 'int')]['refund_amount'], 2, '.', '') . $currency_symbol
+							. '<br/><b>' . __('<b>Refund: ') . ' #</b>' 
 							. $refunds[Nuvei_Http::get_param('TransactionID', 'int')]['wc_id'];
 					}
 					
 					if (round($this->sc_order->get_total(), 2) <= $this->sum_order_refunds()) {
 						$status = 'refunded';
 					}
-				} elseif ('Auth' === $transactionType) {
-					$message = __('The amount has been authorized and wait for Settle.', 'nuvei_checkout_woocommerce') . $gw_data;
+				} elseif ( 'Auth' === $transaction_type ) {
+					$message = $gw_data;
 					$status  = 'pending';
-				} elseif (in_array($transactionType, array('Settle', 'Sale'), true)) {
-					$message = __('The amount has been authorized and captured by ', 'nuvei_checkout_woocommerce') 
-						. NUVEI_GATEWAY_TITLE . '.' . $gw_data;
+				} elseif ( in_array( $transaction_type, array( 'Settle', 'Sale' ), true ) ) {
+					$message = $gw_data;
 					$status  = 'completed';
 					
 					$this->sc_order->payment_complete($order_id);
 				}
 				
 				// check for correct amount and currency
-				if (in_array($transactionType, array('Auth', 'Sale'), true)) {
+				if (in_array($transaction_type, array('Auth', 'Sale'), true)) {
 					$order_amount = round(floatval($this->sc_order->get_total()), 2);
 					$dmn_amount   = round(Nuvei_Http::get_param('totalAmount', 'float'), 2);
 					
 					if ($order_amount !== $dmn_amount) {
-						$message .= '<hr/><b>' . __('Payment ERROR!', 'nuvei_checkout_woocommerce') . '</b> ' 
+						$message .= '<br/><b>' . __('Payment ERROR!', 'nuvei_checkout_woocommerce') . '</b> ' 
 							. $dmn_amount . ' ' . Nuvei_Http::get_param('currency')
 							. ' ' . __('paid instead of', 'nuvei_checkout_woocommerce') . ' ' . $order_amount
 							. ' ' . $this->sc_order->get_currency() . '!';
@@ -585,8 +593,8 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 						
 						Nuvei_Logger::write(
 							array(
-								'order_amount'	=> $order_amount,
-								'dmn_amount'	=> $dmn_amount,
+								'order_amount' => $order_amount,
+								'dmn_amount'   => $dmn_amount,
 							),
 							'DMN amount and Order amount do not much.'
 						);
@@ -594,18 +602,18 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 				}
 				
 				if ($this->sc_order->get_currency() !== Nuvei_Http::get_param('currency')) {
-					$message .= '<hr/><b>' . __('Payment ERROR!', 'nuvei_checkout_woocommerce') . '</b> '
+					$message .= '<br/><b>' . __('Payment ERROR!', 'nuvei_checkout_woocommerce') . '</b> '
 							. __('The Order currency is ', 'nuvei_checkout_woocommerce') 
 							. $this->sc_order->get_currency()
-							. __(', but the DMN currency is ', 'nuvei_checkout_woocommerce') 
-							. Nuvei_Http::get_param('currency') . '!';
-						
+							. __( ', but the DMN currency is ', 'nuvei_checkout_woocommerce' )
+							. Nuvei_Http::get_param( 'currency' ) . '!';
+
 						$status = 'failed';
 						
 						Nuvei_Logger::write(
 							array(
-								'order currency'	=> $this->sc_order->get_currency(),
-								'dmn currency'      => Nuvei_Http::get_param('currency'),
+								'order currency' => $this->sc_order->get_currency(),
+								'dmn currency'   => Nuvei_Http::get_param( 'currency' ),
 							),
 							'DMN currency and Order currency do not much.'
 						);
@@ -617,22 +625,22 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			case 'ERROR':
 			case 'DECLINED':
 			case 'FAIL':
-				$reason = ',<br/>' . __('<b>Reason:</b> ', 'nuvei_checkout_woocommerce');
-				if ('' != Nuvei_Http::get_param('reason')) {
-					$reason .= Nuvei_Http::get_param('reason');
-				} elseif ('' != Nuvei_Http::get_param('Reason')) {
-					$reason .= Nuvei_Http::get_param('Reason');
+				$reason = ',<br/>' . __( '<b>Reason:</b> ', 'nuvei_checkout_woocommerce' );
+				if ( '' != Nuvei_Http::get_param( 'reason' ) ) {
+					$reason .= Nuvei_Http::get_param( 'reason' );
+				} elseif ( '' != Nuvei_Http::get_param( 'Reason' ) ) {
+					$reason .= Nuvei_Http::get_param( 'Reason' );
 				}
 				
-				$message = __('<b>Transaction failed.</b>', 'nuvei_checkout_woocommerce') . '<br/>' 
-					. __('<b>Error code:</b> ', 'nuvei_checkout_woocommerce') . Nuvei_Http::get_param('ErrCode') . '<br/>' 
-					. __('<b>Message:</b> ', 'nuvei_checkout_woocommerce') . Nuvei_Http::get_param('message') . $reason . $gw_data;
+				$message = $gw_data . '<br/>'
+					. __( 'Error code: ', 'nuvei_checkout_woocommerce' ) . Nuvei_Http::get_param( 'ErrCode' ) . '<br/>'
+					. __( 'Message: ', 'nuvei_checkout_woocommerce' ) . Nuvei_Http::get_param( 'message' ) . $reason;
 				
 				// do not change status
-				if ('Void' === $transactionType) {
-					$message = 'Your Void request <b>fail</b>.';
-				}
-				if (in_array($transactionType, array('Auth', 'Settle', 'Sale'))) {
+//				if ('Void' === $transaction_type) {
+//					$message = 'Your Void request <b>fail</b>.';
+//				}
+				if (in_array($transaction_type, array('Auth', 'Settle', 'Sale'))) {
 					$status = 'failed';
 				}
 				
@@ -640,11 +648,12 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 				break;
 
 			case 'PENDING':
-				if ('processing' === $status || 'completed' === $status) {
+				if ( 'processing' === $status || 'completed' === $status ) {
 					break;
 				}
 
-				$message            = __('Payment is still pending.', 'nuvei_checkout_woocommerce') . $gw_data;
+//				$message            = __( 'Payment is still pending.', 'nuvei_checkout_woocommerce' ) . $gw_data;
+				$message            = $gw_data;
 				$this->msg['class'] = 'woocommerce_message woocommerce_message_info';
 				$status             = 'on-hold';
 				break;
@@ -652,10 +661,10 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		
 		if (!empty($message)) {
 			$this->msg['message'] = $message;
-			$this->sc_order->add_order_note($this->msg['message']);
+			$this->sc_order->add_order_note( $this->msg['message'] );
 		}
 
-		$this->sc_order->update_status($status);
+		$this->sc_order->update_status( $status );
 		$this->sc_order->save();
 		
 		Nuvei_Logger::write($status, 'Status of Order #' . $order_id . ' was set to');
