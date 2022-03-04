@@ -6,8 +6,10 @@ defined( 'ABSPATH' ) || exit;
  * A custom class for logs.
  */
 class Nuvei_Logger {
+    
+    private static $trace_id;
 
-	public static function write( $data, $title = '') {
+	public static function write( $data, $message = '', $log_level = 'INFO', $span_id = '') {
 		$logs_path   = plugin_dir_path( NUVEI_PLUGIN_FILE ) . 'logs' . DIRECTORY_SEPARATOR;
 		$plugin_data = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . 'index.php');
 		$save_logs   = 'yes';
@@ -25,57 +27,86 @@ class Nuvei_Logger {
 			return;
 		}
 		
-		$d		= $data;
-		$string	= '';
-
-		if (is_array($data)) {
-			// do not log accounts if on prod
-			if ('no' == $test_mode) {
-				if (isset($data['userAccountDetails']) && is_array($data['userAccountDetails'])) {
-					$data['userAccountDetails'] = 'account details';
-				}
-				if (isset($data['userPaymentOption']) && is_array($data['userPaymentOption'])) {
-					$data['userPaymentOption'] = 'user payment options details';
-				}
-				if (isset($data['paymentOption']) && is_array($data['paymentOption'])) {
-					$data['paymentOption'] = 'payment options details';
-				}
-			}
-			// do not log accounts if on prod
-			
-			if (!empty($data['paymentMethods']) && is_array($data['paymentMethods'])) {
-				$data['paymentMethods'] = json_encode($data['paymentMethods']);
-			}
-			if (!empty($data['plans']) && is_array($data['plans'])) {
-				$data['plans'] = json_encode($data['plans']);
-			}
-			
-			$d = 'yes' == $test_mode ? print_r($data, true) : json_encode($data);
-		} elseif (is_object($data)) {
-			$d = 'yes' == $test_mode ? print_r($data, true) : json_encode($data);
-		} elseif (is_bool($data)) {
-			$d = $data ? 'true' : 'false';
-		}
-		
-		if (!empty($plugin_data['Version'])) {
-			$string .= '[v.' . $plugin_data['Version'] . '] | ';
-		}
-
-		if (!empty($title)) {
-			if (is_string($title)) {
-				$string .= $title;
-			} else {
-				$string .= "\r\n" . ( 'yes' == $test_mode ? json_encode($title, JSON_PRETTY_PRINT) : json_encode($title) );
-			}
-			
-			$string .= "\r\n";
-		}
-
-		$string .= $d . "\r\n\r\n";
-		
+        $beauty_log = ('yes' == $test_mode) ? true : false;
+        $tab        = '    '; // 4 spaces
+        
+        # prepare log parts
+        $utimestamp     = microtime(true);
+        $timestamp      = floor($utimestamp);
+        $milliseconds   = round(($utimestamp - $timestamp) * 1000000);
+        $record_time    = date('Y-m-d') . 'T' . date('H:i:s') . '.' . $milliseconds . date('P');
+        
+        if(!self::$trace_id) {
+            self::$trace_id = bin2hex(random_bytes(16));
+        }
+        
+        if(!empty($span_id)) {
+            $span_id .= $tab;
+        }
+        
+        $machine_name       = '';
+        $service_name       = 'Prestashop Checkout SDK plugin v.' . $plugin_data['Version'] . '|';
+        $source_file_name   = '';
+        $member_name        = '';
+        $source_line_number = '';
+        $backtrace          = debug_backtrace();
+        
+        if(!empty($backtrace)) {
+            if(!empty($backtrace[0]['file'])) {
+                $file_path_arr  = explode(DIRECTORY_SEPARATOR, $backtrace[0]['file']);
+                
+                if(!empty($file_path_arr)) {
+                    $source_file_name = end($file_path_arr) . '|';
+                }
+            }
+            
+            if(!empty($backtrace[0]['line'])) {
+                $source_line_number = $backtrace[0]['line'] . $tab;
+            }
+        }
+        
+        if(!empty($message)) {
+            $message .= $tab;
+        }
+        
+        if(is_array($data) || is_object($data)) {
+            $exception = $beauty_log ? json_encode($data, JSON_PRETTY_PRINT) : json_encode($data);
+        }
+        elseif(is_bool($data)) {
+            $exception = $data ? 'true' : 'false';
+        }
+        else {
+            $exception = $data;
+        }
+        # prepare log parts END
+        
+        // Content of the log string:
+        $string = $record_time      // timestamp
+            . $tab                  // tab
+            . $log_level            // level
+            . $tab                  // tab
+            . self::$trace_id       // TraceId
+            . $tab                  // tab
+            . $span_id              // SpanId, if not empty it will include $tab
+//            . $parent_id            // ParentId, if not empty it will include $tab
+            . $machine_name         // MachineName if not empty it will include a "|"
+            . $service_name         // ServiceName if not empty it will include a "|"
+            // TreadId
+            . $source_file_name     // SourceFileName if not empty it will include a "|"
+            . $member_name          // MemberName if not empty it will include a "|"
+            . $source_line_number   // SourceLineName if not empty it will include $tab
+            // RequestPath
+            // RequestId
+            . $message
+            . $exception            // the exception, in our case - data to print
+        ;
+        
+        $string     .= "\r\n\r\n";
+        $file_name  = date('Y-m-d', time());
+        
 		file_put_contents(
-			$logs_path . gmdate('Y-m-d', time()) . '.log',
-			gmdate('H:i:s', time()) . ': ' . $string,
+			$logs_path . $file_name . '.log',
+			$string,
 			FILE_APPEND
 		);
 	}
