@@ -596,7 +596,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	}
 	
 	public function get_today_log() {
-		$log_file = plugin_dir_path(NUVEI_PLUGIN_FILE) . 'logs/' . gmdate('Y-m-d') . '.txt';
+		$log_file = plugin_dir_path(NUVEI_PLUGIN_FILE) . 'logs/' . gmdate('Y-m-d') . '.log';
 		
 		if (!file_exists($log_file)) {
 			wp_send_json(array(
