@@ -9,6 +9,14 @@ class Nuvei_Logger {
     
     private static $trace_id;
 
+    /**
+     * Save plugin logs.
+     * 
+     * @param mixed $data The data to save in the log.
+     * @param string $message Record message.
+     * @param string $log_level The Log level.
+     * @param string $span_id Process unique ID.
+     */
 	public static function write( $data, $message = '', $log_level = 'INFO', $span_id = '') {
 		$logs_path   = plugin_dir_path( NUVEI_PLUGIN_FILE ) . 'logs' . DIRECTORY_SEPARATOR;
 		$plugin_data = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . 'index.php');

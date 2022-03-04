@@ -265,7 +265,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		$responsechecksum        = Nuvei_Http::get_param('responsechecksum');
 		
 		if (empty($advanceResponseChecksum) && empty($responsechecksum)) {
-			Nuvei_Logger::write('Error - advanceResponseChecksum and responsechecksum parameters are empty.');
+			Nuvei_Logger::write(null, 'advanceResponseChecksum and responsechecksum parameters are empty.', 'CRITICAL');
 			return false;
 		}
 		
@@ -285,7 +285,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 				return true;
 			}
 
-			Nuvei_Logger::write('Error - advanceResponseChecksum validation fail.');
+			Nuvei_Logger::write(null, 'advanceResponseChecksum validation fail.', 'WARN');
 			return false;
 		}
 		
@@ -311,7 +311,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		$checksum     = hash($this->plugin_settings['hash_type'], utf8_encode($concat_final));
 		
 		if ($responsechecksum !== $checksum) {
-			Nuvei_Logger::write('Error - responsechecksum validation fail.');
+			Nuvei_Logger::write(null, 'responsechecksum validation fail.', 'WARN');
 			return false;
 		}
 		
