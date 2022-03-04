@@ -900,34 +900,52 @@ class Nuvei_Gateway extends WC_Payment_Gateway
     
     public function hide_payment_gateways( $available_gateways ) {
 		if ( is_checkout() && ! is_wc_endpoint_url() ) {
-			global $woocommerce;
-
-			$cart       = $woocommerce->cart;
-			$cart_items = $cart->get_cart();
-
-			if ( count( $cart_items ) == 0 ) {
-				return $available_gateways;
-			}
-
-			foreach ( $cart_items as $item ) {
-				$cart_product   = wc_get_product( $item['product_id'] );
-				$cart_prod_attr = $cart_product->get_attributes();
-
-				// product with a payment plan
-				if ( ! empty( $cart_prod_attr[ 'pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ) ] )
-					&& ! empty( $available_gateways[ NUVEI_GATEWAY_NAME ] )
-				) {
-					$filtred_gws[ NUVEI_GATEWAY_NAME ] = $available_gateways[ NUVEI_GATEWAY_NAME ];
-                    
-                    WC()->session->set('nuvei_force_upo', true);
-					
-                    return $filtred_gws;
-				}
-			}
+            $items_info = $this->check_for_product_with_plan();
+            
+            if($items_info['item_with_plan']
+                && ! empty( $available_gateways[ NUVEI_GATEWAY_NAME ] )
+            ) {
+                if($items_info['items'] > 1) {
+                    return [];
+                }
+                
+                $filtred_gws[ NUVEI_GATEWAY_NAME ] = $available_gateways[ NUVEI_GATEWAY_NAME ];
+                return $filtred_gws;
+            }
 		}
 
 		return $available_gateways;
 	}
+    
+    /**
+     * Check for Item with a Nuvei Payment plan in the cart.
+     * 
+     * @global object $woocommerce
+     * @return array $resp
+     */
+    public function check_for_product_with_plan()
+    {
+        global $woocommerce;
+
+        $cart       = $woocommerce->cart;
+        $cart_items = $cart->get_cart();
+        $resp       = [
+            'items'             => count($cart_items),
+            'item_with_plan'    => false
+        ];
+        
+        foreach ( $cart_items as $item ) {
+            $cart_product   = wc_get_product( $item['product_id'] );
+            $cart_prod_attr = $cart_product->get_attributes();
+            
+            // product with a payment plan
+            if ( ! empty( $cart_prod_attr[ 'pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ) ] )) {
+                $resp['item_with_plan'] = true;
+            }
+        }
+        
+        return $resp;
+    }
 	
 	/**
 	 * Get a plugin setting by its key.
