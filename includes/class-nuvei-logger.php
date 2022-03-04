@@ -105,7 +105,7 @@ class Nuvei_Logger {
         $file_name  = date('Y-m-d', time());
         
 		file_put_contents(
-			$logs_path . $file_name . '.log',
+			$logs_path . $file_name . '.' . NUVEI_LOG_EXT,
 			$string,
 			FILE_APPEND
 		);
