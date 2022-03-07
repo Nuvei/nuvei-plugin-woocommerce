@@ -280,6 +280,9 @@ function nuveiSyncPaymentPlans() {
 }
 
 function nuveiDisablePm(_code, _name) {
+    console.log('nuveiDisablePm', _code)
+    console.log('nuveiDisablePm', _name)
+    
 	var selectedPMs			= jQuery('#woocommerce_nuvei_pm_black_list').val();
 	var selectedPMsVisible	= jQuery('#woocommerce_nuvei_pm_black_list_visible').val();
 	
@@ -362,19 +365,16 @@ jQuery(function() {
 	});
 	
 	// for the disable/enable PM select
-	jQuery('#nuvei_block_pms_multiselect').on('change', function() {
-		if('' == jQuery('#nuvei_block_pms_multiselect').val()) {
+    jQuery('#nuvei_block_pms_multiselect option').on('click', function() {
+        var self = jQuery(this);
+        
+        if('' == self.prop('value')) {
 			return;
 		}
-		
-		nuveiDisablePm(
-			jQuery('#nuvei_block_pms_multiselect').val(), 
-			jQuery('#nuvei_block_pms_multiselect option:selected').text()
-		);
-
-		// hide the selected option
-		jQuery('#nuvei_block_pms_multiselect option:selected').hide();
-	});
+        
+        nuveiDisablePm(self.val(), self.text());
+        self.hide();
+    });
 });
 // document ready function END
 

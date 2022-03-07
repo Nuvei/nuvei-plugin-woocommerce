@@ -381,7 +381,7 @@ abstract class Nuvei_Request {
 			// return base params to the sender
 			//          $resp_array['request_params'] = $all_params;
 			
-			Nuvei_Logger::write($resp_array, 'Nuvei Request response:');
+			Nuvei_Logger::write(empty($resp_array) ? $resp : $resp_array, 'Nuvei Request response:');
 
 			return $resp_array;
 		} catch (Exception $e) {

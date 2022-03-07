@@ -53,7 +53,7 @@ class Nuvei_Logger {
         }
         
         $machine_name       = '';
-        $service_name       = 'Prestashop Checkout SDK plugin v.' . $plugin_data['Version'] . '|';
+        $service_name       = NUVEI_SOURCE_APPLICATION . ' ' . $plugin_data['Version'] . '|';
         $source_file_name   = '';
         $member_name        = '';
         $source_line_number = '';
