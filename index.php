@@ -9,9 +9,9 @@
  * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 5.8.2
+ * Tested up to: 5.9.1
  * WC requires at least: 3.0
- * WC tested up to: 6.0.0
+ * WC tested up to: 6.2.1
 */
 
 defined('ABSPATH') || die('die');
