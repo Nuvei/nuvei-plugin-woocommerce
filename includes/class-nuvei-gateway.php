@@ -802,45 +802,46 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		Nuvei_Logger::write($ord_details);
         
         // for UPO
-        $save_pm = (bool) $this->get_setting('use_upos'); 
+        $use_upos = $save_pm = (bool) $this->get_setting('use_upos');
+        
+        if(!is_user_logged_in()) {
+            $use_upos = $save_pm = false;
+        }
         // TODO uncomment this when sdk team is reay
-//        if(null !== WC()->session->get('nuvei_force_upo')) {
+//        elseif(null !== WC()->session->get('nuvei_force_upo')) {
 //            $save_pm = 'always';
 //        }
 		
-        if(null !== WC()->session->get('nuvei_force_upo')) {
-            $save_pm = 'always';
-        }
-		
 		$checkout_data = array( // use it in the template
-			'sessionToken'          => $oo_data['sessionToken'],
-			'env'                   => 'yes' == $this->get_setting('test') ? 'test' : 'prod',
-			'merchantId'            => $this->get_setting('merchantId'),
-			'merchantSiteId'        => $this->get_setting('merchantSiteId'),
-			'country'               => $ord_details['billingAddress']['country'],
-			'currency'              => get_woocommerce_currency(),
-			'amount'                => (string) number_format((float) $cart->total, 2, '.', ''),
-			'renderTo'              => '#nuvei_checkout',
+			'sessionToken'              => $oo_data['sessionToken'],
+			'env'                       => 'yes' == $this->get_setting('test') ? 'test' : 'prod',
+			'merchantId'                => $this->get_setting('merchantId'),
+			'merchantSiteId'            => $this->get_setting('merchantSiteId'),
+			'country'                   => $ord_details['billingAddress']['country'],
+			'currency'                  => get_woocommerce_currency(),
+			'amount'                    => (string) number_format((float) $cart->total, 2, '.', ''),
+			'renderTo'                  => '#nuvei_checkout',
 		//            'onResult'              => nuveiCheckoutCallback, // pass it in the JS, showNuveiCheckout()
 		//            'userTokenId'           => $ord_details['billingAddress']['email'],
-			'useDCC'                =>  $this->get_setting('use_dcc', 'enable'),
-			'strict'                => false,
-			'savePM'                => $save_pm,
+			'useDCC'                    =>  $this->get_setting('use_dcc', 'enable'),
+			'strict'                    => false,
+			'savePM'                    => $save_pm,
+			'showUserPaymentOptions'    => $use_upos,
 		//            'subMethod'           => '',
-			'pmWhitelist'           => null,
-			'pmBlacklist'           => $pm_black_list,
+			'pmWhitelist'               => null,
+			'pmBlacklist'               => $pm_black_list,
 		//            'blockCards'            => $this->get_setting('blocked_cards', []), set it later
-			'alwaysCollectCvv'      => true,
-			'fullName'              => $ord_details['billingAddress']['firstName'] . ' ' . $oo_data['billingAddress']['lastName'],
-			'email'                 => $ord_details['billingAddress']['email'],
-			'payButton'             => $this->get_setting('pay_button', 'amountButton'),
-			'showResponseMessage'   => false, // shows/hide the response popups
-			'locale'                => substr(get_locale(), 0, 2),
-			'autoOpenPM'            => (bool) $this->get_setting('auto_open_pm', 1),
-			'logLevel'              => $this->get_setting('log_level'),
-			'maskCvv'               => true,
-			'i18n'                  => json_decode($this->get_setting('translation', ''), true),
-            'billingAddress'        => $ord_details['billingAddress'],
+			'alwaysCollectCvv'          => true,
+			'fullName'                  => $ord_details['billingAddress']['firstName'] . ' ' . $oo_data['billingAddress']['lastName'],
+			'email'                     => $ord_details['billingAddress']['email'],
+			'payButton'                 => $this->get_setting('pay_button', 'amountButton'),
+			'showResponseMessage'       => false, // shows/hide the response popups
+			'locale'                    => substr(get_locale(), 0, 2),
+			'autoOpenPM'                => (bool) $this->get_setting('auto_open_pm', 1),
+			'logLevel'                  => $this->get_setting('log_level'),
+			'maskCvv'                   => true,
+			'i18n'                      => json_decode($this->get_setting('translation', ''), true),
+            'billingAddress'            => $ord_details['billingAddress'],
 		);
         
 		// check for product with a plan
