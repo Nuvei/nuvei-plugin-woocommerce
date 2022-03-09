@@ -498,6 +498,7 @@ function nuvei_enqueue( $hook) {
 		});
 	}
 	
+    // TODO - remove it after tests
 	// second checkout step process order
 	if (
 		isset($_REQUEST['wc-api'])

@@ -264,23 +264,22 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$nuvei_transaction_id = Nuvei_Http::get_param('nuvei_transaction_id', 'int');
 		
 		# in case we use Cashier
-		if (1 == $this->settings['use_cashier']) {
-			Nuvei_Logger::write('Process Cashier payment.');
-			
-			$url = $this->generate_cashier_url($return_success_url, $return_error_url, $order_id);
-
-			if (!empty($url)) {
-				return array(
-					'result'    => 'success',
-					'redirect'    => add_query_arg(array(), $url)
-				);
-			}
-			
-			return;
-		}
+//		if (1 == $this->settings['use_cashier']) {
+//			Nuvei_Logger::write('Process Cashier payment.');
+//			
+//			$url = $this->generate_cashier_url($return_success_url, $return_error_url, $order_id);
+//
+//			if (!empty($url)) {
+//				return array(
+//					'result'    => 'success',
+//					'redirect'    => add_query_arg(array(), $url)
+//				);
+//			}
+//			
+//			return;
+//		}
 		# in case we use Cashier END
 		
-		# in case of webSDK payment (cc_card)
 		if (!empty($nuvei_transaction_id)) {
 			Nuvei_Logger::write('Process webSDK Order, transaction ID #' . $nuvei_transaction_id);
 			
@@ -292,145 +291,154 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'redirect'  => $return_success_url
 			);
 		}
-		# in case of webSDK payment (cc_card) END
-		
-		Nuvei_Logger::write('Process Rest APM Order.');
-		
-		$np_obj = new Nuvei_Payment($this->settings);
-		$resp   = $np_obj->process(array(
-			'order_id'             => $order_id, 
-			'return_success_url'   => $return_success_url, 
-			'return_error_url'     => $return_error_url
-		));
-		
-		if (!$resp) {
-			$msg = __('There is no response for the Order.', 'nuvei_checkout_woocommerce');
+        
+        Nuvei_Logger::write('process_payment() error - $nuvei_transaction_id is empty for Order ID ' . $order_id);
 			
-			$order->add_order_note($msg);
-			$order->save();
-			
-			Nuvei_Logger::write('There is no response for the Order.');
-			
-			return array(
-				'result'    => 'success',
-				'redirect'  => $return_error_url
-			);
-		}
+        return array(
+            'result'    => 'success',
+            'redirect'  => array(
+                'Status'    => 'error',
+            ),
+            wc_get_checkout_url() . 'order-received/' . $order_id . '/'
+        );
 		
-		if (empty(Nuvei_Http::get_request_status($resp))) {
-			$msg = __('There is no Status for the Order.', 'nuvei_checkout_woocommerce');
-			
-			$order->add_order_note($msg);
-			$order->save();
-			
-			Nuvei_Logger::write('There is no Status for the Order.');
-			
-			return array(
-				'result'    => 'success',
-				'redirect'  => $return_error_url
-			);
-		}
+//		Nuvei_Logger::write('Process Rest APM Order.');
 		
-		# Redirect
-		if (!empty($resp['redirectURL']) || !empty($resp['paymentOption']['redirectUrl'])) {
-			return array(
-				'result'    => 'success',
-				'redirect'    => add_query_arg(
-					array(),
-					!empty($resp['redirectURL']) ? $resp['redirectURL'] : $resp['paymentOption']['redirectUrl']
-				)
-			);
-		}
-		
-		if (empty($resp['transactionStatus'])) {
-			$msg = __('There is no Transaction Status for the Order.', 'nuvei_checkout_woocommerce');
-			
-			$order->add_order_note($msg);
-			$order->save();
-			
-			Nuvei_Logger::write('There is no Transaction Status for the Order.');
-			
-			return array(
-				'result'    => 'success',
-				'redirect'  => $return_error_url
-			);
-		}
-		
-		if ('DECLINED' === Nuvei_Http::get_request_status($resp)
-			|| 'DECLINED' === $resp['transactionStatus']
-		) {
-			$order->add_order_note(__('Order Declined.', 'nuvei_checkout_woocommerce'));
-			$order->set_status('cancelled');
-			$order->save();
-			
-			return array(
-				'result'    => 'success',
-				'redirect'  => $return_error_url
-			);
-		}
-		
-		if ('ERROR' === Nuvei_Http::get_request_status($resp)
-			|| 'ERROR' === $resp['transactionStatus']
-		) {
-			$order->set_status('failed');
-
-			$error_txt = __('Payment error', 'nuvei_checkout_woocommerce');
-
-			if (!empty($resp['reason'])) {
-				$error_txt .= ': ' . $resp['errCode'] . ' - ' . $resp['reason'] . '.';
-			} elseif (!empty($resp['threeDReason'])) {
-				$error_txt .= ': ' . $resp['threeDReason'] . '.';
-			} elseif (!empty($resp['message'])) {
-				$error_txt .= ': ' . $resp['message'] . '.';
-			}
-			
-			$order->add_order_note($error_txt);
-			$order->save();
-			
-			return array(
-				'result'    => 'success',
-				'redirect'  => $return_error_url
-			);
-		}
-		
-		// catch Error code or reason
-		if ( ( isset($resp['gwErrorCode']) && -1 === $resp['gwErrorCode'] )
-			|| isset($resp['gwErrorReason'])
-		) {
-			$msg = __('Error with the Payment: ', 'nuvei_checkout_woocommerce') . $resp['gwErrorReason'] . '.';
-
-			$order->add_order_note($msg);
-			$order->save();
-
-			return array(
-				'result'    => 'success',
-				'redirect'  => $return_error_url
-			);
-		}
-		
-		# SUCCESS
-		// If we get Transaction ID save it as meta-data
-		if (isset($resp['transactionId']) && $resp['transactionId']) {
-			$order->update_meta_data(NUVEI_TRANS_ID, $resp['transactionId'], 0);
-		}
-		
-		// save the response transactionType value
-		if (isset($resp['transactionType']) && '' !== $resp['transactionType']) {
-			$order->update_meta_data(NUVEI_RESP_TRANS_TYPE, $resp['transactionType']);
-		}
-
-		if (isset($resp['transactionId']) && '' !== $resp['transactionId']) {
-			$order->add_order_note(__('Payment succsess for Transaction Id ', 'nuvei_checkout_woocommerce') . $resp['transactionId']);
-		} else {
-			$order->add_order_note(__('Payment succsess.', 'nuvei_checkout_woocommerce'));
-		}
-
-		$order->save();
-		
-		return array(
-			'result'    => 'success',
-			'redirect'  => $return_success_url
-		);
+//		$np_obj = new Nuvei_Payment($this->settings);
+//		$resp   = $np_obj->process(array(
+//			'order_id'             => $order_id, 
+//			'return_success_url'   => $return_success_url, 
+//			'return_error_url'     => $return_error_url
+//		));
+//		
+//		if (!$resp) {
+//			$msg = __('There is no response for the Order.', 'nuvei_checkout_woocommerce');
+//			
+//			$order->add_order_note($msg);
+//			$order->save();
+//			
+//			Nuvei_Logger::write('There is no response for the Order.');
+//			
+//			return array(
+//				'result'    => 'success',
+//				'redirect'  => $return_error_url
+//			);
+//		}
+//		
+//		if (empty(Nuvei_Http::get_request_status($resp))) {
+//			$msg = __('There is no Status for the Order.', 'nuvei_checkout_woocommerce');
+//			
+//			$order->add_order_note($msg);
+//			$order->save();
+//			
+//			Nuvei_Logger::write('There is no Status for the Order.');
+//			
+//			return array(
+//				'result'    => 'success',
+//				'redirect'  => $return_error_url
+//			);
+//		}
+//		
+//		# Redirect
+//		if (!empty($resp['redirectURL']) || !empty($resp['paymentOption']['redirectUrl'])) {
+//			return array(
+//				'result'    => 'success',
+//				'redirect'    => add_query_arg(
+//					array(),
+//					!empty($resp['redirectURL']) ? $resp['redirectURL'] : $resp['paymentOption']['redirectUrl']
+//				)
+//			);
+//		}
+//		
+//		if (empty($resp['transactionStatus'])) {
+//			$msg = __('There is no Transaction Status for the Order.', 'nuvei_checkout_woocommerce');
+//			
+//			$order->add_order_note($msg);
+//			$order->save();
+//			
+//			Nuvei_Logger::write('There is no Transaction Status for the Order.');
+//			
+//			return array(
+//				'result'    => 'success',
+//				'redirect'  => $return_error_url
+//			);
+//		}
+//		
+//		if ('DECLINED' === Nuvei_Http::get_request_status($resp)
+//			|| 'DECLINED' === $resp['transactionStatus']
+//		) {
+//			$order->add_order_note(__('Order Declined.', 'nuvei_checkout_woocommerce'));
+//			$order->set_status('cancelled');
+//			$order->save();
+//			
+//			return array(
+//				'result'    => 'success',
+//				'redirect'  => $return_error_url
+//			);
+//		}
+//		
+//		if ('ERROR' === Nuvei_Http::get_request_status($resp)
+//			|| 'ERROR' === $resp['transactionStatus']
+//		) {
+//			$order->set_status('failed');
+//
+//			$error_txt = __('Payment error', 'nuvei_checkout_woocommerce');
+//
+//			if (!empty($resp['reason'])) {
+//				$error_txt .= ': ' . $resp['errCode'] . ' - ' . $resp['reason'] . '.';
+//			} elseif (!empty($resp['threeDReason'])) {
+//				$error_txt .= ': ' . $resp['threeDReason'] . '.';
+//			} elseif (!empty($resp['message'])) {
+//				$error_txt .= ': ' . $resp['message'] . '.';
+//			}
+//			
+//			$order->add_order_note($error_txt);
+//			$order->save();
+//			
+//			return array(
+//				'result'    => 'success',
+//				'redirect'  => $return_error_url
+//			);
+//		}
+//		
+//		// catch Error code or reason
+//		if ( ( isset($resp['gwErrorCode']) && -1 === $resp['gwErrorCode'] )
+//			|| isset($resp['gwErrorReason'])
+//		) {
+//			$msg = __('Error with the Payment: ', 'nuvei_checkout_woocommerce') . $resp['gwErrorReason'] . '.';
+//
+//			$order->add_order_note($msg);
+//			$order->save();
+//
+//			return array(
+//				'result'    => 'success',
+//				'redirect'  => $return_error_url
+//			);
+//		}
+//		
+//		# SUCCESS
+//		// If we get Transaction ID save it as meta-data
+//		if (isset($resp['transactionId']) && $resp['transactionId']) {
+//			$order->update_meta_data(NUVEI_TRANS_ID, $resp['transactionId'], 0);
+//		}
+//		
+//		// save the response transactionType value
+//		if (isset($resp['transactionType']) && '' !== $resp['transactionType']) {
+//			$order->update_meta_data(NUVEI_RESP_TRANS_TYPE, $resp['transactionType']);
+//		}
+//
+//		if (isset($resp['transactionId']) && '' !== $resp['transactionId']) {
+//			$order->add_order_note(__('Payment succsess for Transaction Id ', 'nuvei_checkout_woocommerce') . $resp['transactionId']);
+//		} else {
+//			$order->add_order_note(__('Payment succsess.', 'nuvei_checkout_woocommerce'));
+//		}
+//
+//		$order->save();
+//		
+//		return array(
+//			'result'    => 'success',
+//			'redirect'  => $return_success_url
+//		);
 	}
 	
 	/**

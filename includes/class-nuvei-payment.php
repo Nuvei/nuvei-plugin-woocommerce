@@ -4,6 +4,8 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * The class for paymentAPM and payment requests.
+ * 
+ * @deprecated since version 1.0.0
  */
 class Nuvei_Payment extends Nuvei_Request {
 

@@ -110,7 +110,7 @@ class Nuvei_Update_Order extends Nuvei_Request {
 
 			WC()->session->set('nuvei_last_open_order_details', $nuvei_last_open_order_details);
 
-			Nuvei_Logger::write($nuvei_last_open_order_details, 'Update Order Class - nuvei_last_open_order_details');
+//			Nuvei_Logger::write($nuvei_last_open_order_details, 'Update Order Class - nuvei_last_open_order_details');
 			// put the new data in the session END
 			
 			return array_merge($params, $resp);

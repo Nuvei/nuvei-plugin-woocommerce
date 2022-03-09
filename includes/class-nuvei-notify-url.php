@@ -302,16 +302,26 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		
 		// remove parameters not part of the checksum
 		$dmn_params = array_diff_key($request_arr, $custom_params);
-		
-		foreach ($dmn_params as $value) {
-			$concat .= $value;
-		}
+		$concat     = urldecode(implode('', $dmn_params));
+//		foreach ($dmn_params as $value) {
+//			$concat .= $value;
+//		}
 		
 		$concat_final = $concat . $this->plugin_settings['secret'];
-		$checksum     = hash($this->plugin_settings['hash_type'], utf8_encode($concat_final));
+//		$checksum     = hash($this->plugin_settings['hash_type'], utf8_encode($concat_final));
+		$checksum     = hash($this->plugin_settings['hash_type'], $concat_final);
 		
 		if ($responsechecksum !== $checksum) {
-			Nuvei_Logger::write(null, 'responsechecksum validation fail.', 'WARN');
+            $log_data = [];
+            
+            if('yes' == $this->plugin_settings['test']) {
+                $log_data['string concat']  = $concat;
+                $log_data['hash']           = $this->plugin_settings['hash_type'];
+                $log_data['checksum']       = $checksum;
+                $log_data['dmn_params']     = array_keys($dmn_params);
+            }
+            
+			Nuvei_Logger::write($log_data, 'responsechecksum validation fail.', 'WARN');
 			return false;
 		}
 		
