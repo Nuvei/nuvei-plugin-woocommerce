@@ -9,9 +9,9 @@
  * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 5.9.1
+ * Tested up to: 5.9.2
  * WC requires at least: 3.0
- * WC tested up to: 6.2.1
+ * WC tested up to: 6.3.1
 */
 
 defined('ABSPATH') || die('die');
@@ -498,8 +498,7 @@ function nuvei_enqueue( $hook) {
 		});
 	}
 	
-    // TODO - remove it after tests
-	// second checkout step process order
+	// nuvei checkout step process order, after the internal submit form the checkout
 	if (
 		isset($_REQUEST['wc-api'])
 		&& 'process-order' == $_REQUEST['wc-api']

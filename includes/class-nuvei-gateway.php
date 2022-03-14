@@ -264,20 +264,20 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$nuvei_transaction_id = Nuvei_Http::get_param('nuvei_transaction_id', 'int');
 		
 		# in case we use Cashier
-//		if (1 == $this->settings['use_cashier']) {
-//			Nuvei_Logger::write('Process Cashier payment.');
-//			
-//			$url = $this->generate_cashier_url($return_success_url, $return_error_url, $order_id);
-//
-//			if (!empty($url)) {
-//				return array(
-//					'result'    => 'success',
-//					'redirect'    => add_query_arg(array(), $url)
-//				);
-//			}
-//			
-//			return;
-//		}
+		if (1 == $this->settings['use_cashier']) {
+			Nuvei_Logger::write('Process Cashier payment.');
+			
+			$url = $this->generate_cashier_url($return_success_url, $return_error_url, $order_id);
+
+			if (!empty($url)) {
+				return array(
+					'result'    => 'success',
+					'redirect'    => add_query_arg(array(), $url)
+				);
+			}
+			
+			return;
+		}
 		# in case we use Cashier END
 		
 		if (!empty($nuvei_transaction_id)) {
@@ -1296,6 +1296,16 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'default'       => 1,
 				'class'         => 'nuvei_checkout_setting'
 			),
+            'close_popup' => [
+                'title'         => __('Auto close APM popup.', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+				'options'       => array(
+					1   => __('Yes (Recommended)', 'nuvei_checkout_woocommerce'),
+					0   => __('No', 'nuvei_checkout_woocommerce'),
+				),
+				'default'       => 1,
+				'class'         => 'nuvei_checkout_setting'
+            ],
 			'log_level' => array(
 				'title'         => __('Checkout Log level', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',

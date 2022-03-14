@@ -25,9 +25,10 @@ class Nuvei_Settle_Void extends Nuvei_Request {
 			return false;
 		}
 		
-		$order   = wc_get_order($data['order_id']);
-		$curr    = get_woocommerce_currency();
-		$tr_curr = $order->get_meta(NUVEI_TRANS_CURR);
+		$order      = wc_get_order($data['order_id']);
+		$curr       = get_woocommerce_currency();
+		$tr_curr    = $order->get_meta(NUVEI_TRANS_CURR);
+        $notify_url = Nuvei_String::get_notify_url($this->plugin_settings);
 		
 		if (!empty($tr_curr)) {
 			$curr = $tr_curr;
@@ -39,6 +40,8 @@ class Nuvei_Settle_Void extends Nuvei_Request {
 			'currency'              => $curr,
 			'relatedTransactionId'  => $order->get_meta(NUVEI_TRANS_ID),
 			'authCode'              => $order->get_meta(NUVEI_AUTH_CODE_KEY),
+            'url'                   => $notify_url,
+            'urlDetails'            => ['notificationUrl' => $notify_url],
 		);
 
 		return $this->call_rest_api($data['method'], $params);

@@ -59,6 +59,17 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		if (!empty($form_data)) {
 			parse_str($form_data, $ajax_params); 
 		}
+        
+        $url_details = [
+            'notificationUrl'   => Nuvei_String::get_notify_url($this->plugin_settings),
+            'backUrl'           => wc_get_checkout_url(),
+        ];
+        
+        if(1 == $this->plugin_settings['close_popup']) {
+            $url_details['successUrl']  = $url_details['failureUrl'] 
+                                        = $url_details['pendingUrl'] 
+                                        = NUVEI_SDK_AUTOCLOSE_URL;
+        }
 		
 		// check for a Product with Payment Plan
 		$addresses = $this->get_order_addresses();
@@ -71,6 +82,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 			'userDetails'       => $addresses['billingAddress'],
 			'transactionType'   => $this->plugin_settings['payment_action'],
 			'paymentOption'     => array('card' => array('threeD' => array('isDynamic3D' => 1))),
+            'urlDetails'        => $url_details,
 		);
 		
 		if (1 == $this->plugin_settings['use_upos']) {

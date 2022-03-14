@@ -23,21 +23,24 @@ class Nuvei_Refund extends Nuvei_Request {
 			return false;
 		}
 		
-		$time    = gmdate('YmdHis', time());
-		$order   = wc_get_order($data['order_id']);
-		$curr    = get_woocommerce_currency();
-		$tr_curr = $order->get_meta(NUVEI_TRANS_CURR);
+		$time       = gmdate('YmdHis', time());
+		$order      = wc_get_order($data['order_id']);
+		$curr       = get_woocommerce_currency();
+//		$tr_curr    = $order->get_meta(NUVEI_TRANS_CURR);
+        $notify_url = Nuvei_String::get_notify_url($this->plugin_settings);
 		
-		if (!empty($tr_curr)) {
-			$curr = $tr_curr;
-		}
+//		if (!empty($tr_curr)) {
+//			$curr = $tr_curr;
+//		}
 		
 		$ref_parameters = array(
 			'clientRequestId'       => $data['order_id'] . '_' . $time . '_' . uniqid(),
 			'clientUniqueId'        => $time . '_' . uniqid(),
 			'amount'                => number_format($data['ref_amount'], 2, '.', ''),
-			'currency'              => $curr,
+//			'currency'              => $curr,
 			'relatedTransactionId'  => $data['tr_id'], // GW Transaction ID
+            'url'                   => $notify_url,
+            'urlDetails'            => ['notificationUrl' => $notify_url],
 		);
 		
 		return $this->call_rest_api('refundTransaction', $ref_parameters);
@@ -222,6 +225,7 @@ class Nuvei_Refund extends Nuvei_Request {
 	}
 
 	protected function get_checksum_params() {
-		return  array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'currency', 'relatedTransactionId', 'url', 'timeStamp');
+//		return  array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'currency', 'relatedTransactionId', 'url', 'timeStamp');
+		return  array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'relatedTransactionId', 'url', 'timeStamp');
 	}
 }

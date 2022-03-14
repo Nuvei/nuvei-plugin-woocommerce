@@ -32,7 +32,7 @@ abstract class Nuvei_Request {
 	public function __construct( array $plugin_settings) {
 		$time                  = gmdate('Ymdhis');
 		$this->plugin_settings = $plugin_settings;
-		$notify_url            = Nuvei_String::get_notify_url($plugin_settings);
+//		$notify_url            = Nuvei_String::get_notify_url($plugin_settings);
 		
 		$this->request_base_params = array(
 			'merchantId'        => $plugin_settings['merchantId'],
@@ -46,10 +46,11 @@ abstract class Nuvei_Request {
 			'merchantDetails'	=> array(
 				'customField3'      => time(), // create time
 			),
-			'urlDetails'        => array(
-				'notificationUrl'   => $notify_url,
-			),
-			'url'               => $notify_url, // a custom parameter for the checksum
+//			'urlDetails'        => array(
+//				'notificationUrl'   => $notify_url,
+//                'backUrl'           => wc_get_checkout_url(),
+//			),
+//			'url'               => $notify_url, // a custom parameter for the checksum
 		);
 	}
 	

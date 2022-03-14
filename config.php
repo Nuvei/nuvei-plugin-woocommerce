@@ -25,8 +25,9 @@ define('NUVEI_LOG_EXT', 'log');
 define('NUVEI_REST_ENDPOINT_INT',   'https://ppp-test.safecharge.com/ppp/api/v1/');
 define('NUVEI_REST_ENDPOINT_PROD',  'https://secure.safecharge.com/ppp/api/v1/');
 
-define('NUVEI_SDK_URL_INT',   'https://srv-bsf-devpppjs.gw-4u.com/checkoutNext/checkout.js');
-define('NUVEI_SDK_URL_PROD',  'https://cdn.safecharge.com/safecharge_resources/v1/checkout/checkout.js');
+define('NUVEI_SDK_URL_INT',         'https://srv-bsf-devpppjs.gw-4u.com/checkoutNext/checkout.js');
+define('NUVEI_SDK_URL_PROD',        'https://cdn.safecharge.com/safecharge_resources/v1/checkout/checkout.js');
+define('NUVEI_SDK_AUTOCLOSE_URL',   'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html');
 
 define('NUVEI_JS_LOCALIZATIONS', [
     'ajaxurl'               => admin_url('admin-ajax.php'),
