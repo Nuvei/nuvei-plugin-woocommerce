@@ -645,14 +645,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		return 0;
 	}
 	
-	public function show_apms_names() {
-		if (isset($this->settings['show_apms_names'])) {
-			return $this->settings['show_apms_names'];
-		}
-		
-		return 0;
-	}
-	
 	public function create_nuvei_global_attribute() {
 		Nuvei_Logger::write('create_nuvei_global_attribute()');
 		
@@ -892,6 +884,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			$checkout_data['blockCards'] = $blocked_cards;
 		}
 		# blocked_cards END
+        
+        if($this->get_setting('sdk_version') != 'prod') {
+            $checkout_data['webSdkEnv'] = 'dev';
+        }
 		
 		$resp_data['nuveiPluginUrl'] = plugin_dir_url(NUVEI_PLUGIN_FILE);
 		$resp_data['nuveiSiteUrl']   = get_site_url();

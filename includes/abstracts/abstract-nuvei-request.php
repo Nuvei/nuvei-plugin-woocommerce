@@ -197,13 +197,32 @@ abstract class Nuvei_Request {
 		$billingAddress['lastName'] = !empty($bln) ? $bln : 'Missing parameter';
 
 		// address
-		$ba = trim(Nuvei_Http::get_param('billing_address_1', 'string', '', $form_params)) . ' '
-			. trim(Nuvei_Http::get_param('billing_address_2', 'string', '', $form_params));
+        $ba     = '';
+        $ba_ln1 = trim(Nuvei_Http::get_param('billing_address_1', 'string', '', $form_params));
+        $ba_ln2 = trim(Nuvei_Http::get_param('billing_address_2', 'string', '', $form_params));
+        
+        if(!empty($ba_ln1)) {
+            $ba = $ba_ln1;
+            
+            if(!empty($ba_ln2)) {
+                $ba .= ' ' . $ba_ln2;
+            }
+        }
+        
 		if (empty(trim($ba))) {
-			$ba = $cart->get_customer()->get_billing_address() . ' '
-				. $cart->get_customer()->get_billing_address_2();
+            $ba_ln1 = trim($cart->get_customer()->get_billing_address());
+            $ba_ln2 = trim($cart->get_customer()->get_billing_address_2());
+            
+            if(!empty($ba_ln1)) {
+                $ba = $ba_ln1;
+
+                if(!empty($ba_ln2)) {
+                    $ba .= ' ' . $ba_ln2;
+                }
+            }
+            
 		}
-		$billingAddress['address'] = !empty(trim($ba)) ? $ba : 'Missing parameter';
+		$billingAddress['address'] = !empty($ba) ? $ba : 'Missing parameter';
 		
 		// billing_phone
 		$bp = trim(Nuvei_Http::get_param('billing_phone', 'string', '', $form_params));

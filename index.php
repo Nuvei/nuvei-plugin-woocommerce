@@ -9,7 +9,7 @@
  * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 5.9.2
+ * Tested up to: 5.9.3
  * WC requires at least: 3.0
  * WC tested up to: 6.3.1
 */
@@ -394,7 +394,6 @@ function nuvei_load_styles_scripts( $styles) {
             'wcThSep'           => $wcThSep,
             'wcDecSep'          => $wcDecSep,
             'useUpos'           => $wc_nuvei->can_use_upos(),
-            'showApmsNames'     => $wc_nuvei->show_apms_names(),
             'isUserLogged'      => is_user_logged_in() ? 1 : 0,
             'isPluginActive'    => $wc_nuvei->settings['enabled'],
             'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION,
@@ -482,11 +481,8 @@ function nuvei_enqueue( $hook) {
 	global $wc_nuvei;
 		
 	# DMNs catch
-	if (
-		//isset($_REQUEST['wc-api']) 
-	//      && in_array($_REQUEST['wc-api'], array('sc_listener', 'nuvei_listener')) // sc_listener is legacy value
-		in_array(Nuvei_Http::get_param('wc-api'), array('sc_listener', 'nuvei_listener')) // sc_listener is legacy value
-	) {
+    // sc_listener is legacy value
+	if (in_array(Nuvei_Http::get_param('wc-api'), array('sc_listener', 'nuvei_listener'))) {
 		//      add_action('wp_loaded', array($wc_nuvei, 'process_dmns'));
 		add_action('wp_loaded', function() {
 			global $wc_nuvei;
@@ -499,10 +495,8 @@ function nuvei_enqueue( $hook) {
 	}
 	
 	// nuvei checkout step process order, after the internal submit form the checkout
-	if (
-		isset($_REQUEST['wc-api'])
-		&& 'process-order' == $_REQUEST['wc-api']
-		&& !empty($_REQUEST['order_id'])
+	if ('process-order' == Nuvei_Http::get_param('wc-api')
+		&& !empty(Nuvei_Http::get_param('order_id'))
 	) {
 		$wc_nuvei->process_payment(Nuvei_Http::get_param('order_id', 'int', 0));
 	}
