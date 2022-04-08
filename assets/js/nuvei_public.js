@@ -44,10 +44,6 @@ function showNuveiCheckout(_params) {
         nuveiCheckoutSdkParams.pmBlacklist  = null;
         nuveiCheckoutSdkParams.pmWhitelist  = ['cc_card'];
     }
-    // for UPOs we need userTokenId
-    if(false !== nuveiCheckoutSdkParams.savePM) {
-        nuveiCheckoutSdkParams.userTokenId = nuveiCheckoutSdkParams.email;
-    }
 	
 	nuveiCheckoutSdkParams.prePayment	= nuveiPrePayment;
 	nuveiCheckoutSdkParams.onResult		= nuveiAfterSdkResponse;

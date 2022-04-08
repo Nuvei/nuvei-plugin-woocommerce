@@ -409,7 +409,8 @@ function nuvei_load_styles_scripts( $styles) {
 	);
 	
     if(is_checkout()) {
-        $items_info = $wc_nuvei->check_for_product_with_plan();
+        $nuvei_helper = new Nuvei_Helper($wc_nuvei->settings);
+        $items_info = $nuvei_helper->check_for_product_with_plan();
         
         if($items_info['items'] > 1 && $items_info['item_with_plan']) {
             wc_add_notice( __('Your Cart contains a Product with Nuvei Payment paln and another product/s. You must remove the Product with the payment plan or the other product/s to finish your Order!', 'nuvei_checkout_woocommerce'), 'error' );

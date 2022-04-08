@@ -78,7 +78,7 @@ class Nuvei_Logger {
         }
         
         if(is_array($data) || is_object($data)) {
-            $exception = $beauty_log ? json_encode($data, JSON_PRETTY_PRINT) : json_encode($data);
+            $exception = urldecode($beauty_log ? json_encode($data, JSON_PRETTY_PRINT) : json_encode($data));
         }
         elseif(is_bool($data)) {
             $exception = $data ? 'true' : 'false';

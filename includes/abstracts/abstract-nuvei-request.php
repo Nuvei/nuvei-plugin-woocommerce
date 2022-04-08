@@ -53,6 +53,36 @@ abstract class Nuvei_Request {
 //			'url'               => $notify_url, // a custom parameter for the checksum
 		);
 	}
+    
+    /**
+     * Check for Item with a Nuvei Payment plan in the cart.
+     * 
+     * @global object $woocommerce
+     * @return array $resp
+     */
+    public function check_for_product_with_plan()
+    {
+        global $woocommerce;
+
+        $cart       = $woocommerce->cart;
+        $cart_items = $cart->get_cart();
+        $resp       = [
+            'items'             => count($cart_items),
+            'item_with_plan'    => false
+        ];
+        
+        foreach ( $cart_items as $item ) {
+            $cart_product   = wc_get_product( $item['product_id'] );
+            $cart_prod_attr = $cart_product->get_attributes();
+            
+            // product with a payment plan
+            if ( ! empty( $cart_prod_attr[ 'pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ) ] )) {
+                $resp['item_with_plan'] = true;
+            }
+        }
+        
+        return $resp;
+    }
 	
 	/**
 	 * Checks if the Order belongs to WC_Order and if the order was made
@@ -587,6 +617,21 @@ abstract class Nuvei_Request {
 		
 		return $order_id . '_' . time() . NUVEI_CUID_POSTFIX;
 	}
+    
+    protected function pass_user_token_id() {
+        if($this->plugin_settings('use_upos') == 1) {
+            return true;
+        }
+        else {
+            $items_with_plan_data = $this->check_for_product_with_plan();
+            
+            if(!empty($items_with_plan_data['item_with_plan'])) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
 	
 	/**
 	 * Get the request endpoint - sandbox or production.

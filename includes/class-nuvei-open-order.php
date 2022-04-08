@@ -85,7 +85,12 @@ class Nuvei_Open_Order extends Nuvei_Request {
             'urlDetails'        => $url_details,
 		);
 		
-		if (1 == $this->plugin_settings['use_upos']) {
+        // add or not userTokenId
+        $items_with_plan_data = $this->check_for_product_with_plan();
+        
+		if (!empty($items_with_plan_data['item_with_plan'])
+            || 1 == $this->plugin_settings['use_upos']
+        ) {
 			$oo_params['userTokenId'] = $addresses['billingAddress']['email'];
 		}
 		

@@ -76,6 +76,15 @@ class Nuvei_Update_Order extends Nuvei_Request {
 				'customField2' => json_encode($product_data['products_data']), // item details
 			),
 		);
+        
+        // add or not userTokenId
+        $items_with_plan_data = $this->check_for_product_with_plan();
+        
+        if (!empty($items_with_plan_data['item_with_plan'])
+            || 1 == $this->plugin_settings['use_upos']
+        ) {
+			$params['userTokenId'] = $params['billingAddress']['email'];
+		}
 		
 		// lat changes for the rebilling
 		if (!empty($product_data['subscr_data'])) {
