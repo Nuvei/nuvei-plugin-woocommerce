@@ -38,6 +38,16 @@ function showNuveiCheckout(_params) {
 	if(typeof _params != 'undefined') {
 		nuveiCheckoutSdkParams = _params;
 	}
+    
+    // in this case we have product with Nuvei payment plan.
+    if('savePM' === nuveiCheckoutSdkParams.savePM) {
+        nuveiCheckoutSdkParams.pmBlacklist  = null;
+        nuveiCheckoutSdkParams.pmWhitelist  = ['cc_card'];
+    }
+    // for UPOs we need userTokenId
+    if(false !== nuveiCheckoutSdkParams.savePM) {
+        nuveiCheckoutSdkParams.userTokenId = nuveiCheckoutSdkParams.email;
+    }
 	
 	nuveiCheckoutSdkParams.prePayment	= nuveiPrePayment;
 	nuveiCheckoutSdkParams.onResult		= nuveiAfterSdkResponse;

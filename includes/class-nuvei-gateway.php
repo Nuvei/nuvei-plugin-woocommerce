@@ -807,10 +807,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         if(!is_user_logged_in()) {
             $use_upos = $save_pm = false;
         }
-        // TODO uncomment this when sdk team is reay
-//        elseif(null !== WC()->session->get('nuvei_force_upo')) {
-//            $save_pm = 'always';
-//        }
+        elseif(!empty($this->check_for_product_with_plan())) {
+            $save_pm = 'always';
+        }
 		
 		$checkout_data = array( // use it in the template
 			'sessionToken'              => $oo_data['sessionToken'],
