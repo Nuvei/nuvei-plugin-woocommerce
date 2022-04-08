@@ -802,14 +802,18 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		Nuvei_Logger::write($ord_details);
         
         // for UPO
-        $use_upos = $save_pm = (bool) $this->get_setting('use_upos');
+        $items_with_plan_data   = $this->check_for_product_with_plan();
+        $use_upos               = $save_pm 
+                                = (bool) $this->get_setting('use_upos');
         
         if(!is_user_logged_in()) {
             $use_upos = $save_pm = false;
         }
-        elseif(!empty($this->check_for_product_with_plan())) {
+        elseif(!empty($items_with_plan_data['item_with_plan'])) {
             $save_pm = 'always';
         }
+        
+        Nuvei_Logger::write($this->check_for_product_with_plan());
 		
 		$checkout_data = array( // use it in the template
 			'sessionToken'              => $oo_data['sessionToken'],
