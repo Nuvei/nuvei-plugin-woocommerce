@@ -314,7 +314,8 @@ class Nuvei_Notify_Url extends Nuvei_Request {
                 $log_data['string concat']  = $concat;
                 $log_data['hash']           = $this->plugin_settings['hash_type'];
                 $log_data['checksum']       = $checksum;
-                $log_data['dmn_params']     = array_keys($dmn_params);
+//                $log_data['dmn_params']     = array_keys($dmn_params)
+                ;
             }
             
 			Nuvei_Logger::write($log_data, 'responsechecksum validation fail.', 'WARN');

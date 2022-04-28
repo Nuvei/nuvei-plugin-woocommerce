@@ -18,7 +18,7 @@ class Nuvei_Get_Apms extends Nuvei_Request {
 		
 		$apms_params = array(
 			'sessionToken'      => $args['sessionToken'],
-			'currencyCode'      => get_woocommerce_currency(),
+//			'currencyCode'      => get_woocommerce_currency(),
 			'languageCode'      => Nuvei_String::format_location(get_locale()),
 		);
 		
