@@ -157,7 +157,8 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			$this->is_order_valid($order_id);
 			$this->save_update_order_numbers();
 			
-			$order_status = strtolower($this->sc_order->get_status());
+			$order_status   = strtolower($this->sc_order->get_status());
+            $order_total    = round($this->sc_order->get_total(), 2);
 			
 			if ('completed' !== $order_status) {
 				$this->change_order_status(
@@ -167,7 +168,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 				);
 			}
 			
-			$this->subscription_start($transactionType, $order_id);
+			$this->subscription_start($transactionType, $order_id, $order_total);
 			
 			echo esc_html('DMN process end for Order #' . $order_id);
 			exit;
@@ -302,7 +303,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		
 		// remove parameters not part of the checksum
 		$dmn_params = array_diff_key($request_arr, $custom_params);
-		$concat     = urldecode(implode('', $dmn_params));
+		$concat     = implode('', $dmn_params);
 		
 		$concat_final = $concat . $this->plugin_settings['secret'];
 		$checksum     = hash($this->plugin_settings['hash_type'], $concat_final);
@@ -435,18 +436,16 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	 * 
 	 * @param string    $transactionType
 	 * @param int       $order_id
+	 * @param float     $order_total Pass the Order Total only for Auth.
 	 */
-	private function subscription_start( $transactionType, $order_id) {
-		if (!in_array($transactionType, array('Settle', 'Sale'))
-			|| empty(Nuvei_Http::get_param('customField1', 'json'))
-		) {
-			return;
-		}
-		
-		$subscr_data = json_decode(Nuvei_Http::get_param('customField1', 'json'), true);
-		
-		if (empty($subscr_data) || !is_array($subscr_data)) {
-			Nuvei_Logger::write($subscr_data, 'DMN Payment Plan data is empty or wrong format. We will not start a Payment plan.');
+	private function subscription_start($transactionType, $order_id, $order_total = null)
+    {
+        $subscr_data = json_decode(Nuvei_Http::get_param('customField1', 'json'), true);
+        
+		if (!in_array($transactionType, array('Settle', 'Sale', 'Auth'))
+            || empty($subscr_data)
+            || !is_array($subscr_data)
+        ) {
 			return;
 		}
 		
@@ -456,6 +455,11 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			Nuvei_Logger::write($prod_plan, 'There is a problem with the DMN Product Payment Plan data:');
 			return;
 		}
+        
+        if('Auth' == $transactionType && null !== $order_total && 0 < $order_total) {
+            Nuvei_Logger::write($order_total, 'We allow Rebilling for Auth only when the Order total is 0.');
+            return;
+        }
 		
 		// this is the only place to pass the Order ID, we will need it later, to identify the Order
 		$prod_plan['clientRequestId'] = $order_id . '_' . uniqid();

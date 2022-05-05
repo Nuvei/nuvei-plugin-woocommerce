@@ -41,7 +41,7 @@ function nuvei_admin_init() {
 		) {
 			deactivate_plugins(plugin_basename( __FILE__ ));
 		}
-		// check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin END
+		// /check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin
 
 		// check in GIT for new version
 		$file         = dirname(__FILE__) . '/tmp/nuvei-latest-version.json';
@@ -166,8 +166,7 @@ function nuvei_init() {
 	
 	if ('yes' == $plugin_enabled) {
 		// for WPML plugin
-		if (
-			is_plugin_active('sitepress-multilingual-cms' . DIRECTORY_SEPARATOR . 'sitepress.php')
+		if (is_plugin_active('sitepress-multilingual-cms' . DIRECTORY_SEPARATOR . 'sitepress.php')
 			&& 'yes' == $wc_nuvei->settings['use_wpml_thanks_page']
 		) {
 			add_filter('woocommerce_get_checkout_order_received_url', 'nuvei_wpml_thank_you_page', 10, 2);
@@ -177,6 +176,8 @@ function nuvei_init() {
 		add_action( 'manage_shop_order_posts_custom_column', 'nuvei_fill_custom_column' );
 		// for the Store > My Account > Orders list
 		add_action( 'woocommerce_my_account_my_orders_column_order-number', 'nuvei_edit_my_account_orders_col' );
+        // show payment methods on checkout when total is 0
+        add_filter( 'woocommerce_cart_needs_payment', 'nuvei_wc_cart_needs_payment', 10, 2 );
 	}
 	
 	// change Thank-you page title and text
@@ -889,3 +890,29 @@ function nuvei_get_file_form_git( $file) {
 	
 	return $array;
 }
+
+/**
+ * Decide to override or not default WC behavior for Zero Total Order.
+ * 
+ * @param boolean $needs_payment
+ * @param object $cart
+ * 
+ * @return boolean $needs_payment
+ */
+function nuvei_wc_cart_needs_payment($needs_payment, $cart)
+{
+    $cart_items = $cart->get_cart();
+
+    foreach ( $cart_items as $item ) {
+        $cart_product   = wc_get_product( $item['product_id'] );
+        $cart_prod_attr = $cart_product->get_attributes();
+
+        // check for product with a payment plan
+        if ( ! empty( $cart_prod_attr[ 'pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ) ] )) {
+            $needs_payment = true;
+        }
+    }
+    
+    return $needs_payment;
+}
+

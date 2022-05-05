@@ -217,14 +217,14 @@ abstract class Nuvei_Request {
 		if (empty($bfn)) {
 			$bfn = $cart->get_customer()->get_billing_first_name();
 		}
-		$billingAddress['firstName'] = !empty($bfn) ? $bfn : 'Missing parameter';
+		$billingAddress['firstName'] = !empty($bfn) ? trim($bfn) : 'Missing parameter';
 		
 		// billing_last_name
 		$bln = trim(Nuvei_Http::get_param('billing_last_name', 'string', '', $form_params));
 		if (empty($bln)) {
 			$bln = $cart->get_customer()->get_billing_last_name();
 		}
-		$billingAddress['lastName'] = !empty($bln) ? $bln : 'Missing parameter';
+		$billingAddress['lastName'] = !empty($bln) ? trim($bln) : 'Missing parameter';
 
 		// address
         $ba     = '';
@@ -252,42 +252,42 @@ abstract class Nuvei_Request {
             }
             
 		}
-		$billingAddress['address'] = !empty($ba) ? $ba : 'Missing parameter';
+		$billingAddress['address'] = !empty($ba) ? trim($ba) : 'Missing parameter';
 		
 		// billing_phone
 		$bp = trim(Nuvei_Http::get_param('billing_phone', 'string', '', $form_params));
 		if (empty($bp)) {
 			$bp = $cart->get_customer()->get_billing_phone();
 		}
-		$billingAddress['phone'] = !empty($bp) ? $bp : 'Missing parameter';
+		$billingAddress['phone'] = !empty($bp) ? trim($bp) : 'Missing parameter';
 
 		// billing_postcode
 		$bz = trim(Nuvei_Http::get_param('billing_postcode', 'int', 0, $form_params));
 		if (empty($bz)) {
 			$bz = $cart->get_customer()->get_billing_postcode();
 		}
-		$billingAddress['zip'] = !empty($bz) ? $bz : 'Missing parameter';
+		$billingAddress['zip'] = !empty($bz) ? trim($bz) : 'Missing parameter';
 
 		// billing_city
 		$bc = trim(Nuvei_Http::get_param('billing_city', 'string', '', $form_params));
 		if (empty($bc)) {
 			$bc = $cart->get_customer()->get_billing_city();
 		}
-		$billingAddress['city'] = !empty($bc) ? $bc : 'Missing parameter';
+		$billingAddress['city'] = !empty($bc) ? trim($bc) : 'Missing parameter';
 
 		// billing_country
 		$bcn = trim(Nuvei_Http::get_param('billing_country', 'string', '', $form_params));
 		if (empty($bcn)) {
 			$bcn = $cart->get_customer()->get_billing_country();
 		}
-		$billingAddress['country'] = $bcn;
+		$billingAddress['country'] = trim($bcn);
 
 		// billing_email
 		$be = Nuvei_Http::get_param('billing_email', 'mail', '', $form_params);
 		if (empty($be)) {
 			$be = $cart->get_customer()->get_billing_email();
 		}
-		$billingAddress['email'] = $be;
+		$billingAddress['email'] = trim($be);
 		# set billing params END
 		
 		// shipping
@@ -307,7 +307,7 @@ abstract class Nuvei_Request {
 			$sa = $cart->get_customer()->get_shipping_address() . ' '
 				. $cart->get_customer()->get_shipping_address_2();
 		}
-		
+        
 		$sz = Nuvei_Http::get_param('shipping_postcode', 'string', '', $form_params);
 		if (empty($sz)) {
 			$sz = $cart->get_customer()->get_shipping_postcode();
@@ -326,12 +326,12 @@ abstract class Nuvei_Request {
 		return array(
 			'billingAddress'	=> $billingAddress,
 			'shippingAddress'	=> array(
-				'firstName'	=> $sfn,
-				'lastName'  => $sln,
-				'address'   => $sa,
-				'zip'       => $sz,
-				'city'      => $sc,
-				'country'   => $scn,
+				'firstName'	=> trim($sfn),
+				'lastName'  => trim($sln),
+				'address'   => trim($sa),
+				'zip'       => trim($sz),
+				'city'      => trim($sc),
+				'country'   => trim($scn),
 			),
 		);
 	}

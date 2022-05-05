@@ -71,7 +71,6 @@ class Nuvei_Open_Order extends Nuvei_Request {
                                         = NUVEI_SDK_AUTOCLOSE_URL;
         }
 		
-		// check for a Product with Payment Plan
 		$addresses = $this->get_order_addresses();
 		$oo_params = array(
 			'clientUniqueId'    => $uniq_str . '_wc_cart',
