@@ -144,7 +144,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		
 		# Sale and Auth
 		if (in_array($transactionType, array('Sale', 'Auth'), true)) {
-			// WebSDK
+			// SDK
 			if ( !is_numeric($clientUniqueId) && 0 != $TransactionID ) {
 				$order_id = $this->get_order_by_trans_id($TransactionID, $transactionType);
 				
@@ -155,6 +155,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			}
 			
 			$this->is_order_valid($order_id);
+            $this->check_for_repeating_dmn();
 			$this->save_update_order_numbers();
 			
 			$order_status   = strtolower($this->sc_order->get_status());
@@ -186,6 +187,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			&& ( in_array($transactionType, array('Void', 'Settle'), true) )
 		) {
 			$this->is_order_valid($clientUniqueId);
+            $this->check_for_repeating_dmn();
 			
 			if ('Settle' == $transactionType) {
 				$this->save_update_order_numbers();
@@ -207,7 +209,8 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			if (0 == $order_id) {
 				$order_id = $this->get_order_by_trans_id($relatedTransactionId, $transactionType);
 			}
-			
+            
+            $this->check_for_repeating_dmn();
 			$this->create_refund_record($order_id);
 			
 			$this->change_order_status(
@@ -401,7 +404,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	 * Save or update order AuthCode and TransactionID on status change.
 	 */
 	private function save_update_order_numbers() {
-		// save or update AuthCode and GW Transaction ID
+		// save or update AuthCode and Transaction ID
 		$auth_code = Nuvei_Http::get_param('AuthCode', 'int');
 		if (!empty($auth_code)) {
 			$this->sc_order->update_meta_data(NUVEI_AUTH_CODE_KEY, $auth_code);
@@ -425,6 +428,11 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		$tr_curr = Nuvei_Http::get_param('currency');
 		if (!empty($tr_curr)) {
 			$this->sc_order->update_meta_data(NUVEI_TRANS_CURR, $tr_curr);
+		}
+        
+        $tr_status = Nuvei_Http::get_request_status();
+        if (!empty($tr_status)) {
+			$this->sc_order->update_meta_data(NUVEI_TRANS_STATUS, $tr_status);
 		}
 		
 		$this->sc_order->save();
@@ -809,5 +817,17 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		Nuvei_Logger::write($sum, 'Sum of refunds for an Order.');
 		return round($sum, 2);
 	}
+    
+    private function check_for_repeating_dmn()
+    {
+        if($this->sc_order->get_meta(NUVEI_TRANS_ID) == Nuvei_Http::get_param('TransactionID', 'int')
+            && $this->sc_order->get_meta(NUVEI_TRANS_STATUS) == Nuvei_Http::get_request_status()
+        ) {
+            Nuvei_Logger::write('Repating DMN message detected. Stop the process.');
+			exit(wp_json_encode('This DMN is already received.'));
+        }
+        
+        return;
+    }
 	
 }

@@ -11,7 +11,7 @@
  * Require at least: 4.7
  * Tested up to: 5.9.3
  * WC requires at least: 3.0
- * WC tested up to: 6.3.1
+ * WC tested up to: 6.4.1
 */
 
 defined('ABSPATH') || die('die');
@@ -542,8 +542,7 @@ function nuvei_add_buttons( $order) {
 	}
 	
 	// hide Refund Button
-	if (
-		!in_array($order_payment_method, array('cc_card', 'dc_card', 'apmgw_expresscheckout'))
+	if (!in_array($order_payment_method, array('cc_card', 'dc_card', 'apmgw_expresscheckout'))
 		|| 'processing' == $order_status
 	) {
 		echo '<script type="text/javascript">jQuery(\'.refund-items\').prop("disabled", true);</script>';
@@ -559,8 +558,7 @@ function nuvei_add_buttons( $order) {
 		$order_has_refund = $order->get_meta(NUVEI_ORDER_HAS_REFUND);
 		
 		// Show VOID button
-		if (
-			'cc_card' == $order_payment_method
+		if ('cc_card' == $order_payment_method
 			/**
 			 * Before v3.5 we put a flag on refund - $order_has_refund
 			 * since v3.5 we save some of the refund parameters as json in "_sc_refunds" meta data
@@ -581,8 +579,11 @@ function nuvei_add_buttons( $order) {
 					. esc_html__('Void', 'nuvei_checkout_woocommerce') . '</button>';
 		}
 		
-		// show SETTLE button ONLY if P3D resonse transaction_type IS Auth
-		if ('pending' == $order_status && 'Auth' == $order->get_meta(NUVEI_RESP_TRANS_TYPE)) {
+		// show SETTLE button ONLY if transaction type IS Auth and the Total is not 0
+		if ('pending' == $order_status 
+            && 'Auth' == $order->get_meta(NUVEI_RESP_TRANS_TYPE)
+            && 0 < $order->get_total()
+        ) {
 			$question = sprintf(
 				/* translators: %d is replaced with "decimal" */
 				__('Are you sure, you want to Settle Order #%d?', 'nuvei_checkout_woocommerce'),

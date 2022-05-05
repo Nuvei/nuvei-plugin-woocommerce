@@ -93,7 +93,8 @@ abstract class Nuvei_Request {
 	 * 
 	 * @return bool|WC_Order
 	 */
-	protected function is_order_valid( $order_id, $return = false) {
+	protected function is_order_valid($order_id, $return = false)
+    {
 		Nuvei_Logger::write($order_id, 'is_order_vali() check.');
 		
 		$this->sc_order = wc_get_order( $order_id );
@@ -161,6 +162,10 @@ abstract class Nuvei_Request {
 			exit;
 		}
 		// can we override Order status (state) END
+        
+        # Do not run DMN logic more than once
+        
+        # /Do not run DMN logic more than once
 		
 		return $this->sc_order;
 	}
