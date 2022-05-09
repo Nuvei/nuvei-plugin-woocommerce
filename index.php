@@ -544,6 +544,7 @@ function nuvei_add_buttons( $order) {
 	// hide Refund Button
 	if (!in_array($order_payment_method, array('cc_card', 'dc_card', 'apmgw_expresscheckout'))
 		|| 'processing' == $order_status
+        || 0 == $order->get_total()
 	) {
 		echo '<script type="text/javascript">jQuery(\'.refund-items\').prop("disabled", true);</script>';
 	}

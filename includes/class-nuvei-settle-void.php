@@ -5,8 +5,8 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A class for Settle and Void requests.
  */
-class Nuvei_Settle_Void extends Nuvei_Request {
-
+class Nuvei_Settle_Void extends Nuvei_Request
+{
 	/**
 	 * Main method of the class.
 	 * Expected parameters are:
@@ -14,7 +14,8 @@ class Nuvei_Settle_Void extends Nuvei_Request {
 	 * @param array [order_id, action, method]
 	 * @return array|false
 	 */
-	public function process() {
+	public function process()
+    {
 		$data = current(func_get_args());
 		
 		if (empty($data['order_id']) 
@@ -53,12 +54,25 @@ class Nuvei_Settle_Void extends Nuvei_Request {
 	 * @param int $order_id
 	 * @param string $action
 	 */
-	public function create_settle_void( $order_id, $action) {
+	public function create_settle_void($order_id, $action)
+    {
 		$this->is_order_valid($order_id);
-		
-		$method  = 'settle' == $action ? 'settleTransaction' : 'voidTransaction';
-		$nsv_obj = new Nuvei_Settle_Void($this->plugin_settings);
-		$resp    = $nsv_obj->process(array(
+        
+		$method = 'settle' == $action ? 'settleTransaction' : 'voidTransaction';
+        
+        // Offline Void of Zero Total Order
+        if('voidTransaction' == $method
+            && 0 == $this->sc_order->get_total()
+        ) {
+            $this->subscription_cancel();
+            $this->sc_order->update_status('cancelled');
+            
+            wp_send_json(array('status' => 1, 'data' => []));
+            exit;
+        }
+        
+        
+		$resp = $this->process(array(
 			'order_id' => $order_id, 
 			'action'   => $action, 
 			'method'   => $method

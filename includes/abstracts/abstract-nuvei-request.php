@@ -637,6 +637,43 @@ abstract class Nuvei_Request {
         
         return false;
     }
+    
+    /**
+	 * Try to Cancel any Subscription if there are.
+	 * 
+	 * @return void
+	 */
+	protected function subscription_cancel()
+    {
+		Nuvei_Logger::write('subscription_cancel()');
+		
+		$subscr_ids = json_decode($this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS));
+
+		if (empty($subscr_ids) || !is_array($subscr_ids)) {
+			Nuvei_Logger::write($subscr_ids, 'There is no Subscription to be canceled.');
+			return;
+		}
+
+		$ncs_obj = new Nuvei_Subscription_Cancel($this->plugin_settings);
+
+		foreach ($subscr_ids as $id) {
+			$resp = $ncs_obj->process(array('subscriptionId' => $id));
+
+			// On Error
+			if (!$resp || !is_array($resp) || 'SUCCESS' != $resp['status']) {
+				$msg = __('<b>Error</b> when try to cancel Subscription #', 'nuvei_checkout_woocommerce') . $id . ' ';
+
+				if (!empty($resp['reason'])) {
+					$msg .= '<br/>' . __('<b>Reason</b> ', 'nuvei_checkout_woocommerce') . $resp['reason'];
+				}
+				
+				$this->sc_order->add_order_note($msg);
+				$this->sc_order->save();
+			}
+		}
+		
+		return;
+	}
 	
 	/**
 	 * Get the request endpoint - sandbox or production.

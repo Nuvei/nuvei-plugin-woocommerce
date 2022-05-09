@@ -197,7 +197,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			$this->subscription_start($transactionType, $clientUniqueId);
 			
 			if ('Void' == $transactionType) {
-				$this->subscription_cancel($clientUniqueId);
+				$this->subscription_cancel();
 			}
 				
 			echo wp_json_encode('DMN received.');
@@ -210,7 +210,6 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 				$order_id = $this->get_order_by_trans_id($relatedTransactionId, $transactionType);
 			}
             
-            $this->check_for_repeating_dmn();
 			$this->create_refund_record($order_id);
 			
 			$this->change_order_status(
@@ -687,43 +686,6 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		$this->sc_order->save();
 		
 		Nuvei_Logger::write($status, 'Status of Order #' . $order_id . ' was set to');
-	}
-	
-	/**
-	 * Try to Cancel any Subscription if there are.
-	 * 
-	 * @param int $order_id
-	 * @return void
-	 */
-	private function subscription_cancel( $order_id) {
-		Nuvei_Logger::write($order_id, 'subscription_cancel()');
-		
-		$subscr_ids = json_decode($this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS));
-
-		if (empty($subscr_ids) || !is_array($subscr_ids)) {
-			Nuvei_Logger::write($subscr_ids, 'DMN Message - there is no Subscription to be canceled.');
-			return;
-		}
-
-		$ncs_obj = new Nuvei_Subscription_Cancel($this->plugin_settings);
-
-		foreach ($subscr_ids as $id) {
-			$resp = $ncs_obj->process(array('subscriptionId' => $id));
-
-			// On Error
-			if (!$resp || !is_array($resp) || 'SUCCESS' != $resp['status']) {
-				$msg = __('<b>Error</b> when try to cancel Subscription #', 'nuvei_checkout_woocommerce') . $id . ' ';
-
-				if (!empty($resp['reason'])) {
-					$msg .= '<br/>' . __('<b>Reason:</b> ', 'nuvei_checkout_woocommerce') . $resp['reason'];
-				}
-				
-				$this->sc_order->add_order_note($msg);
-				$this->sc_order->save();
-			}
-		}
-		
-		return;
 	}
 	
 	/**
