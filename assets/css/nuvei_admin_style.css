@@ -1,0 +1,24 @@
+#woocommerce-product-data ul.wc-tabs li.sc_subscr_tab a::before {
+	content: '\f18e';
+}
+
+#_sc_subscr_recurr_amount, 
+#_sc_subscr_recurr_period, 
+#_sc_subscr_trial_period, 
+#_sc_subscr_end_after_period {
+	-moz-appearance: textfield !important;
+}
+
+#_sc_subscr_recurr_amount::-webkit-outer-spin-button, 
+#_sc_subscr_recurr_amount::-webkit-inner-spin-button, 
+#_sc_subscr_recurr_period::-webkit-outer-spin-button, 
+#_sc_subscr_recurr_period::-webkit-inner-spin-button, 
+#_sc_subscr_trial_period::-webkit-outer-spin-button, 
+#_sc_subscr_trial_period::-webkit-inner-spin-button, 
+#_sc_subscr_end_after_period::-webkit-outer-spin-button, 
+#_sc_subscr_end_after_period::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+.nuvei_checkout_settings_cont { display: none; }

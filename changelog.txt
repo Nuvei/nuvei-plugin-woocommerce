@@ -1,0 +1,4 @@
+*** WooCommerce Extension Changelog ***
+
+version 1.0.0
+	* Based on latest version of Nuvei Woocommerce plugin, but use Checkout SDK instead Web SDK.

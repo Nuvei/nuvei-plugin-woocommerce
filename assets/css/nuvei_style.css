@@ -1,0 +1,60 @@
+#content .woocommerce-warning {
+	background-color: #e2401c;
+	list-style: none;
+	padding: 1em 1.618em;
+	margin-bottom: 2.617924em;
+	margin-left: 0;
+	border-radius: 2px;
+	color: #fff;
+	clear: both;
+	border-left: 0.6180469716em solid rgba(0, 0, 0, 0.15);
+}
+
+#content .woocommerce-warning {
+	background-color: orange;
+}
+
+/* for the 3DS modal */
+.sfcModal-dialog {
+	width: 50%;
+	margin: 0 auto;
+	margin-top: 10%;
+}
+
+#sc_reorder_btn {
+	width: 100%;
+	font-size: 1.41575em;
+	background-color: #333333;
+	color: #ffffff;
+	border: 0;
+	border-radius: 0;
+	cursor: pointer;
+	padding: 0.6180469716em 1.41575em;
+	text-decoration: none;
+	font-weight: 600;
+	text-shadow: none;
+	-webkit-appearance: none;
+	margin: 0;
+	font-family: "Source Sans Pro", "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+	line-height: 1.618;
+	text-rendering: optimizeLegibility;
+	text-transform: none;
+	overflow: visible;
+	box-sizing: border-box;
+	word-wrap: break-word;
+	text-align: center;
+}
+
+#sc_reorder_btn:hover {
+	background-color: #1a1a1a;
+	border-color: #1a1a1a;
+	color: #ffffff;
+}
+
+.nuvei_plan_order {
+	background-image: url(/wp-content/plugins/nuvei_checkout_woocommerce/assets/icons/subscription.png);
+	background-size: 17px;
+	background-repeat: no-repeat;
+	background-position: right center;
+	padding-right: 20px;
+}
