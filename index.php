@@ -349,9 +349,15 @@ function nuvei_load_styles_scripts( $styles) {
 	);
 	
 	// Checkout SDK URL for integration and production
+    $sdk_version = NUVEI_SDK_URL_PROD;
+    
+    if(!empty($wc_nuvei->settings['sdk_version'])) {
+        $sdk_version = $wc_nuvei->settings['sdk_version'];
+    }
+    
 	wp_register_script(
 		'nuvei_checkout_sdk',
-		($wc_nuvei->settings['sdk_version'] == 'prod' ? NUVEI_SDK_URL_PROD : NUVEI_SDK_URL_INT),
+		($sdk_version == 'prod' ? NUVEI_SDK_URL_PROD : NUVEI_SDK_URL_INT),
 		array('jquery'),
 		'1'
 	);
