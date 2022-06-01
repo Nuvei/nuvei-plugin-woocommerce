@@ -962,10 +962,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		//            'user_token_id'     => @$data['order']['description']['billingAddress']['email'],
 			'time_stamp'        => gmdate('Y-m-d H:i:s'),
 			
-			'first_name'        => $addresses['billingAddress']['firstName'],
+			'first_name'        => urldecode($addresses['billingAddress']['firstName']),
 			'last_name'         => $addresses['billingAddress']['lastName'],
 			'email'             => $addresses['billingAddress']['email'],
 			'country'           => $addresses['billingAddress']['country'],
+            'state'             => $addresses['billingAddress']['state'],
 			'city'              => $addresses['billingAddress']['city'],
 			'zip'               => $addresses['billingAddress']['zip'],
 			'address1'          => $addresses['billingAddress']['address'],
@@ -1073,7 +1074,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'enabled' => array(
 				'title' => __('Enable/Disable', 'nuvei_checkout_woocommerce'),
 				'type' => 'checkbox',
-				'label' => __('Enable Nuvei Checkout.', 'nuvei_checkout_woocommerce'),
+				'label' => __('Enable Nuvei Checkout Plugin.', 'nuvei_checkout_woocommerce'),
 				'default' => 'no'
 			),
 		   'title' => array(

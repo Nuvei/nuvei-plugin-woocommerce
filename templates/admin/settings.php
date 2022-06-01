@@ -5,7 +5,7 @@
 			__( 'Return to payments', 'nuvei_checkout_woocommerce' ),
 			admin_url( 'admin.php?page=wc-settings&tab=checkout' )
 		);
-		?>
+    ?>
 </h2>
 
 <p><?php esc_html__('Please check and fill the settings of the plugin.', 'nuvei_checkout_woocommerce'); ?></p>

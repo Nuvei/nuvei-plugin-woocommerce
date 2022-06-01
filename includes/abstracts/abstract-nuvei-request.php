@@ -286,6 +286,13 @@ abstract class Nuvei_Request {
 			$bcn = $cart->get_customer()->get_billing_country();
 		}
 		$billingAddress['country'] = trim($bcn);
+        
+        //billing state
+        $bst = trim(Nuvei_Http::get_param('billing_state', 'string', '', $form_params));
+		if (empty($bst)) {
+			$bst = $cart->get_customer()->get_billing_state();
+		}
+		$billingAddress['state'] = trim($bst);
 
 		// billing_email
 		$be = Nuvei_Http::get_param('billing_email', 'mail', '', $form_params);
