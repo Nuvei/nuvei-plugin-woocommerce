@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Checkout for Woocommerce
  * Plugin URI: https://github.com/SafeChargeInternational/nuvei_checkout_woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
@@ -150,8 +150,8 @@ function nuvei_init() {
 			&& NUVEI_GATEWAY_NAME == $data['payment_method'] 
 			&& empty(Nuvei_Http::get_param('nuvei_transaction_id'))
 		) {
-			if (isset($wc_nuvei->settings['use_cashier'])
-				&& 1 != $wc_nuvei->settings['use_cashier']
+			if (isset($wc_nuvei->settings['integration_type'])
+				&& 'cashier' != $wc_nuvei->settings['integration_type']
 			) {
 				$wc_nuvei->call_checkout();
 			}

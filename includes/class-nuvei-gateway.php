@@ -21,8 +21,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 
 		$this->init_settings();
 		$this->init_form_base_fields();
-		$this->init_form_advanced_fields_checkout(true);
-		$this->init_form_advanced_fields_cashier(true);
+		$this->init_form_advanced_fields(true);
 		$this->init_form_tools_fields(true);
 		
 		// required for the Store
@@ -264,7 +263,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$nuvei_transaction_id = Nuvei_Http::get_param('nuvei_transaction_id', 'int');
 		
 		# in case we use Cashier
-		if (1 == $this->settings['use_cashier']) {
+		if ('cashier' == $this->settings['integration_type']) {
 			Nuvei_Logger::write('Process Cashier payment.');
 			
 			$url = $this->generate_cashier_url($return_success_url, $return_error_url, $order_id);
@@ -844,6 +843,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'maskCvv'                   => true,
 			'i18n'                      => json_decode($this->get_setting('translation', ''), true),
             'billingAddress'            => $ord_details['billingAddress'],
+            'userData'                  => ['billingAddress' => $ord_details['billingAddress']],
 		);
         
 		// check for product with a plan
@@ -1155,15 +1155,15 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * 
 	 * @param bool $fields_append - use it when load the fields. In this case we want all fields in same array.
 	 */
-	private function init_form_advanced_fields_cashier( $fields_append = false) {
+	private function init_form_advanced_fields($fields_append = false) {
 		$fields = array(
-			'use_cashier' => array(
-				'title'         => __('Use Redirect Payment Page instead of Checkout SDK', 'nuvei_checkout_woocommerce'),
+            'integration_type' => array(
+				'title'         => __('Integration type', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
-				'description'   => __('The Checkout SDK is recommended.', 'nuvei_checkout_woocommerce'),
+				//'description'   => __('The Checkout SDK is recommended.', 'nuvei_checkout_woocommerce'),
 				'options'       => array(
-					0 => __('No', 'nuvei_checkout_woocommerce'),
-					1 => __('Yes', 'nuvei_checkout_woocommerce'),
+					'sdk'       => __('Checkout SDK', 'nuvei_checkout_woocommerce'),
+					'cashier'   => __('Payment page - Cashier', 'nuvei_checkout_woocommerce'),
 				),
 				'default'       => 0,
 			),
@@ -1178,23 +1178,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				),
 				'class'         => 'nuvei_cashier_setting'
 			),
-		);
-		
-		if ($fields_append) {
-			$this->form_fields = array_merge($this->form_fields, $fields);
-		} else {
-			$this->form_fields = $fields;
-		}
-	}
-    
-	/**
-	 * Instead of override init_form_fields() split the settings in three
-	 * groups and put them in different tabs.
-	 * 
-	 * @param bool $fields_append - use it when load the fields. In this case we want all fields in same array.
-	 */
-	private function init_form_advanced_fields_checkout( $fields_append = false) {
-		$fields = array(
             'sdk_version' => [
                 'title'         => __('SDK version', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
