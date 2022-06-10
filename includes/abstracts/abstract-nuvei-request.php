@@ -614,22 +614,6 @@ abstract class Nuvei_Request {
 		return $data;
 	}
 	
-	/**
-	 * Set client unique id.
-	 * We change it only for Sandbox (test) mode.
-	 * 
-	 * @param int $order_id
-	 * 
-	 * @return int|string
-	 */
-	protected function set_cuid( $order_id) {
-		if ('yes' != $this->plugin_settings['test']) {
-			return (int) $order_id;
-		}
-		
-		return $order_id . '_' . time() . NUVEI_CUID_POSTFIX;
-	}
-    
     protected function pass_user_token_id() {
         if($this->plugin_settings('use_upos') == 1) {
             return true;

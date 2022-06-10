@@ -31,7 +31,6 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		global $woocommerce;
 		
 		$cart        = $woocommerce->cart;
-		$uniq_str    = gmdate('YmdHis') . '_' . uniqid();
 		$ajax_params = array();
 		
 		# try to update Order
@@ -73,7 +72,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		
 		$addresses = $this->get_order_addresses();
 		$oo_params = array(
-			'clientUniqueId'    => $uniq_str . '_wc_cart',
+			'clientUniqueId'    => gmdate('YmdHis') . '_' . uniqid(),
 			'currency'          => get_woocommerce_currency(),
 			'amount'            => (string) number_format((float) $cart->total, 2, '.', ''),
 			'shippingAddress'	=> $addresses['shippingAddress'],
@@ -113,12 +112,9 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		// set them to session for the check before submit the data to the webSDK
 		$nuvei_last_open_order_details = array(
 			'amount'			=> $oo_params['amount'],
-		//          'merchantDetails'   => $resp['request_base_params']['merchantDetails'],
 			'sessionToken'		=> $resp['sessionToken'],
-		//          'clientRequestId'   => $resp['request_base_params']['clientRequestId'],
 			'orderId'			=> $resp['orderId'],
 			'billingAddress'	=> $oo_params['billingAddress'],
-		//          'cart_string'       => json_encode(WC()->session->cart), // stringify the Cart
 		);
 		
 		WC()->session->set('nuvei_last_open_order_details', $nuvei_last_open_order_details);

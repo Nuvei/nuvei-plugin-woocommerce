@@ -1,6 +1,13 @@
 *** WooCommerce Extension Changelog ***
 
 # 1.0.2
+    * Added default encoding into Cashier URL.
+    * Removed set_cuid() method.
+    * For Cashier URL, clientUniqueId was replaced with merchant_unique_id.
+    * Removed old commented code parts.
+    * Removed last checks for 'https to http' option.
+    * If the logged data is string try to url decode it, if it is an URL.
+    * Do not print pretty merchant payment methods list.
     * Added userData.billingAddress into Checkout SDK parameters.
     * The option for using Checkout SDK or Cashier was moved at the top of the Advanced settings. When change it, the unselected group of settings will hide.
 
