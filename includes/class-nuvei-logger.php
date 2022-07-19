@@ -57,7 +57,7 @@ class Nuvei_Logger {
         $source_file_name   = '';
         $member_name        = '';
         $source_line_number = '';
-        $backtrace          = debug_backtrace();
+        $backtrace          = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
         
         if(!empty($backtrace)) {
             if(!empty($backtrace[0]['file'])) {

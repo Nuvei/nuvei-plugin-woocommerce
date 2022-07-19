@@ -1,5 +1,9 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.0.3
+    * Tested on WP 6.0.1 and WC 6.7.0.
+    * Do not get all information in debug_backtrace().
+
 # 1.0.2
     * Added default encoding into Cashier URL.
     * Removed set_cuid() method.
