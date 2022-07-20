@@ -35,7 +35,11 @@
 				<?php echo esc_html('Clean', 'nuvei_checkout_woocommerce'); ?>
 			</button>
 			
-			<p class="description"><?php echo esc_html($data['description']); ?></p>
+			<p class="description">
+                <a href="<?php echo esc_attr('https://woocomm-dev.gw-4u.com/wp-admin/admin.php?page=wc-settings&tab=checkout&section=nuvei#nuvei_advanced_settings'); ?>" class="class" target="_blank">
+                    <?php echo esc_html('Check the Documentation.', 'nuvei_checkout_woocommerce'); ?>
+                </a>
+            </p>
 		</fieldset>
 	</td>
 </tr>

@@ -161,7 +161,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'css'                       => '',
 			'custom_attributes'         => array(),
 			'desc_tip'                  => false,
-			'description'               => '',
 			'merchant_pms'              => $pms,
 			'nuvei_blocked_pms'         => $nuvei_blocked_pms,
 			'nuvei_blocked_pms_visible' => implode(', ', $nuvei_blocked_pms_visible),
@@ -1081,9 +1080,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'title'         => __('Block Cards', 'nuvei_checkout_woocommerce'),
 				'type'          => 'text',
 				'description'   => sprintf(
-					__('For examples', 'nuvei_checkout_woocommerce')
-						. ' <a href="%s" class="class" target="_blank">%s</a>',
-					esc_html('https://docs.safecharge.com/documentation/features/blocking-cards/'),
+                    ' <a href="%s" class="class" target="_blank">%s</a>',
+					esc_html('https://docs.nuvei.com/documentation/accept-payment/checkout-2/payment-customization/#card-processing'),
 					__('check the Documentation.', 'nuvei_checkout_woocommerce')
 				),
 				'class'         => 'nuvei_checkout_setting',
