@@ -37,6 +37,7 @@ define('NUVEI_JS_LOCALIZATIONS', [
     'paymentGatewayName'    => NUVEI_GATEWAY_NAME,
     
     // translations
+    'insuffFunds'       => __('You have Insufficient funds, please go back and remove some of the items in your shopping cart, or use another card.', 'nuvei_checkout_woocommerce'),
     'paymentDeclined'	=> __('Your Payment was DECLINED. Please, try another payment option!', 'nuvei_checkout_woocommerce'),
     'paymentError'      => __('Error with your Payment.', 'nuvei_checkout_woocommerce'),
     'unexpectedError'	=> __('Unexpected error. Please, try another payment option!', 'nuvei_checkout_woocommerce'),
