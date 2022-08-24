@@ -2,6 +2,7 @@
 
 # 1.0.4
     * Show better error message if the client get "Insufficient funds" error.
+    * Upgraded latest tested WC version.
 
 # 1.0.3
     * Tested on WP 6.0.1 and WC 6.7.0.
