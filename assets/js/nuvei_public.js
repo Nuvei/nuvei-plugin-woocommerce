@@ -24,6 +24,11 @@ function nuveiAfterSdkResponse(resp) {
 	}
 	
 	if (resp.result == 'DECLINED') {
+        if (resp.hasOwnProperty('errorDescription') && 'Insufficient funds' == resp.errorDescription) {
+            nuveiShowErrorMsg(scTrans.insuffFunds);
+            return
+        }
+        
 		nuveiShowErrorMsg(scTrans.paymentDeclined);
 		return;
 	}

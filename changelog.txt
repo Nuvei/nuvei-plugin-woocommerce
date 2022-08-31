@@ -1,4 +1,27 @@
 *** WooCommerce Extension Changelog ***
 
-version 1.0.0
+# 1.0.4
+    * Show better error message if the client get "Insufficient funds" error.
+    * Upgraded latest tested WC version.
+
+# 1.0.3
+    * Tested on WP 6.0.1 and WC 6.7.0.
+    * Do not get all information in debug_backtrace().
+    * Added link to the Documentation for "Block Payment methods" setting.
+
+# 1.0.2
+    * Added default encoding into Cashier URL.
+    * Removed set_cuid() method.
+    * For Cashier URL, clientUniqueId was replaced with merchant_unique_id.
+    * Removed old commented code parts.
+    * Removed last checks for 'https to http' option.
+    * If the logged data is string try to url decode it, if it is an URL.
+    * Do not print pretty merchant payment methods list.
+    * Added userData.billingAddress into Checkout SDK parameters.
+    * The option for using Checkout SDK or Cashier was moved at the top of the Advanced settings. When change it, the unselected group of settings will hide.
+
+# 1.0.1
+    * Added billing "state" parameters in the requests.
+
+# 1.0.0
 	* Based on latest version of Nuvei Woocommerce plugin, but use Checkout SDK instead Web SDK.

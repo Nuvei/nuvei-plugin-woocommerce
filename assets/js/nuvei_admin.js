@@ -213,16 +213,15 @@ function nuveiGetTodayLog() {
 }
 
 function nuvei_show_hide_rest_settings() {
-	var _disabled = false;
-	
-	if(1 == jQuery('#woocommerce_nuvei_use_cashier').val()) {
-		_disabled = true;
+    if('sdk' == jQuery('#woocommerce_nuvei_integration_type').val()) {
+		jQuery('.nuvei_cashier_setting').closest('tr').hide();
+        jQuery('.nuvei_checkout_setting').closest('tr').show();
 	}
-	
-	jQuery('.nuvei_checkout_setting').attr('disabled', _disabled);
-	// hide-show the only Cashier setting
-	jQuery('.nuvei_cashier_setting').attr('disabled', _disabled ? false : true);
-}
+    else {
+        jQuery('.nuvei_checkout_setting').closest('tr').hide();
+        jQuery('.nuvei_cashier_setting').closest('tr').show();
+    }
+}   
 
 function switchNuveiTabs() {
 	if('' == window.location.hash) {
@@ -360,7 +359,7 @@ jQuery(function() {
 	// for the Use Cashier... setting
 	nuvei_show_hide_rest_settings();
 	
-	jQuery('#woocommerce_nuvei_use_cashier').on('change', function() {
+	jQuery('#woocommerce_nuvei_integration_type').on('change', function() {
 		nuvei_show_hide_rest_settings();
 	});
 	

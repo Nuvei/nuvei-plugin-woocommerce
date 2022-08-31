@@ -3,15 +3,15 @@
  * Plugin Name: Nuvei Checkout for Woocommerce
  * Plugin URI: https://github.com/SafeChargeInternational/nuvei_checkout_woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 1.0.0
+ * Version: 1.0.4
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 5.9.3
+ * Tested up to: 6.0.1
  * WC requires at least: 3.0
- * WC tested up to: 6.5.1
+ * WC tested up to: 6.8.2
 */
 
 defined('ABSPATH') || die('die');
@@ -150,8 +150,8 @@ function nuvei_init() {
 			&& NUVEI_GATEWAY_NAME == $data['payment_method'] 
 			&& empty(Nuvei_Http::get_param('nuvei_transaction_id'))
 		) {
-			if (isset($wc_nuvei->settings['use_cashier'])
-				&& 1 != $wc_nuvei->settings['use_cashier']
+			if (isset($wc_nuvei->settings['integration_type'])
+				&& 'cashier' != $wc_nuvei->settings['integration_type']
 			) {
 				$wc_nuvei->call_checkout();
 			}
@@ -349,9 +349,15 @@ function nuvei_load_styles_scripts( $styles) {
 	);
 	
 	// Checkout SDK URL for integration and production
+    $sdk_version = NUVEI_SDK_URL_PROD;
+    
+    if(!empty($wc_nuvei->settings['sdk_version'])) {
+        $sdk_version = $wc_nuvei->settings['sdk_version'];
+    }
+    
 	wp_register_script(
 		'nuvei_checkout_sdk',
-		($wc_nuvei->settings['sdk_version'] == 'prod' ? NUVEI_SDK_URL_PROD : NUVEI_SDK_URL_INT),
+		($sdk_version == 'prod' ? NUVEI_SDK_URL_PROD : NUVEI_SDK_URL_INT),
 		array('jquery'),
 		'1'
 	);
