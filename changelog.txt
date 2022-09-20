@@ -1,5 +1,9 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.1.0
+    * Unify products with plan in a single subscription, and multiply subscription amount by their quantity.
+    * Tested on WC 6.9.2.
+
 # 1.0.4
     * Show better error message if the client get "Insufficient funds" error.
     * Upgraded latest tested WC version.

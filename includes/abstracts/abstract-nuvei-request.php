@@ -597,7 +597,8 @@ abstract class Nuvei_Request {
 			
 			$data['subscr_data'][$item['product_id']] = array(
 				'planId'			=> $term_meta['planId'][0],
-				'recurringAmount'	=> number_format($term_meta['recurringAmount'][0], 2, '.', ''),
+//				'recurringAmount'	=> number_format($term_meta['recurringAmount'][0], 2, '.', ''),
+				'recurringAmount'	=> number_format($term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', ''),
 			);
 
 			$data['subscr_data'][$item['product_id']]['recurringPeriod']
@@ -638,21 +639,25 @@ abstract class Nuvei_Request {
     {
 		Nuvei_Logger::write('subscription_cancel()');
 		
-		$subscr_ids = json_decode($this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS));
+//		$subscr_ids = json_decode($this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS));
+		$subscr_ids = $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS);
 
-		if (empty($subscr_ids) || !is_array($subscr_ids)) {
+//		if (empty($subscr_ids) || !is_array($subscr_ids)) {
+		if (empty($subscr_ids)) {
 			Nuvei_Logger::write($subscr_ids, 'There is no Subscription to be canceled.');
 			return;
 		}
 
 		$ncs_obj = new Nuvei_Subscription_Cancel($this->plugin_settings);
 
-		foreach ($subscr_ids as $id) {
-			$resp = $ncs_obj->process(array('subscriptionId' => $id));
+//		foreach ($subscr_ids as $id) {
+//			$resp = $ncs_obj->process(array('subscriptionId' => $id));
+			$resp = $ncs_obj->process(array('subscriptionId' => $subscr_ids));
 
 			// On Error
 			if (!$resp || !is_array($resp) || 'SUCCESS' != $resp['status']) {
-				$msg = __('<b>Error</b> when try to cancel Subscription #', 'nuvei_checkout_woocommerce') . $id . ' ';
+//				$msg = __('<b>Error</b> when try to cancel Subscription #', 'nuvei_checkout_woocommerce') . $id . ' ';
+				$msg = __('<b>Error</b> when try to cancel Subscription #', 'nuvei_checkout_woocommerce') . $subscr_ids . ' ';
 
 				if (!empty($resp['reason'])) {
 					$msg .= '<br/>' . __('<b>Reason</b> ', 'nuvei_checkout_woocommerce') . $resp['reason'];
@@ -661,7 +666,7 @@ abstract class Nuvei_Request {
 				$this->sc_order->add_order_note($msg);
 				$this->sc_order->save();
 			}
-		}
+//		}
 		
 		return;
 	}

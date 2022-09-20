@@ -72,18 +72,21 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 						. __('<b>Plan ID:</b> ', 'nuvei_checkout_woocommerce') . Nuvei_Http::get_param('planId', 'int');
 					
 					// save the Subscription ID
-					$ord_subscr_ids = json_decode($this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS));
+//					$ord_subscr_ids = json_decode($this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS));
+//					$ord_subscr_ids = $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS);
 					
-					if (empty($ord_subscr_ids)) {
-						$ord_subscr_ids = array();
-					}
+//					if (empty($ord_subscr_ids)) {
+////						$ord_subscr_ids = array();
+//						$ord_subscr_ids = '';
+//					}
 					
 					// just add the ID without the details, we need only the ID to cancel the Subscription
-					if (!in_array($subscriptionId, $ord_subscr_ids)) {
-						$ord_subscr_ids[] = $subscriptionId;
-					}
+//					if (!in_array($subscriptionId, $ord_subscr_ids)) {
+//						$ord_subscr_ids[] = $subscriptionId;
+//					}
 					
-					$this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR_IDS, json_encode($ord_subscr_ids));
+//					$this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR_IDS, json_encode($ord_subscr_ids));
+					$this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR_IDS, $subscriptionId);
 				} elseif ('inactive' == strtolower($subscriptionState)) {
 					$msg = __('<b>Subscription is Inactive</b>.', 'nuvei_checkout_woocommerce') . '<br/>' 
 						. __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $subscriptionId . '<br/>' 
@@ -486,7 +489,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			}
 		}
 		
-		for ($qty; $qty > 0; $qty--) {
+		//for ($qty; $qty > 0; $qty--) {
 			$resp = $ns_obj->process($prod_plan);
 		
 			// On Error
@@ -500,7 +503,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 				$this->sc_order->add_order_note($msg);
 				$this->sc_order->save();
 				
-				break;
+//				break;
 			}
 			
 			// On Success
@@ -511,7 +514,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 			$this->sc_order->add_order_note($msg);
 			$this->sc_order->save();
-		}
+		//}
 			
 		return;
 	}
@@ -556,6 +559,8 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 				break;
 
 			case 'APPROVED':
+                $order_amount = round(floatval($this->sc_order->get_total()), 2);
+                
 				if ( 'Void' === $transaction_type ) {
 					$message = $gw_data;
 
@@ -576,12 +581,17 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 							. $refunds[Nuvei_Http::get_param('TransactionID', 'int')]['wc_id'];
 					}
 					
-					if (round($this->sc_order->get_total(), 2) <= $this->sum_order_refunds()) {
+//					if (round($this->sc_order->get_total(), 2) <= $this->sum_order_refunds()) {
+					if ($order_amount <= $this->sum_order_refunds()) {
 						$status = 'refunded';
 					}
 				} elseif ( 'Auth' === $transaction_type ) {
 					$message = $gw_data;
 					$status  = 'pending';
+                    
+                    if (0 == $order_amount) {
+                        $status  = 'completed';
+                    }
 				} elseif ( in_array( $transaction_type, array( 'Settle', 'Sale' ), true ) ) {
 					$message = $gw_data;
 					$status  = 'completed';
@@ -591,7 +601,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 				
 				// check for correct amount and currency
 				if (in_array($transaction_type, array('Auth', 'Sale'), true)) {
-					$order_amount = round(floatval($this->sc_order->get_total()), 2);
+					
 					$dmn_amount   = round(Nuvei_Http::get_param('totalAmount', 'float'), 2);
 					
 					if ($order_amount !== $dmn_amount) {

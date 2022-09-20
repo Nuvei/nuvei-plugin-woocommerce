@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Checkout for Woocommerce
  * Plugin URI: https://github.com/SafeChargeInternational/nuvei_checkout_woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 1.0.4
+ * Version: 1.1.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
@@ -11,7 +11,7 @@
  * Require at least: 4.7
  * Tested up to: 6.0.1
  * WC requires at least: 3.0
- * WC tested up to: 6.8.2
+ * WC tested up to: 6.9.2
 */
 
 defined('ABSPATH') || die('die');
