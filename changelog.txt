@@ -1,5 +1,8 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.1.1
+    # Disable Nuvei Rebilling products for Guest users.
+
 # 1.1.0
     * Unify products with plan in a single subscription, and multiply subscription amount by their quantity.
     * Tested on WC 6.9.2.
