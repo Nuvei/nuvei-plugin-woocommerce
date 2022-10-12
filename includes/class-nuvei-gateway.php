@@ -603,6 +603,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				wc_print_notice(__('You can not add a Product with Payment Plan to another Product.', 'nuvei_checkout_woocommerce'), 'error');
 				return false;
 			}
+            
+            // 1.2 - disable for guests
+            if(!is_user_logged_in()) {
+                wc_print_notice(__('You must login to add a product with a Payment Plan.', 'nuvei_checkout_woocommerce'), 'error');
+				return false;
+            }
 			
 			return true;
 		}
