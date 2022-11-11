@@ -1,10 +1,14 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.2.0
+    * Hide Void button 48 hours after the Order is made.
+    * Added "Cancel Subscription" button, when the Subscription was confirmed as Active.
+
 # 1.1.2
     * Tested on WP 6.1 and WC 7.0.1.
 
 # 1.1.1
-    # Disable Nuvei Rebilling products for Guest users.
+    * Disable Nuvei Rebilling products for Guest users.
 
 # 1.1.0
     * Unify products with plan in a single subscription, and multiply subscription amount by their quantity.

@@ -639,34 +639,29 @@ abstract class Nuvei_Request {
     {
 		Nuvei_Logger::write('subscription_cancel()');
 		
-//		$subscr_ids = json_decode($this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS));
-		$subscr_ids = $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS);
+		$subscr_id = $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_ID);
 
-//		if (empty($subscr_ids) || !is_array($subscr_ids)) {
-		if (empty($subscr_ids)) {
-			Nuvei_Logger::write($subscr_ids, 'There is no Subscription to be canceled.');
+		if (empty($subscr_id)) {
+			Nuvei_Logger::write($subscr_id, 'There is no Subscription to be canceled.');
 			return;
 		}
 
 		$ncs_obj = new Nuvei_Subscription_Cancel($this->plugin_settings);
 
-//		foreach ($subscr_ids as $id) {
-//			$resp = $ncs_obj->process(array('subscriptionId' => $id));
-			$resp = $ncs_obj->process(array('subscriptionId' => $subscr_ids));
+        $resp = $ncs_obj->process(array('subscriptionId' => $subscr_id));
 
-			// On Error
-			if (!$resp || !is_array($resp) || 'SUCCESS' != $resp['status']) {
-//				$msg = __('<b>Error</b> when try to cancel Subscription #', 'nuvei_checkout_woocommerce') . $id . ' ';
-				$msg = __('<b>Error</b> when try to cancel Subscription #', 'nuvei_checkout_woocommerce') . $subscr_ids . ' ';
+        // On Error
+        if (!$resp || !is_array($resp) || 'SUCCESS' != $resp['status']) {
+            $msg = __('<b>Error</b> when try to cancel Subscription #', 'nuvei_checkout_woocommerce')
+                . $subscr_id . ' ';
 
-				if (!empty($resp['reason'])) {
-					$msg .= '<br/>' . __('<b>Reason</b> ', 'nuvei_checkout_woocommerce') . $resp['reason'];
-				}
-				
-				$this->sc_order->add_order_note($msg);
-				$this->sc_order->save();
-			}
-//		}
+            if (!empty($resp['reason'])) {
+                $msg .= '<br/>' . __('<b>Reason</b> ', 'nuvei_checkout_woocommerce') . $resp['reason'];
+            }
+
+            $this->sc_order->add_order_note($msg);
+            $this->sc_order->save();
+        }
 		
 		return;
 	}
