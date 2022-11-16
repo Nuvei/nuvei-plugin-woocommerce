@@ -559,8 +559,15 @@ function nuvei_add_buttons( $order)
 		$order_status           = strtolower($order->get_status());
 		$order_payment_method   = $order->get_meta('_paymentMethod');
 		$order_refunds          = json_decode($order->get_meta(NUVEI_REFUNDS), true);
-        $order_date_completed   = $order->get_date_completed()->getTimestamp();
 		$refunds_exists         = false;
+        $order_time             = 0;
+        
+        if (!is_null($order->get_date_created())) {
+            $order_time = $order->get_date_created()->getTimestamp();
+        }
+        if (!is_null($order->get_date_completed())) {
+            $order_time = $order->get_date_completed()->getTimestamp();
+        }
         
 		if (!empty($order_refunds) && is_array($order_refunds)) {
 			foreach ($order_refunds as $data) {
@@ -591,7 +598,7 @@ function nuvei_add_buttons( $order)
 		// Show VOID button
 		if ('cc_card' == $order_payment_method 
             && !$refunds_exists
-            && time() < $order_date_completed + 172800 // 48 hours
+            && time() < $order_time + 172800 // 48 hours
         ) {
 			$question = sprintf(
 				/* translators: %d is replaced with "decimal" */
