@@ -2,6 +2,7 @@
 
 # 1.2.0
     * Hide Void button 48 hours after the Order is made.
+    * Hide Void button for Zero Orders.
     * Added "Cancel Subscription" button, when the Subscription was confirmed as Active.
 
 # 1.1.2

@@ -191,8 +191,11 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			$this->change_order_status($order_id, $req_status, $transactionType);
 			$this->subscription_start($transactionType, $clientUniqueId);
 			
-			if ('Void' == $transactionType) {
-				$this->subscription_cancel();
+			if ('Void' == $transactionType
+                && 'active' == $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_STATE)
+            ) {
+                $ncs_obj = new Nuvei_Subscription_Cancel($this->plugin_settings);
+                $ncs_obj->process(['subscriptionId' => $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_ID)]);
 			}
 				
 			echo wp_json_encode('DMN received.');

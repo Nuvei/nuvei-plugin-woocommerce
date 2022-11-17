@@ -299,8 +299,8 @@ function nuvei_ajax_action()
 		}
         
 		wp_send_json([
-            'status' => $ord_status, 
-            'data' => $resp
+            'status'    => $ord_status, 
+            'data'      => $resp
         ]);
 		exit;
 	}
@@ -590,14 +590,21 @@ function nuvei_add_buttons( $order)
 	) {
 		echo '<script type="text/javascript">jQuery(\'.refund-items\').prop("disabled", true);</script>';
 	}
+    
+    // Show Cancel Subscription button
+    if ('active' == $order->get_meta(NUVEI_ORDER_SUBSCR_STATE)) {
+        echo
+            '<button id="sc_cancel_subs_btn" type="button" onclick="nuveiAction(\''
+                . esc_html__('Are you sure, you want to cancel the subscription for this order?', 'nuvei_checkout_woocommerce')
+                . '\', \'cancelSubscr\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
+                . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') . '</button>';
+    }
 	
 	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
-		// we do not set this meta anymore, keep it only because of the orders made before v3.5 of the plugin
-		$order_has_refund = $order->get_meta(NUVEI_ORDER_HAS_REFUND);
-		
 		// Show VOID button
 		if ('cc_card' == $order_payment_method 
             && !$refunds_exists
+            && 0 < (float) $order->get_total()
             && time() < $order_time + 172800 // 48 hours
         ) {
 			$question = sprintf(
@@ -630,19 +637,10 @@ function nuvei_add_buttons( $order)
 					. '\', \'settle\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
 					. esc_html__('Settle', 'nuvei_checkout_woocommerce') . '</button>';
 		}
-        
-        // Show Cancel Subscription button
-        if ('active' == $order->get_meta(NUVEI_ORDER_SUBSCR_STATE)) {
-            echo
-				'<button id="sc_cancel_subs_btn" type="button" onclick="nuveiAction(\''
-					. esc_html__('Are you sure, you want to cancel the subscription for this order?', 'nuvei_checkout_woocommerce')
-					. '\', \'cancelSubscr\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
-					. esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') . '</button>';
-        }
-		
-		// add loading screen
-		echo '<div id="custom_loader" class="blockUI blockOverlay" style="height: 100%; position: absolute; top: 0px; width: 100%; z-index: 10; background-color: rgba(255,255,255,0.5); display: none;"></div>';
-	}
+    }
+    
+    // add loading screen
+	echo '<div id="custom_loader" class="blockUI blockOverlay" style="height: 100%; position: absolute; top: 0px; width: 100%; z-index: 10; background-color: rgba(255,255,255,0.5); display: none;"></div>';
 }
 
 /**
