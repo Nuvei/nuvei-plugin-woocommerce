@@ -1,5 +1,8 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.2.1
+    * After approved transaction, do not click on #place_order button, but submit form.checkout if exists.
+
 # 1.2.0
     * Hide Void button 48 hours after the Order is made.
     * Hide Void button for Zero Orders.
