@@ -1,10 +1,19 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.2.1
+    * After approved transaction, do not click on #place_order button, but submit form.checkout if exists.
+    * Tested on WP 6.1.1 and WC 7.1.0.
+
+# 1.2.0
+    * Hide Void button 48 hours after the Order is made.
+    * Hide Void button for Zero Orders.
+    * Added "Cancel Subscription" button, when the Subscription was confirmed as Active.
+
 # 1.1.2
     * Tested on WP 6.1 and WC 7.0.1.
 
 # 1.1.1
-    # Disable Nuvei Rebilling products for Guest users.
+    * Disable Nuvei Rebilling products for Guest users.
 
 # 1.1.0
     * Unify products with plan in a single subscription, and multiply subscription amount by their quantity.

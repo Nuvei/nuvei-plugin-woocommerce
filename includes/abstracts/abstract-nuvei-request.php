@@ -6,8 +6,8 @@ defined( 'ABSPATH' ) || exit;
  * The base class for requests. The different requests classes inherit this one.
  * Some common methods are also here.
  */
-abstract class Nuvei_Request {
-
+abstract class Nuvei_Request
+{
 	protected $plugin_settings;
 	protected $request_base_params;
 	protected $sc_order;
@@ -29,10 +29,10 @@ abstract class Nuvei_Request {
 	 * 
 	 * @param array $plugin_settings
 	 */
-	public function __construct( array $plugin_settings) {
+	public function __construct( array $plugin_settings)
+    {
 		$time                  = gmdate('Ymdhis');
 		$this->plugin_settings = $plugin_settings;
-//		$notify_url            = Nuvei_String::get_notify_url($plugin_settings);
 		
 		$this->request_base_params = array(
 			'merchantId'        => $plugin_settings['merchantId'],
@@ -46,11 +46,6 @@ abstract class Nuvei_Request {
 			'merchantDetails'	=> array(
 				'customField3'      => time(), // create time
 			),
-//			'urlDetails'        => array(
-//				'notificationUrl'   => $notify_url,
-//                'backUrl'           => wc_get_checkout_url(),
-//			),
-//			'url'               => $notify_url, // a custom parameter for the checksum
 		);
 	}
     
@@ -163,14 +158,11 @@ abstract class Nuvei_Request {
 		}
 		// can we override Order status (state) END
         
-        # Do not run DMN logic more than once
-        
-        # /Do not run DMN logic more than once
-		
 		return $this->sc_order;
 	}
 	
-	protected function save_refund_meta_data( $trans_id, $ref_amount, $status = '', $wc_id = 0) {
+	protected function save_refund_meta_data( $trans_id, $ref_amount, $status = '', $wc_id = 0)
+    {
 		Nuvei_Logger::write('save_refund_meta_data()');
 		
 		$refunds = json_decode($this->sc_order->get_meta(NUVEI_REFUNDS), true);
@@ -205,7 +197,8 @@ abstract class Nuvei_Request {
 	 * @global Woocommerce $woocommerce
 	 * @return array
 	 */
-	protected function get_order_addresses() {
+	protected function get_order_addresses()
+    {
 		global $woocommerce;
 		
 		$form_params    = array();
@@ -357,7 +350,8 @@ abstract class Nuvei_Request {
 	 *
 	 * @return mixed
 	 */
-	protected function call_rest_api( $method, $params) {
+	protected function call_rest_api( $method, $params)
+    {
 		if (empty($this->plugin_settings['hash_type'])
 			|| empty($this->plugin_settings['secret'])
 		) {
@@ -462,7 +456,8 @@ abstract class Nuvei_Request {
 	 *
 	 * @return array $device_details
 	 */
-	protected function get_device_details() {
+	protected function get_device_details()
+    {
 		$device_details = array(
 			'deviceType'    => 'UNKNOWN', // DESKTOP, SMARTPHONE, TABLET, TV, and UNKNOWN
 			'deviceName'    => 'UNKNOWN',
@@ -548,7 +543,8 @@ abstract class Nuvei_Request {
 	 * 
 	 * @return array $data
 	 */
-	protected function get_products_data() {
+	protected function get_products_data()
+    {
 		global $woocommerce;
 		
 		$items = $woocommerce->cart->get_cart();
@@ -597,7 +593,6 @@ abstract class Nuvei_Request {
 			
 			$data['subscr_data'][$item['product_id']] = array(
 				'planId'			=> $term_meta['planId'][0],
-//				'recurringAmount'	=> number_format($term_meta['recurringAmount'][0], 2, '.', ''),
 				'recurringAmount'	=> number_format($term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', ''),
 			);
 
@@ -615,7 +610,8 @@ abstract class Nuvei_Request {
 		return $data;
 	}
 	
-    protected function pass_user_token_id() {
+    protected function pass_user_token_id()
+    {
         if($this->plugin_settings('use_upos') == 1) {
             return true;
         }
@@ -630,53 +626,13 @@ abstract class Nuvei_Request {
         return false;
     }
     
-    /**
-	 * Try to Cancel any Subscription if there are.
-	 * 
-	 * @return void
-	 */
-	protected function subscription_cancel()
-    {
-		Nuvei_Logger::write('subscription_cancel()');
-		
-//		$subscr_ids = json_decode($this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS));
-		$subscr_ids = $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS);
-
-//		if (empty($subscr_ids) || !is_array($subscr_ids)) {
-		if (empty($subscr_ids)) {
-			Nuvei_Logger::write($subscr_ids, 'There is no Subscription to be canceled.');
-			return;
-		}
-
-		$ncs_obj = new Nuvei_Subscription_Cancel($this->plugin_settings);
-
-//		foreach ($subscr_ids as $id) {
-//			$resp = $ncs_obj->process(array('subscriptionId' => $id));
-			$resp = $ncs_obj->process(array('subscriptionId' => $subscr_ids));
-
-			// On Error
-			if (!$resp || !is_array($resp) || 'SUCCESS' != $resp['status']) {
-//				$msg = __('<b>Error</b> when try to cancel Subscription #', 'nuvei_checkout_woocommerce') . $id . ' ';
-				$msg = __('<b>Error</b> when try to cancel Subscription #', 'nuvei_checkout_woocommerce') . $subscr_ids . ' ';
-
-				if (!empty($resp['reason'])) {
-					$msg .= '<br/>' . __('<b>Reason</b> ', 'nuvei_checkout_woocommerce') . $resp['reason'];
-				}
-				
-				$this->sc_order->add_order_note($msg);
-				$this->sc_order->save();
-			}
-//		}
-		
-		return;
-	}
-	
 	/**
 	 * Get the request endpoint - sandbox or production.
 	 * 
 	 * @return string
 	 */
-	private function get_endpoint_base() {
+	private function get_endpoint_base()
+    {
 		if ('yes' == $this->plugin_settings['test']) {
 			return NUVEI_REST_ENDPOINT_INT;
 		}
@@ -690,7 +646,8 @@ abstract class Nuvei_Request {
 	 * @param array $params
 	 * @return array
 	 */
-	private function validate_parameters( $params) {
+	private function validate_parameters( $params)
+    {
 		// directly check the mails
 		if (isset($params['billingAddress']['email'])) {
 			if (!filter_var($params['billingAddress']['email'], NUVEI_PARAMS_VALIDATION_EMAIL['flag'])) {

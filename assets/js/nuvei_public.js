@@ -19,7 +19,14 @@ function nuveiAfterSdkResponse(resp) {
 		&& resp.transactionId != 'undefined'
 	) {
 		jQuery('#nuvei_transaction_id').val(resp.transactionId);
-		jQuery('#place_order').trigger('click');
+        
+        if (jQuery('form.checkout').length != 1) {
+            nuveiShowErrorMsg(scTrans.CheckoutFormError);
+            return;
+        }
+        
+        jQuery('form.checkout').trigger('submit');
+        
 		return;
 	}
 	

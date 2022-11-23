@@ -14,7 +14,8 @@ define('NUVEI_RESP_TRANS_TYPE',     '_transactionType');
 define('NUVEI_PAYMENT_METHOD',      '_paymentMethod');
 define('NUVEI_ORDER_HAS_REFUND',    '_scHasRefund');
 define('NUVEI_REFUNDS',             '_sc_refunds');
-define('NUVEI_ORDER_SUBSCR_IDS',    '_nuveiSubscrIDs');
+define('NUVEI_ORDER_SUBSCR_ID',     '_nuveiSubscrIDs');
+define('NUVEI_ORDER_SUBSCR_STATE',  '_nuveiSubscrState');
 define('NUVEI_CUID_POSTFIX',        '_sandbox_apm'); // postfix for Sandbox APM payments
 define('NUVEI_TRANS_CURR',          '_transactionCurrency');
 define('NUVEI_TRANS_STATUS',        '_transactionStatus');
@@ -54,6 +55,7 @@ define('NUVEI_JS_LOCALIZATIONS', [
     'LastDownload'		=> __('Last Download', 'nuvei_checkout_woocommerce'),
     'ReadLog'           => __('Read Log', 'nuvei_checkout_woocommerce'),
     'RefreshLogError'   => __('Getting log faild, please check the console for more information!', 'nuvei_checkout_woocommerce'),
+    'CheckoutFormError' => __('Checkout form class error, please contact the site administrator!', 'nuvei_checkout_woocommerce'),
 ]);
 
 define('NUVEI_PARAMS_VALIDATION', [

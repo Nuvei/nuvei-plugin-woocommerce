@@ -5,13 +5,15 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Class to work the DMNs.
  */
-class Nuvei_Notify_Url extends Nuvei_Request {
-
-	public function __construct( $plugin_settings) {
+class Nuvei_Notify_Url extends Nuvei_Request
+{
+	public function __construct( $plugin_settings)
+    {
 		$this->plugin_settings = $plugin_settings;
 	}
 	
-	public function process() {
+	public function process()
+    {
 		Nuvei_Logger::write($_REQUEST, 'DMN params');
 		
 		// stop DMNs only on test mode
@@ -52,7 +54,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
         
 		# Subscription State DMN
 		if ('subscription' == $dmnType) {
-			$subscriptionState = Nuvei_Http::get_param('subscriptionState');
+			$subscriptionState = strtolower(Nuvei_Http::get_param('subscriptionState'));
 			$subscriptionId    = Nuvei_Http::get_param('subscriptionId', 'int');
 			$planId            = Nuvei_Http::get_param('planId', 'int');
 			$cri_parts         = explode('_', $client_request_id);
@@ -66,35 +68,24 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			$this->is_order_valid((int) $cri_parts[0]);
 			
 			if (!empty($subscriptionState)) {
-				if ('active' == strtolower($subscriptionState)) {
+				if ('active' == $subscriptionState) {
 					$msg = __('<b>Subscription is Active</b>.', 'nuvei_checkout_woocommerce') . '<br/>'
 						. __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $subscriptionId . '<br/>'
 						. __('<b>Plan ID:</b> ', 'nuvei_checkout_woocommerce') . Nuvei_Http::get_param('planId', 'int');
 					
-					// save the Subscription ID
-//					$ord_subscr_ids = json_decode($this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS));
-//					$ord_subscr_ids = $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_IDS);
-					
-//					if (empty($ord_subscr_ids)) {
-////						$ord_subscr_ids = array();
-//						$ord_subscr_ids = '';
-//					}
-					
-					// just add the ID without the details, we need only the ID to cancel the Subscription
-//					if (!in_array($subscriptionId, $ord_subscr_ids)) {
-//						$ord_subscr_ids[] = $subscriptionId;
-//					}
-					
-//					$this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR_IDS, json_encode($ord_subscr_ids));
-					$this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR_IDS, $subscriptionId);
-				} elseif ('inactive' == strtolower($subscriptionState)) {
+					$this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR_ID, $subscriptionId);
+				}
+                elseif ('inactive' == $subscriptionState) {
 					$msg = __('<b>Subscription is Inactive</b>.', 'nuvei_checkout_woocommerce') . '<br/>' 
 						. __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $subscriptionId . '<br/>' 
 						. __('<b>Plan ID:</b> ', 'nuvei_checkout_woocommerce') . $planId;
-				} elseif ('canceled' == strtolower($subscriptionState)) {
+				}
+                elseif ('canceled' == $subscriptionState) {
 					$msg = __('<b>Subscription</b> was canceled.', 'nuvei_checkout_woocommerce') . '<br/>'
 						. __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $subscriptionId;
 				}
+                
+                $this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR_STATE, $subscriptionState);
 				
 				$this->sc_order->add_order_note($msg);
 				$this->sc_order->save();
@@ -200,8 +191,11 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			$this->change_order_status($order_id, $req_status, $transactionType);
 			$this->subscription_start($transactionType, $clientUniqueId);
 			
-			if ('Void' == $transactionType) {
-				$this->subscription_cancel();
+			if ('Void' == $transactionType
+                && 'active' == $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_STATE)
+            ) {
+                $ncs_obj = new Nuvei_Subscription_Cancel($this->plugin_settings);
+                $ncs_obj->process(['subscriptionId' => $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_ID)]);
 			}
 				
 			echo wp_json_encode('DMN received.');
