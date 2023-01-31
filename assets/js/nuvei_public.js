@@ -31,7 +31,7 @@ function nuveiAfterSdkResponse(resp) {
 	}
 	
 	if (resp.result == 'DECLINED') {
-        if (resp.hasOwnProperty('errorDescription') && 'Insufficient funds' == resp.errorDescription) {
+        if (resp.hasOwnProperty('errorDescription') && 'insufficient funds' == resp.errorDescription.toLowerCase()) {
             nuveiShowErrorMsg(scTrans.insuffFunds);
             return
         }

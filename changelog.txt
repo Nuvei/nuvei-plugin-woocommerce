@@ -1,5 +1,9 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.2.2
+    * Fixed the missing message for Insufficient funds.
+    * Tested on WP 6.1.1 and WC 7.3.0.
+
 # 1.2.1
     * After approved transaction, do not click on #place_order button, but submit form.checkout if exists.
     * Tested on WP 6.1.1 and WC 7.1.0.
