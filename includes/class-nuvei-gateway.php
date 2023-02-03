@@ -123,7 +123,16 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		return ob_get_clean();
 	}
 	
-	public function generate_nuvei_multiselect_html( $key, $data) {
+    /**
+     * Generate custom multi select for the plugin settings.
+     * 
+     * @param $key
+     * @param array $data
+     * 
+     * @return string
+     */
+	public function generate_nuvei_multiselect_html( $key, $data)
+    {
 		# prepare the list with Payment methods
 		$get_st_obj    = new Nuvei_Get_Session_Token($this->settings);
 		$resp          = $get_st_obj->process();
@@ -1076,7 +1085,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				),
 				'description'   => sprintf(
 					'<a href="%s" class="class" target="_blank">%s</a>',
-					esc_html('https://docs.safecharge.com/documentation/guides/currency-conversion-features/dynamic-currency-conversion-dcc/'),
+					esc_html('https://docs.nuvei.com/documentation/accept-payment/simply-connect/payment-customization/#dynamic-currency-conversion'),
 					__('Check the Documentation.', 'nuvei_checkout_woocommerce')
 				),
 				'default'       => 'enabled',
@@ -1088,7 +1097,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'description'   => sprintf(
                     ' <a href="%s" class="class" target="_blank">%s</a>',
 					esc_html('https://docs.nuvei.com/documentation/accept-payment/checkout-2/payment-customization/#card-processing'),
-					__('check the Documentation.', 'nuvei_checkout_woocommerce')
+					__('Check the Documentation.', 'nuvei_checkout_woocommerce')
 				),
 				'class'         => 'nuvei_checkout_setting',
 			),
@@ -1156,7 +1165,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'description'   => sprintf(
 					__('This filed is the only way to translate Checkout SDK strings. Put the translations for all desired languages as shown in the placeholder. For examples', 'nuvei_checkout_woocommerce')
 						. ' <a href="%s" class="class">%s</a>',
-					esc_html('https://docs.safecharge.com/documentation/accept-payment/checkout-sdk/advanced-styling/#i18n-styling'),
+					esc_html('https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation'),
 					__('check the Documentation.', 'nuvei_checkout_woocommerce')
 				),
 				'type'          => 'textarea',

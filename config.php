@@ -21,8 +21,8 @@ define('NUVEI_TRANS_CURR',          '_transactionCurrency');
 define('NUVEI_TRANS_STATUS',        '_transactionStatus');
 define('NUVEI_SOURCE_APPLICATION',  'WOOCOMMERCE_PLUGIN');
 define('NUVEI_GLOB_ATTR_NAME',      'Nuvei Payment Plan'); // the name of the Nuvei Global Product Attribute name
-define('NUVEI_STOP_DMN',            0); // manually stop DMN process
 define('NUVEI_LOG_EXT',             'log');
+define('NUVEI_APMS_REFUND_VOID',    ['cc_card', 'apmgw_expresscheckout']);
 
 define('NUVEI_REST_ENDPOINT_INT',   'https://ppp-test.safecharge.com/ppp/api/v1/');
 define('NUVEI_REST_ENDPOINT_PROD',  'https://secure.safecharge.com/ppp/api/v1/');

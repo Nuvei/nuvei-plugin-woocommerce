@@ -27,8 +27,7 @@ class Nuvei_String {
 		$url       = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' )
             . 'wc-api=nuvei_listener'
 			. '&save_logs=' . $save_logs 
-            . '&test_mode=' . $test_mode 
-            . '&stop_dmn=' . (defined('NUVEI_STOP_DMN') ? NUVEI_STOP_DMN : 0);
+            . '&test_mode=' . $test_mode;
 		
 		// some servers needs / before ?
 		if (strpos($url, '?') !== false && strpos($url, '/?') === false) {

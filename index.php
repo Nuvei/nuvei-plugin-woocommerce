@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Checkout for Woocommerce
  * Plugin URI: https://github.com/SafeChargeInternational/nuvei_checkout_woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 1.2.2
+ * Version: 1.2.3
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
@@ -542,6 +542,9 @@ function nuvei_enqueue( $hook) {
  */
 function nuvei_add_buttons( $order)
 {
+    Nuvei_Logger::write('nuvei_add_buttons');
+    
+    // in case this is not Nuvei order
 	if (empty($order->get_payment_method())
 		|| !in_array($order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))
 	) {
@@ -550,7 +553,9 @@ function nuvei_add_buttons( $order)
 	}
     
     // to show Nuvei buttons we must be sure the order is paid via Nuvei Paygate
-    if (!$order->get_meta(NUVEI_AUTH_CODE_KEY) || !$order->get_meta(NUVEI_TRANS_ID)) {
+    // AMP's transactions does not have Auth code
+    if (!$order->get_meta(NUVEI_AUTH_CODE_KEY) && !$order->get_meta(NUVEI_TRANS_ID)) {
+        Nuvei_Logger::write('', 'Missing Transaction ID and Auth Code!', 'WARN');
         return false;
     }
     
@@ -584,7 +589,7 @@ function nuvei_add_buttons( $order)
 	}
     
 	// hide Refund Button
-	if (!in_array($order_payment_method, array('cc_card', 'apmgw_expresscheckout'))
+	if (!in_array($order_payment_method, NUVEI_APMS_REFUND_VOID)
 		|| 'processing' == $order_status
         || 0 == $order->get_total()
 	) {
@@ -602,7 +607,7 @@ function nuvei_add_buttons( $order)
 	
 	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
 		// Show VOID button
-		if ('cc_card' == $order_payment_method 
+		if (in_array($order_payment_method, NUVEI_APMS_REFUND_VOID)
             && !$refunds_exists
             && 0 < (float) $order->get_total()
             && time() < $order_time + 172800 // 48 hours

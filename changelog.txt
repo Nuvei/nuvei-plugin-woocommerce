@@ -1,5 +1,9 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.2.3
+    * Fix the links to Nuvei documentation into the plugin settings.
+    * Do not process Pending DMNs.
+
 # 1.2.2
     * Fixed the missing message for Insufficient funds.
     * Tested on WP 6.1.1 and WC 7.3.0.

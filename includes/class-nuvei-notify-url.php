@@ -16,19 +16,13 @@ class Nuvei_Notify_Url extends Nuvei_Request
     {
 		Nuvei_Logger::write($_REQUEST, 'DMN params');
 		
-		// stop DMNs only on test mode
-		if (Nuvei_Http::get_param('stop_dmn', 'int') == 1 && 'yes' == $this->plugin_settings['test']) {
-			$params             = $_REQUEST;
-			$params['stop_dmn'] = 0;
-			
-			Nuvei_Logger::write(
-				get_site_url() . '/?' . http_build_query($params),
-				'DMN was stopped, please run it manually from the URL bleow:'
-			);
-			
-			echo wp_json_encode('DMN was stopped, please run it manually!');
-			exit;
-		}
+		# stop DMNs only on test mode
+//        Nuvei_Logger::write(
+//            get_site_url() . '/?' . http_build_query($_REQUEST),
+//            'DMN was stopped, please run it manually from the URL bleow:'
+//        );
+//        exit(wp_json_encode('DMN was stopped, please run it manually!'));
+        # /stop DMNs only on test mode
 		
         if (!$this->validate_checksum()) {
 			echo wp_json_encode('DMN Error - Checksum validation problem!');
@@ -48,9 +42,14 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		
 		if (empty($req_status) && empty($dmnType)) {
 			Nuvei_Logger::write('DMN Error - the Status is empty!');
-			echo wp_json_encode('DMN Error - the Status is empty!');
-			exit;
+			exit(wp_json_encode('DMN Error - the Status is empty!'));
 		}
+        
+        if ('pending' == strtolower($req_status)) {
+            $msg = 'Pending DMN, waiting for the next.';
+            Nuvei_Logger::write($msg);
+			exit(wp_json_encode($msg));
+        }
         
 		# Subscription State DMN
 		if ('subscription' == $dmnType) {
@@ -297,7 +296,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			'wc-api'            => '',
 			'save_logs'         => '',
 			'test_mode'         => '',
-			'stop_dmn'          => '',
 			'responsechecksum'  => '',
 		);
 		
