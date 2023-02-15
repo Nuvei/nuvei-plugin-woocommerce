@@ -16,7 +16,7 @@ class Nuvei_String {
 	 * 
 	 * @return string
 	 */
-	public static function get_notify_url( $plugin_settings, $use_default = false) {
+	public static function get_notify_url( $plugin_settings, $order_id = '', $use_default = false) {
 		if (!$use_default && !empty($plugin_settings['notify_url'])) {
 			return $plugin_settings['notify_url'];
 		}
@@ -24,14 +24,25 @@ class Nuvei_String {
 		$url_part  = get_site_url();
 		$save_logs = isset($plugin_settings['save_logs']) ? $plugin_settings['save_logs'] : 'no';  
 		$test_mode = isset($plugin_settings['test']) ? $plugin_settings['test'] : 'yes';
-		$url       = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' )
-            . 'wc-api=nuvei_listener'
-			. '&save_logs=' . $save_logs 
-            . '&test_mode=' . $test_mode;
+		$use_http  = isset($plugin_settings['use_http']) ? $plugin_settings['use_http'] : 'yes';
+		$url       = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' ) . 'wc-api=nuvei_listener'
+			. '&save_logs=' . $save_logs . '&test_mode=' . $test_mode . '&stop_dmn='
+            . (defined('NUVEI_STOP_DMN') ? NUVEI_STOP_DMN : 0);
+		
+		// use this when receive a Cashier DMN
+		if (!empty($order_id)) {
+			$url .= '&clientUniqueId=' . $order_id;
+		}
 		
 		// some servers needs / before ?
 		if (strpos($url, '?') !== false && strpos($url, '/?') === false) {
 			$url = str_replace('?', '/?', $url);
+		}
+		
+		// force Notification URL protocol to http
+		if ('yes' === $use_http && false !== strpos($url, 'https://')) {
+			$url = str_replace('https://', '', $url);
+			$url = 'http://' . $url;
 		}
 		
 		return $url;

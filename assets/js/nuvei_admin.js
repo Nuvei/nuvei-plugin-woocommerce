@@ -1,70 +1,63 @@
 var scSettleBtn		= null;
 var scVoidBtn		= null;
 
-// when the admin select to Settle, Void or Cancel Subscription actions
-//function settleAndCancelOrder(question, action, orderId) {
-function nuveiAction(question, action, orderId) {
+// when the admin select to Settle or Void the Order
+function settleAndCancelOrder(question, action, orderId) {
 	console.log('settleAndCancelOrder')
 	
-	if (!confirm(question)) {
-        return;
-    }
+	if (confirm(question)) {
+		jQuery('#custom_loader').show();
 		
-    jQuery('#custom_loader').show();
-
-    var data = {
-        action      : 'sc-ajax-action',
-        security    : scTrans.security,
-        orderId     : orderId
-    };
-
-    if (action == 'settle') {
-        data.settleOrder = 1;
-    }
-    else if (action == 'void') {
-        data.cancelOrder = 1;
-    }
-    else if ('cancelSubscr' == action) {
-        data.cancelSubs = 1;
-    }
-
-    jQuery.ajax({
-        type: "POST",
-        url: scTrans.ajaxurl,
-        data: data,
-        dataType: 'json'
-    })
-        .fail(function( jqXHR, textStatus, errorThrown){
-            jQuery('#custom_loader').hide();
-            alert('Response fail.');
-
-            console.error(textStatus)
-            console.error(errorThrown)
-        })
-        .done(function(resp) {
-            console.log(resp);
-
-            if (resp && typeof resp.status != 'undefined' && resp.data != 'undefined') {
-                if (resp.status == 1) {
-                    var urlParts    = window.location.toString().split('post.php');
-                    window.location = urlParts[0] + 'edit.php?post_type=shop_order';
-                } else if (resp.data.reason != 'undefined' && resp.data.reason != '') {
-                    jQuery('#custom_loader').hide();
-                    alert(resp.data.reason);
-                } else if (resp.data.gwErrorReason != 'undefined' && resp.data.gwErrorReason != '') {
-                    jQuery('#custom_loader').hide();
-                    alert(resp.data.gwErrorReason);
-                } else {
-                    jQuery('#custom_loader').hide();
-                    alert('Response error.');
-                }
-            } else {
-                jQuery('#custom_loader').hide();
-                alert('Response error.');
-            }
-        });
+		var data = {
+			action      : 'sc-ajax-action',
+			security    : scTrans.security,
+			orderId     : orderId
+		};
+		
+		if (action == 'settle') {
+			data.settleOrder = 1;
+		} else if (action == 'void') {
+			data.cancelOrder = 1;
+		}
+		
+		jQuery.ajax({
+			type: "POST",
+			url: scTrans.ajaxurl,
+			data: data,
+			dataType: 'json'
+		})
+			.fail(function( jqXHR, textStatus, errorThrown){
+				jQuery('#custom_loader').hide();
+				alert('Response fail.');
+				
+				console.error(textStatus)
+				console.error(errorThrown)
+			})
+			.done(function(resp) {
+				console.log(resp);
+				
+				if (resp && typeof resp.status != 'undefined' && resp.data != 'undefined') {
+					if (resp.status == 1) {
+						var urlParts    = window.location.toString().split('post.php');
+						window.location = urlParts[0] + 'edit.php?post_type=shop_order';
+					} else if (resp.data.reason != 'undefined' && resp.data.reason != '') {
+						jQuery('#custom_loader').hide();
+						alert(resp.data.reason);
+					} else if (resp.data.gwErrorReason != 'undefined' && resp.data.gwErrorReason != '') {
+						jQuery('#custom_loader').hide();
+						alert(resp.data.gwErrorReason);
+					} else {
+						jQuery('#custom_loader').hide();
+						alert('Response error.');
+					}
+				} else {
+					jQuery('#custom_loader').hide();
+					alert('Response error.');
+				}
+			});
+	}
 }
-
+ 
 /**
  * Function returnSCSettleBtn
  * Returns the SC Settle button
@@ -220,15 +213,16 @@ function nuveiGetTodayLog() {
 }
 
 function nuvei_show_hide_rest_settings() {
-    if('sdk' == jQuery('#woocommerce_nuvei_integration_type').val()) {
-		jQuery('.nuvei_cashier_setting').closest('tr').hide();
-        jQuery('.nuvei_checkout_setting').closest('tr').show();
+	var _disabled = false;
+	
+	if(1 == jQuery('#woocommerce_nuvei_use_cashier').val()) {
+		_disabled = true;
 	}
-    else {
-        jQuery('.nuvei_checkout_setting').closest('tr').hide();
-        jQuery('.nuvei_cashier_setting').closest('tr').show();
-    }
-}   
+	
+	jQuery('.nuvei_checkout_setting').attr('disabled', _disabled);
+	// hide-show the only Cashier setting
+	jQuery('.nuvei_cashier_setting').attr('disabled', _disabled ? false : true);
+}
 
 function switchNuveiTabs() {
 	if('' == window.location.hash) {
@@ -366,7 +360,7 @@ jQuery(function() {
 	// for the Use Cashier... setting
 	nuvei_show_hide_rest_settings();
 	
-	jQuery('#woocommerce_nuvei_integration_type').on('change', function() {
+	jQuery('#woocommerce_nuvei_use_cashier').on('change', function() {
 		nuvei_show_hide_rest_settings();
 	});
 	

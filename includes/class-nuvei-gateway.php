@@ -21,7 +21,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 
 		$this->init_settings();
 		$this->init_form_base_fields();
-		$this->init_form_advanced_fields(true);
+		$this->init_form_advanced_fields_checkout(true);
+		$this->init_form_advanced_fields_cashier(true);
 		$this->init_form_tools_fields(true);
 		
 		// required for the Store
@@ -123,16 +124,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		return ob_get_clean();
 	}
 	
-    /**
-     * Generate custom multi select for the plugin settings.
-     * 
-     * @param $key
-     * @param array $data
-     * 
-     * @return string
-     */
-	public function generate_nuvei_multiselect_html( $key, $data)
-    {
+	public function generate_nuvei_multiselect_html( $key, $data) {
 		# prepare the list with Payment methods
 		$get_st_obj    = new Nuvei_Get_Session_Token($this->settings);
 		$resp          = $get_st_obj->process();
@@ -170,6 +162,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'css'                       => '',
 			'custom_attributes'         => array(),
 			'desc_tip'                  => false,
+			'description'               => '',
 			'merchant_pms'              => $pms,
 			'nuvei_blocked_pms'         => $nuvei_blocked_pms,
 			'nuvei_blocked_pms_visible' => implode(', ', $nuvei_blocked_pms_visible),
@@ -208,7 +201,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	  * @return array
 	 */
 	public function process_payment( $order_id) {
-		Nuvei_Logger::write($order_id, 'Process payment() Order');
+		Nuvei_Logger::write('Process payment(), Order #' . $order_id);
 		
 		$sc_nonce = Nuvei_Http::get_param('sc_nonce');
 		
@@ -271,7 +264,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$nuvei_transaction_id = Nuvei_Http::get_param('nuvei_transaction_id', 'int');
 		
 		# in case we use Cashier
-		if ('cashier' == $this->settings['integration_type']) {
+		if (1 == $this->settings['use_cashier']) {
 			Nuvei_Logger::write('Process Cashier payment.');
 			
 			$url = $this->generate_cashier_url($return_success_url, $return_error_url, $order_id);
@@ -279,7 +272,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			if (!empty($url)) {
 				return array(
 					'result'    => 'success',
-					'redirect'  => add_query_arg(array(), $url)
+					'redirect'    => add_query_arg(array(), $url)
 				);
 			}
 			
@@ -308,6 +301,144 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             ),
             wc_get_checkout_url() . 'order-received/' . $order_id . '/'
         );
+		
+//		Nuvei_Logger::write('Process Rest APM Order.');
+		
+//		$np_obj = new Nuvei_Payment($this->settings);
+//		$resp   = $np_obj->process(array(
+//			'order_id'             => $order_id, 
+//			'return_success_url'   => $return_success_url, 
+//			'return_error_url'     => $return_error_url
+//		));
+//		
+//		if (!$resp) {
+//			$msg = __('There is no response for the Order.', 'nuvei_checkout_woocommerce');
+//			
+//			$order->add_order_note($msg);
+//			$order->save();
+//			
+//			Nuvei_Logger::write('There is no response for the Order.');
+//			
+//			return array(
+//				'result'    => 'success',
+//				'redirect'  => $return_error_url
+//			);
+//		}
+//		
+//		if (empty(Nuvei_Http::get_request_status($resp))) {
+//			$msg = __('There is no Status for the Order.', 'nuvei_checkout_woocommerce');
+//			
+//			$order->add_order_note($msg);
+//			$order->save();
+//			
+//			Nuvei_Logger::write('There is no Status for the Order.');
+//			
+//			return array(
+//				'result'    => 'success',
+//				'redirect'  => $return_error_url
+//			);
+//		}
+//		
+//		# Redirect
+//		if (!empty($resp['redirectURL']) || !empty($resp['paymentOption']['redirectUrl'])) {
+//			return array(
+//				'result'    => 'success',
+//				'redirect'    => add_query_arg(
+//					array(),
+//					!empty($resp['redirectURL']) ? $resp['redirectURL'] : $resp['paymentOption']['redirectUrl']
+//				)
+//			);
+//		}
+//		
+//		if (empty($resp['transactionStatus'])) {
+//			$msg = __('There is no Transaction Status for the Order.', 'nuvei_checkout_woocommerce');
+//			
+//			$order->add_order_note($msg);
+//			$order->save();
+//			
+//			Nuvei_Logger::write('There is no Transaction Status for the Order.');
+//			
+//			return array(
+//				'result'    => 'success',
+//				'redirect'  => $return_error_url
+//			);
+//		}
+//		
+//		if ('DECLINED' === Nuvei_Http::get_request_status($resp)
+//			|| 'DECLINED' === $resp['transactionStatus']
+//		) {
+//			$order->add_order_note(__('Order Declined.', 'nuvei_checkout_woocommerce'));
+//			$order->set_status('cancelled');
+//			$order->save();
+//			
+//			return array(
+//				'result'    => 'success',
+//				'redirect'  => $return_error_url
+//			);
+//		}
+//		
+//		if ('ERROR' === Nuvei_Http::get_request_status($resp)
+//			|| 'ERROR' === $resp['transactionStatus']
+//		) {
+//			$order->set_status('failed');
+//
+//			$error_txt = __('Payment error', 'nuvei_checkout_woocommerce');
+//
+//			if (!empty($resp['reason'])) {
+//				$error_txt .= ': ' . $resp['errCode'] . ' - ' . $resp['reason'] . '.';
+//			} elseif (!empty($resp['threeDReason'])) {
+//				$error_txt .= ': ' . $resp['threeDReason'] . '.';
+//			} elseif (!empty($resp['message'])) {
+//				$error_txt .= ': ' . $resp['message'] . '.';
+//			}
+//			
+//			$order->add_order_note($error_txt);
+//			$order->save();
+//			
+//			return array(
+//				'result'    => 'success',
+//				'redirect'  => $return_error_url
+//			);
+//		}
+//		
+//		// catch Error code or reason
+//		if ( ( isset($resp['gwErrorCode']) && -1 === $resp['gwErrorCode'] )
+//			|| isset($resp['gwErrorReason'])
+//		) {
+//			$msg = __('Error with the Payment: ', 'nuvei_checkout_woocommerce') . $resp['gwErrorReason'] . '.';
+//
+//			$order->add_order_note($msg);
+//			$order->save();
+//
+//			return array(
+//				'result'    => 'success',
+//				'redirect'  => $return_error_url
+//			);
+//		}
+//		
+//		# SUCCESS
+//		// If we get Transaction ID save it as meta-data
+//		if (isset($resp['transactionId']) && $resp['transactionId']) {
+//			$order->update_meta_data(NUVEI_TRANS_ID, $resp['transactionId'], 0);
+//		}
+//		
+//		// save the response transactionType value
+//		if (isset($resp['transactionType']) && '' !== $resp['transactionType']) {
+//			$order->update_meta_data(NUVEI_RESP_TRANS_TYPE, $resp['transactionType']);
+//		}
+//
+//		if (isset($resp['transactionId']) && '' !== $resp['transactionId']) {
+//			$order->add_order_note(__('Payment succsess for Transaction Id ', 'nuvei_checkout_woocommerce') . $resp['transactionId']);
+//		} else {
+//			$order->add_order_note(__('Payment succsess.', 'nuvei_checkout_woocommerce'));
+//		}
+//
+//		$order->save();
+//		
+//		return array(
+//			'result'    => 'success',
+//			'redirect'  => $return_success_url
+//		);
 	}
 	
 	/**
@@ -612,12 +743,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				wc_print_notice(__('You can not add a Product with Payment Plan to another Product.', 'nuvei_checkout_woocommerce'), 'error');
 				return false;
 			}
-            
-            // 1.2 - disable for guests
-            if(!is_user_logged_in()) {
-                wc_print_notice(__('You must login to add a product with a Payment Plan.', 'nuvei_checkout_woocommerce'), 'error');
-				return false;
-            }
 			
 			return true;
 		}
@@ -719,7 +844,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'maskCvv'                   => true,
 			'i18n'                      => json_decode($this->get_setting('translation', ''), true),
             'billingAddress'            => $ord_details['billingAddress'],
-            'userData'                  => ['billingAddress' => $ord_details['billingAddress']],
 		);
         
 		// check for product with a plan
@@ -817,15 +941,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		return $default;
 	}
 	
-    /**
-     * @global type $woocommerce
-     * 
-     * @param string $success_url
-     * @param string $error_url
-     * @param int $order_id
-     * 
-     * @return string
-     */
 	private function generate_cashier_url( $success_url, $error_url, $order_id) {
 		global $woocommerce;
 		
@@ -841,24 +956,23 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		Nuvei_Logger::write($products_data, 'get_cashier_url() $products_data.');
 		
 		$params = array(
-			'merchant_id'           => $this->settings['merchantId'],
-			'merchant_site_id'      => $this->settings['merchantSiteId'],
-            'merchant_unique_id'    => $order_id,
-			'version'               => '4.0.0',
-            'time_stamp'            => gmdate('Y-m-d H:i:s'),
+			'merchant_id'       => $this->settings['merchantId'],
+			'merchant_site_id'  => $this->settings['merchantSiteId'],
+			'version'           => '4.0.0',
+		//            'user_token_id'     => @$data['order']['description']['billingAddress']['email'],
+			'time_stamp'        => gmdate('Y-m-d H:i:s'),
 			
-			'first_name'        => urldecode($addresses['billingAddress']['firstName']),
+			'first_name'        => $addresses['billingAddress']['firstName'],
 			'last_name'         => $addresses['billingAddress']['lastName'],
 			'email'             => $addresses['billingAddress']['email'],
 			'country'           => $addresses['billingAddress']['country'],
-            'state'             => $addresses['billingAddress']['state'],
 			'city'              => $addresses['billingAddress']['city'],
 			'zip'               => $addresses['billingAddress']['zip'],
 			'address1'          => $addresses['billingAddress']['address'],
 			'phone1'            => $addresses['billingAddress']['phone'],
 			'merchantLocale'    => get_locale(),
 			
-			'notify_url'        => Nuvei_String::get_notify_url($this->settings),
+			'notify_url'        => Nuvei_String::get_notify_url($this->settings, $order_id),
 			'success_url'       => $success_url,
 			'error_url'         => $error_url,
 			'pending_url'       => $success_url,
@@ -871,7 +985,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'currency'          => get_woocommerce_currency(),
 			'total_tax'         => 0,
 			'total_amount'      => $total_amount,
-            'encoding'          => 'UTF-8'
 		);
 		
 		if (1 == $this->settings['use_upos']) {
@@ -960,7 +1073,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'enabled' => array(
 				'title' => __('Enable/Disable', 'nuvei_checkout_woocommerce'),
 				'type' => 'checkbox',
-				'label' => __('Enable Nuvei Checkout Plugin.', 'nuvei_checkout_woocommerce'),
+				'label' => __('Enable Nuvei Checkout.', 'nuvei_checkout_woocommerce'),
 				'default' => 'no'
 			),
 		   'title' => array(
@@ -1041,15 +1154,15 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * 
 	 * @param bool $fields_append - use it when load the fields. In this case we want all fields in same array.
 	 */
-	private function init_form_advanced_fields($fields_append = false) {
+	private function init_form_advanced_fields_cashier( $fields_append = false) {
 		$fields = array(
-            'integration_type' => array(
-				'title'         => __('Integration type', 'nuvei_checkout_woocommerce'),
+			'use_cashier' => array(
+				'title'         => __('Use Redirect Payment Page instead of Checkout SDK', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
-				//'description'   => __('The Checkout SDK is recommended.', 'nuvei_checkout_woocommerce'),
+				'description'   => __('The Checkout SDK is recommended.', 'nuvei_checkout_woocommerce'),
 				'options'       => array(
-					'sdk'       => __('Checkout SDK', 'nuvei_checkout_woocommerce'),
-					'cashier'   => __('Payment page - Cashier', 'nuvei_checkout_woocommerce'),
+					0 => __('No', 'nuvei_checkout_woocommerce'),
+					1 => __('Yes', 'nuvei_checkout_woocommerce'),
 				),
 				'default'       => 0,
 			),
@@ -1064,6 +1177,23 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				),
 				'class'         => 'nuvei_cashier_setting'
 			),
+		);
+		
+		if ($fields_append) {
+			$this->form_fields = array_merge($this->form_fields, $fields);
+		} else {
+			$this->form_fields = $fields;
+		}
+	}
+    
+	/**
+	 * Instead of override init_form_fields() split the settings in three
+	 * groups and put them in different tabs.
+	 * 
+	 * @param bool $fields_append - use it when load the fields. In this case we want all fields in same array.
+	 */
+	private function init_form_advanced_fields_checkout( $fields_append = false) {
+		$fields = array(
             'sdk_version' => [
                 'title'         => __('SDK version', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
@@ -1085,7 +1215,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				),
 				'description'   => sprintf(
 					'<a href="%s" class="class" target="_blank">%s</a>',
-					esc_html('https://docs.nuvei.com/documentation/accept-payment/simply-connect/payment-customization/#dynamic-currency-conversion'),
+					esc_html('https://docs.safecharge.com/documentation/guides/currency-conversion-features/dynamic-currency-conversion-dcc/'),
 					__('Check the Documentation.', 'nuvei_checkout_woocommerce')
 				),
 				'default'       => 'enabled',
@@ -1095,9 +1225,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'title'         => __('Block Cards', 'nuvei_checkout_woocommerce'),
 				'type'          => 'text',
 				'description'   => sprintf(
-                    ' <a href="%s" class="class" target="_blank">%s</a>',
-					esc_html('https://docs.nuvei.com/documentation/accept-payment/checkout-2/payment-customization/#card-processing'),
-					__('Check the Documentation.', 'nuvei_checkout_woocommerce')
+					__('For examples', 'nuvei_checkout_woocommerce')
+						. ' <a href="%s" class="class" target="_blank">%s</a>',
+					esc_html('https://docs.safecharge.com/documentation/features/blocking-cards/'),
+					__('check the Documentation.', 'nuvei_checkout_woocommerce')
 				),
 				'class'         => 'nuvei_checkout_setting',
 			),
@@ -1165,7 +1296,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'description'   => sprintf(
 					__('This filed is the only way to translate Checkout SDK strings. Put the translations for all desired languages as shown in the placeholder. For examples', 'nuvei_checkout_woocommerce')
 						. ' <a href="%s" class="class">%s</a>',
-					esc_html('https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation'),
+					esc_html('https://docs.safecharge.com/documentation/accept-payment/checkout-sdk/advanced-styling/#i18n-styling'),
 					__('check the Documentation.', 'nuvei_checkout_woocommerce')
 				),
 				'type'          => 'textarea',
@@ -1206,7 +1337,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'title'         => __('Notify URL', 'nuvei_checkout_woocommerce'),
 				'type'          => 'text',
 				'description'   => '<b>' . __('Default URL: ', 'nuvei_checkout_woocommerce') . '</b>'
-					. Nuvei_String::get_notify_url($this->settings, true) . '<br/>'
+					. Nuvei_String::get_notify_url($this->settings, '', true) . '<br/>'
 					. __('To use the Default URL leave the field empty.', 'nuvei_checkout_woocommerce'),
 			),
 			'today_log' => array(

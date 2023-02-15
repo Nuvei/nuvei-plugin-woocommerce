@@ -14,15 +14,14 @@ define('NUVEI_RESP_TRANS_TYPE',     '_transactionType');
 define('NUVEI_PAYMENT_METHOD',      '_paymentMethod');
 define('NUVEI_ORDER_HAS_REFUND',    '_scHasRefund');
 define('NUVEI_REFUNDS',             '_sc_refunds');
-define('NUVEI_ORDER_SUBSCR_ID',     '_nuveiSubscrIDs');
-define('NUVEI_ORDER_SUBSCR_STATE',  '_nuveiSubscrState');
+define('NUVEI_ORDER_SUBSCR_IDS',    '_nuveiSubscrIDs');
 define('NUVEI_CUID_POSTFIX',        '_sandbox_apm'); // postfix for Sandbox APM payments
 define('NUVEI_TRANS_CURR',          '_transactionCurrency');
 define('NUVEI_TRANS_STATUS',        '_transactionStatus');
 define('NUVEI_SOURCE_APPLICATION',  'WOOCOMMERCE_PLUGIN');
 define('NUVEI_GLOB_ATTR_NAME',      'Nuvei Payment Plan'); // the name of the Nuvei Global Product Attribute name
+define('NUVEI_STOP_DMN',            0); // manually stop DMN process
 define('NUVEI_LOG_EXT',             'log');
-define('NUVEI_APMS_REFUND_VOID',    ['cc_card', 'apmgw_expresscheckout']);
 
 define('NUVEI_REST_ENDPOINT_INT',   'https://ppp-test.safecharge.com/ppp/api/v1/');
 define('NUVEI_REST_ENDPOINT_PROD',  'https://secure.safecharge.com/ppp/api/v1/');
@@ -38,7 +37,6 @@ define('NUVEI_JS_LOCALIZATIONS', [
     'paymentGatewayName'    => NUVEI_GATEWAY_NAME,
     
     // translations
-    'insuffFunds'       => __('You have Insufficient funds, please go back and remove some of the items in your shopping cart, or use another card.', 'nuvei_checkout_woocommerce'),
     'paymentDeclined'	=> __('Your Payment was DECLINED. Please, try another payment option!', 'nuvei_checkout_woocommerce'),
     'paymentError'      => __('Error with your Payment.', 'nuvei_checkout_woocommerce'),
     'unexpectedError'	=> __('Unexpected error. Please, try another payment option!', 'nuvei_checkout_woocommerce'),
@@ -55,7 +53,6 @@ define('NUVEI_JS_LOCALIZATIONS', [
     'LastDownload'		=> __('Last Download', 'nuvei_checkout_woocommerce'),
     'ReadLog'           => __('Read Log', 'nuvei_checkout_woocommerce'),
     'RefreshLogError'   => __('Getting log faild, please check the console for more information!', 'nuvei_checkout_woocommerce'),
-    'CheckoutFormError' => __('Checkout form class error, please contact the site administrator!', 'nuvei_checkout_woocommerce'),
 ]);
 
 define('NUVEI_PARAMS_VALIDATION', [

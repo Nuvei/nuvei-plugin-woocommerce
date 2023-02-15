@@ -5,7 +5,7 @@
 			__( 'Return to payments', 'nuvei_checkout_woocommerce' ),
 			admin_url( 'admin.php?page=wc-settings&tab=checkout' )
 		);
-    ?>
+		?>
 </h2>
 
 <p><?php esc_html__('Please check and fill the settings of the plugin.', 'nuvei_checkout_woocommerce'); ?></p>
@@ -32,13 +32,24 @@
 </div>
 
 <div id="nuvei_advanced_settings_cont" class="nuvei_checkout_settings_cont" style="display: none;">
+	<h3><?php echo esc_html__('Checkout SDK Settings', 'nuvei_checkout_woocommerce'); ?>:</h3>
 	<table class="form-table">
 		<?php
-			$this->init_form_advanced_fields();
+			$this->init_form_advanced_fields_checkout();
 			$this->generate_settings_html();
 		?>
 		
 	</table>
+	<hr/>
+	
+	<h3><?php echo esc_html__('Redirect Payment Page Settings', 'nuvei_checkout_woocommerce'); ?>:</h3>
+	<table class="form-table">
+		<?php
+			$this->init_form_advanced_fields_cashier();
+			$this->generate_settings_html();
+		?>
+	</table>
+	<hr/>
 </div>
 
 <div id="nuvei_tools_cont" class="nuvei_checkout_settings_cont" style="display: none;">

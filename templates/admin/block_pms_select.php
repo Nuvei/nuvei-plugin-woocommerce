@@ -34,6 +34,8 @@
 			<button type="button" class="button-secondary" onclick="nuveiCleanBlockedPMs()">
 				<?php echo esc_html('Clean', 'nuvei_checkout_woocommerce'); ?>
 			</button>
+			
+			<p class="description"><?php echo esc_html($data['description']); ?></p>
 		</fieldset>
 	</td>
 </tr>

@@ -3,15 +3,15 @@
  * Plugin Name: Nuvei Checkout for Woocommerce
  * Plugin URI: https://github.com/SafeChargeInternational/nuvei_checkout_woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 1.2.3
+ * Version: 1.0.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 7.1.1
+ * Tested up to: 5.9.3
  * WC requires at least: 3.0
- * WC tested up to: 7.3.0
+ * WC tested up to: 6.5.1
 */
 
 defined('ABSPATH') || die('die');
@@ -150,8 +150,8 @@ function nuvei_init() {
 			&& NUVEI_GATEWAY_NAME == $data['payment_method'] 
 			&& empty(Nuvei_Http::get_param('nuvei_transaction_id'))
 		) {
-			if (isset($wc_nuvei->settings['integration_type'])
-				&& 'cashier' != $wc_nuvei->settings['integration_type']
+			if (isset($wc_nuvei->settings['use_cashier'])
+				&& 1 != $wc_nuvei->settings['use_cashier']
 			) {
 				$wc_nuvei->call_checkout();
 			}
@@ -248,8 +248,7 @@ function nuvei_init() {
  * Function nuvei_ajax_action
  * Main function for the Ajax requests.
  */
-function nuvei_ajax_action()
-{
+function nuvei_ajax_action() {
 	if (!check_ajax_referer('sc-security-nonce', 'security')) {
 		wp_send_json_error(__('Invalid security token sent.'));
 		wp_die('Invalid security token sent');
@@ -278,31 +277,9 @@ function nuvei_ajax_action()
 	}
 	
 	// Refund
-	if (Nuvei_Http::get_param('refAmount', 'float') != 0) {
+	if ( isset($_POST['refAmount']) ) {
 		$nuvei_refund = new Nuvei_Refund($wc_nuvei->settings);
-		$nuvei_refund->create_refund_request(
-            Nuvei_Http::get_param('postId', 'int'), 
-            Nuvei_Http::get_param('refAmount', 'float')
-        );
-	}
-    
-	// Cancel Subscription
-	if (Nuvei_Http::get_param('cancelSubs', 'int') == 1) {
-        $order = wc_get_order(Nuvei_Http::get_param('orderId', 'int'));
-        
-		$nuvei_class    = new Nuvei_Subscription_Cancel($wc_nuvei->settings);
-		$resp           = $nuvei_class->process(['subscriptionId' => $order->get_meta(NUVEI_ORDER_SUBSCR_ID)]);
-        $ord_status     = 0;
-        
-        if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
-			$ord_status = 1;
-		}
-        
-		wp_send_json([
-            'status'    => $ord_status, 
-            'data'      => $resp
-        ]);
-		exit;
+		$nuvei_refund->create_refund_request(Nuvei_Http::get_param('postId', 'int'), Nuvei_Http::get_param('refAmount', 'float'));
 	}
 	
 	// Update Order before submit
@@ -372,15 +349,9 @@ function nuvei_load_styles_scripts( $styles) {
 	);
 	
 	// Checkout SDK URL for integration and production
-    $sdk_version = NUVEI_SDK_URL_PROD;
-    
-    if(!empty($wc_nuvei->settings['sdk_version'])) {
-        $sdk_version = $wc_nuvei->settings['sdk_version'];
-    }
-    
 	wp_register_script(
 		'nuvei_checkout_sdk',
-		($sdk_version == 'prod' ? NUVEI_SDK_URL_PROD : NUVEI_SDK_URL_INT),
+		($wc_nuvei->settings['sdk_version'] == 'prod' ? NUVEI_SDK_URL_PROD : NUVEI_SDK_URL_INT),
 		array('jquery'),
 		'1'
 	);
@@ -540,40 +511,22 @@ function nuvei_enqueue( $hook) {
  * @global Order $order
  * @return type
  */
-function nuvei_add_buttons( $order)
-{
-    Nuvei_Logger::write('nuvei_add_buttons');
-    
-    // in case this is not Nuvei order
+function nuvei_add_buttons( $order) {
+	
 	if (empty($order->get_payment_method())
 		|| !in_array($order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))
 	) {
 		echo '<script type="text/javascript">var notNuveiOrder = true;</script>';
 		return false;
 	}
-    
-    // to show Nuvei buttons we must be sure the order is paid via Nuvei Paygate
-    // AMP's transactions does not have Auth code
-    if (!$order->get_meta(NUVEI_AUTH_CODE_KEY) && !$order->get_meta(NUVEI_TRANS_ID)) {
-        Nuvei_Logger::write('', 'Missing Transaction ID and Auth Code!', 'WARN');
-        return false;
-    }
-    
+	
 	try {
-		$order_id               = $order->get_id();
-		$order_status           = strtolower($order->get_status());
-		$order_payment_method   = $order->get_meta('_paymentMethod');
-		$order_refunds          = json_decode($order->get_meta(NUVEI_REFUNDS), true);
-		$refunds_exists         = false;
-        $order_time             = 0;
-        
-        if (!is_null($order->get_date_created())) {
-            $order_time = $order->get_date_created()->getTimestamp();
-        }
-        if (!is_null($order->get_date_completed())) {
-            $order_time = $order->get_date_completed()->getTimestamp();
-        }
-        
+		$order_id             = $order->get_id();
+		$order_status         = strtolower($order->get_status());
+		$order_payment_method = $order->get_meta('_paymentMethod');
+		$order_refunds        = json_decode($order->get_meta(NUVEI_REFUNDS), true);
+		$refunds_exists       = false;
+		
 		if (!empty($order_refunds) && is_array($order_refunds)) {
 			foreach ($order_refunds as $data) {
 				if ('approved' == $data['status']) {
@@ -587,31 +540,33 @@ function nuvei_add_buttons( $order)
 			. esc_js($ex->getMessage()) . '")</script>';
 		exit;
 	}
-    
+	
 	// hide Refund Button
-	if (!in_array($order_payment_method, NUVEI_APMS_REFUND_VOID)
+	if (!in_array($order_payment_method, array('cc_card', 'dc_card', 'apmgw_expresscheckout'))
 		|| 'processing' == $order_status
         || 0 == $order->get_total()
 	) {
 		echo '<script type="text/javascript">jQuery(\'.refund-items\').prop("disabled", true);</script>';
 	}
-    
-    // Show Cancel Subscription button
-    if ('active' == $order->get_meta(NUVEI_ORDER_SUBSCR_STATE)) {
-        echo
-            '<button id="sc_cancel_subs_btn" type="button" onclick="nuveiAction(\''
-                . esc_html__('Are you sure, you want to cancel the subscription for this order?', 'nuvei_checkout_woocommerce')
-                . '\', \'cancelSubscr\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
-                . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') . '</button>';
-    }
+	
+	// to show SC buttons we must be sure the order is paid via SC Paygate
+	if (!$order->get_meta(NUVEI_AUTH_CODE_KEY) || !$order->get_meta(NUVEI_TRANS_ID)) {
+		return;
+	}
 	
 	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
+		// we do not set this meta anymore, keep it only because of the orders made before v3.5 of the plugin
+		$order_has_refund = $order->get_meta(NUVEI_ORDER_HAS_REFUND);
+		
 		// Show VOID button
-		if (in_array($order_payment_method, NUVEI_APMS_REFUND_VOID)
-            && !$refunds_exists
-            && 0 < (float) $order->get_total()
-            && time() < $order_time + 172800 // 48 hours
-        ) {
+		if ('cc_card' == $order_payment_method
+			/**
+			 * Before v3.5 we put a flag on refund - $order_has_refund
+			 * since v3.5 we save some of the refund parameters as json in "_sc_refunds" meta data
+			 * and do not save $order_has_refund flag anymore
+			 */
+			&& ( '1' != $order_has_refund && !$refunds_exists )
+		) {
 			$question = sprintf(
 				/* translators: %d is replaced with "decimal" */
 				__('Are you sure, you want to Cancel Order #%d?', 'nuvei_checkout_woocommerce'),
@@ -619,7 +574,7 @@ function nuvei_add_buttons( $order)
 			);
 			
 			echo
-				'<button id="sc_void_btn" type="button" onclick="nuveiAction(\''
+				'<button id="sc_void_btn" type="button" onclick="settleAndCancelOrder(\''
 					. esc_html($question) . '\', \'void\', ' . esc_html($order_id)
 					. ')" class="button generate-items">'
 					. esc_html__('Void', 'nuvei_checkout_woocommerce') . '</button>';
@@ -637,15 +592,15 @@ function nuvei_add_buttons( $order)
 			);
 			
 			echo
-				'<button id="sc_settle_btn" type="button" onclick="nuveiAction(\''
+				'<button id="sc_settle_btn" type="button" onclick="settleAndCancelOrder(\''
 					. esc_html($question)
 					. '\', \'settle\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
 					. esc_html__('Settle', 'nuvei_checkout_woocommerce') . '</button>';
 		}
-    }
-    
-    // add loading screen
-	echo '<div id="custom_loader" class="blockUI blockOverlay" style="height: 100%; position: absolute; top: 0px; width: 100%; z-index: 10; background-color: rgba(255,255,255,0.5); display: none;"></div>';
+		
+		// add loading screen
+		echo '<div id="custom_loader" class="blockUI blockOverlay" style="height: 100%; position: absolute; top: 0px; width: 100%; z-index: 10; background-color: rgba(255,255,255,0.5); display: none;"></div>';
+	}
 }
 
 /**
@@ -869,18 +824,17 @@ function nuvei_edit_term_meta( $term_id, $tt_id) {
 // Attributes, Terms and Meta functions END
 
 # For the custom column in the Order list
-function nuvei_fill_custom_column( $column)
-{
+function nuvei_fill_custom_column( $column) {
 	global $post;
 	
 	$order = wc_get_order($post->ID);
 	
-	if ('order_number' === $column && !empty($order->get_meta(NUVEI_ORDER_SUBSCR_ID))) { 
-?>
+	if ('order_number' === $column && !empty($order->get_meta(NUVEI_ORDER_SUBSCR_IDS))) { 
+		?>
 		<mark class="order-status status-processing tips" style="float: right;">
 			<span><?php echo esc_html__('Nuvei Subscription', 'nuvei_checkout_woocommerce'); ?></span>
 		</mark>
-<?php 
+		<?php 
 	}
 }
 # For the custom column in the Order list END
@@ -894,7 +848,7 @@ function nuvei_fill_custom_column( $column)
 function nuvei_edit_my_account_orders_col( $order) {
 	echo '<a href="' . esc_url( $order->get_view_order_url() ) . '"';
 	
-	if (!empty($order->get_meta(NUVEI_ORDER_SUBSCR_ID))) {
+	if (!empty($order->get_meta(NUVEI_ORDER_SUBSCR_IDS))) {
 		echo ' class="nuvei_plan_order" title="' . esc_attr__('Nuvei Payment Plan Order', 'nuvei_checkout_woocommerce') . '"';
 	}
 	

@@ -59,7 +59,20 @@ class Nuvei_Settle_Void extends Nuvei_Request
 		$this->is_order_valid($order_id);
         
 		$method = 'settle' == $action ? 'settleTransaction' : 'voidTransaction';
-		$resp   = $this->process(array(
+        
+        // Offline Void of Zero Total Order
+        if('voidTransaction' == $method
+            && 0 == $this->sc_order->get_total()
+        ) {
+            $this->subscription_cancel();
+            $this->sc_order->update_status('cancelled');
+            
+            wp_send_json(array('status' => 1, 'data' => []));
+            exit;
+        }
+        
+        
+		$resp = $this->process(array(
 			'order_id' => $order_id, 
 			'action'   => $action, 
 			'method'   => $method
@@ -76,8 +89,7 @@ class Nuvei_Settle_Void extends Nuvei_Request
 		exit;
 	}
 
-	protected function get_checksum_params()
-    {
+	protected function get_checksum_params() {
 		return array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'currency', 'relatedTransactionId', 'authCode', 'url', 'timeStamp');
 	}
 }

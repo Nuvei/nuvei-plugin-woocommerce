@@ -57,7 +57,7 @@ class Nuvei_Logger {
         $source_file_name   = '';
         $member_name        = '';
         $source_line_number = '';
-        $backtrace          = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+        $backtrace          = debug_backtrace();
         
         if(!empty($backtrace)) {
             if(!empty($backtrace[0]['file'])) {
@@ -77,24 +77,11 @@ class Nuvei_Logger {
             $message .= $tab;
         }
         
-        if(is_array($data)) {
-            // paymentMethods can be very big array
-            if(!empty($data['paymentMethods'])) {
-                $exception = json_encode($data);
-            }
-            else {
-                $exception = $beauty_log ? json_encode($data, JSON_PRETTY_PRINT) : json_encode($data);
-            }
-        }
-        elseif(is_object($data)) {
-            $data_tmp   = print_r($data, true);
-            $exception  = $beauty_log ? json_encode($data_tmp, JSON_PRETTY_PRINT) : json_encode($data_tmp);
+        if(is_array($data) || is_object($data)) {
+            $exception = urldecode($beauty_log ? json_encode($data, JSON_PRETTY_PRINT) : json_encode($data));
         }
         elseif(is_bool($data)) {
             $exception = $data ? 'true' : 'false';
-        }
-        elseif(is_string($data)) {
-            $exception = false === strpos($data, 'http') ? $data : urldecode($data);
         }
         else {
             $exception = $data;
