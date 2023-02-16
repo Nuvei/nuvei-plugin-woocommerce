@@ -3,6 +3,8 @@
 # 1.2.3
     * Fix the links to Nuvei documentation into the plugin settings.
     * Do not process Pending DMNs.
+    * Check for set integration_type before try to use it.
+    * Changes into the readme file.
 
 # 1.2.2
     * Fixed the missing message for Insufficient funds.

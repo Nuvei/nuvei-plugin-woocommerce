@@ -24,11 +24,9 @@ A wide selection of region-specific payment methods can help your business grow 
 Right payment methods at the checkout page can bring you global reach, help you increase conversions and create a seamless experience for your customers.
 
 ## Automatic installation
-Please note, this gateway requires WooCommerce 3.0 and above.
+To do an automatic install, log in to your WordPress dashboard, navigate to the Plugins menu and click Add New. Upload the provided archive and install it. As a final step you should activate the plugin.
 
-To do an automatic install of, log in to your WordPress dashboard, navigate to the Plugins menu and click Add New.
-
-Upload the provided archive and install it. As a final step you should activate the plugin.
+After upgrade go to plugin settings, check and save them!
 
 ## Manual installation
 1. Backup your site completely before proceeding.
@@ -41,6 +39,8 @@ Upload the provided archive and install it. As a final step you should activate 
 8. With your FTP program, upload the Plugin folder (recommended name is - nuvei_checkout_woocommerce) to the wp-content/plugins folder in your WordPress directory online.
 9. Go to Plugins screen and find the newly uploaded Plugin in the list.
 10. Click Activate to activate it.
+
+After upgrade go to plugin settings, check and save them!
 
 ## Support
 Please, contact out Tech-Support team (tech-support@nuvei.com) in case of questions and difficulties.

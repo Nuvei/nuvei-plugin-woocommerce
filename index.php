@@ -1,7 +1,7 @@
 <?php 
 /**
- * Plugin Name: Nuvei Checkout for Woocommerce
- * Plugin URI: https://github.com/SafeChargeInternational/nuvei_checkout_woocommerce
+ * Plugin Name: Nuvei Plugin for Woocommerce
+ * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
  * Version: 1.2.3
  * Author: Nuvei
@@ -91,7 +91,7 @@ function nuvei_admin_init() {
 		if ($git_version > $curr_version) {
 			add_action('admin_notices', function() {
 				$class     = 'notice notice-info is-dismissible';
-				$url       = 'https://github.com/SafeChargeInternational/nuvei_checkout_woocommerce/blob/main/changelog.txt';
+				$url       = NUVEI_GIT_REPO . '/blob/main/changelog.txt';
 				$message_1 = __('There is a new version of Nuvei Plugin available.', 'nuvei_checkout_woocommerce' );
 				$message_2 = __('View version details.', 'nuvei_checkout_woocommerce' );
 
@@ -914,7 +914,7 @@ function nuvei_get_file_form_git( $file) {
 	curl_setopt(
 		$ch,
 		CURLOPT_URL,
-		'https://raw.githubusercontent.com/SafeChargeInternational/nuvei_checkout_woocommerce/main/index.php'
+		NUVEI_GIT_REPO . '/main/index.php'
 	);
 
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

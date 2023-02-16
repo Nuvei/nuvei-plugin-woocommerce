@@ -271,7 +271,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$nuvei_transaction_id = Nuvei_Http::get_param('nuvei_transaction_id', 'int');
 		
 		# in case we use Cashier
-		if ('cashier' == $this->settings['integration_type']) {
+		if (isset($this->settings['integration_type'])
+            && 'cashier' == $this->settings['integration_type']
+        ) {
 			Nuvei_Logger::write('Process Cashier payment.');
 			
 			$url = $this->generate_cashier_url($return_success_url, $return_error_url, $order_id);

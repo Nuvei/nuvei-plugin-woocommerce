@@ -23,6 +23,7 @@ define('NUVEI_SOURCE_APPLICATION',  'WOOCOMMERCE_PLUGIN');
 define('NUVEI_GLOB_ATTR_NAME',      'Nuvei Payment Plan'); // the name of the Nuvei Global Product Attribute name
 define('NUVEI_LOG_EXT',             'log');
 define('NUVEI_APMS_REFUND_VOID',    ['cc_card', 'apmgw_expresscheckout']);
+define('NUVEI_GIT_REPO',            'https://github.com/Nuvei/nuvei-plugin-woocommerce');
 
 define('NUVEI_REST_ENDPOINT_INT',   'https://ppp-test.safecharge.com/ppp/api/v1/');
 define('NUVEI_REST_ENDPOINT_PROD',  'https://secure.safecharge.com/ppp/api/v1/');
