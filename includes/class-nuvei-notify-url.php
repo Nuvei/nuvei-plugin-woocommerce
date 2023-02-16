@@ -296,6 +296,11 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			'wc-api'            => '',
 			'save_logs'         => '',
 			'test_mode'         => '',
+            /** @deprecated
+             * TODO - must be removed in near future.
+             * Be new notify URL is provided to Integration/TechSupport Team
+             */
+            'stop_dmn'          => '',
 			'responsechecksum'  => '',
 		);
 		

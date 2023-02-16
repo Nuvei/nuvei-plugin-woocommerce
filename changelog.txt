@@ -7,6 +7,7 @@
     * Changes into the readme file.
     * Added NUVEI_LOGS_DIR constant. Save all plugin generated files in it.
     * Removed tmp folder.
+    * The Notify URL provided to Nuvei Integration/TechSupport Team must be updated!
 
 # 1.2.2
     * Fixed the missing message for Insufficient funds.
