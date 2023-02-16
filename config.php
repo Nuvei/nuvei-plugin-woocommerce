@@ -22,6 +22,7 @@ define('NUVEI_TRANS_STATUS',        '_transactionStatus');
 define('NUVEI_SOURCE_APPLICATION',  'WOOCOMMERCE_PLUGIN');
 define('NUVEI_GLOB_ATTR_NAME',      'Nuvei Payment Plan'); // the name of the Nuvei Global Product Attribute name
 define('NUVEI_LOG_EXT',             'log');
+define('NUVEI_LOGS_DIR',            dirname(__FILE__) . '/logs/');
 define('NUVEI_APMS_REFUND_VOID',    ['cc_card', 'apmgw_expresscheckout']);
 define('NUVEI_GIT_REPO',            'https://github.com/Nuvei/nuvei-plugin-woocommerce');
 

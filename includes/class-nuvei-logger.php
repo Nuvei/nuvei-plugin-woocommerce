@@ -18,7 +18,6 @@ class Nuvei_Logger {
      * @param string $span_id Process unique ID.
      */
 	public static function write( $data, $message = '', $log_level = 'INFO', $span_id = '') {
-		$logs_path   = plugin_dir_path( NUVEI_PLUGIN_FILE ) . 'logs' . DIRECTORY_SEPARATOR;
 		$plugin_data = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . 'index.php');
 		$save_logs   = 'yes';
 		$test_mode   = 'yes';
@@ -31,7 +30,7 @@ class Nuvei_Logger {
 		}
 		
 		// path is different fore each plugin
-		if (!is_dir($logs_path) || 'yes' != $save_logs) {
+		if (!is_dir(NUVEI_LOGS_DIR) || 'yes' != $save_logs) {
 			return;
 		}
 		
@@ -126,7 +125,7 @@ class Nuvei_Logger {
         $file_name  = date('Y-m-d', time());
         
 		file_put_contents(
-			$logs_path . $file_name . '.' . NUVEI_LOG_EXT,
+			NUVEI_LOGS_DIR . $file_name . '.' . NUVEI_LOG_EXT,
 			$string,
 			FILE_APPEND
 		);

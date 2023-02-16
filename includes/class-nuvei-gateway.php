@@ -72,7 +72,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'title'             => '',
 		);
 		
-		$nuvei_plans_path = dirname(dirname(__FILE__)) . '/tmp/sc_plans.json';
+		$nuvei_plans_path = NUVEI_LOGS_DIR . 'sc_plans.json';
 
 		if (is_readable($nuvei_plans_path)) { 
 			$defaults['description'] = __('Last download: ', 'nuvei_checkout_woocommerce')
@@ -455,7 +455,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
 		// in case there are  no active plans - create default one END
 		
-		if (file_put_contents(plugin_dir_path(NUVEI_PLUGIN_FILE) . '/tmp/sc_plans.json', json_encode($resp['plans']))) {
+		if (file_put_contents(NUVEI_LOGS_DIR . 'sc_plans.json', json_encode($resp['plans']))) {
 			$this->create_nuvei_global_attribute();
 			
 			wp_send_json(array(
@@ -466,7 +466,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
 		
 		Nuvei_Logger::write(
-			plugin_dir_path(NUVEI_PLUGIN_FILE) . 'tmp/sc_plans.json',
+			NUVEI_LOGS_DIR . 'sc_plans.json',
 			'Plans list was not saved.'
 		);
 		
@@ -475,7 +475,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	}
 	
 	public function get_today_log() {
-		$log_file = plugin_dir_path(NUVEI_PLUGIN_FILE) . 'logs/' . gmdate('Y-m-d') . '.' . NUVEI_LOG_EXT;
+		$log_file = NUVEI_LOGS_DIR . gmdate('Y-m-d') . '.' . NUVEI_LOG_EXT;
 		
 		if (!file_exists($log_file)) {
 			wp_send_json(array(
@@ -519,7 +519,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	public function create_nuvei_global_attribute() {
 		Nuvei_Logger::write('create_nuvei_global_attribute()');
 		
-		$nuvei_plans_path          = plugin_dir_path(NUVEI_PLUGIN_FILE) . '/tmp/sc_plans.json';
+		$nuvei_plans_path          = NUVEI_LOGS_DIR . 'sc_plans.json';
 		$nuvei_glob_attr_name_slug = Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME);
 		$taxonomy_name             = wc_attribute_taxonomy_name($nuvei_glob_attr_name_slug);
 		

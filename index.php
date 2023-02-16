@@ -44,7 +44,7 @@ function nuvei_admin_init() {
 		// /check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin
 
 		// check in GIT for new version
-		$file         = dirname(__FILE__) . '/tmp/nuvei-latest-version.json';
+		$file         = NUVEI_LOGS_DIR . 'nuvei-latest-version.json';
 		$plugin_data  = get_plugin_data(__FILE__);
 		$curr_version = (int) str_replace('.', '', $plugin_data['Version']);
 		$git_version  = 0;
@@ -485,7 +485,7 @@ function nuvei_load_admin_styles_scripts( $hook) {
 	);
 	
 	// get the list of the plans
-	$nuvei_plans_path = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
+	$nuvei_plans_path = NUVEI_LOGS_DIR . 'sc_plans.json';
 	$plans_list       = array();
 
 	if (is_readable($nuvei_plans_path)) { 
@@ -786,7 +786,7 @@ function nuvei_show_message_on_cart( $data) {
 
 // Attributes, Terms and Meta functions
 function nuvei_add_term_fields_form( $taxonomy) {
-	$nuvei_plans_path = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
+	$nuvei_plans_path = NUVEI_LOGS_DIR . 'sc_plans.json';
 	
 	ob_start();
 	
@@ -801,7 +801,7 @@ function nuvei_add_term_fields_form( $taxonomy) {
 }
 
 function nuvei_edit_term_meta_form( $term, $taxonomy) {
-	$nuvei_plans_path = plugin_dir_path(__FILE__) . '/tmp/sc_plans.json';
+	$nuvei_plans_path = NUVEI_LOGS_DIR . 'sc_plans.json';
 
 	ob_start();
 	$term_meta  = get_term_meta($term->term_id);
