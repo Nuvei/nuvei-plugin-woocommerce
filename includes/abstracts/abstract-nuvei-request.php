@@ -71,7 +71,7 @@ abstract class Nuvei_Request
             $cart_prod_attr = $cart_product->get_attributes();
             
             // product with a payment plan
-            if ( ! empty( $cart_prod_attr[ 'pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ) ] )) {
+            if ( ! empty($cart_prod_attr['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
                 $resp['item_with_plan'] = true;
             }
         }
@@ -607,6 +607,8 @@ abstract class Nuvei_Request
 			# optional data END
 		}
 
+        Nuvei_Logger::write($data);
+        
 		return $data;
 	}
 	
@@ -616,9 +618,9 @@ abstract class Nuvei_Request
             return true;
         }
         else {
-            $items_with_plan_data = $this->check_for_product_with_plan();
+            $product_data = $this->get_products_data();
             
-            if(!empty($items_with_plan_data['item_with_plan'])) {
+            if(!empty($product_data['subscr_data'])) {
                 return true;
             }
         }

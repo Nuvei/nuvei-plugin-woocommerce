@@ -24,15 +24,9 @@ class Nuvei_Update_Order extends Nuvei_Request {
 			$nuvei_last_open_order_details = WC()->session->get('nuvei_last_open_order_details');
 		}
 		
-		//      Nuvei_Logger::write(
-		//          isset($nuvei_last_open_order_details) ? $nuvei_last_open_order_details : '',
-		//          'update_order() - session[nuvei_last_open_order_details]'
-		//      );
-		
 		if (empty($nuvei_last_open_order_details)
 			|| empty($nuvei_last_open_order_details['sessionToken'])
 			|| empty($nuvei_last_open_order_details['orderId'])
-		//          || empty($nuvei_last_open_order_details['clientRequestId'])
 		) {
 			Nuvei_Logger::write($nuvei_last_open_order_details, 'update_order() - Missing last Order session data.');
 			
@@ -72,54 +66,30 @@ class Nuvei_Update_Order extends Nuvei_Request {
 			),
 			
 			'merchantDetails'   => array(
-				'customField1' => '', // subscription details
+				'customField1' => json_encode($product_data['subscr_data']), // subscription details
 				'customField2' => json_encode($product_data['products_data']), // item details
 			),
 		);
         
-        // add or not userTokenId
-        $items_with_plan_data = $this->check_for_product_with_plan();
+		// last changes for the rebilling
+        $params['isRebilling'] = empty($product_data['subscr_data']) ? 1 : 0;
         
-        if (!empty($items_with_plan_data['item_with_plan'])
-            || 1 == $this->plugin_settings['use_upos']
-        ) {
-			$params['userTokenId'] = $params['billingAddress']['email'];
-		}
-		
-		// lat changes for the rebilling
-		if (!empty($product_data['subscr_data'])) {
-			$params['isRebilling']                                        = 0;
-			$params['paymentOption']['card']['threeD']['rebillFrequency'] = 1;
-			$params['paymentOption']['card']['threeD']['rebillExpiry']    = gmdate('Ymd', strtotime('+10 years'));
-			$params['merchantDetails']['customField1']                    = json_encode($product_data['subscr_data']);
-		} else { // for normal transaction
-			$params['isRebilling']                                        = 1;
-			$params['paymentOption']['card']['threeD']['rebillFrequency'] = 0;
-			$params['paymentOption']['card']['threeD']['rebillExpiry']    = gmdate('Ymd', time());
-		}
-		
 		$resp = $this->call_rest_api('updateOrder', $params);
 		
 		# Success
 		if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
-			$nuvei_last_open_order_details['amount'] = $cart_amount;
-			//          $nuvei_last_open_order_details['merchantDetails']           = $resp['request_base_params']['merchantDetails'];
-			$nuvei_last_open_order_details['billingAddress']['country']	= $params['billingAddress']['country'];
+			$nuvei_last_open_order_details['amount']                    = $cart_amount;
+			$nuvei_last_open_order_details['billingAddress']['country'] = $params['billingAddress']['country'];
 			
 			// put the new data in the session
 			$nuvei_last_open_order_details = array(
 				'amount'			=> $params['amount'],
-			//              'merchantDetails'   => $resp['request_base_params']['merchantDetails'],
 				'sessionToken'		=> $resp['sessionToken'],
-			//              'clientRequestId'   => $resp['request_base_params']['clientRequestId'],
 				'orderId'			=> $resp['orderId'],
 				'billingAddress'	=> $params['billingAddress'],
-			//              'cart_string'       => json_encode(WC()->session->cart), // stringify the Cart
 			);
 
 			WC()->session->set('nuvei_last_open_order_details', $nuvei_last_open_order_details);
-
-//			Nuvei_Logger::write($nuvei_last_open_order_details, 'Update Order Class - nuvei_last_open_order_details');
 			// put the new data in the session END
 			
 			return array_merge($params, $resp);

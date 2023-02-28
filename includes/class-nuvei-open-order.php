@@ -30,27 +30,33 @@ class Nuvei_Open_Order extends Nuvei_Request {
 	public function process() {
 		global $woocommerce;
 		
-		$cart        = $woocommerce->cart;
-		$ajax_params = array();
+		$cart                           = $woocommerce->cart;
+		$ajax_params                    = array();
+        $nuvei_last_open_order_details  = WC()->session->get('nuvei_last_open_order_details');
+        $product_data                   = $this->get_products_data();
 		
 		# try to update Order
-		$uo_obj = new Nuvei_Update_Order($this->plugin_settings);
-		$resp   = $uo_obj->process();
-		
-		if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
-			if ($this->is_ajax) {
-				wp_send_json(array(
-					'status'        => 1,
-					'sessionToken'	=> $resp['sessionToken']
-				));
-				exit;
-			}
+        if ( !( empty($nuvei_last_open_order_details['userTokenId'])
+            && !empty($product_data['subscr_data'])
+        ) ) {
+            $uo_obj = new Nuvei_Update_Order($this->plugin_settings);
+            $resp   = $uo_obj->process();
 
-			return $resp;
-		} elseif (!empty($resp['status']) && !empty($resp['reload_checkout'])) {
-			wp_send_json(array('reload_checkout' => 1));
-			exit;
-		}
+            if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
+                if ($this->is_ajax) {
+                    wp_send_json(array(
+                        'status'        => 1,
+                        'sessionToken'	=> $resp['sessionToken']
+                    ));
+                    exit;
+                }
+
+                return $resp;
+            } elseif (!empty($resp['status']) && !empty($resp['reload_checkout'])) {
+                wp_send_json(array('reload_checkout' => 1));
+                exit;
+            }
+        }
 		# try to update Order END
 		
 		$form_data = Nuvei_Http::get_param('scFormData');
@@ -79,17 +85,18 @@ class Nuvei_Open_Order extends Nuvei_Request {
 			'billingAddress'	=> $addresses['billingAddress'],
 			'userDetails'       => $addresses['billingAddress'],
 			'transactionType'   => $this->plugin_settings['payment_action'],
-			'paymentOption'     => array('card' => array('threeD' => array('isDynamic3D' => 1))),
             'urlDetails'        => $url_details,
+            'isRebilling'       => 1,
 		);
 		
         // add or not userTokenId
-        $items_with_plan_data = $this->check_for_product_with_plan();
-        
-		if (!empty($items_with_plan_data['item_with_plan'])
+		if (!empty($product_data['subscr_data'])
             || 1 == $this->plugin_settings['use_upos']
         ) {
 			$oo_params['userTokenId'] = $addresses['billingAddress']['email'];
+			$oo_params['isRebilling'] = 0;
+			$oo_params['merchantDetails']['customField1']
+                = json_encode($product_data['subscr_data']);
 		}
 		
 		$resp = $this->call_rest_api('openOrder', $oo_params);
@@ -116,6 +123,10 @@ class Nuvei_Open_Order extends Nuvei_Request {
 			'orderId'			=> $resp['orderId'],
 			'billingAddress'	=> $oo_params['billingAddress'],
 		);
+        
+        if (!empty($oo_params['userTokenId'])) {
+            $nuvei_last_open_order_details['userTokenId'] = $oo_params['userTokenId'];
+        }
 		
 		WC()->session->set('nuvei_last_open_order_details', $nuvei_last_open_order_details);
 		

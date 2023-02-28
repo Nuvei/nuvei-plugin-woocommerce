@@ -3,15 +3,15 @@
  * Plugin Name: Nuvei Plugin for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 1.2.3
+ * Version: 1.2.4
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 7.1.1
+ * Tested up to: 6.1.1
  * WC requires at least: 3.0
- * WC tested up to: 7.3.0
+ * WC tested up to: 7.4.0
 */
 
 defined('ABSPATH') || die('die');

@@ -1,5 +1,9 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.2.4
+    * Fix for the case when updateOrder does not upgrade empty userTokenId.
+    * Do not validate and process the Tokenization DMNs.
+
 # 1.2.3
     * Fix the links to Nuvei documentation into the plugin settings.
     * Do not process Pending DMNs.

@@ -24,6 +24,11 @@ class Nuvei_Notify_Url extends Nuvei_Request
 //        exit(wp_json_encode('DMN was stopped, please run it manually!'));
         # /stop DMNs only on test mode
 		
+        if ('CARD_TOKENIZATION' == Nuvei_Http::get_param('type')) {
+            echo wp_json_encode('Tokenization DMN, waiting for the next one.');
+			exit;
+        }
+        
         if (!$this->validate_checksum()) {
 			echo wp_json_encode('DMN Error - Checksum validation problem!');
 			exit;
@@ -446,6 +451,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 	 */
 	private function subscription_start($transactionType, $order_id, $order_total = null)
     {
+        Nuvei_Logger::write('Try to start subscription.');
+        
         $subscr_data = json_decode(Nuvei_Http::get_param('customField1', 'json'), true);
         
 		if (!in_array($transactionType, array('Settle', 'Sale', 'Auth'))
