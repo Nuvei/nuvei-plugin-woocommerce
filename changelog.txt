@@ -3,6 +3,7 @@
 # 1.2.4
     * Fix for the case when updateOrder does not upgrade empty userTokenId.
     * Do not validate and process the Tokenization DMNs.
+    * When click on Pay button check if the products are still in stock.
 
 # 1.2.3
     * Fix the links to Nuvei documentation into the plugin settings.

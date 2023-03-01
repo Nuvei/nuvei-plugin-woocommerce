@@ -211,7 +211,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		Nuvei_Logger::write($order_id, 'Process payment() Order');
 		
         // clean last open order details
-        WC()->session->set('nuvei_last_open_order_details', []);
+//        WC()->session->set('nuvei_last_open_order_details', []);
         
 		$sc_nonce = Nuvei_Http::get_param('sc_nonce');
 		

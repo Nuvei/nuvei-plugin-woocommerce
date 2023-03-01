@@ -245,7 +245,6 @@ function nuvei_init() {
 }
 
 /**
- * Function nuvei_ajax_action
  * Main function for the Ajax requests.
  */
 function nuvei_ajax_action()

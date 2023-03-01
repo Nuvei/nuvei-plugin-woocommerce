@@ -58,13 +58,14 @@ define('NUVEI_JS_LOCALIZATIONS', [
     'ReadLog'           => __('Read Log', 'nuvei_checkout_woocommerce'),
     'RefreshLogError'   => __('Getting log faild, please check the console for more information!', 'nuvei_checkout_woocommerce'),
     'CheckoutFormError' => __('Checkout form class error, please contact the site administrator!', 'nuvei_checkout_woocommerce'),
+    'TransactionAppr'   => __('The transaction was approved.', 'nuvei_checkout_woocommerce'),
 ]);
 
 define('NUVEI_PARAMS_VALIDATION', [
     // deviceDetails
     'deviceType' => array(
         'length' => 10,
-        'flag'    => FILTER_SANITIZE_STRING
+        'flag'    => FILTER_DEFAULT
     ),
     'deviceName' => array(
         'length' => 255,
@@ -111,11 +112,11 @@ define('NUVEI_PARAMS_VALIDATION', [
     ),
     'country' => array(
         'length' => 20,
-        'flag'    => FILTER_SANITIZE_STRING
+        'flag'    => FILTER_DEFAULT
     ),
     'state' => array(
         'length' => 2,
-        'flag'    => FILTER_SANITIZE_STRING
+        'flag'    => FILTER_DEFAULT
     ),
     'county' => array(
         'length' => 255,

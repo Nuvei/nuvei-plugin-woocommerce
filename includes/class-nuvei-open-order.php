@@ -5,8 +5,8 @@ defined( 'ABSPATH' ) || exit;
 /**
  * The class for openOrder request.
  */
-class Nuvei_Open_Order extends Nuvei_Request {
-
+class Nuvei_Open_Order extends Nuvei_Request
+{
 	private $is_ajax;
 	
 	/**
@@ -15,7 +15,8 @@ class Nuvei_Open_Order extends Nuvei_Request {
 	 * @param array $plugin_settings
 	 * @param bool  $is_ajax
 	 */
-	public function __construct( array $plugin_settings, $is_ajax = false) {
+	public function __construct( array $plugin_settings, $is_ajax = false)
+    {
 		parent::__construct($plugin_settings);
 		
 		$this->is_ajax = $is_ajax;
@@ -27,14 +28,33 @@ class Nuvei_Open_Order extends Nuvei_Request {
 	 * @global object $woocommerce
 	 * @return array|boolean
 	 */
-	public function process() {
+	public function process()
+    {
+        Nuvei_Logger::write('OpenOrder class.');
+        
 		global $woocommerce;
 		
 		$cart                           = $woocommerce->cart;
 		$ajax_params                    = array();
         $nuvei_last_open_order_details  = WC()->session->get('nuvei_last_open_order_details');
         $product_data                   = $this->get_products_data();
-		
+        
+        // check if product is available when click on Pay button
+        if ($this->is_ajax 
+            && !empty($product_data['products_data']) 
+            && is_array($product_data['products_data'])
+        ) {
+            foreach ($product_data['products_data'] as $data) {
+                if (0 <= $data['stock_qty'] || is_null($data['stock_qty'])) {
+                    wp_send_json(array(
+                        'status'    => 0,
+                        'msg'       => __('An item is not available.')
+                    ));
+                    exit;
+                }
+            }
+        }
+        
 		# try to update Order
         if ( !( empty($nuvei_last_open_order_details['userTokenId'])
             && !empty($product_data['subscr_data'])
@@ -86,7 +106,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 			'userDetails'       => $addresses['billingAddress'],
 			'transactionType'   => $this->plugin_settings['payment_action'],
             'urlDetails'        => $url_details,
-            'isRebilling'       => 1,
+//            'isRebilling'       => 1,
 		);
 		
         // add or not userTokenId
@@ -94,7 +114,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
             || 1 == $this->plugin_settings['use_upos']
         ) {
 			$oo_params['userTokenId'] = $addresses['billingAddress']['email'];
-			$oo_params['isRebilling'] = 0;
+//			$oo_params['isRebilling'] = 0;
 			$oo_params['merchantDetails']['customField1']
                 = json_encode($product_data['subscr_data']);
 		}

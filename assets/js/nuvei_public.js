@@ -35,8 +35,9 @@ function nuveiAfterSdkResponse(resp) {
             return;
         }
         
+        jQuery('#nuvei_checkout_errors').html('<b>' + scTrans.TransactionAppr + '</b>');
+        jQuery('#nuvei_checkout').remove();
         jQuery('form.checkout').trigger('submit');
-        
 		return;
 	}
 	
@@ -143,8 +144,14 @@ function nuveiPrePayment(paymentDetails) {
 					
 					showNuveiCheckout();
 				}
-				
-				reject(errorMsg);
+                
+                if (resp.hasOwnProperty('msg')) {
+                    errorMsg = resp.msg;
+                }
+                
+				reject();
+                nuveiShowErrorMsg(errorMsg);
+                return;
 			});
 	});
 }
@@ -158,7 +165,7 @@ jQuery(function() {
 	if(jQuery('form.woocommerce-checkout').length == 1) {
 		if(jQuery('.woocommerce #nuvei_checkout_container').length == 0) {
 			jQuery('form.woocommerce-checkout')	
-				.before(
+				.after(
 					'<div id="nuvei_checkout_container" style="display: none;">'
 						+ '<div id="nuvei_checkout_errors"></div>'
 						+ '<div id="nuvei_checkout">Loading...</div>'

@@ -563,6 +563,7 @@ abstract class Nuvei_Request
 				'quantity'	=> $item['quantity'],
 				'price'		=> get_post_meta($item['product_id'] , '_price', true),
 				'name'		=> $cart_product->get_title(),
+				'stock_qty' => $cart_product->get_stock_quantity(),
 			);
 
 			// check for variations

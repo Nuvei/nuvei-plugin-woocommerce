@@ -72,7 +72,7 @@ class Nuvei_Update_Order extends Nuvei_Request {
 		);
         
 		// last changes for the rebilling
-        $params['isRebilling'] = empty($product_data['subscr_data']) ? 1 : 0;
+//        $params['isRebilling'] = empty($product_data['subscr_data']) ? 1 : 0;
         
 		$resp = $this->call_rest_api('updateOrder', $params);
 		
