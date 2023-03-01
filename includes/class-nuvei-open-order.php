@@ -45,7 +45,9 @@ class Nuvei_Open_Order extends Nuvei_Request
             && is_array($product_data['products_data'])
         ) {
             foreach ($product_data['products_data'] as $data) {
-                if (0 <= $data['stock_qty'] || is_null($data['stock_qty'])) {
+                if (!$data['in_stock']) {
+                    Nuvei_Logger::write($data, 'An item is not available.');
+                    
                     wp_send_json(array(
                         'status'    => 0,
                         'msg'       => __('An item is not available.')
