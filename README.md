@@ -8,11 +8,11 @@ PHP:
 
 Wordpress: 
   - minimum v4.7
-  - tested up to v5.8.2
+  - tested up to v6.1.1
 
 WooCommerce: 
   - minimum v 3.0
-  - tested up to v6.0.0
+  - tested up to v7.4.0
 
 Stable tag: main
 
