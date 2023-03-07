@@ -602,7 +602,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * 
 	 * @return bool
 	 */
-	public function add_to_cart_validation( $true, $product_id, $quantity) {
+	public function add_to_cart_validation( $true, $product_id, $quantity)
+    {
 		global $woocommerce;
 		
 		$cart       = $woocommerce->cart;
@@ -787,7 +788,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		exit;
 	}
     
-    public function hide_payment_gateways( $available_gateways ) {
+    public function hide_payment_gateways( $available_gateways )
+    {
 		if ( is_checkout() && ! is_wc_endpoint_url() ) {
             $nuvei_helper   = new Nuvei_Helper($this->settings);
             $items_info     = $nuvei_helper->check_for_product_with_plan();
@@ -795,9 +797,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             if($items_info['item_with_plan']
                 && ! empty( $available_gateways[ NUVEI_GATEWAY_NAME ] )
             ) {
-                if($items_info['items'] > 1) {
-                    return [];
-                }
+                // in case of mixed items in the Cart, hide all payment providers
+//                if($items_info['items'] > 1) {
+//                    return [];
+//                }
                 
                 $filtred_gws[ NUVEI_GATEWAY_NAME ] = $available_gateways[ NUVEI_GATEWAY_NAME ];
                 return $filtred_gws;

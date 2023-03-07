@@ -389,20 +389,12 @@ abstract class Nuvei_Request
 		);
 		// add the checksum END
 		
-		Nuvei_Logger::write(
-			array(
-				'URL'       => $url,
-				'params'    => $all_params
-			),
-			'Nuvei Request all params:'
-		);
-		
 		$json_post = json_encode($all_params);
 		
 		try {
 			$header =  array(
 				'Content-Type: application/json',
-				'Content-Length: ' . strlen($json_post),
+//				'Content-Length: ' . strlen($json_post),
 			);
 			
 			if (!function_exists('curl_init')) {
@@ -424,6 +416,18 @@ abstract class Nuvei_Request
 			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
 			$resp = curl_exec($ch);
+            
+            Nuvei_Logger::write(
+                array(
+                    'Request URL'       => $url,
+                    'Request header'    => $header,
+                    'Request params'    => $all_params,
+                    'Response'          => $resp,
+                    'Response info'     => curl_getinfo($ch),
+                ),
+                'Nuvei Request/Response data'
+            );
+            
 			curl_close($ch);
 			
 			if (false === $resp) {
@@ -437,7 +441,7 @@ abstract class Nuvei_Request
 			// return base params to the sender
 			//          $resp_array['request_params'] = $all_params;
 			
-			Nuvei_Logger::write(empty($resp_array) ? $resp : $resp_array, 'Nuvei Request response:');
+//			Nuvei_Logger::write(empty($resp_array) ? $resp : $resp_array, 'Nuvei Request response:');
 
 			return $resp_array;
 		} catch (Exception $e) {

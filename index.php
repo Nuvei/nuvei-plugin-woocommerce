@@ -30,7 +30,8 @@ add_action('admin_init', 'nuvei_admin_init');
 add_filter('woocommerce_payment_gateways', 'nuvei_add_gateway');
 add_action('plugins_loaded', 'nuvei_init', 0);
 
-function nuvei_admin_init() {
+function nuvei_admin_init()
+{
 	try {
 		// check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin
 		$path_to_nuvei_plugin = dirname(plugin_dir_path(__FILE__)) . DIRECTORY_SEPARATOR
@@ -110,7 +111,8 @@ function nuvei_admin_init() {
 	}
 }
 
-function nuvei_init() {
+function nuvei_init()
+{
 	if (!class_exists('WC_Payment_Gateway')) {
 		return;
 	}
@@ -239,7 +241,7 @@ function nuvei_init() {
 	// edit Term meta data
 	add_action( 'edited_pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME), 'nuvei_edit_term_meta', 10, 2 );
 	// before add a product to the cart
-	add_filter( 'woocommerce_add_to_cart_validation', array($wc_nuvei, 'add_to_cart_validation'), 10, 3 );
+//	add_filter( 'woocommerce_add_to_cart_validation', array($wc_nuvei, 'add_to_cart_validation'), 10, 3 );
     // Show/hide payment gateways in case of product with Nuvei Payment plan in the Cart
     add_filter( 'woocommerce_available_payment_gateways', array($wc_nuvei, 'hide_payment_gateways'), 100, 1 );
 }
@@ -332,7 +334,8 @@ function nuvei_ajax_action()
 /**
 * Add the Gateway to WooCommerce
 **/
-function nuvei_add_gateway( $methods) {
+function nuvei_add_gateway( $methods)
+{
 	$methods[] = 'Nuvei_Gateway'; // get the name of the Gateway Class
 	return $methods;
 }
@@ -346,15 +349,15 @@ function nuvei_add_gateway( $methods) {
  * 
  * @param type $styles
  */
-function nuvei_load_styles_scripts( $styles) {
+function nuvei_load_styles_scripts( $styles)
+{
 	global $wc_nuvei;
 	global $wpdb;
 	
 	$plugin_url = plugin_dir_url(__FILE__);
 	
-	if (
-		( isset($_SERVER['HTTPS']) && 'on' == $_SERVER['HTTPS'] )
-		&& ( isset($_SERVER['REQUEST_SCHEME']) && 'https' == $_SERVER['REQUEST_SCHEME'] )
+	if ( (isset($_SERVER['HTTPS']) && 'on' == $_SERVER['HTTPS'])
+		&& (isset($_SERVER['REQUEST_SCHEME']) && 'https' == $_SERVER['REQUEST_SCHEME'])
 	) {
 		if (strpos($plugin_url, 'https') === false) {
 			$plugin_url = str_replace('http:', 'https:', $plugin_url);
@@ -439,11 +442,13 @@ function nuvei_load_styles_scripts( $styles) {
 	
     if(is_checkout()) {
         $nuvei_helper = new Nuvei_Helper($wc_nuvei->settings);
-        $items_info = $nuvei_helper->check_for_product_with_plan();
         
-        if($items_info['items'] > 1 && $items_info['item_with_plan']) {
-            wc_add_notice( __('Your Cart contains a Product with Nuvei Payment paln and another product/s. You must remove the Product with the payment plan or the other product/s to finish your Order!', 'nuvei_checkout_woocommerce'), 'error' );
-        }
+        // last check for mixed items in the Cart
+//        $items_info = $nuvei_helper->check_for_product_with_plan();
+//        
+//        if($items_info['items'] > 1 && $items_info['item_with_plan']) {
+//            wc_add_notice( __('Your Cart contains a Product with Nuvei Payment paln and another product/s. You must remove the Product with the payment plan or the other product/s to finish your Order!', 'nuvei_checkout_woocommerce'), 'error' );
+//        }
         
         wp_enqueue_style('nuvei_style');
         wp_enqueue_script('nuvei_checkout_sdk');
@@ -507,7 +512,8 @@ function nuvei_load_admin_styles_scripts( $hook) {
 }
 
 // first method we come in
-function nuvei_enqueue( $hook) {
+function nuvei_enqueue( $hook)
+{
 	global $wc_nuvei;
 		
 	# DMNs catch
@@ -702,7 +708,8 @@ function nuvei_rewrite_return_url() {
  * 
  * @return string $order_received_url
  */
-function nuvei_wpml_thank_you_page( $order_received_url, $order) {
+function nuvei_wpml_thank_you_page( $order_received_url, $order)
+{
 	$lang_code          = get_post_meta($order->id, 'wpml_language', true);
 	$order_received_url = apply_filters('wpml_permalink', $order_received_url, $lang_code);
 	
@@ -711,7 +718,8 @@ function nuvei_wpml_thank_you_page( $order_received_url, $order) {
 	return $order_received_url;
 }
 
-function nuvei_edit_order_buttons() {
+function nuvei_edit_order_buttons()
+{
 	$default_text          = __('Place order', 'woocommerce');
 	$sc_continue_text      = __('Continue', 'woocommerce');
 	$chosen_payment_method = WC()->session->get('chosen_payment_method');
@@ -750,7 +758,8 @@ function nuvei_change_title_order_received( $title, $id) {
  * 
  * @global type $wp
  */
-function nuvei_user_orders() {
+function nuvei_user_orders()
+{
 	global $wp;
 	
 	$order     = wc_get_order($wp->query_vars['order-pay']);
