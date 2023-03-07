@@ -462,63 +462,64 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			return;
 		}
 		
-		$prod_plan = current($subscr_data);
-		
-		if (empty($prod_plan) || !is_array($prod_plan)) {
-			Nuvei_Logger::write($prod_plan, 'There is a problem with the DMN Product Payment Plan data:');
-			return;
-		}
+//		$prod_plan = current($subscr_data);
         
-        if('Auth' == $transactionType && null !== $order_total && 0 < $order_total) {
-            Nuvei_Logger::write($order_total, 'We allow Rebilling for Auth only when the Order total is 0.');
-            return;
-        }
-		
-		// this is the only place to pass the Order ID, we will need it later, to identify the Order
-		$prod_plan['clientRequestId'] = $order_id . '_' . uniqid();
-		
-		$ns_obj = new Nuvei_Subscription($this->plugin_settings);
-		
-		// check for more than one products of same type
-		$qty        = 1;
-		$items_data = json_decode(Nuvei_Http::get_param('customField2', 'json'), true);
-		
-		if (!empty($items_data) && is_array($items_data)) {
-			$items_data_curr = current($items_data);
-			
-			if (!empty($items_data_curr['quantity']) && is_numeric($items_data_curr['quantity'])) {
-				$qty = $items_data_curr['quantity'];
-				
-				Nuvei_Logger::write('We will create ' . $qty . ' subscriptions.');
-			}
-		}
-		
-		//for ($qty; $qty > 0; $qty--) {
-			$resp = $ns_obj->process($prod_plan);
-		
-			// On Error
-			if (!$resp || !is_array($resp) || empty($resp['status']) || 'SUCCESS' != $resp['status']) {
-				$msg = __('<b>Error</b> when try to start a Subscription by the Order.', 'nuvei_checkout_woocommerce');
+        // iterate over products with plans
+        foreach ($subscr_data as $prod_plan) {
+            if (empty($prod_plan) || !is_array($prod_plan)) {
+                Nuvei_Logger::write($prod_plan, 'There is a problem with the DMN Product Payment Plan data:');
+                return;
+            }
 
-				if (!empty($resp['reason'])) {
-					$msg .= '<br/>' . __('<b>Reason:</b> ', 'nuvei_checkout_woocommerce') . $resp['reason'];
-				}
-				
-				$this->sc_order->add_order_note($msg);
-				$this->sc_order->save();
-				
+            if('Auth' == $transactionType && 0 !== (float) $order_total) {
+                Nuvei_Logger::write($order_total, 'We allow Rebilling for Auth only when the Order total is 0.');
+                return;
+            }
+
+            // this is the only place to pass the Order ID, we will need it later, to identify the Order
+            $prod_plan['clientRequestId'] = $order_id . '_' . uniqid();
+
+            $ns_obj = new Nuvei_Subscription($this->plugin_settings);
+
+            // check for more than one products of same type
+            $qty        = 1;
+            $items_data = json_decode(Nuvei_Http::get_param('customField2', 'json'), true);
+
+            if (!empty($items_data) && is_array($items_data)) {
+                $items_data_curr = current($items_data);
+
+                if (!empty($items_data_curr['quantity']) && is_numeric($items_data_curr['quantity'])) {
+                    $qty = $items_data_curr['quantity'];
+
+                    Nuvei_Logger::write('We will create ' . $qty . ' subscriptions.');
+                }
+            }
+
+            $resp = $ns_obj->process($prod_plan);
+
+            // On Error
+            if (!$resp || !is_array($resp) || empty($resp['status']) || 'SUCCESS' != $resp['status']) {
+                $msg = __('<b>Error</b> when try to start a Subscription by the Order.', 'nuvei_checkout_woocommerce');
+
+                if (!empty($resp['reason'])) {
+                    $msg .= '<br/>' . __('<b>Reason:</b> ', 'nuvei_checkout_woocommerce') . $resp['reason'];
+                }
+
+                $this->sc_order->add_order_note($msg);
+                $this->sc_order->save();
+
 //				break;
-			}
-			
-			// On Success
-			$msg = __('<b>Subscription</b> was created. ') . '<br/>'
-				. __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $resp['subscriptionId'] . '.<br/>' 
-				. __('<b>Recurring amount:</b> ', 'nuvei_checkout_woocommerce') . $this->sc_order->get_currency() . ' '
-				. $prod_plan['recurringAmount'];
+            }
 
-			$this->sc_order->add_order_note($msg);
-			$this->sc_order->save();
-		//}
+            // On Success
+            $msg = __('<b>Subscription</b> was created. ') . '<br/>'
+                . __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $resp['subscriptionId'] . '.<br/>' 
+                . __('<b>Recurring amount:</b> ', 'nuvei_checkout_woocommerce') . $this->sc_order->get_currency() . ' '
+                . $prod_plan['recurringAmount'];
+
+            $this->sc_order->add_order_note($msg);
+            $this->sc_order->save();
+        }
 			
 		return;
 	}

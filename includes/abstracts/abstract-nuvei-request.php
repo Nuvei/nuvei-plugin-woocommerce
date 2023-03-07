@@ -415,14 +415,15 @@ abstract class Nuvei_Request
 			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
-			$resp = curl_exec($ch);
+			$resp       = curl_exec($ch);
+            $resp_array = json_decode($resp, true);
             
             Nuvei_Logger::write(
                 array(
                     'Request URL'       => $url,
                     'Request header'    => $header,
                     'Request params'    => $all_params,
-                    'Response'          => $resp,
+                    'Response'          => is_array($resp_array) ? $resp_array : $resp,
                     'Response info'     => curl_getinfo($ch),
                 ),
                 'Nuvei Request/Response data'
@@ -437,12 +438,10 @@ abstract class Nuvei_Request
 				);
 			}
 			
-			$resp_array	= json_decode($resp, true);
+			
 			// return base params to the sender
 			//          $resp_array['request_params'] = $all_params;
 			
-//			Nuvei_Logger::write(empty($resp_array) ? $resp : $resp_array, 'Nuvei Request response:');
-
 			return $resp_array;
 		} catch (Exception $e) {
 			return array(
