@@ -4,21 +4,29 @@
  * Put all Constants here.
  */
 
-define('NUVEI_GATEWAY_TITLE', 'Nuvei');
-define('NUVEI_GATEWAY_NAME', 'nuvei'); // the name by WC recognize this Gateway
+const NUVEI_GATEWAY_TITLE   = 'Nuvei';
+const NUVEI_GATEWAY_NAME    = 'nuvei'; // the name by WC recognize this Gateway
 
-// some keys for order metadata, we make them hiden when starts with underscore
-define('NUVEI_AUTH_CODE_KEY',       '_authCode');
-define('NUVEI_TRANS_ID',            '_transactionId');
-define('NUVEI_RESP_TRANS_TYPE',     '_transactionType');
-define('NUVEI_PAYMENT_METHOD',      '_paymentMethod');
-define('NUVEI_ORDER_HAS_REFUND',    '_scHasRefund');
-define('NUVEI_REFUNDS',             '_sc_refunds');
-define('NUVEI_ORDER_SUBSCR_ID',     '_nuveiSubscrIDs');
-define('NUVEI_ORDER_SUBSCR_STATE',  '_nuveiSubscrState');
-define('NUVEI_CUID_POSTFIX',        '_sandbox_apm'); // postfix for Sandbox APM payments
-define('NUVEI_TRANS_CURR',          '_transactionCurrency');
-define('NUVEI_TRANS_STATUS',        '_transactionStatus');
+// keys for order metadata, we make them hiden when starts with underscore
+const NUVEI_AUTH_CODE_KEY       = '_authCode';
+const NUVEI_TRANS_ID            = '_transactionId';
+const NUVEI_RESP_TRANS_TYPE     = '_transactionType';
+const NUVEI_PAYMENT_METHOD      = '_paymentMethod';
+const NUVEI_ORDER_HAS_REFUND    = '_scHasRefund';
+const NUVEI_REFUNDS             = '_sc_refunds';
+/**
+ * @deprecated since version 1.3.0
+ */
+const NUVEI_ORDER_SUBSCR_ID     = '_nuveiSubscrIDs';
+/**
+ * @deprecated since version 1.3.0
+ */
+const NUVEI_ORDER_SUBSCR_STATE  = '_nuveiSubscrState';
+const NUVEI_ORDER_SUBSCR        = '_nuveiSubscr'; // replace the deprecated above
+const NUVEI_CUID_POSTFIX        = '_sandbox_apm'; // postfix for Sandbox APM payments
+const NUVEI_TRANS_CURR          = '_transactionCurrency';
+const NUVEI_TRANS_STATUS        = '_transactionStatus';
+
 define('NUVEI_SOURCE_APPLICATION',  'WOOCOMMERCE_PLUGIN');
 define('NUVEI_GLOB_ATTR_NAME',      'Nuvei Payment Plan'); // the name of the Nuvei Global Product Attribute name
 define('NUVEI_LOG_EXT',             'log');

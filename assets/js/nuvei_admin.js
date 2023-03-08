@@ -3,7 +3,7 @@ var scVoidBtn		= null;
 
 // when the admin select to Settle, Void or Cancel Subscription actions
 //function settleAndCancelOrder(question, action, orderId) {
-function nuveiAction(question, action, orderId) {
+function nuveiAction(question, action, orderId, subscrId) {
 	console.log('settleAndCancelOrder')
 	
 	if (!confirm(question)) {
@@ -26,6 +26,7 @@ function nuveiAction(question, action, orderId) {
     }
     else if ('cancelSubscr' == action) {
         data.cancelSubs = 1;
+        data.subscrId   = subscrId;
     }
 
     jQuery.ajax({

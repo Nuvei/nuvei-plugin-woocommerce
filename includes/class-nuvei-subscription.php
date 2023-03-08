@@ -5,15 +5,16 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Create Subscription request class.
  */
-class Nuvei_Subscription extends Nuvei_Request {
-
+class Nuvei_Subscription extends Nuvei_Request
+{
 	/**
 	 * Main method
 	 * 
 	 * @param array $prod_plan - plan details
 	 * @return array|bool
 	 */
-	public function process() {
+	public function process()
+    {
 		$prod_plan = current(func_get_args());
 		
 		$params = array_merge(
@@ -29,7 +30,8 @@ class Nuvei_Subscription extends Nuvei_Request {
 		return $this->call_rest_api('createSubscription', $params);
 	}
 
-	protected function get_checksum_params() {
+	protected function get_checksum_params()
+    {
 		return array(
 			'merchantId',
 			'merchantSiteId',

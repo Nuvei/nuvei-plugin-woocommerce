@@ -108,7 +108,6 @@ class Nuvei_Open_Order extends Nuvei_Request
 			'userDetails'       => $addresses['billingAddress'],
 			'transactionType'   => $this->plugin_settings['payment_action'],
             'urlDetails'        => $url_details,
-//            'isRebilling'       => 1,
 		);
 		
         // add or not userTokenId
@@ -116,7 +115,7 @@ class Nuvei_Open_Order extends Nuvei_Request
             || 1 == $this->plugin_settings['use_upos']
         ) {
 			$oo_params['userTokenId'] = $addresses['billingAddress']['email'];
-//			$oo_params['isRebilling'] = 0;
+            // pass the subscription data, to use it later, here we use variation_id as key
 			$oo_params['merchantDetails']['customField1']
                 = json_encode($product_data['subscr_data']);
 		}
@@ -171,7 +170,8 @@ class Nuvei_Open_Order extends Nuvei_Request
 	 *
 	 * @return array
 	 */
-	protected function get_checksum_params() {
+	protected function get_checksum_params()
+    {
 		return array('merchantId', 'merchantSiteId', 'clientRequestId', 'amount', 'currency', 'timeStamp');
 	}
 }

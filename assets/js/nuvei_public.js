@@ -19,7 +19,7 @@ function nuveiAfterSdkResponse(resp) {
     }
     
 	if (typeof resp.result == 'undefined') {
-		console.error('Error with Checkout SDK response: ' + resp);
+		console.error('Error with Checkout SDK response', resp);
 		nuveiShowErrorMsg(scTrans.unexpectedError);
 		return;
 	}

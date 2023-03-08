@@ -180,6 +180,8 @@ function nuvei_init()
 		add_action( 'woocommerce_my_account_my_orders_column_order-number', 'nuvei_edit_my_account_orders_col' );
         // show payment methods on checkout when total is 0
         add_filter( 'woocommerce_cart_needs_payment', 'nuvei_wc_cart_needs_payment', 10, 2 );
+        // show custom data into order details, product data
+        add_action( 'woocommerce_after_order_itemmeta', 'nuvei_after_order_itemmeta', 10, 3 );
 	}
 	
 	// change Thank-you page title and text
@@ -288,11 +290,14 @@ function nuvei_ajax_action()
 	}
     
 	// Cancel Subscription
-	if (Nuvei_Http::get_param('cancelSubs', 'int') == 1) {
+	if (Nuvei_Http::get_param('cancelSubs', 'int') == 1
+        && !empty($subscriptionId = Nuvei_Http::get_param('subscrId', 'int'))
+    ) {
         $order = wc_get_order(Nuvei_Http::get_param('orderId', 'int'));
         
 		$nuvei_class    = new Nuvei_Subscription_Cancel($wc_nuvei->settings);
-		$resp           = $nuvei_class->process(['subscriptionId' => $order->get_meta(NUVEI_ORDER_SUBSCR_ID)]);
+//		$resp           = $nuvei_class->process(['subscriptionId' => $order->get_meta(NUVEI_ORDER_SUBSCR_ID)]);
+		$resp           = $nuvei_class->process(['subscriptionId' => $subscriptionId]);
         $ord_status     = 0;
         
         if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
@@ -601,7 +606,28 @@ function nuvei_add_buttons( $order)
 		echo '<script type="text/javascript">jQuery(\'.refund-items\').prop("disabled", true);</script>';
 	}
     
-    // Show Cancel Subscription button
+    # Show Cancel Subscription buttons
+    // for the multi buttons, new
+//    $subscr_data = $order->get_meta(NUVEI_ORDER_SUBSCR);
+    
+//    echo '<pre>'.print_r($subscr_data, true).'</pre>';
+    
+//    if (!empty($subscr_data) && is_array($subscr_data)) {
+//        foreach ($subscr_data as $subscr_id => $sd) {
+//            if (empty($sd['state']) || 'active' != $sd['state']) {
+//                continue;
+//            }
+//            
+//            echo
+//                '<button class="nuvei_cancel_subscr button generate-items" type="button" onclick="nuveiAction(\''
+//                    . esc_html__('Are you sure, you want to cancel this subscription?', 'nuvei_checkout_woocommerce')
+//                    . '\', \'cancelSubscr\', \'' . esc_html($order_id) . '\', \'' . esc_html($subscr_id) 
+//                    . '\')">' . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') 
+//                    . ' ' . esc_html($subscr_id) . '</button>';
+//        }
+//    }
+    // legacy
+//    else
     if ('active' == $order->get_meta(NUVEI_ORDER_SUBSCR_STATE)) {
         echo
             '<button id="sc_cancel_subs_btn" type="button" onclick="nuveiAction(\''
@@ -609,6 +635,7 @@ function nuvei_add_buttons( $order)
                 . '\', \'cancelSubscr\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
                 . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') . '</button>';
     }
+    # /Show Cancel Subscription buttons
 	
 	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
 		// Show VOID button
@@ -882,8 +909,16 @@ function nuvei_fill_custom_column( $column)
 	global $post;
 	
 	$order = wc_get_order($post->ID);
+    
+    $old_subscr         = $order->get_meta(NUVEI_ORDER_SUBSCR_ID); // int
+    $new_subscr_data    = $order->get_meta(NUVEI_ORDER_SUBSCR); // array
+    
+//    var_dump($old_subscr);
+//    var_dump($new_subscr_data);
 	
-	if ('order_number' === $column && !empty($order->get_meta(NUVEI_ORDER_SUBSCR_ID))) { 
+	if ('order_number' === $column
+        && (!empty($old_subscr) || !empty($new_subscr_data))
+    ) { 
 ?>
 		<mark class="order-status status-processing tips" style="float: right;">
 			<span><?php echo esc_html__('Nuvei Subscription', 'nuvei_checkout_woocommerce'); ?></span>
@@ -972,3 +1007,34 @@ function nuvei_wc_cart_needs_payment($needs_payment, $cart)
     return $needs_payment;
 }
 
+function nuvei_after_order_itemmeta($item_id, $item, $_product)
+{
+    $order          = wc_get_order(Nuvei_Http::get_param('post', 'int'));
+    $subs_id        = $order->get_meta(NUVEI_ORDER_SUBSCR_ID);
+    $subscr_data    = $order->get_meta(NUVEI_ORDER_SUBSCR);
+    
+//    echo '<pre>'.print_r($_product->get_id(), true).'</pre>';
+//    echo '<pre>'.print_r($subscr_data, true).'</pre>';
+    
+    if (empty($subscr_data) || !is_array($subscr_data)) {
+        return;
+    }
+    
+    foreach ($subscr_data as $subscr_id => $data) {
+        if (empty($data['prod_variation_id']) || $_product->get_id() != $data['prod_variation_id']) {
+            continue;
+        }
+        
+        echo esc_html__('Nuvei Subscription ID:', 'nuvei_checkout_woocommerce') . ' ' . esc_html($subscr_id) . '<br/>';
+        
+        if (empty($data['state']) || 'active' != $data['state']) {
+            continue;
+        }
+        
+        echo
+            '<button class="nuvei_cancel_subscr button generate-items" type="button" onclick="nuveiAction(\''
+                . esc_html__('Are you sure, you want to cancel this subscription?', 'nuvei_checkout_woocommerce')
+                . '\', \'cancelSubscr\', ' . esc_html(0) . ', ' . esc_html($subscr_id) 
+                . ')">' . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') . '</button>';
+    }
+}

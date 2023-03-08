@@ -12,7 +12,7 @@ abstract class Nuvei_Request
 	protected $request_base_params;
 	protected $sc_order;
 	
-	private $device_types = array();
+	private $device_types = [];
 	
 	abstract public function process();
 	abstract protected function get_checksum_params();
@@ -90,7 +90,7 @@ abstract class Nuvei_Request
 	 */
 	protected function is_order_valid($order_id, $return = false)
     {
-		Nuvei_Logger::write($order_id, 'is_order_vali() check.');
+		Nuvei_Logger::write($order_id, 'is_order_valid() check.');
 		
 		$this->sc_order = wc_get_order( $order_id );
 		
@@ -105,7 +105,7 @@ abstract class Nuvei_Request
 			exit;
 		}
 		
-		Nuvei_Logger::write('is_order_vali() - the Order is valid.');
+		Nuvei_Logger::write('The Order is valid.');
 		
 		// in case of Subscription states DMNs - stop proccess here. We will save only a message to the Order.
 		if ('subscription' == Nuvei_Http::get_param('dmnType')) {
@@ -168,7 +168,7 @@ abstract class Nuvei_Request
 		$refunds = json_decode($this->sc_order->get_meta(NUVEI_REFUNDS), true);
 		
 		if (empty($refunds)) {
-			$refunds = array();
+			$refunds = [];
 		}
 		
 		//      Nuvei_Logger::write($refunds, 'save_refund_meta_data(): Saved Refunds before the current one.');
@@ -552,12 +552,15 @@ abstract class Nuvei_Request
 		
 		$items = $woocommerce->cart->get_cart();
 		$data  = array(
-			'subscr_data'	=> array(),
-			'products_data'	=> array(),
+			'subscr_data'	=> [],
+			'products_data'	=> [],
 			'totals'        => $woocommerce->cart->get_totals(),
 		);
-		
-		foreach ($items as $item) {
+        
+		foreach ($items as $item_id => $item) {
+//            Nuvei_Logger::write($item_id, 'item id');
+//            Nuvei_Logger::write($item, 'item');
+            
 			$cart_product   = wc_get_product( $item['product_id'] );
 			$cart_prod_attr = $cart_product->get_attributes();
 
@@ -594,20 +597,38 @@ abstract class Nuvei_Request
 			}
 			
 			$term_meta = get_term_meta($term->term_id);
-			
-			$data['subscr_data'][$item['product_id']] = array(
-				'planId'			=> $term_meta['planId'][0],
+            
+            $data['subscr_data'][$item['variation_id']] = [
+                'planId'			=> $term_meta['planId'][0],
 				'recurringAmount'	=> number_format($term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', ''),
-			);
+                'recurringPeriod'   => [
+                    $term_meta['recurringPeriodUnit'][0] => $term_meta['recurringPeriodPeriod'][0],
+                ],
+                'startAfter'        => [
+                    $term_meta['startAfterUnit'][0] => $term_meta['startAfterPeriod'][0],
+                ],
+                'endAfter'          => [
+                    $term_meta['endAfterUnit'][0] => $term_meta['endAfterPeriod'][0],
+                ],
+            ];
+            
+////			$data['subscr_data'][$item['product_id']] = array(
+//			$data['subscr_data'][$item['variation_id']] = array(
+//				'planId'			=> $term_meta['planId'][0],
+//				'recurringAmount'	=> number_format($term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', ''),
+//			);
 
-			$data['subscr_data'][$item['product_id']]['recurringPeriod']
-				[$term_meta['recurringPeriodUnit'][0]] = $term_meta['recurringPeriodPeriod'][0];
+////			$data['subscr_data'][$item['product_id']]['recurringPeriod']
+//			$data['subscr_data'][$item['variation_id']]['recurringPeriod']
+//				[$term_meta['recurringPeriodUnit'][0]] = $term_meta['recurringPeriodPeriod'][0];
 			
-			$data['subscr_data'][$item['product_id']]['startAfter']
-				[$term_meta['startAfterUnit'][0]] = $term_meta['startAfterPeriod'][0];
+////			$data['subscr_data'][$item['product_id']]['startAfter']
+//			$data['subscr_data'][$item['variation_id']]['startAfter']
+//				[$term_meta['startAfterUnit'][0]] = $term_meta['startAfterPeriod'][0];
 			
-			$data['subscr_data'][$item['product_id']]['endAfter']
-				[$term_meta['endAfterUnit'][0]] = $term_meta['endAfterPeriod'][0];
+////			$data['subscr_data'][$item['product_id']]['endAfter']
+//			$data['subscr_data'][$item['variation_id']]['endAfter']
+//				[$term_meta['endAfterUnit'][0]] = $term_meta['endAfterPeriod'][0];
 			# optional data END
 		}
 

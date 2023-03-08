@@ -651,7 +651,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * 
 	 * @global type $woocommerce
 	 */
-	public function call_checkout() {
+	public function call_checkout()
+    {
 		global $woocommerce;
 		
 		# OpenOrder
@@ -735,7 +736,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			
 			// if there is a plan, remove all APMs
 			if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
-				$checkout_data['pmWhitelist'][] = 'cc_card';
+				$checkout_data['pmWhitelist'] = ['cc_card'];
                 unset($checkout_data['pmBlacklist']);
 				break;
 			}
@@ -743,7 +744,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		// check for product with a plan END
 		
 		# blocked_cards
-		$blocked_cards     = array();
+		$blocked_cards     = [];
 		$blocked_cards_str = $this->get_setting('blocked_cards', '');
 		// clean the string from brakets and quotes
 		$blocked_cards_str = str_replace('],[', ';', $blocked_cards_str);
@@ -753,7 +754,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$blocked_cards_str = str_replace("'", '', $blocked_cards_str);
 		
 		if (empty($blocked_cards_str)) {
-			$checkout_data['blockCards'] = array();
+			$checkout_data['blockCards'] = [];
 		} else {
 			$blockCards_sets = explode(';', $blocked_cards_str);
 
