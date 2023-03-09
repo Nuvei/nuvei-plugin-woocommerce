@@ -86,7 +86,7 @@ abstract class Nuvei_Request
 	 * @param int|string $order_id
 	 * @param bool $return - return the order
 	 * 
-	 * @return bool|WC_Order
+	 * @return void
 	 */
 	protected function is_order_valid($order_id, $return = false)
     {
@@ -98,7 +98,8 @@ abstract class Nuvei_Request
 			Nuvei_Logger::write('is_order_valid() Error - Provided Order ID is not a WC Order');
 			
 			if ($return) {
-				return false;
+//				return false;
+				return;
 			}
 			
 			echo wp_json_encode('is_order_valid() Error - Provided Order ID is not a WC Order');
@@ -109,7 +110,8 @@ abstract class Nuvei_Request
 		
 		// in case of Subscription states DMNs - stop proccess here. We will save only a message to the Order.
 		if ('subscription' == Nuvei_Http::get_param('dmnType')) {
-			return true;
+//			return true;
+			return;
 		}
 		
 		// check for 'sc' also because of the older Orders
@@ -123,7 +125,8 @@ abstract class Nuvei_Request
 			);
 			
 			if ($return) {
-				return false;
+//				return false;
+				return;
 			}
 			
 			echo wp_json_encode('DMN Error - the order does not belongs to Nuvei.');
@@ -137,7 +140,8 @@ abstract class Nuvei_Request
 			Nuvei_Logger::write($this->sc_order->get_payment_method(), 'DMN Error - can not override status of Voided/Refunded Order.');
 			
 			if ($return) {
-				return false;
+//				return false;
+				return;
 			}
 			
 			echo wp_json_encode('DMN Error - can not override status of Voided/Refunded Order.');
@@ -150,7 +154,8 @@ abstract class Nuvei_Request
 			Nuvei_Logger::write($this->sc_order->get_payment_method(), 'DMN Error - can not override status Completed with Auth.');
 			
 			if ($return) {
-				return false;
+//				return false;
+				return;
 			}
 			
 			echo wp_json_encode('DMN Error - can not override status Completed with Auth.');
@@ -158,7 +163,7 @@ abstract class Nuvei_Request
 		}
 		// can we override Order status (state) END
         
-		return $this->sc_order;
+//		return $this->sc_order;
 	}
 	
 	protected function save_refund_meta_data( $trans_id, $ref_amount, $status = '', $wc_id = 0)

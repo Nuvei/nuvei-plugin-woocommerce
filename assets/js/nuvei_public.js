@@ -138,11 +138,15 @@ function nuveiPrePayment(paymentDetails) {
 						return;
 					}
 					
+                    console.log(resp.sessionToken, nuveiCheckoutSdkParams.sessionToken);
+                    
 					// reload the Checkout
 					nuveiCheckoutSdkParams.sessionToken	= resp.sessionToken;
 					nuveiCheckoutSdkParams.amount		= resp.amount;
-					
+                    
+                    jQuery('#nuvei_checkout').html('');
 					showNuveiCheckout();
+                    return;
 				}
                 
                 if (resp.hasOwnProperty('msg')) {

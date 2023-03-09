@@ -62,6 +62,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			$subscriptionId    = Nuvei_Http::get_param('subscriptionId', 'int');
 			$planId            = Nuvei_Http::get_param('planId', 'int');
 			$cri_parts         = explode('_', $client_request_id);
+            $subs_data_key     = NUVEI_ORDER_SUBSCR . '_' . $client_request_id;
 			
 			if (empty($cri_parts) || empty($cri_parts[0]) || !is_numeric($cri_parts[0])) {
 				Nuvei_Logger::write($cri_parts, 'DMN Subscription Error with Client Request Id parts:');
@@ -70,11 +71,12 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			}
             
 			// this is just to give WC time to update its metadata, before we update it here
-            sleep(5);
+//            sleep(5);
             
 			$this->is_order_valid((int) $cri_parts[0]);
             
-            $subsc_data = $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR);
+            
+            $subsc_data = $this->sc_order->get_meta($subs_data_key);
             Nuvei_Logger::write($subsc_data, 'DMN');
             
             if (empty($subsc_data)) {
@@ -108,10 +110,13 @@ class Nuvei_Notify_Url extends Nuvei_Request
 //                $this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR_STATE, $subscriptionState);
 				
                 // update subscr meta
-                $subsc_data[$subscriptionId]['state']   = $subscriptionState;
+//                $subsc_data[$subscriptionId]['state']   = $subscriptionState;
+                $subsc_data['state']        = $subscriptionState;
+                $subsc_data['subscr_id']    = $subscriptionId;
 //                $subsc_data[$subscriptionId]['plan_id'] = $planId;
                 
-                $this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR, $subsc_data);
+//                $this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR, $subsc_data);
+                $this->sc_order->update_meta_data($subs_data_key, $subsc_data);
 				$this->sc_order->add_order_note($msg);
 				$this->sc_order->save();
 			}
@@ -133,7 +138,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
             $subscriptionId = Nuvei_Http::get_param('subscriptionId', 'int');
 			$planId         = Nuvei_Http::get_param('planId', 'int');
             $total          = Nuvei_Http::get_param('totalAmount', 'float');
-            $ord_curr       = $this->sc_order->get_currency();
 			
 			if (empty($cri_parts) || empty($cri_parts[0]) || !is_numeric($cri_parts[0])) {
 				Nuvei_Logger::write($cri_parts, 'DMN Subscription Payment Error with Client Request Id parts:');
@@ -142,6 +146,9 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			}
 			
 			$this->is_order_valid((int) $cri_parts[0]);
+            
+            $ord_curr       = $this->sc_order->get_currency();
+            $subs_data_key  = NUVEI_ORDER_SUBSCR . '_' . $client_request_id;
 			
 			$msg = sprintf(
 				/* translators: %s: the status of the Payment */
@@ -155,12 +162,15 @@ class Nuvei_Notify_Url extends Nuvei_Request
 
 			Nuvei_Logger::write($msg, 'Subscription DMN Payment');
 			
-            $subsc_data = $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR);
+//            $subsc_data = $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR);
+            $subsc_data = $this->sc_order->get_meta($subs_data_key);
             
-            $subsc_data[$subscriptionId]['payments'][] = [
+//            $subsc_data[$subscriptionId]['payments'][] = [
+            $subsc_data['payments'][] = [
                 'amount'            => $total,
                 'order_currency'    => $ord_curr,
                 'transaction_id'    => $TransactionID,
+                'resp_time'         => Nuvei_Http::get_param('responseTimeStamp'),
             ];
             
             $this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR, $subsc_data);
@@ -512,7 +522,21 @@ class Nuvei_Notify_Url extends Nuvei_Request
             }
 
             // this is the only place to pass the Order ID, we will need it later, to identify the Order
-            $prod_plan['clientRequestId'] = $order_id . '_' . uniqid();
+//            $prod_plan['clientRequestId'] = $order_id . '_' . uniqid();
+            $prod_plan['clientRequestId'] = $order_id . '_' . $variation_id;
+            
+            // save subsc as single meta
+            $subsc_data = [
+                'plan_id'           => $prod_plan['planId'],
+                'prod_variation_id' => $variation_id,
+            ];
+            
+            $this->sc_order->update_meta_data(
+                NUVEI_ORDER_SUBSCR . '_' . $prod_plan['clientRequestId'], 
+                $subsc_data
+            );
+            $this->sc_order->save();
+            
 
             $ns_obj = new Nuvei_Subscription($this->plugin_settings);
 
@@ -553,17 +577,17 @@ class Nuvei_Notify_Url extends Nuvei_Request
                 . $prod_plan['recurringAmount'];
             
             // save first subscr meta
-            $subsc_data = $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR);
-            Nuvei_Logger::write($subsc_data, 'Start Subscr');
-            
-            if (empty($subsc_data)) {
-                $subsc_data = [];
-            }
-            
-            $subsc_data[$resp['subscriptionId']]['plan_id']             = $prod_plan['planId'];
-            $subsc_data[$resp['subscriptionId']]['prod_variation_id']   = $variation_id;
-                
-            $this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR, $subsc_data);
+//            $subsc_data = $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR);
+//            Nuvei_Logger::write($subsc_data, 'Start Subscr');
+//            
+//            if (empty($subsc_data)) {
+//                $subsc_data = [];
+//            }
+//            
+//            $subsc_data[$resp['subscriptionId']]['plan_id']             = $prod_plan['planId'];
+//            $subsc_data[$resp['subscriptionId']]['prod_variation_id']   = $variation_id;
+//                
+//            $this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR, $subsc_data);
 
             $this->sc_order->add_order_note($msg);
             $this->sc_order->save();

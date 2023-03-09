@@ -80,6 +80,14 @@ class Nuvei_Open_Order extends Nuvei_Request
             }
         }
 		# try to update Order END
+        
+        Nuvei_Logger::write(
+            [
+                'userTokenId' => $nuvei_last_open_order_details['userTokenId'],
+                'subscr_data' => $product_data['subscr_data']
+            ],
+            'Skip updateOrder'
+        );
 		
 		$form_data = Nuvei_Http::get_param('scFormData');
 		

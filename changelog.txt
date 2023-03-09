@@ -1,5 +1,9 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.3.0
+    * Allow checkout with any combination of products.
+    * Enable using Nuvei Payment Plans for product with attribute only, without variations.
+
 # 1.2.4
     * Fix for the case when updateOrder does not upgrade empty userTokenId.
     * Do not validate and process the Tokenization DMNs.
