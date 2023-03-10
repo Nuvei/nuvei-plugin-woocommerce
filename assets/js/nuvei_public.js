@@ -29,6 +29,7 @@ function nuveiAfterSdkResponse(resp) {
 		&& resp.transactionId != 'undefined'
 	) {
 		jQuery('#nuvei_transaction_id').val(resp.transactionId);
+		jQuery('#nuvei_transaction_id').val(resp.transactionId);
         
         if (jQuery('form.checkout').length != 1) {
             nuveiShowErrorMsg(scTrans.CheckoutFormError);
@@ -86,6 +87,7 @@ function showNuveiCheckout(_params) {
 	
 	jQuery("#nuvei_checkout_container").show();
 	jQuery(window).scrollTop(0);
+    jQuery('#nuvei_session_token').val(nuveiCheckoutSdkParams.sessionToken);
 }
 
 function nuveiCheckoutGoBack() {
@@ -110,53 +112,55 @@ function nuveiShowErrorMsg(text) {
 
 function nuveiPrePayment(paymentDetails) {
 	console.log('nuveiPrePayment');
-	
+    
+    var errorMsg = scTrans.paymentError + ' ' + scTrans.TryAgainLater;
+    
 	return new Promise((resolve, reject) => {
-		var errorMsg = scTrans.paymentError + ' ' + scTrans.TryAgainLater;
-		
 		jQuery.ajax({
-			type: "POST",
-			url: scTrans.ajaxurl,
-			data: {
-				action			: 'sc-ajax-action',
-				security		: scTrans.security,
-				updateOrder		: 1
-			},
-			dataType: 'json'
-		})
-			.fail(function(){
-				reject(errorMsg);
-			})
-			.done(function(resp) {
-				console.log(resp);
+            type: "POST",
+            url: scTrans.ajaxurl,
+            data: {
+                action			: 'sc-ajax-action',
+                security		: scTrans.security,
+                updateOrder		: 1
+            },
+            dataType: 'json'
+        })
+            .fail(function(){
+                reject();
+            })
+            .done(function(resp) {
+                console.log(resp);
 
-				if(resp.hasOwnProperty('sessionToken') && '' != resp.sessionToken) {
-					jQuery('#lst').val(resp.sessionToken);
-					
-					if(resp.sessionToken == nuveiCheckoutSdkParams.sessionToken) {
-						resolve();
-						return;
-					}
-					
-                    console.log(resp.sessionToken, nuveiCheckoutSdkParams.sessionToken);
+                if(resp.hasOwnProperty('sessionToken') && '' != resp.sessionToken) {
+                    if(resp.sessionToken == nuveiCheckoutSdkParams.sessionToken) {
+                        resolve();
+                        return;
+                    }
                     
-					// reload the Checkout
-					nuveiCheckoutSdkParams.sessionToken	= resp.sessionToken;
-					nuveiCheckoutSdkParams.amount		= resp.amount;
+                    console.log('tokens error', resp.sessionToken, nuveiCheckoutSdkParams.sessionToken);
+
+                // reload the Checkout
+//					nuveiCheckoutSdkParams.sessionToken	= resp.sessionToken;
+//					nuveiCheckoutSdkParams.amount		= resp.amount;
+
+//                    jQuery('#nuvei_checkout').html('');
+
+                    reject();
+                    showNuveiCheckout(resp);
                     
-                    jQuery('#nuvei_checkout').html('');
-					showNuveiCheckout();
+                    jQuery('#nuvei_session_token').val(resp.sessionToken);
+                    
                     return;
-				}
+                }
                 
                 if (resp.hasOwnProperty('msg')) {
                     errorMsg = resp.msg;
                 }
-                
-				reject();
+
+                reject();
                 nuveiShowErrorMsg(errorMsg);
-                return;
-			});
+            });
 	});
 }
 
@@ -180,6 +184,10 @@ jQuery(function() {
 		if(jQuery('.woocommerce #nuvei_transaction_id').length == 0) {
 			jQuery('form.woocommerce-checkout')
 				.append('<input id="nuvei_transaction_id" type="hidden" name="nuvei_transaction_id" value="" />');
+		}
+		if(jQuery('.woocommerce #nuvei_session_token').length == 0) {
+			jQuery('form.woocommerce-checkout')
+				.append('<input id="nuvei_session_token" type="hidden" name="nuvei_session_token" value="" />');
 		}
 	}
 	

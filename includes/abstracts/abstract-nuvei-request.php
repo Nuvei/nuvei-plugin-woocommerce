@@ -563,47 +563,89 @@ abstract class Nuvei_Request
 		);
         
 		foreach ($items as $item_id => $item) {
-//            Nuvei_Logger::write($item_id, 'item id');
-//            Nuvei_Logger::write($item, 'item');
+			$cart_product           = wc_get_product( $item['product_id'] );
+			$cart_prod_attr         = $cart_product->get_attributes();
+            $nuvei_taxonomy_name    = wc_attribute_taxonomy_name(Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME));
+            $nuvei_plan_variation   = 'attribute_' . $nuvei_taxonomy_name;
             
-			$cart_product   = wc_get_product( $item['product_id'] );
-			$cart_prod_attr = $cart_product->get_attributes();
-
-			// get short items data
+            // get short items data, we use it for Cashier url
 			$data['products_data'][$item['product_id']] = array(
 				'quantity'	=> $item['quantity'],
 				'price'		=> get_post_meta($item['product_id'] , '_price', true),
 				'name'		=> $cart_product->get_title(),
 				'in_stock'  => $cart_product->is_in_stock(),
 			);
-
-			// check for variations
-			if (empty($cart_prod_attr['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
+            
+            if (empty($cart_prod_attr[$nuvei_taxonomy_name])) {
 				continue;
 			}
-
-			$taxonomy_name          = wc_attribute_taxonomy_name(Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME));
-            $nvei_plan_variation    = 'attribute_' . $taxonomy_name;
-
-			Nuvei_Logger::write(
-                [
-                    'item variation id' => $item['variation_id'],
-                    'item variation'    => $item['variation'],
-                    '$taxonomy_name'    => $taxonomy_name,
-                ],
-                'Variation details'
-            );
-			
-			$term = get_term_by('slug', $item['variation'][$nvei_plan_variation], $taxonomy_name);
+            
+            // check if product has only Nuvei Payment Plan Attribute
+            foreach ($cart_prod_attr as $attr) {
+                if ( $attr->get_variation() ) {
+                    continue;
+                }
+                
+                $name = $attr->get_name();
+                
+                // we need data only for Nuvei attribute
+                if (!$attr->is_taxonomy()) {
+                    continue;
+                }
+                
+                $nuvei_plan_term    = current(wp_get_post_terms( $item['product_id'], $name, 'all' ));
+                $term_meta          = get_term_meta($nuvei_plan_term->term_id);
+                
+//                Nuvei_Logger::write(
+//                    [
+//                        '$nuvei_plan_term' => $nuvei_plan_term,
+//                        '$nuvei_plan_term' => $term_meta,
+//                        'term_id' => $nuvei_plan_term->term_id,
+//                    ],
+//                    'Iteam with attribute'
+//                );
+                
+                // in this case we do not have variation_id, only product_id
+                $data['subscr_data']['product_' . $item['product_id']] = [
+                    'planId'			=> $term_meta['planId'][0],
+                    'recurringAmount'	=> number_format($term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', ''),
+                    'recurringPeriod'   => [
+                        $term_meta['recurringPeriodUnit'][0] => $term_meta['recurringPeriodPeriod'][0],
+                    ],
+                    'startAfter'        => [
+                        $term_meta['startAfterUnit'][0] => $term_meta['startAfterPeriod'][0],
+                    ],
+                    'endAfter'          => [
+                        $term_meta['endAfterUnit'][0] => $term_meta['endAfterPeriod'][0],
+                    ],
+                ];
+                
+                // pass [pXY => Z], where pXY is for productID, Z is the term ID
+//                $data['subscr_data']['p' . $item['product_id']] = $nuvei_plan_term->term_id;
+            }
+            // /check if product has only Nuvei Payment Plan Attribute
+            
+            if (empty($item['variation']) || 0 == $item['variation_id']) {
+                continue;
+            }
+            
+			$term = get_term_by('slug', $item['variation'][$nuvei_plan_variation], $nuvei_taxonomy_name);
 
 			if (is_wp_error($term) || empty($term->term_id)) {
-				Nuvei_Logger::write($item['variation'][$nvei_plan_variation], 'Error when try to get Term by Slug:');
+				Nuvei_Logger::write($item['variation'][$nuvei_plan_variation], 'Error when try to get Term by Slug:');
 				continue;
 			}
 			
 			$term_meta = get_term_meta($term->term_id);
+//            Nuvei_Logger::write(
+//                    [
+//                        '$nuvei_plan_term' => $term,
+//                        'term_id' => $nuvei_plan_term->term_id,
+//                    ],
+//                    'Iteam with variation'
+//                );
             
-            $data['subscr_data'][$item['variation_id']] = [
+            $data['subscr_data']['variation_' . $item['variation_id']] = [
                 'planId'			=> $term_meta['planId'][0],
 				'recurringAmount'	=> number_format($term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', ''),
                 'recurringPeriod'   => [
@@ -617,24 +659,8 @@ abstract class Nuvei_Request
                 ],
             ];
             
-////			$data['subscr_data'][$item['product_id']] = array(
-//			$data['subscr_data'][$item['variation_id']] = array(
-//				'planId'			=> $term_meta['planId'][0],
-//				'recurringAmount'	=> number_format($term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', ''),
-//			);
-
-////			$data['subscr_data'][$item['product_id']]['recurringPeriod']
-//			$data['subscr_data'][$item['variation_id']]['recurringPeriod']
-//				[$term_meta['recurringPeriodUnit'][0]] = $term_meta['recurringPeriodPeriod'][0];
-			
-////			$data['subscr_data'][$item['product_id']]['startAfter']
-//			$data['subscr_data'][$item['variation_id']]['startAfter']
-//				[$term_meta['startAfterUnit'][0]] = $term_meta['startAfterPeriod'][0];
-			
-////			$data['subscr_data'][$item['product_id']]['endAfter']
-//			$data['subscr_data'][$item['variation_id']]['endAfter']
-//				[$term_meta['endAfterUnit'][0]] = $term_meta['endAfterPeriod'][0];
-			# optional data END
+            // pass [vXY => Z], where pXY is for variationID, Z is the term ID
+//            $data['subscr_data']['v' . $item['variation_id']] = $nuvei_plan_term->term_id;
 		}
 
         Nuvei_Logger::write($data);
@@ -658,7 +684,27 @@ abstract class Nuvei_Request
         return false;
     }
     
-	/**
+    /**
+     * A common function to set some data into the session.
+     * 
+     * @param string $session_token
+     * @param array $last_req_details Some details from last opne/update order request.
+     * @param array $product_data Short product and subscription data.
+     */
+    protected function set_nuvei_session_data($session_token, $last_req_details, $product_data)
+    {
+        WC()->session->set('nuvei_last_open_order_details', $last_req_details);
+        WC()->session->set(
+            'nuvei_order_details',
+            [
+                $session_token => [
+                    'subscr_data'   => $product_data['subscr_data'],
+//                    'products_data' => $product_data['products_data'],
+                ]
+            ]
+        );
+    }
+    /**
 	 * Get the request endpoint - sandbox or production.
 	 * 
 	 * @return string

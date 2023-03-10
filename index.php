@@ -207,7 +207,8 @@ function nuvei_init()
 				function ( $str, $order) {
 					return esc_html__(' There is an error with your order. Please check your Order status for more information.', 'nuvei_checkout_woocommerce');
 				}, 10, 2);
-		} elseif ('canceled' === strtolower(Nuvei_Http::get_request_status())) {
+		}
+        elseif ('canceled' === strtolower(Nuvei_Http::get_request_status())) {
 			add_filter('the_title', function ( $title, $id) {
 				if (
 					function_exists('is_order_received_page')
@@ -313,8 +314,9 @@ function nuvei_ajax_action()
 	
 	// Update Order before submit
 	if (Nuvei_Http::get_param('updateOrder', 'int') == 1) {
-		$oo_obj = new Nuvei_Open_Order($wc_nuvei->settings, true);
-		$oo_obj->process();
+//		$oo_obj = new Nuvei_Open_Order($wc_nuvei->settings, true);
+//		$oo_obj->process();
+        $wc_nuvei->call_checkout($is_ajax = true);
 	}
 	
 	// when Reorder
@@ -1039,26 +1041,35 @@ function nuvei_after_order_itemmeta($item_id, $item, $_product)
             continue;
         }
         
-        $subscr_data = $order->get_meta($mk);
+        $subscr_data    = $order->get_meta($mk);
+        $key_parts      = explode('_', $mk);
+        $item_variation = $item->get_variation_id();
+        $product_id     = $item->get_product_id();
         
-        if (empty($subscr_data['prod_variation_id'])
-            || $_product->get_id() != $subscr_data['prod_variation_id']
+//        echo '<pre>'.print_r([$mk, $subscr_data],true).'</pre>';
+////        echo '<pre>'.print_r($subscr_data,true).'</pre>';
+//        echo '<pre>'.print_r([$item_id, $product_id],true).'</pre>';
+//        echo '<pre>'.print_r([$item_id, $item->get_variation_id()],true).'</pre>';
+        
+        // in case of variations item
+        if ( (0 != $item_variation && 'variation' == $key_parts[2] && $item_variation == $key_parts[3])
+            // in case of attribute only item
+            || (0 == $item_variation && 'product' == $key_parts[2] && $product_id == $key_parts[3])
         ) {
-            continue;
+            // show Subscr ID and Cancel Subsc button
+            echo '<div class="wc-order-item-variation" style="margin-top: 0px;"><strong>'
+                . __('Nuvei Subscription ID:', 'nuvei_checkout_woocommerce') .'</strong> '
+                . esc_html($subscr_data['subscr_id']) .'</div>';
+            
+            if (!empty($subscr_data['state']) && 'active' == $subscr_data['state']) {
+                echo
+                    '<button class="nuvei_cancel_subscr button generate-items" type="button" style="margin-top: .5em;" onclick="nuveiAction(\''
+                        . esc_html__('Are you sure, you want to cancel this subscription?', 'nuvei_checkout_woocommerce')
+                        . '\', \'cancelSubscr\', ' . esc_html(0) . ', ' . esc_html($subscr_data['subscr_id']) 
+                        . ')">' . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') . '</button>';
+            }
+            
+            break;
         }
-        
-        echo '<div class="wc-order-item-variation" style="margin-top: 0px;"><strong>'
-            . __('Nuvei Subscription ID:', 'nuvei_checkout_woocommerce') .'</strong> '
-            . esc_html($subscr_data['subscr_id']) .'</div>';
-        
-        if (empty($subscr_data['state']) || 'active' != $subscr_data['state']) {
-            continue;
-        }
-        
-        echo
-            '<button class="nuvei_cancel_subscr button generate-items" type="button" onclick="nuveiAction(\''
-                . esc_html__('Are you sure, you want to cancel this subscription?', 'nuvei_checkout_woocommerce')
-                . '\', \'cancelSubscr\', ' . esc_html(0) . ', ' . esc_html($subscr_data['subscr_id']) 
-                . ')">' . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') . '</button>';
     }
 }

@@ -124,8 +124,10 @@ class Nuvei_Open_Order extends Nuvei_Request
         ) {
 			$oo_params['userTokenId'] = $addresses['billingAddress']['email'];
             // pass the subscription data, to use it later, here we use variation_id as key
-			$oo_params['merchantDetails']['customField1']
-                = json_encode($product_data['subscr_data']);
+//			$oo_params['merchantDetails']['customField1']
+//                = json_encode($product_data['subscr_data']);
+//            
+//            Nuvei_Logger::write(strlen($oo_params['merchantDetails']['customField1']), 'customField1 len');
 		}
 		
 		$resp = $this->call_rest_api('openOrder', $oo_params);
@@ -156,8 +158,12 @@ class Nuvei_Open_Order extends Nuvei_Request
         if (!empty($oo_params['userTokenId'])) {
             $nuvei_last_open_order_details['userTokenId'] = $oo_params['userTokenId'];
         }
-		
-		WC()->session->set('nuvei_last_open_order_details', $nuvei_last_open_order_details);
+        
+        $this->set_nuvei_session_data(
+            $resp['sessionToken'],
+            $nuvei_last_open_order_details,
+            $product_data
+        );
 		
 		Nuvei_Logger::write($cart->nuvei_last_open_order_details, 'nuvei_last_open_order_details');
 		

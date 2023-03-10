@@ -46,7 +46,8 @@ class Nuvei_Refund extends Nuvei_Request {
 	 * Create Refund in SC by Refund from WC, after the merchant
 	 * click refund button or set Status to Refunded
 	 */
-	public function create_refund_request( $order_id, $ref_amount) {
+	public function create_refund_request( $order_id, $ref_amount)
+    {
 		if ($order_id < 1) {
 			Nuvei_Logger::write($order_id, 'create_refund_request() Error - Post parameter is less than 1.');
 			

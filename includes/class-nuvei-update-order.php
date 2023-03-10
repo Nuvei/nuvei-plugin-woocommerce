@@ -65,14 +65,13 @@ class Nuvei_Update_Order extends Nuvei_Request {
 				)
 			),
 			
-			'merchantDetails'   => array(
-				'customField1' => json_encode($product_data['subscr_data']), // subscription details
-				'customField2' => json_encode($product_data['products_data']), // item details
-			),
+//			'merchantDetails'   => array(
+//				'customField1' => json_encode($product_data['subscr_data']), // subscription details
+////				'customField2' => json_encode($product_data['products_data']), // item details
+//			),
 		);
         
-		// last changes for the rebilling
-//        $params['isRebilling'] = empty($product_data['subscr_data']) ? 1 : 0;
+//        Nuvei_Logger::write(strlen($params['merchantDetails']['customField1']), 'customField1 len');
         
 		$resp = $this->call_rest_api('updateOrder', $params);
 		
@@ -88,8 +87,12 @@ class Nuvei_Update_Order extends Nuvei_Request {
 				'orderId'			=> $resp['orderId'],
 				'billingAddress'	=> $params['billingAddress'],
 			);
-
-			WC()->session->set('nuvei_last_open_order_details', $nuvei_last_open_order_details);
+            
+            $this->set_nuvei_session_data(
+                $resp['sessionToken'],
+                $nuvei_last_open_order_details,
+                $product_data
+            );
 			// put the new data in the session END
 			
 			return array_merge($params, $resp);

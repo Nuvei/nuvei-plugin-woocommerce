@@ -207,8 +207,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	  * @param int $order_id
 	  * @return array
 	 */
-	public function process_payment( $order_id) {
-		Nuvei_Logger::write($order_id, 'Process payment() Order');
+	public function process_payment( $order_id)
+    {
+		Nuvei_Logger::write($order_id, 'Process payment(), Order');
+		Nuvei_Logger::write(WC()->session->get('nuvei_order_details'), 'nuvei_order_details');
 		
         // clean last open order details
 //        WC()->session->set('nuvei_last_open_order_details', []);
@@ -271,8 +273,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
 		
 		// when we have Approved from the SDK we complete the order here
-		$nuvei_transaction_id = Nuvei_Http::get_param('nuvei_transaction_id', 'int');
-		
+		$nuvei_transaction_id   = Nuvei_Http::get_param('nuvei_transaction_id', 'int');
+		$nuvei_session_token    = Nuvei_Http::get_param('nuvei_session_token');
+        
 		# in case we use Cashier
 		if (isset($this->settings['integration_type'])
             && 'cashier' == $this->settings['integration_type']
@@ -290,8 +293,30 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			
 			return;
 		}
-		# in case we use Cashier END
+		# /in case we use Cashier
 		
+         // search for subscr data
+        $nuvei_order_details = WC()->session->get('nuvei_order_details');
+
+        // save the Nuvei Subscr data to the order
+        if (!empty($nuvei_order_details[$nuvei_session_token]['subscr_data'])) {
+            foreach ($nuvei_order_details[$nuvei_session_token]['subscr_data'] as $item_prod => $data) {
+                $order->update_meta_data(
+                    NUVEI_ORDER_SUBSCR . '_' . $item_prod,
+                    $data
+                );
+            }
+            
+//            $order->update_meta_data(
+//                NUVEI_ORDER_SUBSCR,
+//                $nuvei_order_details[$nuvei_session_token]['subscr_data']
+//            );
+//            $order->save();
+
+            WC()->session->set('nuvei_order_details', []);
+        }
+    
+        // Success
 		if (!empty($nuvei_transaction_id)) {
 			Nuvei_Logger::write('Process webSDK Order, transaction ID #' . $nuvei_transaction_id);
 			
@@ -304,8 +329,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			);
 		}
         
-        Nuvei_Logger::write('process_payment() error - $nuvei_transaction_id is empty for Order ID ' . $order_id);
-			
+        // Error - missing Transaction ID
+        Nuvei_Logger::write($order_id, '$nuvei_transaction_id is empty for Order ID ');
+        
         return array(
             'result'    => 'success',
             'redirect'  => array(
@@ -651,7 +677,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * 
 	 * @global type $woocommerce
 	 */
-	public function call_checkout()
+	public function call_checkout($is_ajax = false)
     {
 		global $woocommerce;
 		
@@ -713,7 +739,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'showUserPaymentOptions'    => $use_upos,
 		//            'subMethod'           => '',
 			'pmWhitelist'               => null,
-			'pmBlacklist'               => $pm_black_list,
+			'pmBlacklist'               => empty($pm_black_list) ? null : $pm_black_list,
 		//            'blockCards'            => $this->get_setting('blocked_cards', []), set it later
 			'alwaysCollectCvv'          => true,
 			'fullName'                  => $ord_details['billingAddress']['firstName'] . ' ' . $oo_data['billingAddress']['lastName'],
@@ -779,6 +805,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			
 		Nuvei_Logger::write($checkout_data, '$checkout_data');
 		
+        if ($is_ajax) {
+            wp_send_json($checkout_data);
+			exit;
+        }
+        
 		wp_send_json(array(
 			'result'	=> 'failure', // this is just to stop WC send the form, and show APMs
 			'refresh'	=> false,
@@ -874,7 +905,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'back_url'          => wc_get_checkout_url(),
 			
 			'customField1'      => '', // subscription details as json
-			'customField2'      => json_encode($products_data['products_data']), // item details as json
+//			'customField2'      => json_encode($products_data['products_data']), // item details as json
 			'customField3'      => time(), // create time time()
 			
 			'currency'          => get_woocommerce_currency(),

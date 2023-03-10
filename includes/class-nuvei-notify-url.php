@@ -62,7 +62,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			$subscriptionId    = Nuvei_Http::get_param('subscriptionId', 'int');
 			$planId            = Nuvei_Http::get_param('planId', 'int');
 			$cri_parts         = explode('_', $client_request_id);
-            $subs_data_key     = NUVEI_ORDER_SUBSCR . '_' . $client_request_id;
 			
 			if (empty($cri_parts) || empty($cri_parts[0]) || !is_numeric($cri_parts[0])) {
 				Nuvei_Logger::write($cri_parts, 'DMN Subscription Error with Client Request Id parts:');
@@ -70,14 +69,15 @@ class Nuvei_Notify_Url extends Nuvei_Request
 				exit;
 			}
             
+            $subs_data_key = str_replace($cri_parts[0], '', $client_request_id);
+            
 			// this is just to give WC time to update its metadata, before we update it here
-//            sleep(5);
+            sleep(5);
             
 			$this->is_order_valid((int) $cri_parts[0]);
             
-            
             $subsc_data = $this->sc_order->get_meta($subs_data_key);
-            Nuvei_Logger::write($subsc_data, 'DMN');
+            Nuvei_Logger::write([$subs_data_key, $subsc_data], '$subs_data_key $subsc_data');
             
             if (empty($subsc_data)) {
                 $subsc_data = [];
@@ -148,7 +148,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			$this->is_order_valid((int) $cri_parts[0]);
             
             $ord_curr       = $this->sc_order->get_currency();
-            $subs_data_key  = NUVEI_ORDER_SUBSCR . '_' . $client_request_id;
+//            $subs_data_key  = NUVEI_ORDER_SUBSCR . '_' . $client_request_id;
+            $subs_data_key = str_replace($cri_parts[0], '', $client_request_id);
 			
 			$msg = sprintf(
 				/* translators: %s: the status of the Payment */
@@ -173,7 +174,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
                 'resp_time'         => Nuvei_Http::get_param('responseTimeStamp'),
             ];
             
-            $this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR, $subsc_data);
+//            $this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR, $subsc_data);
+            $this->sc_order->update_meta_data($subs_data_key, $subsc_data);
                 
             $this->sc_order->add_order_note($msg);
             $this->sc_order->save();
@@ -498,61 +500,57 @@ class Nuvei_Notify_Url extends Nuvei_Request
     {
         Nuvei_Logger::write('Try to start subscription.');
         
-        $subscr_data = json_decode(Nuvei_Http::get_param('customField1', 'json'), true);
-        
-		if (!in_array($transactionType, array('Settle', 'Sale', 'Auth'))
-            || empty($subscr_data)
-            || !is_array($subscr_data)
-        ) {
+        if (!in_array($transactionType, array('Settle', 'Sale', 'Auth'))) {
+            Nuvei_Logger::write(
+                ['$transactionType'  => $transactionType],
+                'Can not start Subscription.'
+            );
 			return;
 		}
-		
-//		$prod_plan = current($subscr_data);
         
-        // iterate over products with plans
-        foreach ($subscr_data as $variation_id => $prod_plan) {
-            if (empty($prod_plan) || !is_array($prod_plan)) {
-                Nuvei_Logger::write($prod_plan, 'There is a problem with the DMN Product Payment Plan data:');
-                return;
+        if('Auth' == $transactionType && 0 !== (float) $order_total) {
+            Nuvei_Logger::write($order_total, 'We allow Rebilling for Auth only when the Order total is 0.');
+            return;
+        }
+        
+//        $subscr_data = json_decode(Nuvei_Http::get_param('customField1', 'json'), true);
+//        $subscr_data = $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR);
+//        Nuvei_Logger::write($subscr_data, '$subscr_data');
+        
+        $order_all_meta = get_post_meta($order_id);
+        
+        foreach ($order_all_meta as $key => $data) {
+            if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
+                continue;
             }
-
-            if('Auth' == $transactionType && 0 !== (float) $order_total) {
-                Nuvei_Logger::write($order_total, 'We allow Rebilling for Auth only when the Order total is 0.');
-                return;
+            
+            if (empty($data) || !is_array($data)) {
+                Nuvei_Logger::write($data, 'There is a problem with the DMN Product Payment Plan data:');
+                continue;
             }
-
-            // this is the only place to pass the Order ID, we will need it later, to identify the Order
-//            $prod_plan['clientRequestId'] = $order_id . '_' . uniqid();
-            $prod_plan['clientRequestId'] = $order_id . '_' . $variation_id;
             
-            // save subsc as single meta
-            $subsc_data = [
-                'plan_id'           => $prod_plan['planId'],
-                'prod_variation_id' => $variation_id,
-            ];
+            $subs_data = $this->sc_order->get_meta($key);
             
-            $this->sc_order->update_meta_data(
-                NUVEI_ORDER_SUBSCR . '_' . $prod_plan['clientRequestId'], 
-                $subsc_data
-            );
-            $this->sc_order->save();
+            Nuvei_Logger::write([$key, $subs_data]);
             
-
+            $prod_plan                      = $subs_data;
+            $prod_plan['clientRequestId']   = $order_id . $key;
+            
             $ns_obj = new Nuvei_Subscription($this->plugin_settings);
 
             // check for more than one products of same type
-            $qty        = 1;
-            $items_data = json_decode(Nuvei_Http::get_param('customField2', 'json'), true);
-
-            if (!empty($items_data) && is_array($items_data)) {
-                $items_data_curr = current($items_data);
-
-                if (!empty($items_data_curr['quantity']) && is_numeric($items_data_curr['quantity'])) {
-                    $qty = $items_data_curr['quantity'];
-
-                    Nuvei_Logger::write('We will create ' . $qty . ' subscriptions.');
-                }
-            }
+//            $qty        = 1;
+//            $items_data = json_decode(Nuvei_Http::get_param('customField2', 'json'), true);
+//
+//            if (!empty($items_data) && is_array($items_data)) {
+//                $items_data_curr = current($items_data);
+//
+//                if (!empty($items_data_curr['quantity']) && is_numeric($items_data_curr['quantity'])) {
+//                    $qty = $items_data_curr['quantity'];
+//
+//                    Nuvei_Logger::write('We will create ' . $qty . ' subscriptions.');
+//                }
+//            }
 
             $resp = $ns_obj->process($prod_plan);
 
@@ -585,13 +583,95 @@ class Nuvei_Notify_Url extends Nuvei_Request
 //            }
 //            
 //            $subsc_data[$resp['subscriptionId']]['plan_id']             = $prod_plan['planId'];
-//            $subsc_data[$resp['subscriptionId']]['prod_variation_id']   = $variation_id;
+//            $subsc_data[$resp['subscriptionId']]['prod_variation_id']   = $item_prod;
 //                
 //            $this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR, $subsc_data);
 
             $this->sc_order->add_order_note($msg);
             $this->sc_order->save();
         }
+        
+        
+        
+		
+		
+        // iterate over products with plans
+//        foreach ($subscr_data as $item_prod => $prod_plan) {
+//            if (empty($prod_plan) || !is_array($prod_plan)) {
+//                Nuvei_Logger::write($prod_plan, 'There is a problem with the DMN Product Payment Plan data:');
+//                continue;
+//            }
+//
+//            // this is the only place to pass the Order ID, we will need it later, to identify the Order
+////            $prod_plan['clientRequestId'] = $order_id . '_' . uniqid();
+//            $prod_plan['clientRequestId'] = $order_id . '_' . $item_prod;
+//            
+//            // save subsc as single meta
+////            $subsc_data = [
+////                'plan_id'           => $prod_plan['planId'],
+////                'prod_variation_id' => $item_prod,
+////            ];
+//            
+////            $this->sc_order->update_meta_data(
+////                NUVEI_ORDER_SUBSCR . '_' . $prod_plan['clientRequestId'], 
+////                $subsc_data
+////            );
+////            $this->sc_order->save();
+//            
+//            $ns_obj = new Nuvei_Subscription($this->plugin_settings);
+//
+//            // check for more than one products of same type
+//            $qty        = 1;
+//            $items_data = json_decode(Nuvei_Http::get_param('customField2', 'json'), true);
+//
+//            if (!empty($items_data) && is_array($items_data)) {
+//                $items_data_curr = current($items_data);
+//
+//                if (!empty($items_data_curr['quantity']) && is_numeric($items_data_curr['quantity'])) {
+//                    $qty = $items_data_curr['quantity'];
+//
+//                    Nuvei_Logger::write('We will create ' . $qty . ' subscriptions.');
+//                }
+//            }
+//
+//            $resp = $ns_obj->process($prod_plan);
+//
+//            // On Error
+//            if (!$resp || !is_array($resp) || empty($resp['status']) || 'SUCCESS' != $resp['status']) {
+//                $msg = __('<b>Error</b> when try to start a Subscription by the Order.', 'nuvei_checkout_woocommerce');
+//
+//                if (!empty($resp['reason'])) {
+//                    $msg .= '<br/>' . __('<b>Reason:</b> ', 'nuvei_checkout_woocommerce') . $resp['reason'];
+//                }
+//
+//                $this->sc_order->add_order_note($msg);
+//                $this->sc_order->save();
+//
+////				break;
+//            }
+//
+//            // On Success
+//            $msg = __('<b>Subscription</b> was created. ') . '<br/>'
+//                . __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $resp['subscriptionId'] . '.<br/>' 
+//                . __('<b>Recurring amount:</b> ', 'nuvei_checkout_woocommerce') . $this->sc_order->get_currency() . ' '
+//                . $prod_plan['recurringAmount'];
+//            
+//            // save first subscr meta
+////            $subsc_data = $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR);
+////            Nuvei_Logger::write($subsc_data, 'Start Subscr');
+////            
+////            if (empty($subsc_data)) {
+////                $subsc_data = [];
+////            }
+////            
+////            $subsc_data[$resp['subscriptionId']]['plan_id']             = $prod_plan['planId'];
+////            $subsc_data[$resp['subscriptionId']]['prod_variation_id']   = $item_prod;
+////                
+////            $this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR, $subsc_data);
+//
+//            $this->sc_order->add_order_note($msg);
+//            $this->sc_order->save();
+//        }
 			
 		return;
 	}
