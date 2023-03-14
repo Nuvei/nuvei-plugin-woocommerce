@@ -1084,10 +1084,13 @@ function nuvei_after_order_itemmeta($item_id, $item, $_product)
             
             if (!empty($subscr_data['state']) && 'active' == $subscr_data['state']) {
                 echo
-                    '<button class="nuvei_cancel_subscr button generate-items" type="button" style="margin-top: .5em;" onclick="nuveiAction(\''
+                    '<button id="nuvei_cancel_subs_'. esc_html($subscr_data['subscr_id']) 
+                        .'" class="nuvei_cancel_subscr button generate-items" type="button" '
+                        . 'style="margin-top: .5em;" onclick="nuveiAction(\''
                         . esc_html__('Are you sure, you want to cancel this subscription?', 'nuvei_checkout_woocommerce')
                         . '\', \'cancelSubscr\', ' . esc_html(0) . ', ' . esc_html($subscr_data['subscr_id']) 
-                        . ')">' . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') . '</button>';
+                        . ')">' . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') 
+                    . '</button>';
             }
             
             break;
