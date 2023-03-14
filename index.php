@@ -1041,10 +1041,24 @@ function nuvei_after_order_itemmeta($item_id, $item, $_product)
             continue;
         }
         
-        $subscr_data    = $order->get_meta($mk);
-        $key_parts      = explode('_', $mk);
-        $item_variation = $item->get_variation_id();
-        $product_id     = $item->get_product_id();
+        if ('WC_Order_Item_Product' != get_class($item)) {
+            continue;
+        }
+        
+        // because of some delay this may not work, and have to refresh the page
+        try {
+            $subscr_data    = $order->get_meta($mk);
+            $key_parts      = explode('_', $mk);
+            $item_variation = $item->get_variation_id();
+            $product_id     = $item->get_product_id();
+        }
+        catch (\Exception $ex) {
+            Nuvei_Logger::write([
+                'exception' => $ex->getMessage(),
+                'item'      => $item,
+            ]);
+            continue;
+        }
         
 //        echo '<pre>'.print_r([$mk, $subscr_data],true).'</pre>';
 ////        echo '<pre>'.print_r($subscr_data,true).'</pre>';

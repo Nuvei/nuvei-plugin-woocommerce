@@ -751,8 +751,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'logLevel'                  => $this->get_setting('log_level'),
 			'maskCvv'                   => true,
 			'i18n'                      => json_decode($this->get_setting('translation', ''), true),
-            'billingAddress'            => $ord_details['billingAddress'],
-            'userData'                  => ['billingAddress' => $ord_details['billingAddress']],
+//            'billingAddress'            => $ord_details['billingAddress'],
+//            'userData'                  => ['billingAddress' => $ord_details['billingAddress']],
 		);
         
 		// check for product with a plan
