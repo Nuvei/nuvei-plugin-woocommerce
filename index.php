@@ -1047,6 +1047,8 @@ function nuvei_after_order_itemmeta($item_id, $item, $_product)
         
         // because of some delay this may not work, and have to refresh the page
         try {
+            Nuvei_Logger::write('check nuvei_after_order_itemmeta');
+            
             $subscr_data    = $order->get_meta($mk);
             $key_parts      = explode('_', $mk);
             $item_variation = $item->get_variation_id();
@@ -1064,6 +1066,11 @@ function nuvei_after_order_itemmeta($item_id, $item, $_product)
 ////        echo '<pre>'.print_r($subscr_data,true).'</pre>';
 //        echo '<pre>'.print_r([$item_id, $product_id],true).'</pre>';
 //        echo '<pre>'.print_r([$item_id, $item->get_variation_id()],true).'</pre>';
+        
+        if (empty($subscr_data['state']) || empty ($subscr_data['subscr_id'])) {
+            // wait for meta data to be created
+            continue;
+        }
         
         // in case of variations item
         if ( (0 != $item_variation && 'variation' == $key_parts[2] && $item_variation == $key_parts[3])
