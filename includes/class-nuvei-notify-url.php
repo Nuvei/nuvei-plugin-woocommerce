@@ -45,10 +45,10 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		$client_request_id      = Nuvei_Http::get_param('clientRequestId');
 		$req_status             = Nuvei_Http::get_request_status();
 		
-		if (empty($req_status) && empty($dmnType)) {
-			Nuvei_Logger::write('DMN Error - the Status is empty!');
-			exit(wp_json_encode('DMN Error - the Status is empty!'));
-		}
+//		if (empty($req_status) && empty($dmnType)) {
+//			Nuvei_Logger::write('DMN Error - the Status is empty!');
+//			exit(wp_json_encode('DMN Error - the Status is empty!'));
+//		}
         
         if ('pending' == strtolower($req_status)) {
             $msg = 'Pending DMN, waiting for the next.';
@@ -88,11 +88,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
 					$msg = __('<b>Subscription is Active</b>.', 'nuvei_checkout_woocommerce') . '<br/>'
 						. __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $subscriptionId . '<br/>'
 						. __('<b>Plan ID:</b> ', 'nuvei_checkout_woocommerce') . Nuvei_Http::get_param('planId', 'int');
-					
-                    /**
-                     * @deprecated since version 1.3.0
-                     */
-//					$this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR_ID, $subscriptionId);
 				}
                 elseif ('inactive' == $subscriptionState) {
 					$msg = __('<b>Subscription is Inactive</b>.', 'nuvei_checkout_woocommerce') . '<br/>' 
@@ -104,18 +99,10 @@ class Nuvei_Notify_Url extends Nuvei_Request
 						. __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $subscriptionId;
 				}
                 
-                /**
-                 * @deprecated since version 1.3.0
-                 */
-//                $this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR_STATE, $subscriptionState);
-				
                 // update subscr meta
-//                $subsc_data[$subscriptionId]['state']   = $subscriptionState;
                 $subsc_data['state']        = $subscriptionState;
                 $subsc_data['subscr_id']    = $subscriptionId;
-//                $subsc_data[$subscriptionId]['plan_id'] = $planId;
                 
-//                $this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR, $subsc_data);
                 $this->sc_order->update_meta_data($subs_data_key, $subsc_data);
 				$this->sc_order->add_order_note($msg);
 				$this->sc_order->save();
@@ -126,11 +113,11 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		}
 		# Subscription State DMN END
 		
-		if (empty($TransactionID)) {
-			Nuvei_Logger::write('DMN error - The TransactionID is empty!');
-			echo wp_json_encode('DMN error - The TransactionID is empty!');
-			exit;
-		}
+//		if (empty($TransactionID)) {
+//			Nuvei_Logger::write('DMN error - The TransactionID is empty!');
+//			echo wp_json_encode('DMN error - The TransactionID is empty!');
+//			exit;
+//		}
 		
 		# Subscription Payment DMN
 		if ('subscriptionPayment' == $dmnType && 0 != $TransactionID) {
@@ -148,8 +135,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			$this->is_order_valid((int) $cri_parts[0]);
             
             $ord_curr       = $this->sc_order->get_currency();
-//            $subs_data_key  = NUVEI_ORDER_SUBSCR . '_' . $client_request_id;
-            $subs_data_key = str_replace($cri_parts[0], '', $client_request_id);
+            $subs_data_key  = str_replace($cri_parts[0], '', $client_request_id);
 			
 			$msg = sprintf(
 				/* translators: %s: the status of the Payment */
@@ -163,10 +149,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 
 			Nuvei_Logger::write($msg, 'Subscription DMN Payment');
 			
-//            $subsc_data = $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR);
             $subsc_data = $this->sc_order->get_meta($subs_data_key);
             
-//            $subsc_data[$subscriptionId]['payments'][] = [
             $subsc_data['payments'][] = [
                 'amount'            => $total,
                 'order_currency'    => $ord_curr,
@@ -174,9 +158,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
                 'resp_time'         => Nuvei_Http::get_param('responseTimeStamp'),
             ];
             
-//            $this->sc_order->update_meta_data(NUVEI_ORDER_SUBSCR, $subsc_data);
             $this->sc_order->update_meta_data($subs_data_key, $subsc_data);
-                
             $this->sc_order->add_order_note($msg);
             $this->sc_order->save();
             
@@ -239,8 +221,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 
 			$this->change_order_status($order_id, $req_status, $transactionType);
 			$this->subscription_start($transactionType, $clientUniqueId);
+            $this->subscription_cancel($transactionType, $order_id);
 			
-            // since 1.3.0
 //			if ('Void' == $transactionType
 //                && 'active' == $this->sc_order->get_meta(NUVEI_ORDER_SUBSCR_STATE)
 //            ) {
@@ -282,9 +264,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		exit;
 	}
 
-	protected function get_checksum_params() {
-		
-	}
+	protected function get_checksum_params() {}
 	
 	/**
 	 * Get client unique id.
@@ -292,7 +272,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 	 * 
 	 * @return int|string
 	 */
-	private function get_cuid() {
+	private function get_cuid()
+    {
 		$clientUniqueId = Nuvei_Http::get_param('clientUniqueId');
 		
 		if ('yes' != $this->plugin_settings['test']) {
@@ -591,10 +572,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
             $this->sc_order->save();
         }
         
-        
-        
-		
-		
         // iterate over products with plans
 //        foreach ($subscr_data as $item_prod => $prod_plan) {
 //            if (empty($prod_plan) || !is_array($prod_plan)) {
@@ -675,6 +652,37 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			
 		return;
 	}
+    
+    /**
+     * @param int $transactionType
+     * @param int $order_id
+     */
+    private function subscription_cancel($transactionType, $order_id)
+    {
+        if ('Void' != $transactionType) {
+            Nuvei_Logger::write($transactionType, 'Only Void can cancel a subscription.');
+			return;
+		}
+        
+        $order_all_meta = get_post_meta($order_id);
+        
+        foreach ($order_all_meta as $key => $data) {
+            if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
+                continue;
+            }
+            
+            $subs_data = $this->sc_order->get_meta($key);
+            Nuvei_Logger::write([$key, $subs_data]);
+            
+            if (empty($subs_data['state']) || 'active' != $subs_data['state']) {
+                Nuvei_Logger::write($subs_data, 'The subscription is not Active.');
+                continue;
+            }
+            
+            $ncs_obj = new Nuvei_Subscription_Cancel($this->plugin_settings);
+            $ncs_obj->process(['subscriptionId' => $subs_data['subscr_id']]);
+        }
+    }
 	
 	/**
 	 * Change the status of the order.

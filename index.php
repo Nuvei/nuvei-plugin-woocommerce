@@ -244,7 +244,7 @@ function nuvei_init()
 	// edit Term meta data
 	add_action( 'edited_pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME), 'nuvei_edit_term_meta', 10, 2 );
 	// before add a product to the cart
-//	add_filter( 'woocommerce_add_to_cart_validation', array($wc_nuvei, 'add_to_cart_validation'), 10, 3 );
+	add_filter( 'woocommerce_add_to_cart_validation', array($wc_nuvei, 'add_to_cart_validation'), 10, 3 );
     // Show/hide payment gateways in case of product with Nuvei Payment plan in the Cart
     add_filter( 'woocommerce_available_payment_gateways', array($wc_nuvei, 'hide_payment_gateways'), 100, 1 );
 }
@@ -552,7 +552,7 @@ function nuvei_enqueue( $hook)
  * @global Order $order
  * @return type
  */
-function nuvei_add_buttons( $order)
+function nuvei_add_buttons($order)
 {
     Nuvei_Logger::write('nuvei_add_buttons');
     
@@ -594,7 +594,8 @@ function nuvei_add_buttons( $order)
 				}
 			}
 		}
-	} catch (Exception $ex) {
+	}
+    catch (Exception $ex) {
 		echo '<script type="text/javascript">console.error("'
 			. esc_js($ex->getMessage()) . '")</script>';
 		exit;
@@ -608,28 +609,7 @@ function nuvei_add_buttons( $order)
 		echo '<script type="text/javascript">jQuery(\'.refund-items\').prop("disabled", true);</script>';
 	}
     
-    # Show Cancel Subscription buttons
-    // for the multi buttons, new
-//    $subscr_data = $order->get_meta(NUVEI_ORDER_SUBSCR);
-    
-//    echo '<pre>'.print_r($subscr_data, true).'</pre>';
-    
-//    if (!empty($subscr_data) && is_array($subscr_data)) {
-//        foreach ($subscr_data as $subscr_id => $sd) {
-//            if (empty($sd['state']) || 'active' != $sd['state']) {
-//                continue;
-//            }
-//            
-//            echo
-//                '<button class="nuvei_cancel_subscr button generate-items" type="button" onclick="nuveiAction(\''
-//                    . esc_html__('Are you sure, you want to cancel this subscription?', 'nuvei_checkout_woocommerce')
-//                    . '\', \'cancelSubscr\', \'' . esc_html($order_id) . '\', \'' . esc_html($subscr_id) 
-//                    . '\')">' . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') 
-//                    . ' ' . esc_html($subscr_id) . '</button>';
-//        }
-//    }
-    // legacy
-//    else
+    # Show Cancel Subscription buttons - Legacy
     if ('active' == $order->get_meta(NUVEI_ORDER_SUBSCR_STATE)) {
         echo
             '<button id="sc_cancel_subs_btn" type="button" onclick="nuveiAction(\''
@@ -637,7 +617,6 @@ function nuvei_add_buttons( $order)
                 . '\', \'cancelSubscr\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
                 . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') . '</button>';
     }
-    # /Show Cancel Subscription buttons
 	
 	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
 		// Show VOID button
@@ -646,11 +625,28 @@ function nuvei_add_buttons( $order)
             && 0 < (float) $order->get_total()
             && time() < $order_time + 172800 // 48 hours
         ) {
-			$question = sprintf(
+            $question = sprintf(
 				/* translators: %d is replaced with "decimal" */
 				__('Are you sure, you want to Cancel Order #%d?', 'nuvei_checkout_woocommerce'),
 				$order_id
 			);
+            
+            // check for acrive subscriptions
+            $all_meta = get_post_meta($order->get_id());
+            
+            foreach ($all_meta as $meta_key => $meta_data) {
+                if (false !== strpos($meta_key, NUVEI_ORDER_SUBSCR)) {
+                    $subscr_data = $order->get_meta($meta_key);
+                    
+                    if (!empty($subscr_data['state'])
+                        && 'active' == $subscr_data['state']
+                    ) {
+                        $question = __('Are you sure, you want to Cancel this Order? This will also deactivate all Active Subscriptions.', 'nuvei_checkout_woocommerce');
+                        break;
+                    }
+                }
+            }
+            // /check for acrive subscriptions
 			
 			echo
 				'<button id="sc_void_btn" type="button" onclick="nuveiAction(\''

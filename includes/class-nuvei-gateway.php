@@ -628,7 +628,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * 
 	 * @return bool
 	 */
-	public function add_to_cart_validation( $true, $product_id, $quantity)
+	public function add_to_cart_validation($true, $product_id, $quantity)
     {
 		global $woocommerce;
 		
@@ -640,14 +640,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		// 1 - incoming Product with plan
 		if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
 			// 1.1 if there are Products in the cart, stop the process
-			if (count($cart_items) > 0) {
-				wc_print_notice(__('You can not add a Product with Payment Plan to another Product.', 'nuvei_checkout_woocommerce'), 'error');
-				return false;
-			}
+//			if (count($cart_items) > 0) {
+//				wc_print_notice(__('You can not add a Product with Payment Plan to another Product.', 'nuvei_checkout_woocommerce'), 'error');
+//				return false;
+//			}
             
             // 1.2 - disable for guests
             if(!is_user_logged_in()) {
-                wc_print_notice(__('You must login to add a product with a Payment Plan.', 'nuvei_checkout_woocommerce'), 'error');
+                wc_add_notice(
+                    __('You must login to add a product with a Payment Plan.', 'nuvei_checkout_woocommerce'),
+                    'error'
+                );
 				return false;
             }
 			
@@ -656,18 +659,18 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		
 		// 2 - incoming Product without plan
 		// 2.1 - the cart is not empty
-		if (count($cart_items) > 0) {
-			foreach ($cart_items as $item) {
-				$cart_product   = wc_get_product( $item['product_id'] );
-				$cart_prod_attr = $cart_product->get_attributes();
-
-				// 2.1.1 in case there is Product with plan in the Cart
-				if (!empty($cart_prod_attr['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
-					wc_print_notice(__('You can not add Product to a Product with Payment Plan.', 'nuvei_checkout_woocommerce'), 'error');
-					return false;
-				}
-			}
-		}
+//		if (count($cart_items) > 0) {
+//			foreach ($cart_items as $item) {
+//				$cart_product   = wc_get_product( $item['product_id'] );
+//				$cart_prod_attr = $cart_product->get_attributes();
+//
+//				// 2.1.1 in case there is Product with plan in the Cart
+//				if (!empty($cart_prod_attr['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
+//					wc_print_notice(__('You can not add Product to a Product with Payment Plan.', 'nuvei_checkout_woocommerce'), 'error');
+//					return false;
+//				}
+//			}
+//		}
 		
 		return true;
 	}

@@ -355,7 +355,7 @@ abstract class Nuvei_Request
 	 *
 	 * @return mixed
 	 */
-	protected function call_rest_api( $method, $params)
+	protected function call_rest_api($method, $params)
     {
 		if (empty($this->plugin_settings['hash_type'])
 			|| empty($this->plugin_settings['secret'])
