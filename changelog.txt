@@ -5,6 +5,7 @@
     * Enable using Nuvei Payment Plans for product with attribute only, without variations.
     * Do not pass Product data by open/updateOrder request.
     * Do not pass Subscription data by open/updateOrder request, but keep it in WC session. Just before redirect to the success page save it as Order meta data.
+    * Logs directory was moved to wp-content/uploads/nuvei-logs
 
 # 1.2.4
     * Fix for the case when updateOrder does not upgrade empty userTokenId.

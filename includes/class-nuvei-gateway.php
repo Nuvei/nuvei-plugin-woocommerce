@@ -62,7 +62,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 *
 	 * @return string
 	 */
-	public function generate_payment_plans_btn_html( $key, $data) {
+	public function generate_payment_plans_btn_html( $key, $data)
+    {
 		$defaults = array(
 			'class'             => 'button-secondary',
 			'css'               => '',
@@ -72,7 +73,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'title'             => '',
 		);
 		
-		$nuvei_plans_path = NUVEI_LOGS_DIR . 'sc_plans.json';
+		$nuvei_plans_path = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
 
 		if (is_readable($nuvei_plans_path)) { 
 			$defaults['description'] = __('Last download: ', 'nuvei_checkout_woocommerce')
@@ -455,7 +456,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * 
 	 * @param int $recursions
 	 */
-	public function download_subscr_pans( $recursions = 0) {
+	public function download_subscr_pans( $recursions = 0)
+    {
+        Nuvei_Logger::write('download_subscr_pans');
+        
 		if ($recursions > 1) {
 			wp_send_json(array('status' => 0));
 			exit;
@@ -484,7 +488,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
 		// in case there are  no active plans - create default one END
 		
-		if (file_put_contents(NUVEI_LOGS_DIR . 'sc_plans.json', json_encode($resp['plans']))) {
+		if (file_put_contents(NUVEI_LOGS_DIR . NUVEI_PLANS_FILE, json_encode($resp['plans']))) {
 			$this->create_nuvei_global_attribute();
 			
 			wp_send_json(array(
@@ -495,7 +499,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
 		
 		Nuvei_Logger::write(
-			NUVEI_LOGS_DIR . 'sc_plans.json',
+			NUVEI_LOGS_DIR . NUVEI_PLANS_FILE,
 			'Plans list was not saved.'
 		);
 		
@@ -537,7 +541,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		return $this->subscr_units;
 	}
 	
-	public function can_use_upos() {
+	public function can_use_upos()
+    {
 		if (isset($this->settings['use_upos'])) {
 			return $this->settings['use_upos'];
 		}
@@ -545,10 +550,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		return 0;
 	}
 	
-	public function create_nuvei_global_attribute() {
+	public function create_nuvei_global_attribute()
+    {
 		Nuvei_Logger::write('create_nuvei_global_attribute()');
 		
-		$nuvei_plans_path          = NUVEI_LOGS_DIR . 'sc_plans.json';
+		$nuvei_plans_path          = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
 		$nuvei_glob_attr_name_slug = Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME);
 		$taxonomy_name             = wc_attribute_taxonomy_name($nuvei_glob_attr_name_slug);
 		
@@ -852,7 +858,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * @param string    $key - the key we are search for
 	 * @param mixed     $default - the default value if no setting found
 	 */
-	private function get_setting( $key, $default = 0) {
+	private function get_setting( $key, $default = 0)
+    {
 		if (isset($this->settings[$key])) {
 			return $this->settings[$key];
 		}
@@ -869,7 +876,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
      * 
      * @return string
      */
-	private function generate_cashier_url( $success_url, $error_url, $order_id) {
+	private function generate_cashier_url( $success_url, $error_url, $order_id)
+    {
 		global $woocommerce;
 		
 		$cart          = $woocommerce->cart;

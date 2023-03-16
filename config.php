@@ -27,19 +27,22 @@ const NUVEI_CUID_POSTFIX        = '_sandbox_apm'; // postfix for Sandbox APM pay
 const NUVEI_TRANS_CURR          = '_transactionCurrency';
 const NUVEI_TRANS_STATUS        = '_transactionStatus';
 
-define('NUVEI_SOURCE_APPLICATION',  'WOOCOMMERCE_PLUGIN');
-define('NUVEI_GLOB_ATTR_NAME',      'Nuvei Payment Plan'); // the name of the Nuvei Global Product Attribute name
-define('NUVEI_LOG_EXT',             'log');
-define('NUVEI_LOGS_DIR',            dirname(__FILE__) . '/logs/');
-define('NUVEI_APMS_REFUND_VOID',    ['cc_card', 'apmgw_expresscheckout']);
-define('NUVEI_GIT_REPO',            'https://github.com/Nuvei/nuvei-plugin-woocommerce');
+const NUVEI_SOURCE_APPLICATION  = 'WOOCOMMERCE_PLUGIN';
+const NUVEI_GLOB_ATTR_NAME      = 'Nuvei Payment Plan'; // the name of the Nuvei Global Product Attribute name
+const NUVEI_LOG_EXT             = 'log';
+const NUVEI_PLANS_FILE          = 'sc_plans.json';
+const NUVEI_APMS_REFUND_VOID    = ['cc_card', 'apmgw_expresscheckout'];
+const NUVEI_GIT_REPO            = 'https://github.com/Nuvei/nuvei-plugin-woocommerce';
 
-define('NUVEI_REST_ENDPOINT_INT',   'https://ppp-test.safecharge.com/ppp/api/v1/');
-define('NUVEI_REST_ENDPOINT_PROD',  'https://secure.safecharge.com/ppp/api/v1/');
+const NUVEI_REST_ENDPOINT_INT   = 'https://ppp-test.safecharge.com/ppp/api/v1/';
+const NUVEI_REST_ENDPOINT_PROD  = 'https://secure.safecharge.com/ppp/api/v1/';
 
-define('NUVEI_SDK_URL_INT',         'https://srv-bsf-devpppjs.gw-4u.com/checkoutNext/checkout.js');
-define('NUVEI_SDK_URL_PROD',        'https://cdn.safecharge.com/safecharge_resources/v1/checkout/checkout.js');
-define('NUVEI_SDK_AUTOCLOSE_URL',   'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html');
+const NUVEI_SDK_URL_INT         = 'https://srv-bsf-devpppjs.gw-4u.com/checkoutNext/checkout.js';
+const NUVEI_SDK_URL_PROD        = 'https://cdn.safecharge.com/safecharge_resources/v1/checkout/checkout.js';
+const NUVEI_SDK_AUTOCLOSE_URL   = 'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html';
+
+define('NUVEI_LOGS_DIR', dirname(dirname(dirname(__FILE__))) . DIRECTORY_SEPARATOR 
+    . 'uploads' . DIRECTORY_SEPARATOR . 'nuvei-logs' . DIRECTORY_SEPARATOR);
 
 define('NUVEI_JS_LOCALIZATIONS', [
     'ajaxurl'               => admin_url('admin-ajax.php'),

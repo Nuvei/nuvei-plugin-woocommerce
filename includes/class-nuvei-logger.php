@@ -5,8 +5,8 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A custom class for logs.
  */
-class Nuvei_Logger {
-    
+class Nuvei_Logger
+{
     private static $trace_id;
 
     /**
@@ -17,7 +17,8 @@ class Nuvei_Logger {
      * @param string $log_level The Log level.
      * @param string $span_id Process unique ID.
      */
-	public static function write( $data, $message = '', $log_level = 'INFO', $span_id = '') {
+	public static function write( $data, $message = '', $log_level = 'INFO', $span_id = '')
+    {
 		$plugin_data = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . 'index.php');
 		$save_logs   = 'yes';
 		$test_mode   = 'yes';
@@ -28,7 +29,7 @@ class Nuvei_Logger {
 		if (!empty($_GET['test_mode'])) {
 			$test_mode = filter_var($_GET['test_mode'], FILTER_SANITIZE_STRING);
 		}
-		
+        
 		// path is different fore each plugin
 		if (!is_dir(NUVEI_LOGS_DIR) || 'yes' != $save_logs) {
 			return;
@@ -124,7 +125,7 @@ class Nuvei_Logger {
         $string     .= "\r\n\r\n";
         $file_name  = date('Y-m-d', time());
         
-		file_put_contents(
+		$res = file_put_contents(
 			NUVEI_LOGS_DIR . $file_name . '.' . NUVEI_LOG_EXT,
 			$string,
 			FILE_APPEND

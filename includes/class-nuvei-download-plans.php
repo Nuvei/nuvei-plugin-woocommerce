@@ -5,14 +5,15 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A class for getPlansList request.
  */
-class Nuvei_Download_Plans extends Nuvei_Request {
-
+class Nuvei_Download_Plans extends Nuvei_Request
+{
 	/**
 	 * The main method.
 	 * 
 	 * @return array|false
 	 */
-	public function process() {
+	public function process()
+    {
 		$params = array(
 			'planStatus'		=> 'ACTIVE',
 			'currency'			=> '',

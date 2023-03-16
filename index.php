@@ -26,9 +26,30 @@ require_once ABSPATH . 'wp-admin/includes/plugin.php';
 
 $wc_nuvei = null;
 
+register_activation_hook(__FILE__, 'nuvei_plugin_activate');
+
 add_action('admin_init', 'nuvei_admin_init');
 add_filter('woocommerce_payment_gateways', 'nuvei_add_gateway');
 add_action('plugins_loaded', 'nuvei_init', 0);
+
+/**
+ * On activate try to create custom logs directory.
+ */
+function nuvei_plugin_activate()
+{
+    $content_dir        = dirname(dirname(dirname(__FILE__)));
+    $custom_logs_dir    = $content_dir . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'nuvei-logs';
+    $htaccess_file      = $custom_logs_dir . DIRECTORY_SEPARATOR . '.htaccess';
+    
+    if (is_dir($custom_logs_dir) && file_exists($htaccess_file)) {
+        return;
+    }
+    
+    // try to create them if not exists
+    if (mkdir($custom_logs_dir)) {
+        file_put_contents($htaccess_file, 'deny from all');
+    }
+}
 
 function nuvei_admin_init()
 {
@@ -297,7 +318,6 @@ function nuvei_ajax_action()
         $order = wc_get_order(Nuvei_Http::get_param('orderId', 'int'));
         
 		$nuvei_class    = new Nuvei_Subscription_Cancel($wc_nuvei->settings);
-//		$resp           = $nuvei_class->process(['subscriptionId' => $order->get_meta(NUVEI_ORDER_SUBSCR_ID)]);
 		$resp           = $nuvei_class->process(['subscriptionId' => $subscriptionId]);
         $ord_status     = 0;
         
@@ -496,8 +516,8 @@ function nuvei_load_admin_styles_scripts( $hook) {
 	);
 	
 	// get the list of the plans
-	$nuvei_plans_path = NUVEI_LOGS_DIR . 'sc_plans.json';
-	$plans_list       = array();
+	$nuvei_plans_path = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
+	$plans_list       = [];
 
 	if (is_readable($nuvei_plans_path)) { 
 		$plans_list = stripslashes(file_get_contents($nuvei_plans_path));
@@ -812,14 +832,16 @@ function nuvei_user_orders()
 }
 
 // on reorder, show warning message to the cart if need to
-function nuvei_show_message_on_cart( $data) {
+function nuvei_show_message_on_cart( $data)
+{
 	echo '<script>jQuery("#content .woocommerce:first").append("<div class=\'woocommerce-warning\'>'
 		. wp_kses_post(Nuvei_Http::get_param('sc_msg')) . '</div>");</script>';
 }
 
 // Attributes, Terms and Meta functions
-function nuvei_add_term_fields_form( $taxonomy) {
-	$nuvei_plans_path = NUVEI_LOGS_DIR . 'sc_plans.json';
+function nuvei_add_term_fields_form( $taxonomy)
+{
+	$nuvei_plans_path = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
 	
 	ob_start();
 	
@@ -833,8 +855,9 @@ function nuvei_add_term_fields_form( $taxonomy) {
 	ob_end_flush();
 }
 
-function nuvei_edit_term_meta_form( $term, $taxonomy) {
-	$nuvei_plans_path = NUVEI_LOGS_DIR . 'sc_plans.json';
+function nuvei_edit_term_meta_form( $term, $taxonomy)
+{
+	$nuvei_plans_path = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
 
 	ob_start();
 	$term_meta  = get_term_meta($term->term_id);

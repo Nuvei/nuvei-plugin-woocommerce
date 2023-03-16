@@ -12,7 +12,7 @@ Wordpress:
 
 WooCommerce: 
   - minimum v 3.0
-  - tested up to v7.4.0
+  - tested up to v7.5.0
 
 Stable tag: main
 
@@ -22,6 +22,9 @@ Nuvei offers major international credit and debit cards enabling you to accept p
 A wide selection of region-specific payment methods can help your business grow in new markets. Other popular payment methods from mobile payments to eWallets, can be easily implemented at your checkout page.
 
 Right payment methods at the checkout page can bring you global reach, help you increase conversions and create a seamless experience for your customers.
+
+## Importanat note
+If you have installed plugin version before v1.3.0, and this is your first upgrade, after the upgrade, deactivate and activate plugin again, so new logs directory be created!
 
 ## Automatic installation
 To do an automatic install, log in to your WordPress dashboard, navigate to the Plugins menu and click Add New. Upload the provided archive and install it. As a final step you should activate the plugin.
