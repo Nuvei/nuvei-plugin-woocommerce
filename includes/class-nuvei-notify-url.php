@@ -489,7 +489,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			return;
 		}
         
-        if('Auth' == $transactionType && 0 !== (float) $order_total) {
+        if('Auth' == $transactionType && 0 != (float) $order_total) {
             Nuvei_Logger::write($order_total, 'We allow Rebilling for Auth only when the Order total is 0.');
             return;
         }
