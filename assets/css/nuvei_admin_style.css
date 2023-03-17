@@ -22,3 +22,7 @@
 }
 
 .nuvei_checkout_settings_cont { display: none; }
+
+#woocommerce_nuvei_notify_url {
+    display: none;
+}

@@ -349,11 +349,6 @@ function nuvei_ajax_action()
 		$wc_nuvei->download_subscr_pans();
 	}
 	
-	// get today log
-	if (Nuvei_Http::get_param('getLog', 'int') == 1) {
-		$wc_nuvei->get_today_log();
-	}
-	
 	wp_send_json_error(__('Not recognized Ajax call.', 'nuvei_checkout_woocommerce'));
 	wp_die();
 }

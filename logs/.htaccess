@@ -1,8 +1,0 @@
-AddDefaultCharset UTF-8
-Options -Indexes
-RewriteEngine On
-
-<Files>
-    Order Deny,Allow
-    Deny from all
-</Files>

@@ -123,11 +123,6 @@ class Nuvei_Open_Order extends Nuvei_Request
             || 1 == $this->plugin_settings['use_upos']
         ) {
 			$oo_params['userTokenId'] = $addresses['billingAddress']['email'];
-            // pass the subscription data, to use it later, here we use variation_id as key
-//			$oo_params['merchantDetails']['customField1']
-//                = json_encode($product_data['subscr_data']);
-//            
-//            Nuvei_Logger::write(strlen($oo_params['merchantDetails']['customField1']), 'customField1 len');
 		}
 		
 		$resp = $this->call_rest_api('openOrder', $oo_params);

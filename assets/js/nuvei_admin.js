@@ -167,59 +167,6 @@ function scCreateRefund(question) {
 		});
 }
 
-function nuveiGetTodayLog() {
-	console.log('nuveiGetTodayLog');
-	
-	var logTd		= jQuery('#woocommerce_nuvei_today_log').closest('td');
-	var thisLoader	= logTd.find('.custom_loader');
-	
-	thisLoader.show();
-	
-	var data = {
-		action      : 'sc-ajax-action',
-		security	: scTrans.security,
-		getLog		: 1
-	};
-	
-	jQuery.ajax({
-		type		: "POST",
-		url			: scTrans.ajaxurl,
-		data		: data,
-		dataType	: 'json'
-	})
-		.fail(function( jqXHR, textStatus, errorThrown) {
-			jQuery('#woocommerce_nuvei_today_log_area').text(scTrans.RefreshLogError);
-			jQuery('#woocommerce_nuvei_today_log_area').css('display', 'block');
-			
-			thisLoader.hide();
-
-			console.error(textStatus)
-			console.error(errorThrown)
-		})
-		.done(function(resp) {
-			if (resp && typeof resp.status != 'undefined' && resp.data != 'undefined') {
-				if (resp.status == 0) {
-					jQuery('#woocommerce_nuvei_today_log_area').text(resp.msg);
-					jQuery('#woocommerce_nuvei_today_log_area').css('display', 'block');
-				}
-				else if(resp.hasOwnProperty('data')) {
-					jQuery('#woocommerce_nuvei_today_log_area').text(resp.data);
-					jQuery('#woocommerce_nuvei_today_log_area').css('display', 'block');
-				}
-				else {
-					jQuery('#woocommerce_nuvei_today_log_area').text(scTrans.RefreshLogError);
-					jQuery('#woocommerce_nuvei_today_log_area').css('display', 'block');
-				}
-			}
-			else {
-				jQuery('#woocommerce_nuvei_today_log_area').text(scTrans.RefreshLogError);
-				jQuery('#woocommerce_nuvei_today_log_area').css('display', 'block');
-			}
-			
-			thisLoader.hide();
-		});
-}
-
 function nuvei_show_hide_rest_settings() {
     if('sdk' == jQuery('#woocommerce_nuvei_integration_type').val()) {
 		jQuery('.nuvei_cashier_setting').closest('tr').hide();

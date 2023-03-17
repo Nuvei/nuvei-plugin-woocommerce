@@ -88,42 +88,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		return ob_get_clean();
 	}
 	
-	/**
-	 * Generate Button HTML.
-	 * Custom function to generate beautiful button in admin settings.
-	 * Thanks to https://gist.github.com/BFTrick/31de2d2235b924e853b0
-	 * 
-	 * This function catch the type of the settings element we want
-	 * to create. Example - element type button1 -> generate_button1_html
-	 *
-	 * @param mixed $key
-	 * @param mixed $data
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return string
-	 */
-	public function generate_todays_log_btn_html( $key, $data) {
-		$defaults = array(
-			'class'             => 'button-secondary',
-			'css'               => '',
-			'custom_attributes' => array(),
-			'desc_tip'          => false,
-			'description'       => '',
-			'title'             => '',
-		);
-		
-		$data['title_btn']   = __('Read log', 'nuvei_checkout_woocommerce');
-		$data['description'] = __('Please, use with caution! The Production log files can be enormous.', 'nuvei_checkout_woocommerce');
-		
-		ob_start();
-		
-		$data = wp_parse_args($data, $defaults);
-		require_once dirname(NUVEI_PLUGIN_FILE) . '/templates/admin/read_todays_log_btn.php';
-		
-		return ob_get_clean();
-	}
-	
     /**
      * Generate custom multi select for the plugin settings.
      * 
@@ -641,42 +605,18 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$cart       = $woocommerce->cart;
 		$product    = wc_get_product( $product_id );
 		$attributes = $product->get_attributes();
-		$cart_items = $cart->get_cart();
 		
-		// 1 - incoming Product with plan
-		if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
-			// 1.1 if there are Products in the cart, stop the process
-//			if (count($cart_items) > 0) {
-//				wc_print_notice(__('You can not add a Product with Payment Plan to another Product.', 'nuvei_checkout_woocommerce'), 'error');
-//				return false;
-//			}
+		// for guests disable adding products with Nuvei Payment plan to the Cart
+		if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])
+            && !is_user_logged_in()
+        ) {
+            wc_add_notice(
+                __('You must login to add a product with a Payment Plan.', 'nuvei_checkout_woocommerce'),
+                'error'
+            );
             
-            // 1.2 - disable for guests
-            if(!is_user_logged_in()) {
-                wc_add_notice(
-                    __('You must login to add a product with a Payment Plan.', 'nuvei_checkout_woocommerce'),
-                    'error'
-                );
-				return false;
-            }
-			
-			return true;
+            return false;
 		}
-		
-		// 2 - incoming Product without plan
-		// 2.1 - the cart is not empty
-//		if (count($cart_items) > 0) {
-//			foreach ($cart_items as $item) {
-//				$cart_product   = wc_get_product( $item['product_id'] );
-//				$cart_prod_attr = $cart_product->get_attributes();
-//
-//				// 2.1.1 in case there is Product with plan in the Cart
-//				if (!empty($cart_prod_attr['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
-//					wc_print_notice(__('You can not add Product to a Product with Payment Plan.', 'nuvei_checkout_woocommerce'), 'error');
-//					return false;
-//				}
-//			}
-//		}
 		
 		return true;
 	}
@@ -708,7 +648,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         
 		$cart          = $woocommerce->cart;
 		$cart_items    = $cart->get_cart();
-		$time          = gmdate('Ymdhis');
 		$ord_details   = WC()->session->get('nuvei_last_open_order_details');
 		$pm_black_list = trim($this->get_setting('pm_black_list', ''));
 			
@@ -760,8 +699,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'logLevel'                  => $this->get_setting('log_level'),
 			'maskCvv'                   => true,
 			'i18n'                      => json_decode($this->get_setting('translation', ''), true),
-//            'billingAddress'            => $ord_details['billingAddress'],
-//            'userData'                  => ['billingAddress' => $ord_details['billingAddress']],
 		);
         
 		// check for product with a plan
@@ -838,11 +775,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             if($items_info['item_with_plan']
                 && ! empty( $available_gateways[ NUVEI_GATEWAY_NAME ] )
             ) {
-                // in case of mixed items in the Cart, hide all payment providers
-//                if($items_info['items'] > 1) {
-//                    return [];
-//                }
-                
                 $filtred_gws[ NUVEI_GATEWAY_NAME ] = $available_gateways[ NUVEI_GATEWAY_NAME ];
                 return $filtred_gws;
             }
@@ -1006,7 +938,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * Instead of override init_form_fields() split the settings in three
 	 * groups and put them in different tabs.
 	 */
-	private function init_form_base_fields() {
+	private function init_form_base_fields()
+    {
 		$this->form_fields = array(
 			'enabled' => array(
 				'title' => __('Enable/Disable', 'nuvei_checkout_woocommerce'),
@@ -1092,12 +1025,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * 
 	 * @param bool $fields_append - use it when load the fields. In this case we want all fields in same array.
 	 */
-	private function init_form_advanced_fields($fields_append = false) {
+	private function init_form_advanced_fields($fields_append = false)
+    {
 		$fields = array(
             'integration_type' => array(
 				'title'         => __('Integration type', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
-				//'description'   => __('The Checkout SDK is recommended.', 'nuvei_checkout_woocommerce'),
 				'options'       => array(
 					'sdk'       => __('Checkout SDK', 'nuvei_checkout_woocommerce'),
 					'cashier'   => __('Payment page - Cashier', 'nuvei_checkout_woocommerce'),
@@ -1247,7 +1180,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * 
 	 * @param bool $fields_append - use it when load the fields. In this case we want all fields in same array.
 	 */
-	private function init_form_tools_fields( $fields_append = false) {
+	private function init_form_tools_fields( $fields_append = false)
+    {
 		$fields = array(
 			'get_plans_btn' => array(
 				'title' => __('Sync Payment Plans', 'nuvei_checkout_woocommerce'),
@@ -1255,21 +1189,15 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			),
 			'notify_url' => array(
 				'title'         => __('Notify URL', 'nuvei_checkout_woocommerce'),
-				'type'          => 'text',
-				'description'   => '<b>' . __('Default URL: ', 'nuvei_checkout_woocommerce') . '</b>'
-					. Nuvei_String::get_notify_url($this->settings, true) . '<br/>'
-					. __('To use the Default URL leave the field empty.', 'nuvei_checkout_woocommerce'),
-			),
-			'today_log' => array(
-				'title'         => __('View today\'s log', 'nuvei_checkout_woocommerce'),
-				'title_btn'     => __('Read log', 'nuvei_checkout_woocommerce'),
-				'type'          => 'todays_log_btn',
+				'type'          => 'hidden',
+				'description'   => Nuvei_String::get_notify_url($this->settings, true),
 			),
 		);
 		
 		if ($fields_append) {
 			$this->form_fields = array_merge($this->form_fields, $fields);
-		} else {
+		}
+        else {
 			$this->form_fields = $fields;
 		}
 	}

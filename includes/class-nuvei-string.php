@@ -5,8 +5,8 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A class to help with some strings.
  */
-class Nuvei_String {
-
+class Nuvei_String
+{
 	/**
 	 * Generate base of the Notify URL.
 	 * 
@@ -16,7 +16,8 @@ class Nuvei_String {
 	 * 
 	 * @return string
 	 */
-	public static function get_notify_url( $plugin_settings, $use_default = false) {
+	public static function get_notify_url( $plugin_settings, $use_default = false)
+    {
 		if (!$use_default && !empty($plugin_settings['notify_url'])) {
 			return $plugin_settings['notify_url'];
 		}
@@ -43,7 +44,8 @@ class Nuvei_String {
 	 * @param string $text
 	 * @return string
 	 */
-	public static function get_slug( $text = '') {
+	public static function get_slug( $text = '')
+    {
 		return str_replace(' ', '-', strtolower($text));
 	}
 	
@@ -53,7 +55,8 @@ class Nuvei_String {
 	 * @param string $locale
 	 * @return string
 	 */
-	public static function format_location( $locale) {
+	public static function format_location( $locale)
+    {
 		switch ($locale) {
 			case 'de_DE':
 				return 'de';
@@ -66,4 +69,5 @@ class Nuvei_String {
 				return 'en';
 		}
 	}
+    
 }
