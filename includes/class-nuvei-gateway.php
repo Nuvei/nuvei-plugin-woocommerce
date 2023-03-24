@@ -652,28 +652,29 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
 		# OpenOrder END
         
-		$cart          = $woocommerce->cart;
-		$cart_items    = $cart->get_cart();
-		$ord_details   = WC()->session->get('nuvei_last_open_order_details');
-		$pm_black_list = trim($this->get_setting('pm_black_list', ''));
+		$cart           = $woocommerce->cart;
+		$cart_items     = $cart->get_cart();
+		$ord_details    = WC()->session->get('nuvei_last_open_order_details');
+		$prod_details   = WC()->session->get('nuvei_order_details');
+		$pm_black_list  = trim($this->get_setting('pm_black_list', ''));
+        $subscr_data    = [];
+        
+        if (!empty($prod_details[$oo_data['sessionToken']]['subscr_data'])) {
+            $subscr_data = $prod_details[$oo_data['sessionToken']]['subscr_data'];
+        }
 			
 		if (!empty($pm_black_list)) {
 			$pm_black_list = explode(',', $pm_black_list);
 		}
-			
-		Nuvei_Logger::write($ord_details);
-        
+		
         // for UPO
-        $nuvei_helper           = new Nuvei_Helper($this->settings);
-//        $items_with_plan_data   = $nuvei_helper->check_for_product_with_plan();
-        $use_upos               = $save_pm 
-                                = (bool) $this->get_setting('use_upos');
+        $use_upos   = $save_pm 
+                    = (bool) $this->get_setting('use_upos');
         
         if(!is_user_logged_in()) {
             $use_upos = $save_pm = false;
         }
-//        elseif(!empty($items_with_plan_data['item_with_plan'])) {
-        elseif(!empty($this->products_data['subscr_data'])) {
+        elseif(!empty($subscr_data)) {
             $save_pm = 'always';
         }
         
@@ -709,18 +710,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		);
         
 		// check for product with a plan
-//		foreach ($cart_items as $values) {
-//			$product    = wc_get_product($values['data']->get_id());
-//			$attributes = $product->get_attributes();
-//			
-//			// if there is a plan, remove all APMs
-//			if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
-//				$checkout_data['pmWhitelist'] = ['cc_card'];
-//                unset($checkout_data['pmBlacklist']);
-//				break;
-//			}
-//		}
-		if (!empty($this->products_data['subscr_data'])) {
+		if (!empty($subscr_data)) {
             $checkout_data['pmWhitelist'] = ['cc_card'];
             unset($checkout_data['pmBlacklist']);
         }
