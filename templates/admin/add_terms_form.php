@@ -27,7 +27,7 @@
 		
 		<select name="planId" id="planId" required="" onchange="nuveiFillPlanData(this.value)">
 			<option value="">
-				<?php echo esc_html__('Select a Plan...', 'nuvei_checkout_woocommerce'); ?>
+				<?php echo esc_html__('Without Plan', 'nuvei_checkout_woocommerce'); ?>
 			</option>
 			
 			<?php 
