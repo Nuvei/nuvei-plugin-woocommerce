@@ -32,7 +32,13 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page']) 
 			? $this->settings['use_wpml_thanks_page'] : 'no';
 		
+        // products are supported by default
 		$this->supports[] = 'refunds'; // to enable auto refund support
+		$this->supports[] = 'subscriptions'; // to enable WC Subscriptions
+		$this->supports[] = 'subscription_cancellation'; // always
+		$this->supports[] = 'subscription_suspension'; // for not more than 400 days
+		$this->supports[] = 'subscription_reactivation'; // after not more than 400 days
+		$this->supports[] = 'subscription_amount_changes'; // always
 		
 		$this->msg['message'] = '';
 		$this->msg['class']   = '';
