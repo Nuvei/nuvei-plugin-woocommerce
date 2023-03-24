@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Plugin for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 1.3.0
+ * Version: 1.3.1
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
@@ -646,7 +646,7 @@ function nuvei_add_buttons($order)
 				$order_id
 			);
             
-            // check for acrive subscriptions
+            // check for active subscriptions
             $all_meta = get_post_meta($order->get_id());
             
             foreach ($all_meta as $meta_key => $meta_data) {
@@ -661,7 +661,7 @@ function nuvei_add_buttons($order)
                     }
                 }
             }
-            // /check for acrive subscriptions
+            // /check for active subscriptions
 			
 			echo
 				'<button id="sc_void_btn" type="button" onclick="nuveiAction(\''

@@ -659,14 +659,15 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         
         // for UPO
         $nuvei_helper           = new Nuvei_Helper($this->settings);
-        $items_with_plan_data   = $nuvei_helper->check_for_product_with_plan();
+//        $items_with_plan_data   = $nuvei_helper->check_for_product_with_plan();
         $use_upos               = $save_pm 
                                 = (bool) $this->get_setting('use_upos');
         
         if(!is_user_logged_in()) {
             $use_upos = $save_pm = false;
         }
-        elseif(!empty($items_with_plan_data['item_with_plan'])) {
+//        elseif(!empty($items_with_plan_data['item_with_plan'])) {
+        elseif(!empty($this->products_data['subscr_data'])) {
             $save_pm = 'always';
         }
         
@@ -702,17 +703,21 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		);
         
 		// check for product with a plan
-		foreach ($cart_items as $values) {
-			$product    = wc_get_product($values['data']->get_id());
-			$attributes = $product->get_attributes();
-			
-			// if there is a plan, remove all APMs
-			if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
-				$checkout_data['pmWhitelist'] = ['cc_card'];
-                unset($checkout_data['pmBlacklist']);
-				break;
-			}
-		}
+//		foreach ($cart_items as $values) {
+//			$product    = wc_get_product($values['data']->get_id());
+//			$attributes = $product->get_attributes();
+//			
+//			// if there is a plan, remove all APMs
+//			if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
+//				$checkout_data['pmWhitelist'] = ['cc_card'];
+//                unset($checkout_data['pmBlacklist']);
+//				break;
+//			}
+//		}
+		if (!empty($this->products_data['subscr_data'])) {
+            $checkout_data['pmWhitelist'] = ['cc_card'];
+            unset($checkout_data['pmBlacklist']);
+        }
 		// check for product with a plan END
 		
 		# blocked_cards
@@ -755,7 +760,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             wp_send_json($checkout_data);
 			exit;
         }
-        
+
 		wp_send_json(array(
 			'result'	=> 'failure', // this is just to stop WC send the form, and show APMs
 			'refresh'	=> false,

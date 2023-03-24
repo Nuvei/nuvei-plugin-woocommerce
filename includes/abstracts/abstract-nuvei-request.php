@@ -605,6 +605,10 @@ abstract class Nuvei_Request
 //                    'Iteam with attribute'
 //                );
                 
+                if (empty($term_meta['planId'][0])) {
+                    continue;
+                }
+                
                 // in this case we do not have variation_id, only product_id
                 $data['subscr_data']['product_' . $item['product_id']] = [
                     'planId'			=> $term_meta['planId'][0],
@@ -645,6 +649,10 @@ abstract class Nuvei_Request
 //                    'Iteam with variation'
 //                );
             
+            if (empty($term_meta['planId'][0])) {
+                continue;
+            }
+            
             $data['subscr_data']['variation_' . $item['variation_id']] = [
                 'planId'			=> $term_meta['planId'][0],
 				'recurringAmount'	=> number_format($term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', ''),
@@ -668,21 +676,21 @@ abstract class Nuvei_Request
 		return $data;
 	}
 	
-    protected function pass_user_token_id()
-    {
-        if($this->plugin_settings('use_upos') == 1) {
-            return true;
-        }
-        else {
-            $product_data = $this->get_products_data();
-            
-            if(!empty($product_data['subscr_data'])) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
+//    protected function pass_user_token_id()
+//    {
+//        if($this->plugin_settings('use_upos') == 1) {
+//            return true;
+//        }
+//        else {
+//            $product_data = $this->get_products_data();
+//            
+//            if(!empty($product_data['subscr_data'])) {
+//                return true;
+//            }
+//        }
+//        
+//        return false;
+//    }
     
     /**
      * A common function to set some data into the session.

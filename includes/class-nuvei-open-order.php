@@ -7,6 +7,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Open_Order extends Nuvei_Request
 {
+    private $products_data = [];
 	private $is_ajax;
 	
 	/**
@@ -37,29 +38,29 @@ class Nuvei_Open_Order extends Nuvei_Request
 		$cart                           = $woocommerce->cart;
 		$ajax_params                    = array();
         $nuvei_last_open_order_details  = WC()->session->get('nuvei_last_open_order_details');
-        $product_data                   = $this->get_products_data();
+        $this->products_data            = $this->get_products_data();
         
         // check if product is available when click on Pay button
-        if ($this->is_ajax 
-            && !empty($product_data['products_data']) 
-            && is_array($product_data['products_data'])
-        ) {
-            foreach ($product_data['products_data'] as $data) {
-                if (!$data['in_stock']) {
-                    Nuvei_Logger::write($data, 'An item is not available.');
-                    
-                    wp_send_json(array(
-                        'status'    => 0,
-                        'msg'       => __('An item is not available.')
-                    ));
-                    exit;
-                }
-            }
-        }
+//        if ($this->is_ajax 
+//            && !empty($this->products_data['products_data']) 
+//            && is_array($this->products_data['products_data'])
+//        ) {
+//            foreach ($this->products_data['products_data'] as $data) {
+//                if (!$data['in_stock']) {
+//                    Nuvei_Logger::write($data, 'An item is not available.');
+//                    
+//                    wp_send_json(array(
+//                        'status'    => 0,
+//                        'msg'       => __('An item is not available.')
+//                    ));
+//                    exit;
+//                }
+//            }
+//        }
         
 		# try to update Order
         if ( !( empty($nuvei_last_open_order_details['userTokenId'])
-            && !empty($product_data['subscr_data'])
+            && !empty($this->products_data['subscr_data'])
         ) ) {
             $uo_obj = new Nuvei_Update_Order($this->plugin_settings);
             $resp   = $uo_obj->process();
@@ -84,7 +85,7 @@ class Nuvei_Open_Order extends Nuvei_Request
         Nuvei_Logger::write(
             [
                 'userTokenId' => $nuvei_last_open_order_details['userTokenId'],
-                'subscr_data' => $product_data['subscr_data']
+                'subscr_data' => $this->products_data['subscr_data']
             ],
             'Skip updateOrder'
         );
@@ -119,7 +120,7 @@ class Nuvei_Open_Order extends Nuvei_Request
 		);
 		
         // add or not userTokenId
-		if (!empty($product_data['subscr_data'])
+		if (!empty($this->products_data['subscr_data'])
             || 1 == $this->plugin_settings['use_upos']
         ) {
 			$oo_params['userTokenId'] = $addresses['billingAddress']['email'];
@@ -157,7 +158,7 @@ class Nuvei_Open_Order extends Nuvei_Request
         $this->set_nuvei_session_data(
             $resp['sessionToken'],
             $nuvei_last_open_order_details,
-            $product_data
+            $this->products_data
         );
 		
 		Nuvei_Logger::write($cart->nuvei_last_open_order_details, 'nuvei_last_open_order_details');

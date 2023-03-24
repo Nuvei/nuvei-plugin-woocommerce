@@ -23,17 +23,17 @@
 	<th><?php echo esc_html__('Plan ID', 'nuvei_checkout_woocommerce'); ?></th>
 	<td>
 		<select name="planId" id="planId">
-			<?php 
-			if (!empty($plans_list)) : 
-				foreach ($plans_list as $plan) : 
-					?>
+            <option value=""  <?php echo esc_html( current($term_meta['planId']) == '' ? 'selected=' : '' ); ?>>
+				<?php echo esc_html__('Without Plan', 'nuvei_checkout_woocommerce'); ?>
+			</option>
+            
+			<?php if (!empty($plans_list)) : 
+				foreach ($plans_list as $plan) : ?>
 					<option value="<?php echo esc_attr($plan['planId']); ?>" <?php echo esc_html( current($term_meta['planId']) == $plan['planId'] ? 'selected=' : '' ); ?>>
 						<?php echo esc_html($plan['name']); ?>
 					</option>
-					<?php 
-				endforeach;
-			endif; 
-			?>
+                <?php endforeach;
+			endif; ?>
 		</select>
 	</td>
 </tr>
