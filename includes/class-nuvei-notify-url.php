@@ -743,7 +743,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 	 * @param int $order_id
 	 * @return int the order id
 	 */
-	private function create_refund_record( $order_id) {
+	private function create_refund_record( $order_id)
+    {
 		$refunds	= array();
 		$ref_amount = 0;
 		$tries		= 0;
@@ -751,6 +752,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		
 		// there is chance of slow saving of meta data (in create_refund_record()), so let's wait
 		do {
+            Nuvei_Logger::write('Check for Refund meta data.');
+            
             $this->is_order_valid($order_id);
 		
             if ( !in_array($this->sc_order->get_status(), array('completed', 'processing')) ) {
@@ -763,7 +766,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
             }
             
 			$refunds = json_decode($this->sc_order->get_meta(NUVEI_REFUNDS), true);
-			Nuvei_Logger::write('Wait for Refund meta data.');
 			
 			sleep(3);
 			$tries++;
