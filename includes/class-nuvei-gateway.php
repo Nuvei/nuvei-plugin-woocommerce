@@ -39,6 +39,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$this->supports[] = 'subscription_suspension'; // for not more than 400 days
 		$this->supports[] = 'subscription_reactivation'; // after not more than 400 days
 		$this->supports[] = 'subscription_amount_changes'; // always
+		$this->supports[] = 'subscription_date_changes'; // always
+		$this->supports[] = 'multiple_subscriptions'; // TODO - not sure what is this for
 		
 		$this->msg['message'] = '';
 		$this->msg['class']   = '';
@@ -662,7 +664,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         if (!empty($prod_details[$oo_data['sessionToken']]['subscr_data'])) {
             $subscr_data = $prod_details[$oo_data['sessionToken']]['subscr_data'];
         }
-			
+        
 		if (!empty($pm_black_list)) {
 			$pm_black_list = explode(',', $pm_black_list);
 		}
@@ -671,10 +673,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         $use_upos   = $save_pm 
                     = (bool) $this->get_setting('use_upos');
         
+        Nuvei_Logger::write($prod_details);
+        
         if(!is_user_logged_in()) {
             $use_upos = $save_pm = false;
         }
-        elseif(!empty($subscr_data)) {
+        elseif(!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
             $save_pm = 'always';
         }
         
@@ -710,10 +714,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		);
         
 		// check for product with a plan
-		if (!empty($subscr_data)) {
+		if (!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
             $checkout_data['pmWhitelist'] = ['cc_card'];
             unset($checkout_data['pmBlacklist']);
         }
+        
 		// check for product with a plan END
 		
 		# blocked_cards

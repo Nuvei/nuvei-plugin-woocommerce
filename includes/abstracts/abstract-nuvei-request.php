@@ -557,6 +557,7 @@ abstract class Nuvei_Request
 		
 		$items = $woocommerce->cart->get_cart();
 		$data  = array(
+			'wc_subscr'     => false,
 			'subscr_data'	=> [],
 			'products_data'	=> [],
 			'totals'        => $woocommerce->cart->get_totals(),
@@ -575,6 +576,11 @@ abstract class Nuvei_Request
 				'name'		=> $cart_product->get_title(),
 				'in_stock'  => $cart_product->is_in_stock(),
 			);
+            
+            if (false !== strpos($cart_product->get_type(), 'subscription')) {
+                $data['wc_subscr'] = true;
+                continue;
+            }
             
             if (empty($cart_prod_attr[$nuvei_taxonomy_name])) {
 				continue;
@@ -706,6 +712,7 @@ abstract class Nuvei_Request
             'nuvei_order_details',
             [
                 $session_token => [
+                    'wc_subscr'     => $product_data['wc_subscr'],
                     'subscr_data'   => $product_data['subscr_data'],
 //                    'products_data' => $product_data['products_data'],
                 ]
