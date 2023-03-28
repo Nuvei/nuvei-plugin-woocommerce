@@ -408,6 +408,15 @@ abstract class Nuvei_Request
 					'message' => 'To use Nuvei Payment gateway you must install CURL module!'
 				);
 			}
+            
+            Nuvei_Logger::write(
+                array(
+                    'Request URL'       => $url,
+                    'Request header'    => $header,
+                    'Request params'    => $all_params,
+                ),
+                'Nuvei Request data'
+            );
 			
 			// create cURL post
 			$ch = curl_init();
@@ -425,13 +434,10 @@ abstract class Nuvei_Request
             
             Nuvei_Logger::write(
                 array(
-                    'Request URL'       => $url,
-                    'Request header'    => $header,
-                    'Request params'    => $all_params,
-                    'Response'          => is_array($resp_array) ? $resp_array : $resp,
-                    'Response info'     => curl_getinfo($ch),
+                    'Response'      => is_array($resp_array) ? $resp_array : $resp,
+                    'Response info' => curl_getinfo($ch),
                 ),
-                'Nuvei Request/Response data'
+                'Nuvei Response data'
             );
             
 			curl_close($ch);
@@ -443,12 +449,9 @@ abstract class Nuvei_Request
 				);
 			}
 			
-			
-			// return base params to the sender
-			//          $resp_array['request_params'] = $all_params;
-			
 			return $resp_array;
-		} catch (Exception $e) {
+		}
+        catch (Exception $e) {
 			return array(
 				'status' => 'ERROR',
 				'message' => 'Exception ERROR when call REST API: ' . $e->getMessage()
