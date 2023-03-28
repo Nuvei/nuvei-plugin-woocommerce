@@ -285,7 +285,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 	 *
 	 * @return boolean
 	 */
-	private function validate_checksum() {
+	private function validate_checksum()
+    {
 		$advanceResponseChecksum = Nuvei_Http::get_param('advanceResponseChecksum');
 		$responsechecksum        = Nuvei_Http::get_param('responsechecksum');
 		
@@ -360,7 +361,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 	 * 
 	 * @return int
 	 */
-	private function get_order_by_trans_id( $trans_id, $transactionType = '') {
+	private function get_order_by_trans_id( $trans_id, $transactionType = '')
+    {
 		// try to get Order ID by its meta key
 		$tries				= 0;
 		$max_tries			= 10;
@@ -408,7 +410,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 	 * @param int $TransactionID
 	 * @return type
 	 */
-	private function get_order_data( $TransactionID) {
+	private function get_order_data( $TransactionID)
+    {
 		global $wpdb;
 		
 		$res = $wpdb->get_results(
@@ -746,28 +749,27 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		$tries		= 0;
 		$ref_tr_id	= Nuvei_Http::get_param('TransactionID', 'int');
 		
-		$this->is_order_valid($order_id);
-		
-		if ( !in_array($this->sc_order->get_status(), array('completed', 'processing')) ) {
-			Nuvei_Logger::write(
-				$this->sc_order->get_status(),
-				'DMN Refund Error - the Order status does not allow refunds, the status is:'
-			);
-
-			echo wp_json_encode(array('DMN Refund Error - the Order status does not allow refunds.'));
-			exit;
-		}
-		
 		// there is chance of slow saving of meta data (in create_refund_record()), so let's wait
 		do {
+            $this->is_order_valid($order_id);
+		
+            if ( !in_array($this->sc_order->get_status(), array('completed', 'processing')) ) {
+                Nuvei_Logger::write(
+                    $this->sc_order->get_status(),
+                    'DMN Refund Error - the Order status does not allow refunds, the status is:'
+                );
+
+                exit(wp_json_encode(array('DMN Refund Error - the Order status does not allow refunds.')));
+            }
+            
 			$refunds = json_decode($this->sc_order->get_meta(NUVEI_REFUNDS), true);
-			Nuvei_Logger::write('create_refund_record() Wait for Refund meta data.');
+			Nuvei_Logger::write('Wait for Refund meta data.');
 			
 			sleep(3);
 			$tries++;
 		} while (empty($refunds[$ref_tr_id]) && $tries < 5);
 		
-		Nuvei_Logger::write($refunds, 'create_refund_record() Saved refunds for Order #' . $order_id);
+		Nuvei_Logger::write($refunds, 'Saved refunds for Order #' . $order_id);
 		
 		// check for DMN trans ID in the refunds
 		if (!empty($refunds[$ref_tr_id])
@@ -775,14 +777,14 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			&& !empty($refunds[$ref_tr_id]['refund_amount'])
 		) {
 			$ref_amount = $refunds[$ref_tr_id]['refund_amount'];
-		} elseif (0 == $ref_amount && strpos(Nuvei_Http::get_param('clientRequestId'), 'gwp_') !== false) {
+		}
+        elseif (0 == $ref_amount && strpos(Nuvei_Http::get_param('clientRequestId'), 'gwp_') !== false) {
 			// in case of CPanel refund - add Refund meta data here
 			$ref_amount = Nuvei_Http::get_param('totalAmount', 'float');
 		}
 		
 		if (0 == $ref_amount) {
-			Nuvei_Logger::write('create_refund_record() Refund Amount is 0, do not create Refund in WooCommerce.');
-			
+			Nuvei_Logger::write('Refund Amount is 0, do not create Refund in WooCommerce.');
 			return;
 		}
 		
@@ -792,10 +794,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		));
 		
 		if (is_a($refund, 'WP_Error')) {
-			Nuvei_Logger::write($refund, 'create_refund_record() - the Refund process in WC returns error: ');
-			
-			echo wp_json_encode(array('create_refund_record() - the Refund process in WC returns error.'));
-			exit;
+			Nuvei_Logger::write($refund, 'The Refund process in WC returns error: ');
+			exit(wp_json_encode(array('The Refund process in WC returns error.')));
 		}
 		
 		$this->save_refund_meta_data(
@@ -805,7 +805,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			$refund->get_id()
 		);
 
-		return true;
+		return;
 	}
 	
 	private function sum_order_refunds() {
