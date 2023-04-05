@@ -98,19 +98,16 @@ abstract class Nuvei_Request
 			Nuvei_Logger::write('is_order_valid() Error - Provided Order ID is not a WC Order');
 			
 			if ($return) {
-//				return false;
 				return;
 			}
 			
-			echo wp_json_encode('is_order_valid() Error - Provided Order ID is not a WC Order');
-			exit;
+			exit(wp_json_encode('is_order_valid() Error - Provided Order ID is not a WC Order'));
 		}
 		
 		Nuvei_Logger::write('The Order is valid.');
 		
 		// in case of Subscription states DMNs - stop proccess here. We will save only a message to the Order.
 		if ('subscription' == Nuvei_Http::get_param('dmnType')) {
-//			return true;
 			return;
 		}
 		
@@ -125,12 +122,10 @@ abstract class Nuvei_Request
 			);
 			
 			if ($return) {
-//				return false;
 				return;
 			}
 			
-			echo wp_json_encode('DMN Error - the order does not belongs to Nuvei.');
-			exit;
+			exit(wp_json_encode('DMN Error - the order does not belongs to Nuvei.'));
 		}
 		
 		// can we override Order status (state)
@@ -140,30 +135,27 @@ abstract class Nuvei_Request
 			Nuvei_Logger::write($this->sc_order->get_payment_method(), 'DMN Error - can not override status of Voided/Refunded Order.');
 			
 			if ($return) {
-//				return false;
 				return;
 			}
 			
-			echo wp_json_encode('DMN Error - can not override status of Voided/Refunded Order.');
-			exit;
+			exit(wp_json_encode('DMN Error - can not override status of Voided/Refunded Order.'));
 		}
 		
 		if ('completed' == $ord_status
 			&& 'auth' == strtolower(Nuvei_Http::get_param('transactionType'))
 		) {
-			Nuvei_Logger::write($this->sc_order->get_payment_method(), 'DMN Error - can not override status Completed with Auth.');
+			Nuvei_Logger::write(
+                $this->sc_order->get_payment_method(),
+                'DMN Error - can not override status Completed with Auth.'
+            );
 			
 			if ($return) {
-//				return false;
 				return;
 			}
 			
-			echo wp_json_encode('DMN Error - can not override status Completed with Auth.');
-			exit;
+			exit(wp_json_encode('DMN Error - can not override status Completed with Auth.'));
 		}
 		// can we override Order status (state) END
-        
-//		return $this->sc_order;
 	}
 	
 	protected function save_refund_meta_data( $trans_id, $ref_amount, $status = '', $wc_id = 0)
@@ -408,6 +400,15 @@ abstract class Nuvei_Request
 					'message' => 'To use Nuvei Payment gateway you must install CURL module!'
 				);
 			}
+            
+            Nuvei_Logger::write(
+                array(
+                    'Request URL'       => $url,
+                    'Request header'    => $header,
+                    'Request params'    => $all_params,
+                ),
+                'Nuvei Request data'
+            );
 			
 			// create cURL post
 			$ch = curl_init();
@@ -425,13 +426,10 @@ abstract class Nuvei_Request
             
             Nuvei_Logger::write(
                 array(
-                    'Request URL'       => $url,
-                    'Request header'    => $header,
-                    'Request params'    => $all_params,
-                    'Response'          => is_array($resp_array) ? $resp_array : $resp,
-                    'Response info'     => curl_getinfo($ch),
+                    'Response'      => is_array($resp_array) ? $resp_array : $resp,
+                    'Response info' => curl_getinfo($ch),
                 ),
-                'Nuvei Request/Response data'
+                'Nuvei Response data'
             );
             
 			curl_close($ch);
@@ -443,12 +441,9 @@ abstract class Nuvei_Request
 				);
 			}
 			
-			
-			// return base params to the sender
-			//          $resp_array['request_params'] = $all_params;
-			
 			return $resp_array;
-		} catch (Exception $e) {
+		}
+        catch (Exception $e) {
 			return array(
 				'status' => 'ERROR',
 				'message' => 'Exception ERROR when call REST API: ' . $e->getMessage()
