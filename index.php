@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Plugin for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 1.3.1
+ * Version: 1.4.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
@@ -203,6 +203,13 @@ function nuvei_init()
         add_filter( 'woocommerce_cart_needs_payment', 'nuvei_wc_cart_needs_payment', 10, 2 );
         // show custom data into order details, product data
         add_action( 'woocommerce_after_order_itemmeta', 'nuvei_after_order_itemmeta', 10, 3 );
+        // listent for the WC Subscription Payment
+        add_action(
+            'woocommerce_scheduled_subscription_payment_' . NUVEI_GATEWAY_NAME,
+            [$wc_nuvei, 'create_wc_subscr_order'],
+            10,
+            2
+        );
 	}
 	
 	// change Thank-you page title and text
@@ -570,7 +577,7 @@ function nuvei_enqueue( $hook)
 function nuvei_add_buttons($order)
 {
     Nuvei_Logger::write('nuvei_add_buttons');
-    
+    echo '<pre style="text-align: left;">'.print_r(get_post_meta($order->get_id()), true) . '</pre>';
     // in case this is not Nuvei order
 	if (empty($order->get_payment_method())
 		|| !in_array($order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))

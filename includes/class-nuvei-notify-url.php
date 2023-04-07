@@ -173,6 +173,11 @@ class Nuvei_Notify_Url extends Nuvei_Request
                 Nuvei_Logger::write('Cashier Order');
                 $order_id = $merchant_unique_id;
             }
+            elseif ('renewal_order' == Nuvei_Http::get_param('customField4')
+                && !empty($client_request_id)
+            ) { // WCS renewal order
+                $order_id = current(explode('_', $client_request_id));
+            }
             elseif($TransactionID) { // SDK
                 Nuvei_Logger::write('SDK Order');
                 $order_id = $this->get_order_by_trans_id($TransactionID, $transactionType);
@@ -461,6 +466,16 @@ class Nuvei_Notify_Url extends Nuvei_Request
         if (!empty($tr_status)) {
 			$this->sc_order->update_meta_data(NUVEI_TRANS_STATUS, $tr_status);
 		}
+        
+        $is_wc_subscr   = $this->sc_order->get_meta(NUVEI_WC_SUBSCR);
+        $upo_id         = Nuvei_Http::get_param('userPaymentOptionId', 'int');
+        if ($is_wc_subscr && !empty($upo_id)) {
+            $this->sc_order->update_meta_data(NUVEI_UPO, $upo_id);
+        }
+        
+        if ('renewal_order' == Nuvei_Http::get_param('customField4')) {
+            $this->sc_order->update_meta_data(NUVEI_WC_RENEWAL, true);
+        }
 		
 		$this->sc_order->save();
 	}
@@ -476,6 +491,11 @@ class Nuvei_Notify_Url extends Nuvei_Request
 	private function subscription_start($transactionType, $order_id, $order_total = null)
     {
         Nuvei_Logger::write('Try to start subscription.');
+        
+        if ($this->sc_order->get_meta(NUVEI_WC_SUBSCR)) {
+            Nuvei_Logger::write('WC Subscription.');
+			return;
+        }
         
         if (!in_array($transactionType, array('Settle', 'Sale', 'Auth'))) {
             Nuvei_Logger::write(

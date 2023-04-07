@@ -5,9 +5,10 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Update Order request class.
  */
-class Nuvei_Update_Order extends Nuvei_Request {
-
-	public function __construct( array $plugin_settings) {
+class Nuvei_Update_Order extends Nuvei_Request
+{
+	public function __construct( array $plugin_settings)
+    {
 		parent::__construct($plugin_settings);
 	}
 	
@@ -17,7 +18,8 @@ class Nuvei_Update_Order extends Nuvei_Request {
 	 * @global Woocommerce $woocommerce
 	 * @return array
 	 */
-	public function process() {
+	public function process()
+    {
 		$nuvei_last_open_order_details = array();
 		
 		if (!empty(WC()->session)) {
@@ -70,6 +72,19 @@ class Nuvei_Update_Order extends Nuvei_Request {
 ////				'customField2' => json_encode($product_data['products_data']), // item details
 //			),
 		);
+        
+        // WC Subsc
+        if ($product_data['wc_subscr']) {
+            $oo_params['isRebilling'] = 0;
+            $oo_params['card']['threeD']['v2AdditionalParams'] = [ // some default params
+                'rebillFrequency'   => 30, // days
+                'rebillExpiry '     => date('Ymd', strtotime('+5 years')),
+            ];
+        }
+        else {
+            $oo_params['isRebilling']   = null;
+            $oo_params['card']          = null;
+        }
         
 //        Nuvei_Logger::write(strlen($params['merchantDetails']['customField1']), 'customField1 len');
         

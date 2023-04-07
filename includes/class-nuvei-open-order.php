@@ -120,14 +120,21 @@ class Nuvei_Open_Order extends Nuvei_Request
 		
         // add or not userTokenId
 		if (!empty($products_data['subscr_data'])
-            || !empty($products_data['wc_subscr'])
             || 1 == $this->plugin_settings['use_upos']
         ) {
 			$oo_params['userTokenId'] = $addresses['billingAddress']['email'];
-			$oo_params['isRebilling'] = 0;
-            // TODO - set other Initial rebilling parameters!
 		}
-		
+        
+        // WC Subsc
+        if ($products_data['wc_subscr']) {
+            $oo_params['userTokenId'] = $addresses['billingAddress']['email'];
+            $oo_params['isRebilling'] = 0;
+            $oo_params['card']['threeD']['v2AdditionalParams'] = [ // some default params
+                'rebillFrequency'   => 30, // days
+                'rebillExpiry '     => date('Ymd', strtotime('+5 years')),
+            ];
+        }
+        
 		$resp = $this->call_rest_api('openOrder', $oo_params);
 		
 		if (empty($resp['status'])

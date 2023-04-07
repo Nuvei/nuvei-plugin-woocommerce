@@ -14,6 +14,9 @@ const NUVEI_RESP_TRANS_TYPE     = '_transactionType';
 const NUVEI_PAYMENT_METHOD      = '_paymentMethod';
 const NUVEI_ORDER_HAS_REFUND    = '_scHasRefund';
 const NUVEI_REFUNDS             = '_sc_refunds';
+const NUVEI_UPO                 = 'transactionUpo';
+const NUVEI_WC_SUBSCR           = 'wcSubscription';
+const NUVEI_WC_RENEWAL          = 'wcsRenewal';
 /**
  * @deprecated since version 1.3.0
  */

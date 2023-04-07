@@ -10,7 +10,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	private $plugin_data  = array();
 	private $subscr_units = array('year', 'month', 'day');
 	
-	public function __construct() {
+	public function __construct()
+    {
 		# settings to get/save options
 		$this->id                 = NUVEI_GATEWAY_NAME;
 		$this->method_title       = __('Nuvei Checkout', 'nuvei_checkout_woocommerce' );
@@ -107,7 +108,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	public function generate_nuvei_multiselect_html( $key, $data)
     {
 		# prepare the list with Payment methods
-		$get_st_obj    = new Nuvei_Get_Session_Token($this->settings);
+		$get_st_obj    = new Nuvei_Session_Token($this->settings);
 		$resp          = $get_st_obj->process();
 		$session_token = !empty($resp['sessionToken']) ? $resp['sessionToken'] : '';
 		
@@ -271,24 +272,25 @@ class Nuvei_Gateway extends WC_Payment_Gateway
          // search for subscr data
         $nuvei_order_details = WC()->session->get('nuvei_order_details');
 
-        // save the Nuvei Subscr data to the order
-        if (!empty($nuvei_order_details[$nuvei_session_token]['subscr_data'])) {
-            foreach ($nuvei_order_details[$nuvei_session_token]['subscr_data'] as $item_prod => $data) {
-                $order->update_meta_data(
-                    NUVEI_ORDER_SUBSCR . '_' . $item_prod,
-                    $data
-                );
+        if (!empty($nuvei_order_details)) {
+            // save the Nuvei Subscr data to the order
+            if (!empty($nuvei_order_details[$nuvei_session_token]['subscr_data'])) {
+                foreach ($nuvei_order_details[$nuvei_session_token]['subscr_data'] as $item_prod => $data) {
+                    $order->update_meta_data(
+                        NUVEI_ORDER_SUBSCR . '_' . $item_prod,
+                        $data
+                    );
+                }
             }
             
-//            $order->update_meta_data(
-//                NUVEI_ORDER_SUBSCR,
-//                $nuvei_order_details[$nuvei_session_token]['subscr_data']
-//            );
-//            $order->save();
-
+            // mark order if there is WC Subsc
+            if (!empty($nuvei_order_details[$nuvei_session_token]['wc_subscr'])) {
+                $order->update_meta_data(NUVEI_WC_SUBSCR, true);
+            }
+            
             WC()->session->set('nuvei_order_details', []);
         }
-    
+        
         // Success
 		if (!empty($nuvei_transaction_id)) {
 			Nuvei_Logger::write('Process webSDK Order, transaction ID #' . $nuvei_transaction_id);
@@ -788,6 +790,70 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 
 		return $available_gateways;
 	}
+    
+    /**
+     * Call this function form a hook to process an WC Subscription Order.
+     * 
+     * @param float $amount_to_charge
+     * @param WC_Order $renewal_order The new Order.
+     * @param int $product_id
+     */
+    public function create_wc_subscr_order($amount_to_charge, $renewal_order)
+    {
+        $renewal_order_id   = $renewal_order->get_id();
+        $subscription       = wc_get_order($_REQUEST['post_ID']);
+        $parent_order_id    = $subscription->get_parent_id();
+        $parent_order       = wc_get_order($parent_order_id);
+        
+        Nuvei_Logger::write(
+            [
+                '$renewal_order_id' => $renewal_order_id,
+                '$parent_order_id'  => $parent_order_id,
+            ],
+            'create_wc_subscr_order'
+        );
+        
+        // get Session Token
+        $st_obj     = new Nuvei_Session_Token($this->settings);
+        $st_resp    = $st_obj->process();
+        
+        if (empty($st_resp['sessionToken'])) {
+            Nuvei_Logger::write('Error when try to get Session Token');
+            WC_Subscriptions_Manager::process_subscription_payment_failure_on_order($renewal_order);
+            return;
+        }
+        // /get Session Token
+        
+        $payment_obj    = new Nuvei_Payment($this->settings);
+        $params         = [
+            'sessionToken'          => $st_resp['sessionToken'],
+            'userTokenId'           => $renewal_order->get_meta('_billing_email'),
+            'clientRequestId'       => $renewal_order_id . '_' . $parent_order_id . '_' . uniqid(),
+            'currency'              => $renewal_order->get_currency(),
+            'amount'                => round($renewal_order->get_total(), 2),
+//            'transactionType'       => $renewal_order->get_meta(NUVEI_RESP_TRANS_TYPE),
+            'relatedTransactionId'  => $parent_order->get_meta(NUVEI_TRANS_ID),
+            'upoId'                 => $parent_order->get_meta(NUVEI_UPO),
+            'bCountry'              => $renewal_order->get_meta(_billing_country),
+            'bEmail'                => $renewal_order->get_meta(_billing_email),
+        ];
+        
+        Nuvei_Logger::write($params, '$params');
+        Nuvei_Logger::write(get_post_meta($renewal_order_id), '$renewal_order all meta');
+        
+        $resp           = $payment_obj->process($params);
+        
+        
+        
+        /**
+         * TODO - create the order
+         * 
+         * $result = result form some function;
+         * 
+         * if (is_wp_error($result)) { WC_Subscriptions_Manager::process_subscription_payment_failure_on_order( $order, $product_id ); }
+         * else WC_Subscriptions_Manager::process_subscription_payments_on_order( $order );
+         */
+    }
     
 	/**
 	 * Get a plugin setting by its key.

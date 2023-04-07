@@ -5,14 +5,16 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A class for Refund requests.
  */
-class Nuvei_Refund extends Nuvei_Request {
+class Nuvei_Refund extends Nuvei_Request
+{
 	/**
 	 * The main method.
 	 * 
 	 * @param array $data
 	 * @return array|false
 	 */
-	public function process() {
+	public function process()
+    {
 		$data = current(func_get_args());
 		
 		if (empty($data['order_id']) 
@@ -219,7 +221,8 @@ class Nuvei_Refund extends Nuvei_Request {
 		exit;
 	}
 
-	protected function get_checksum_params() {
+	protected function get_checksum_params()
+    {
 		return  array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'relatedTransactionId', 'url', 'timeStamp');
 	}
 }

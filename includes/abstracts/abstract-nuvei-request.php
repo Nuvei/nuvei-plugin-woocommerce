@@ -29,7 +29,7 @@ abstract class Nuvei_Request
 	 * 
 	 * @param array $plugin_settings
 	 */
-	public function __construct( array $plugin_settings)
+	public function __construct(array $plugin_settings)
     {
 		$time                  = gmdate('Ymdhis');
 		$this->plugin_settings = $plugin_settings;
@@ -367,7 +367,12 @@ abstract class Nuvei_Request
 			return $params;
 		}
 		
-		$all_params = array_merge($this->request_base_params, $params);
+		$all_params = array_merge_recursive($this->request_base_params, $params);
+        
+        // use incoming clientRequestId instead of auto generated one
+        if (!empty($params['clientRequestId'])) {
+            $all_params['clientRequestId'] = $params['clientRequestId'];
+        }
 		
 		// add the checksum
 		$checksum_keys = $this->get_checksum_params();
