@@ -577,7 +577,8 @@ function nuvei_enqueue( $hook)
 function nuvei_add_buttons($order)
 {
     Nuvei_Logger::write('nuvei_add_buttons');
-    echo '<pre style="text-align: left;">'.print_r(get_post_meta($order->get_id()), true) . '</pre>';
+    //echo '<pre style="text-align: left;">'.print_r(get_post_meta($order->get_id()), true) . '</pre>';
+    
     // in case this is not Nuvei order
 	if (empty($order->get_payment_method())
 		|| !in_array($order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))
