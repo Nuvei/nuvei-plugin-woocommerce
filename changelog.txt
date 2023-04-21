@@ -1,5 +1,8 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.4.0
+    * Add support for WC Subscriptions plugin.
+
 # 1.3.1
     * Added the possibility to create empty Payment Plan. The merchant must leave the Payment Plan field empty.
     * When create Nuvei Payment plan "Select a Plan..." option was renamed to "Without Plan".
