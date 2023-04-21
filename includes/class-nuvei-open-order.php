@@ -105,7 +105,7 @@ class Nuvei_Open_Order extends Nuvei_Request
                                         = $url_details['pendingUrl'] 
                                         = NUVEI_SDK_AUTOCLOSE_URL;
         }
-		
+        
 		$addresses = $this->get_order_addresses();
 		$oo_params = array(
 			'clientUniqueId'    => gmdate('YmdHis') . '_' . uniqid(),
@@ -114,7 +114,7 @@ class Nuvei_Open_Order extends Nuvei_Request
 			'shippingAddress'	=> $addresses['shippingAddress'],
 			'billingAddress'	=> $addresses['billingAddress'],
 			'userDetails'       => $addresses['billingAddress'],
-			'transactionType'   => $this->plugin_settings['payment_action'],
+			'transactionType'   => (float) $cart->total == 0 ? 'Auth' : $this->plugin_settings['payment_action'],
             'urlDetails'        => $url_details,
 		);
 		

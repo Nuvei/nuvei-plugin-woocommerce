@@ -55,6 +55,7 @@ class Nuvei_Update_Order extends Nuvei_Request
 			'orderId'			=> $nuvei_last_open_order_details['orderId'],
 			'currency'			=> get_woocommerce_currency(),
 			'amount'			=> $cart_amount,
+            'transactionType'   => (float) $cart->total == 0 ? 'Auth' : $this->plugin_settings['payment_action'],
 			'billingAddress'	=> $addresses['billingAddress'],
 			'userDetails'       => $addresses['billingAddress'],
 			'shippingAddress'	=> $addresses['shippingAddress'],
@@ -123,7 +124,8 @@ class Nuvei_Update_Order extends Nuvei_Request
 	 *
 	 * @return array
 	 */
-	protected function get_checksum_params() {
+	protected function get_checksum_params()
+    {
 		return array('merchantId', 'merchantSiteId', 'clientRequestId', 'amount', 'currency', 'timeStamp');
 	}
 }
