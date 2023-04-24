@@ -86,11 +86,6 @@ class Nuvei_Open_Order extends Nuvei_Request
             $try_update_order = false;
         }
         
-        Nuvei_Logger::write([
-            '$nuvei_last_open_order_details'    => $nuvei_last_open_order_details,
-            '$try_update_order'                 => $try_update_order,
-        ]);
-        
         if ($try_update_order) {
             $uo_obj = new Nuvei_Update_Order($this->plugin_settings);
             $resp   = $uo_obj->process();
