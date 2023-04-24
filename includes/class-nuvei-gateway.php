@@ -813,6 +813,18 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             'create_wc_subscr_order'
         );
         
+        if (empty($parent_order->get_meta(NUVEI_TRANS_ID))
+            || empty($parent_order->get_meta(NUVEI_UPO))
+        ) {
+            Nuvei_Logger::write(
+                get_post_meta($parent_order_id),
+                'Error - missing mandatory Parent order data.'
+            );
+            
+            WC_Subscriptions_Manager::process_subscription_payment_failure_on_order($renewal_order);
+            return;
+        }
+        
         // get Session Token
         $st_obj     = new Nuvei_Session_Token($this->settings);
         $st_resp    = $st_obj->process();
@@ -831,28 +843,21 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             'clientRequestId'       => $renewal_order_id . '_' . $parent_order_id . '_' . uniqid(),
             'currency'              => $renewal_order->get_currency(),
             'amount'                => round($renewal_order->get_total(), 2),
-//            'transactionType'       => $renewal_order->get_meta(NUVEI_RESP_TRANS_TYPE),
             'relatedTransactionId'  => $parent_order->get_meta(NUVEI_TRANS_ID),
             'upoId'                 => $parent_order->get_meta(NUVEI_UPO),
             'bCountry'              => $renewal_order->get_meta(_billing_country),
             'bEmail'                => $renewal_order->get_meta(_billing_email),
         ];
         
-        Nuvei_Logger::write($params, '$params');
-        Nuvei_Logger::write(get_post_meta($renewal_order_id), '$renewal_order all meta');
+//        Nuvei_Logger::write($params, '$params');
+//        Nuvei_Logger::write(get_post_meta($renewal_order_id), '$renewal_order all meta');
         
-        $resp           = $payment_obj->process($params);
+        $resp = $payment_obj->process($params);
         
-        
-        
-        /**
-         * TODO - create the order
-         * 
-         * $result = result form some function;
-         * 
-         * if (is_wp_error($result)) { WC_Subscriptions_Manager::process_subscription_payment_failure_on_order( $order, $product_id ); }
-         * else WC_Subscriptions_Manager::process_subscription_payments_on_order( $order );
-         */
+        if (empty($resp['status']) || 'success' != strtolower($resp['status'])) {
+            Nuvei_Logger::write('Error when try to get Session Token');
+            WC_Subscriptions_Manager::process_subscription_payment_failure_on_order($renewal_order);
+        }
     }
     
 	/**

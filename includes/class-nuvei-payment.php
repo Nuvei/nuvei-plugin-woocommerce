@@ -15,11 +15,11 @@ class Nuvei_Payment extends Nuvei_Request
          * expected keys: sessionToken, userTokenId, clientRequestId, currency,
          *      amount, transactionType, relatedTransactionId, upoId, bCountry, bEmail
          */
-        $data       = current(func_get_args());
+        $data   = current(func_get_args());
         
         Nuvei_Logger::write($data, 'Nuvei_Payment process');
         
-        $params     = [
+        $params = [
             'sessionToken'          => @$data['sessionToken'],
             'userTokenId'           => @$data['userTokenId'],
             'clientRequestId'       => @$data['clientRequestId'],
