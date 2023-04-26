@@ -194,6 +194,11 @@ function nuvei_init()
 		) {
 			add_filter('woocommerce_get_checkout_order_received_url', 'nuvei_wpml_thank_you_page', 10, 2);
 		}
+        
+        // hide Pay button from the thank-you page when WCS is active
+        if (is_plugin_active('woocommerce-subscriptions' . DIRECTORY_SEPARATOR . 'woocommerce-subscriptions.php')) {
+            add_action('woocommerce_thankyou', 'nuvei_wcs_mod_thank_you_page', 100, 1);
+        }
 
 		// For the custom column in the Order list
 		add_action( 'manage_shop_order_posts_custom_column', 'nuvei_fill_custom_column' );
@@ -254,7 +259,7 @@ function nuvei_init()
 			}, 10, 2);
 		}
 	}
-	// change Thank-you page title and text ENDs
+	// /change Thank-you page title and text
 	
 	add_filter('woocommerce_pay_order_after_submit', 'nuvei_user_orders', 10, 2);
 	
@@ -709,8 +714,7 @@ function nuvei_add_buttons($order)
  * @global WC_SC $wc_nuvei
  */
 function nuvei_rewrite_return_url() {
-	if (
-		isset($_REQUEST['ppp_status']) && '' != $_REQUEST['ppp_status']
+	if (isset($_REQUEST['ppp_status']) && '' != $_REQUEST['ppp_status']
 		&& ( !isset($_REQUEST['wc_sc_redirected']) || 0 ==  $_REQUEST['wc_sc_redirected'] )
 	) {
 		$query_string = '';
@@ -766,6 +770,10 @@ function nuvei_wpml_thank_you_page( $order_received_url, $order)
 	return $order_received_url;
 }
 
+function nuvei_wcs_mod_thank_you_page($order_id) {
+    echo '<script>jQuery("a.pay").hide();</script>';
+}
+
 function nuvei_edit_order_buttons()
 {
 	$default_text          = __('Place order', 'woocommerce');
@@ -790,8 +798,7 @@ function nuvei_edit_order_buttons()
 }
 
 function nuvei_change_title_order_received( $title, $id) {
-	if (
-		function_exists('is_order_received_page')
+	if (function_exists('is_order_received_page')
 		&& is_order_received_page()
 		&& get_the_ID() === $id
 	) {
