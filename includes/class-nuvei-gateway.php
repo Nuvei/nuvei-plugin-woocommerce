@@ -836,17 +836,18 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         }
         // /get Session Token
         
+        $billing_mail   = $renewal_order->get_meta('_billing_email');
         $payment_obj    = new Nuvei_Payment($this->settings);
         $params         = [
             'sessionToken'          => $st_resp['sessionToken'],
-            'userTokenId'           => $renewal_order->get_meta('_billing_email'),
+            'userTokenId'           => $billing_mail,
             'clientRequestId'       => $renewal_order_id . '_' . $parent_order_id . '_' . uniqid(),
             'currency'              => $renewal_order->get_currency(),
             'amount'                => round($renewal_order->get_total(), 2),
             'relatedTransactionId'  => $parent_order->get_meta(NUVEI_TRANS_ID),
             'upoId'                 => $parent_order->get_meta(NUVEI_UPO),
-            'bCountry'              => $renewal_order->get_meta(_billing_country),
-            'bEmail'                => $renewal_order->get_meta(_billing_email),
+            'bCountry'              => $renewal_order->get_meta('_billing_country'),
+            'bEmail'                => $billing_mail,
         ];
         
 //        Nuvei_Logger::write($params, '$params');
