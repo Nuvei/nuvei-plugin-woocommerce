@@ -821,7 +821,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
                 'Error - missing mandatory Parent order data.'
             );
             
-            WC_Subscriptions_Manager::process_subscription_payment_failure_on_order($renewal_order);
+            WC_Subscriptions_Manager::process_subscription_payment_failure_on_order($parent_order);
             return;
         }
         
@@ -831,7 +831,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         
         if (empty($st_resp['sessionToken'])) {
             Nuvei_Logger::write('Error when try to get Session Token');
-            WC_Subscriptions_Manager::process_subscription_payment_failure_on_order($renewal_order);
+            WC_Subscriptions_Manager::process_subscription_payment_failure_on_order($parent_order);
             return;
         }
         // /get Session Token
@@ -857,7 +857,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         
         if (empty($resp['status']) || 'success' != strtolower($resp['status'])) {
             Nuvei_Logger::write('Error when try to get Session Token');
-            WC_Subscriptions_Manager::process_subscription_payment_failure_on_order($renewal_order);
+            WC_Subscriptions_Manager::process_subscription_payment_failure_on_order($parent_order);
         }
     }
     
