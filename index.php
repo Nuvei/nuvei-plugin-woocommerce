@@ -3,15 +3,15 @@
  * Plugin Name: Nuvei Plugin for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 1.3.1
+ * Version: 1.3.2
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.1.1
+ * Tested up to: 6.2
  * WC requires at least: 3.0
- * WC tested up to: 7.4.1
+ * WC tested up to: 7.6.0
 */
 
 defined('ABSPATH') || die('die');
@@ -750,6 +750,10 @@ function nuvei_rewrite_return_url() {
  */
 function nuvei_wpml_thank_you_page( $order_received_url, $order)
 {
+    if ($order->get_payment_method() != NUVEI_GATEWAY_NAME) {
+        return;
+    }
+    
 	$lang_code          = get_post_meta($order->id, 'wpml_language', true);
 	$order_received_url = apply_filters('wpml_permalink', $order_received_url, $lang_code);
 	
