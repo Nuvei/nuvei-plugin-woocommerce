@@ -801,7 +801,24 @@ class Nuvei_Gateway extends WC_Payment_Gateway
     public function create_wc_subscr_order($amount_to_charge, $renewal_order)
     {
         $renewal_order_id   = $renewal_order->get_id();
-        $subscription       = wc_get_order($_REQUEST['post_ID']);
+//        $subscription       = wc_get_order($_REQUEST['post_ID']);
+        $subscription       = wc_get_order($renewal_order->get_meta('_subscription_renewal'));
+        
+        if (!is_object($subscription)) {
+            Nuvei_Logger::write(
+                [
+                    '$amount_to_charge' => $amount_to_charge,
+                    '$renewal_order' => (array) $renewal_order,
+                    '$_REQUEST' => $_REQUEST,
+                    '$subscription' => $subscription, 
+                    '$renewal_order_id' => $renewal_order_id, 
+                    'get_post_meta' => get_post_meta($renewal_order_id)
+                ],
+                'Error, the Subscription is not an object.'
+            );
+            return;
+        }
+        
         $parent_order_id    = $subscription->get_parent_id();
         $parent_order       = wc_get_order($parent_order_id);
         
