@@ -15,32 +15,35 @@ class Nuvei_Payment extends Nuvei_Request
          * expected keys: sessionToken, userTokenId, clientRequestId, currency,
          *      amount, transactionType, relatedTransactionId, upoId, bCountry, bEmail
          */
-        $data   = current(func_get_args());
+        $data = current(func_get_args());
         
         Nuvei_Logger::write($data, 'Nuvei_Payment process');
         
-        $params = [
-            'sessionToken'          => @$data['sessionToken'],
-            'userTokenId'           => @$data['userTokenId'],
-            'clientRequestId'       => @$data['clientRequestId'],
-            'currency'              => @$data['currency'],
-            'amount'                => @$data['amount'],
-//            'transactionType'       => @$data['transactionType'],
-            'transactionType'       => 'Sale',
-            'isRebilling'           => 1,
-            'relatedTransactionId'  => @$data['relatedTransactionId'],
-            'paymentOption'         => [
-                'userPaymentOptionId'   => @$data['upoId']
+        $params = array_merge(
+            [
+                'sessionToken'          => @$data['sessionToken'],
+                'userTokenId'           => @$data['userTokenId'],
+                'clientRequestId'       => @$data['clientRequestId'],
+                'currency'              => @$data['currency'],
+                'amount'                => @$data['amount'],
+    //            'transactionType'       => @$data['transactionType'],
+                'transactionType'       => 'Sale',
+    //            'isRebilling'           => 1,
+    //            'relatedTransactionId'  => @$data['relatedTransactionId'],
+    //            'paymentOption'         => [
+    //                'userPaymentOptionId'   => @$data['upoId']
+    //            ],
+    //            'billingAddress'        => [
+    //                'country'   => @$data['bCountry'],
+    //                'email'     => @$data['bEmail'],
+    //            ],
+                'urlDetails'            => ['notificationUrl' => Nuvei_String::get_notify_url($this->plugin_settings)],
+                'merchantDetails'	=> array(
+                    'customField4'      => 'renewal_order'
+                ),
             ],
-            'billingAddress'        => [
-                'country'   => @$data['bCountry'],
-                'email'     => @$data['bEmail'],
-            ],
-            'urlDetails'            => ['notificationUrl' => Nuvei_String::get_notify_url($this->plugin_settings)],
-            'merchantDetails'	=> array(
-				'customField4'      => 'renewal_order'
-			),
-        ];
+            $data
+        );
         
         return $this->call_rest_api('payment', $params);
     }

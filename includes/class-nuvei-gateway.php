@@ -723,11 +723,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         
 		// check for product with a plan
 		if (!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
-            $checkout_data['pmWhitelist'] = ['cc_card'];
+            $checkout_data['pmWhitelist']               = ['cc_card', 'apmgw_expresscheckout'];
+            $checkout_data['showUserPaymentOptions']    = false;
+            
             unset($checkout_data['pmBlacklist']);
         }
-        
-		// check for product with a plan END
 		
 		# blocked_cards
 		$blocked_cards     = [];
@@ -788,7 +788,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             
 //            if($items_info['item_with_plan']
             if (!empty($items_info['subscr_data'])
-                && ! empty( $available_gateways[ NUVEI_GATEWAY_NAME ] )
+                && !empty( $available_gateways[ NUVEI_GATEWAY_NAME ] )
             ) {
                 $filtred_gws[ NUVEI_GATEWAY_NAME ] = $available_gateways[ NUVEI_GATEWAY_NAME ];
                 return $filtred_gws;
@@ -868,14 +868,35 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             'clientRequestId'       => $renewal_order_id . '_' . $parent_order_id . '_' . uniqid(),
             'currency'              => $renewal_order->get_currency(),
             'amount'                => round($renewal_order->get_total(), 2),
-            'relatedTransactionId'  => $parent_order->get_meta(NUVEI_TRANS_ID),
-            'upoId'                 => $parent_order->get_meta(NUVEI_UPO),
-            'bCountry'              => $renewal_order->get_meta('_billing_country'),
-            'bEmail'                => $billing_mail,
+//            'relatedTransactionId'  => $parent_order->get_meta(NUVEI_TRANS_ID),
+//            'upoId'                 => $parent_order->get_meta(NUVEI_UPO),
+//            'bCountry'              => $renewal_order->get_meta('_billing_country'),
+//            'bEmail'                => $billing_mail,
+            'billingAddress'        => [
+                'country'   => $renewal_order->get_meta('_billing_country'),
+                'email'     => $billing_mail,
+            ],
+            'paymentOption'         => ['userPaymentOptionId'   => $parent_order->get_meta(NUVEI_UPO)],
         ];
         
+        $parent_payment_method = $parent_order->get_meta(NUVEI_PAYMENT_METHOD);
+        
+        Nuvei_Logger::write(get_post_meta($parent_order_id), '$parent_order all meta');
+        
+        if ('cc_card' == $parent_payment_method) {
+            $params['isRebilling']          = 1;
+            $params['relatedTransactionId'] = $parent_order->get_meta(NUVEI_TRANS_ID);
+//            $params['upoId']                = $parent_order->get_meta(NUVEI_UPO);
+        }
+        
+        if ('apmgw_expresscheckout' == $parent_payment_method) {
+            Nuvei_Logger::write('PayPal rebilling');
+            
+            $params['clientUniqueId']               = $renewal_order_id;
+            $params['paymentOption']['subMethod']   = ['subMethod' => 'ReferenceTransaction'];
+        }
+        
 //        Nuvei_Logger::write($params, '$params');
-//        Nuvei_Logger::write(get_post_meta($renewal_order_id), '$renewal_order all meta');
         
         $resp = $payment_obj->process($params);
         
