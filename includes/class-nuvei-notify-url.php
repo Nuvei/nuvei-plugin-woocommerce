@@ -29,6 +29,9 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			exit;
         }
         
+        // just give few seconds to WC to finish the process generating the DMN
+        sleep(3);
+        
         if (!$this->validate_checksum()) {
 			echo wp_json_encode('DMN Error - Checksum validation problem!');
 			exit;

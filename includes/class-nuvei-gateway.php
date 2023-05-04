@@ -275,11 +275,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         if (!empty($nuvei_order_details)) {
             // save the Nuvei Subscr data to the order
             if (!empty($nuvei_order_details[$nuvei_session_token]['subscr_data'])) {
-                foreach ($nuvei_order_details[$nuvei_session_token]['subscr_data'] as $item_prod => $data) {
-                    $order->update_meta_data(
-                        NUVEI_ORDER_SUBSCR . '_' . $item_prod,
-                        $data
-                    );
+//                foreach ($nuvei_order_details[$nuvei_session_token]['subscr_data'] as $item_prod => $data) {
+                foreach ($nuvei_order_details[$nuvei_session_token]['subscr_data'] as $data) {
+                    // set meta key
+                    if (isset($data['product_id'])) {
+                        $meta_key = NUVEI_ORDER_SUBSCR . '_product_' . $data['product_id'];
+                    }
+                    if (isset($data['variation_id'])) {
+                        $meta_key = NUVEI_ORDER_SUBSCR . '_variation_' . $data['variation_id'];
+                    }
+                    
+                    $order->update_meta_data($meta_key, $data);
                 }
             }
             
@@ -778,9 +784,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway
     {
 		if ( is_checkout() && ! is_wc_endpoint_url() ) {
             $nuvei_helper   = new Nuvei_Helper($this->settings);
-            $items_info     = $nuvei_helper->check_for_product_with_plan();
+            $items_info     = $nuvei_helper->get_products();
             
-            if($items_info['item_with_plan']
+//            if($items_info['item_with_plan']
+            if (!empty($items_info['subscr_data'])
                 && ! empty( $available_gateways[ NUVEI_GATEWAY_NAME ] )
             ) {
                 $filtred_gws[ NUVEI_GATEWAY_NAME ] = $available_gateways[ NUVEI_GATEWAY_NAME ];

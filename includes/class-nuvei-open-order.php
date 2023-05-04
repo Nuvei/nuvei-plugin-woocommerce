@@ -111,7 +111,7 @@ class Nuvei_Open_Order extends Nuvei_Request
         Nuvei_Logger::write(
             [
                 'userTokenId' => $nuvei_last_open_order_details['userTokenId'],
-                'subscr_data' => $products_data['subscr_data']
+//                'subscr_data' => $products_data['subscr_data']
             ],
             'Skip updateOrder'
         );
