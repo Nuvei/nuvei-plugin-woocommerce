@@ -158,7 +158,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	}
 
 	// Generate the HTML For the settings form.
-	public function admin_options() {
+	public function admin_options()
+    {
 		require_once dirname(NUVEI_PLUGIN_FILE) . '/templates/admin/settings.php';
 	}
 
@@ -645,17 +646,23 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	public function call_checkout($is_ajax = false)
     {
 		global $woocommerce;
-		
+        
 		# OpenOrder
 		$oo_obj  = new Nuvei_Open_Order($this->settings);
 		$oo_data = $oo_obj->process();
 		
 		if (!$oo_data || empty($oo_data['sessionToken'])) {
-			wp_send_json(array(
+            $msg = __('Unexpected error, please try again later!', 'nuvei_checkout_woocommerce');
+            
+            if (!empty($oo_data['custom_msg'])) {
+                $msg = $oo_data['custom_msg'];
+            }
+			
+            wp_send_json(array(
 				'result'	=> 'failure',
 				'refresh'	=> false,
 				'reload'	=> false,
-				'messages'	=> '<ul id="sc_fake_error" class="woocommerce-error" role="alert"><li>' . __('Unexpected error, please try again later!', 'nuvei_checkout_woocommerce') . '</li></ul>'
+				'messages'	=> '<ul id="sc_fake_error" class="woocommerce-error" role="alert"><li>' . $msg . '</li></ul>'
 			));
 
 			exit;
@@ -723,8 +730,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         
 		// check for product with a plan
 		if (!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
-            $checkout_data['pmWhitelist']               = ['cc_card', 'apmgw_expresscheckout'];
-            $checkout_data['showUserPaymentOptions']    = false;
+            $checkout_data['pmWhitelist'] = ['cc_card'];
+            
+            if (1 == $this->get_setting('allow_paypal_rebilling', 0)) {
+                $checkout_data['pmWhitelist'][]             = 'apmgw_expresscheckout';
+                $checkout_data['showUserPaymentOptions']    = false;
+            }
             
             unset($checkout_data['pmBlacklist']);
         }
@@ -1139,6 +1150,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'label' => __('Create and save daily log files. This can help for debugging and catching bugs.', 'nuvei_checkout_woocommerce'),
 				'default' => 'yes'
 			),
+			'disable_wcs_alert' => array(
+				'title' => __('Hide WCS warining', 'nuvei_checkout_woocommerce'),
+				'type' => 'checkbox',
+				'label' => __('Check it to hide WCS waringn permanent.', 'nuvei_checkout_woocommerce'),
+				'default' => 'no'
+			),
 		);
 	}
 	
@@ -1182,6 +1199,27 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'default'       => 'prod',
 				'class'         => 'nuvei_checkout_setting'
             ],
+            'use_upos' => array(
+				'title'         => __('Allow client to use UPOs', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+				'options'       => array(
+					0 => 'No',
+					1 => 'Yes',
+				),
+				'default'       => 0,
+				'class'         => 'nuvei_checkout_setting',
+			),
+            'allow_paypal_rebilling' => array(
+				'title'         => __('Allow rebilling with PayPal', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+				'options'       => array(
+					0 => 'No',
+					1 => 'Yes',
+				),
+				'default'       => 0,
+				'class'         => 'nuvei_checkout_setting',
+                'description'   => __('Using PayPal for rebilling will disable the UPOs.', 'nuvei_checkout_woocommerce'),
+			),
 			'use_dcc' => array(
 				'title'         => __('Use currency conversion', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
@@ -1210,16 +1248,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			),
 			'pm_black_list' => array(
 				'type' => 'nuvei_multiselect',
-			),
-			'use_upos' => array(
-				'title'         => __('Allow client to use UPOs', 'nuvei_checkout_woocommerce'),
-				'type'          => 'select',
-				'options'       => array(
-					0 => 'No',
-					1 => 'Yes',
-				),
-				'default'       => 0,
-				'class'         => 'nuvei_checkout_setting',
 			),
 			'pay_button' => array(
 				'title'         => __('Choose the Text on the Pay button', 'nuvei_checkout_woocommerce'),

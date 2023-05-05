@@ -41,6 +41,18 @@ class Nuvei_Open_Order extends Nuvei_Request
         $cart_total                     = (float) $cart->total;
         $try_update_order               = false;
         
+        // do not allow WCS and Nuvei Subscription in same Order
+        if (!empty($products_data['subscr_data']) && $products_data['wc_subscr']) {
+            $msg = 'It is not allowed to put product with WCS and product witn Nuvei Subscription in same Order! Please, contact the site administrator for this problem!';
+
+            Nuvei_Logger::write($msg);
+            
+            return array(
+				'status'    => 0,
+                'custom_msg'       => __($msg, 'nuvei_checkout_woocommerce'),
+			);
+        }
+        
         // check if product is available when click on Pay button
 //        if ($this->is_ajax 
 //            && !empty($products_data['products_data']) 

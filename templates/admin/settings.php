@@ -8,7 +8,15 @@
     ?>
 </h2>
 
-<p><?php esc_html__('Please check and fill the settings of the plugin.', 'nuvei_checkout_woocommerce'); ?></p>
+<p><?php echo esc_html__('Please check and fill the settings of the plugin.', 'nuvei_checkout_woocommerce'); ?></p>
+
+<?php if (is_plugin_active('woocommerce-subscriptions' . DIRECTORY_SEPARATOR . 'woocommerce-subscriptions.php')
+    && 'no' == $this->get_setting('disable_wcs_alert', 'no')
+): ?>
+    <div class="error notice">
+        <p><?php echo esc_html__('Looks like WCS plugin is activated. Please, do NOT USE products with WC Subscription and products with Nuvei Subscription in same site!!!', 'nuvei_checkout_woocommerce'); ?></p>
+    </div>
+<?php endif; ?>
 
 <nav class="nav-tab-wrapper woo-nav-tab-wrapper">
 	<a href="#nuvei_base_settings" class="nuvei_settings_tabs nav-tab" id="nuvei_base_settings_tab">

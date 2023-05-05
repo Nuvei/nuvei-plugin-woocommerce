@@ -788,7 +788,7 @@ function nuvei_mod_thank_you_page($order_id)
     elseif ('canceled' == $request_status) {
         $new_title  = esc_html__('Order canceled', 'nuvei_checkout_woocommerce');
     }
-    var_dump($new_title);
+    
     if (!empty($new_title)) {
         $output .= 'jQuery(".entry-title").html("'. $new_title .'");'
             . 'jQuery(".woocommerce-thankyou-order-received").html("'. $new_msg .'");';
