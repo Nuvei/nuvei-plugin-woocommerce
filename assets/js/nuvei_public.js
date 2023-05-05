@@ -157,6 +157,9 @@ function nuveiPrePayment(paymentDetails) {
                 if (resp.hasOwnProperty('msg')) {
                     errorMsg = resp.msg;
                 }
+                if (resp.hasOwnProperty('data') && typeof resp.data == 'string') {
+                    errorMsg = resp.data;
+                }
 
                 reject();
                 nuveiShowErrorMsg(errorMsg);

@@ -283,13 +283,13 @@ function nuvei_init()
  */
 function nuvei_ajax_action()
 {
-	if (!check_ajax_referer('sc-security-nonce', 'security')) {
+	if (!check_ajax_referer('sc-security-nonce', 'security', false)) {
 		wp_send_json_error(__('Invalid security token sent.'));
 		wp_die('Invalid security token sent');
 	}
 	
 	global $wc_nuvei;
-	
+	wp_die('test2');
 	if (empty($wc_nuvei->settings['test'])) {
 		wp_send_json_error(__('Invalid site mode.'));
 		wp_die('Invalid site mode.');
