@@ -210,7 +210,7 @@ class Nuvei_Open_Order extends Nuvei_Request
             $products_data
         );
 		
-		Nuvei_Logger::write($cart->nuvei_last_open_order_details, 'nuvei_last_open_order_details');
+		Nuvei_Logger::write($nuvei_last_open_order_details, 'saved nuvei_last_open_order_details');
 		
 		if ($this->is_ajax) {
 			wp_send_json(array(

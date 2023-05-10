@@ -11,7 +11,7 @@
  * Require at least: 4.7
  * Tested up to: 6.2
  * WC requires at least: 3.0
- * WC tested up to: 7.6.1
+ * WC tested up to: 7.7.0
 */
 
 defined('ABSPATH') || die('die');
@@ -289,7 +289,7 @@ function nuvei_ajax_action()
 	}
 	
 	global $wc_nuvei;
-	wp_die('test2');
+	
 	if (empty($wc_nuvei->settings['test'])) {
 		wp_send_json_error(__('Invalid site mode.'));
 		wp_die('Invalid site mode.');
@@ -638,6 +638,7 @@ function nuvei_add_buttons($order)
 	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
 		// Show VOID button
 		if (in_array($order_payment_method, NUVEI_APMS_REFUND_VOID)
+            && !empty($order->get_meta(NUVEI_AUTH_CODE_KEY))
             && !$refunds_exists
             && 0 < (float) $order->get_total()
             && time() < $order_time + 172800 // 48 hours

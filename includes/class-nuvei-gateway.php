@@ -361,7 +361,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * @param int $order_id
 	 * @return void
 	 */
-	public function restock_on_refunded_status( $order_id) {
+	public function restock_on_refunded_status( $order_id)
+    {
 		$order            = wc_get_order($order_id);
 		$items            = $order->get_items();
 		$is_order_restock = $order->get_meta('_scIsRestock');

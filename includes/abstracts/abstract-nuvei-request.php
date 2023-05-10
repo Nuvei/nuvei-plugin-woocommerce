@@ -346,7 +346,7 @@ abstract class Nuvei_Request
 		
 		// add the checksum
 		$checksum_keys = $this->get_checksum_params();
-		
+        
 		if (is_array($checksum_keys)) {
 			foreach ($checksum_keys as $key) {
 				if (isset($all_params[$key])) {
