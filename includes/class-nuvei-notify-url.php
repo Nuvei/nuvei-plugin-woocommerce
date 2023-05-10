@@ -513,6 +513,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
             return;
         }
         
+        // The meta key for the Subscription is dynamic.
         $order_all_meta = get_post_meta($order_id);
         
         foreach ($order_all_meta as $key => $data) {
@@ -529,11 +530,13 @@ class Nuvei_Notify_Url extends Nuvei_Request
             
             Nuvei_Logger::write([$key, $subs_data]);
             
-            $prod_plan                      = $subs_data;
-            $prod_plan['clientRequestId']   = $order_id . $key;
+//            $prod_plan                      = $subs_data;
+//            $prod_plan['clientRequestId']   = $order_id . $key;
+            $subs_data['clientRequestId']   = $order_id . $key;
             
             $ns_obj = new Nuvei_Subscription($this->plugin_settings);
-            $resp   = $ns_obj->process($prod_plan);
+//            $resp   = $ns_obj->process($prod_plan);
+            $resp   = $ns_obj->process($subs_data);
 
             // On Error
             if (!$resp || !is_array($resp) || empty($resp['status']) || 'SUCCESS' != $resp['status']) {
@@ -542,21 +545,19 @@ class Nuvei_Notify_Url extends Nuvei_Request
                 if (!empty($resp['reason'])) {
                     $msg .= '<br/>' . __('Reason: ', 'nuvei_checkout_woocommerce') . $resp['reason'];
                 }
-
-                $this->sc_order->add_order_note($msg);
-                $this->sc_order->save();
-
-//				break;
             }
-
             // On Success
-            $msg = __('<b>Subscription</b> was created. ') . '<br/>'
-                . __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $resp['subscriptionId'] . '.<br/>' 
-                . __('<b>Recurring amount:</b> ', 'nuvei_checkout_woocommerce') . $this->sc_order->get_currency() . ' '
-                . $prod_plan['recurringAmount'];
+            else {
+                $msg = __('Subscription was created. ') . '<br/>'
+                    . __('Subscription ID: ', 'nuvei_checkout_woocommerce') . $resp['subscriptionId'] . '.<br/>' 
+                    . __('Recurring amount: ', 'nuvei_checkout_woocommerce') . $this->sc_order->get_currency() . ' '
+    //                . $prod_plan['recurringAmount'];
+                    . $subs_data['recurringAmount'];
+            }
             
             $this->sc_order->add_order_note($msg);
             $this->sc_order->save();
+            break;
         }
         
 		return;
