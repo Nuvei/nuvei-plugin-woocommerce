@@ -904,11 +904,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         if ('apmgw_expresscheckout' == $parent_payment_method) {
             Nuvei_Logger::write('PayPal rebilling');
             
-            $params['clientUniqueId']               = $renewal_order_id;
+            $params['clientUniqueId']               = $renewal_order_id . '_' . uniqid();
             $params['paymentOption']['subMethod']   = ['subMethod' => 'ReferenceTransaction'];
         }
-        
-//        Nuvei_Logger::write($params, '$params');
         
         $resp = $payment_obj->process($params);
         
