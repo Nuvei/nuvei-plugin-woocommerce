@@ -4,7 +4,7 @@
     * Add support for WC Subscriptions plugin.
     * Added a script to remove the WCS Pay button on Thank-you page.
     * On Thank-you page hooks check if the order belongs to Nuvei.
-    * Added PayPal as option for Rebillings.
+    * Added PayPal as option for Rebillings with WCS only.
     * Added _nuveiPrevTransactionStatus custom field to the Order. It will be used in case of declined Void to return Order to original status.
     * Void button will be available only for orders with AuthCode.
     * For WCS Renewal order try to generate unique clientUniqueId parameter.

@@ -642,7 +642,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	/**
 	 * Call the Nuvei Checkout SDK form here and pass all parameters.
 	 * 
-	 * @global type $woocommerce
+	 * @global $woocommerce
 	 */
 	public function call_checkout($is_ajax = false)
     {
@@ -707,16 +707,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'currency'                  => get_woocommerce_currency(),
 			'amount'                    => (string) number_format((float) $cart->total, 2, '.', ''),
 			'renderTo'                  => '#nuvei_checkout',
-		//            'onResult'              => nuveiCheckoutCallback, // pass it in the JS, showNuveiCheckout()
-		//            'userTokenId'           => $ord_details['billingAddress']['email'],
 			'useDCC'                    =>  $this->get_setting('use_dcc', 'enable'),
 			'strict'                    => false,
 			'savePM'                    => $save_pm,
 			'showUserPaymentOptions'    => $use_upos,
-		//            'subMethod'           => '',
 			'pmWhitelist'               => null,
 			'pmBlacklist'               => empty($pm_black_list) ? null : $pm_black_list,
-		//            'blockCards'            => $this->get_setting('blocked_cards', []), set it later
 			'alwaysCollectCvv'          => true,
 			'fullName'                  => $ord_details['billingAddress']['firstName'] . ' ' . $oo_data['billingAddress']['lastName'],
 			'email'                     => $ord_details['billingAddress']['email'],
@@ -733,7 +729,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		if (!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
             $checkout_data['pmWhitelist'] = ['cc_card'];
             
-            if (1 == $this->get_setting('allow_paypal_rebilling', 0)) {
+            // only for WCS
+            if (1 == $this->get_setting('allow_paypal_rebilling', 0)
+                && empty($subscr_data)
+            ) {
                 $checkout_data['pmWhitelist'][]             = 'apmgw_expresscheckout';
                 $checkout_data['showUserPaymentOptions']    = false;
             }
@@ -893,7 +892,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         
         $parent_payment_method = $parent_order->get_meta(NUVEI_PAYMENT_METHOD);
         
-        Nuvei_Logger::write(get_post_meta($parent_order_id), '$parent_order all meta');
+//        Nuvei_Logger::write(get_post_meta($parent_order_id), '$parent_order all meta');
         
         if ('cc_card' == $parent_payment_method) {
             $params['isRebilling']          = 1;
@@ -1217,7 +1216,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				),
 				'default'       => 0,
 				'class'         => 'nuvei_checkout_setting',
-                'description'   => __('Using PayPal for rebilling will disable the UPOs.', 'nuvei_checkout_woocommerce'),
+                'description'   => __('PayPal is available only for WCS. Using PayPal for rebilling will disable the UPOs.', 'nuvei_checkout_woocommerce'),
 			),
 			'use_dcc' => array(
 				'title'         => __('Use currency conversion', 'nuvei_checkout_woocommerce'),

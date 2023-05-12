@@ -634,15 +634,9 @@ abstract class Nuvei_Request
                 $nuvei_plan_term    = current($terms);
                 $term_meta          = get_term_meta($nuvei_plan_term->term_id);
                 
-                Nuvei_Logger::write(
-                    [
-                        '$term_meta'        => $term_meta,
-                    ],
-                    'Iteam with attribute'
-                );
-                
                 // in case of missing Nuvei Plan ID
                 if (empty($term_meta['planId'][0])) {
+                    Nuvei_Logger::write($term_meta, 'Iteam with attribute $term_meta');
                     continue;
                 }
                 
@@ -666,27 +660,11 @@ abstract class Nuvei_Request
             # /check if product has only Nuvei Payment Plan Attribute
 		}
 
-        Nuvei_Logger::write($data, 'get_products_data');
+        Nuvei_Logger::write($data, 'get_products_data() data');
         
 		return $data;
 	}
 	
-//    protected function pass_user_token_id()
-//    {
-//        if($this->plugin_settings('use_upos') == 1) {
-//            return true;
-//        }
-//        else {
-//            $product_data = $this->get_products_data();
-//            
-//            if(!empty($product_data['subscr_data'])) {
-//                return true;
-//            }
-//        }
-//        
-//        return false;
-//    }
-    
     /**
      * A common function to set some data into the session.
      * 
