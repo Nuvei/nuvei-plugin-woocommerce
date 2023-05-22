@@ -38,6 +38,20 @@ class Nuvei_Open_Order extends Nuvei_Request
 		$ajax_params                    = array();
         $nuvei_last_open_order_details  = WC()->session->get('nuvei_last_open_order_details');
         $products_data                  = $this->get_products_data();
+        $cart_total                     = (float) $cart->total;
+        $try_update_order               = false;
+        
+        // do not allow WCS and Nuvei Subscription in same Order
+        if (!empty($products_data['subscr_data']) && $products_data['wc_subscr']) {
+            $msg = 'It is not allowed to put product with WCS and product witn Nuvei Subscription in same Order! Please, contact the site administrator for this problem!';
+
+            Nuvei_Logger::write($msg);
+            
+            return array(
+				'status'    => 0,
+                'custom_msg'       => __($msg, 'nuvei_checkout_woocommerce'),
+			);
+        }
         
         // check if product is available when click on Pay button
 //        if ($this->is_ajax 
@@ -57,10 +71,34 @@ class Nuvei_Open_Order extends Nuvei_Request
 //            }
 //        }
         
-		# try to update Order
+        # try to update Order or not
         if ( !( empty($nuvei_last_open_order_details['userTokenId'])
             && !empty($products_data['subscr_data'])
         ) ) {
+            $try_update_order = true;
+        }
+        
+        if (empty($nuvei_last_open_order_details['transactionType'])) {
+            $try_update_order = false;
+        }
+        
+        if ($cart_total == 0
+            && (empty($nuvei_last_open_order_details['transactionType'])
+                || 'Auth' != $nuvei_last_open_order_details['transactionType']
+            )
+        ) {
+            $try_update_order = false;
+        }
+        
+        if ($cart_total > 0
+            && !empty($nuvei_last_open_order_details['transactionType'])
+            && 'Auth' == $nuvei_last_open_order_details['transactionType']
+            && $nuvei_last_open_order_details['transactionType'] != $this->plugin_settings['payment_action']
+        ) {
+            $try_update_order = false;
+        }
+        
+        if ($try_update_order) {
             $uo_obj = new Nuvei_Update_Order($this->plugin_settings);
             $resp   = $uo_obj->process();
 
@@ -74,17 +112,18 @@ class Nuvei_Open_Order extends Nuvei_Request
                 }
 
                 return $resp;
-            } elseif (!empty($resp['status']) && !empty($resp['reload_checkout'])) {
+            }
+            elseif (!empty($resp['status']) && !empty($resp['reload_checkout'])) {
                 wp_send_json(array('reload_checkout' => 1));
                 exit;
             }
         }
-		# try to update Order END
+		# /try to update Order or not
         
         Nuvei_Logger::write(
             [
                 'userTokenId' => $nuvei_last_open_order_details['userTokenId'],
-                'subscr_data' => $products_data['subscr_data']
+//                'subscr_data' => $products_data['subscr_data']
             ],
             'Skip updateOrder'
         );
@@ -110,7 +149,7 @@ class Nuvei_Open_Order extends Nuvei_Request
 		$oo_params = array(
 			'clientUniqueId'    => gmdate('YmdHis') . '_' . uniqid(),
 			'currency'          => get_woocommerce_currency(),
-			'amount'            => (string) number_format((float) $cart->total, 2, '.', ''),
+			'amount'            => (string) number_format($cart_total, 2, '.', ''),
 			'shippingAddress'	=> $addresses['shippingAddress'],
 			'billingAddress'	=> $addresses['billingAddress'],
 			'userDetails'       => $addresses['billingAddress'],
@@ -124,7 +163,17 @@ class Nuvei_Open_Order extends Nuvei_Request
         ) {
 			$oo_params['userTokenId'] = $addresses['billingAddress']['email'];
 		}
-		
+        
+        // WC Subsc
+        if ($products_data['wc_subscr']) {
+            $oo_params['userTokenId'] = $addresses['billingAddress']['email'];
+            $oo_params['isRebilling'] = 0;
+            $oo_params['card']['threeD']['v2AdditionalParams'] = [ // some default params
+                'rebillFrequency'   => 30, // days
+                'rebillExpiry '     => date('Ymd', strtotime('+5 years')),
+            ];
+        }
+        
 		$resp = $this->call_rest_api('openOrder', $oo_params);
 		
 		if (empty($resp['status'])
@@ -148,6 +197,7 @@ class Nuvei_Open_Order extends Nuvei_Request
 			'sessionToken'		=> $resp['sessionToken'],
 			'orderId'			=> $resp['orderId'],
 			'billingAddress'	=> $oo_params['billingAddress'],
+			'transactionType'	=> $oo_params['transactionType'],
 		);
         
         if (!empty($oo_params['userTokenId'])) {
@@ -160,7 +210,7 @@ class Nuvei_Open_Order extends Nuvei_Request
             $products_data
         );
 		
-		Nuvei_Logger::write($cart->nuvei_last_open_order_details, 'nuvei_last_open_order_details');
+		Nuvei_Logger::write($nuvei_last_open_order_details, 'saved nuvei_last_open_order_details');
 		
 		if ($this->is_ajax) {
 			wp_send_json(array(

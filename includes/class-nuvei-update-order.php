@@ -55,7 +55,6 @@ class Nuvei_Update_Order extends Nuvei_Request
 			'orderId'			=> $nuvei_last_open_order_details['orderId'],
 			'currency'			=> get_woocommerce_currency(),
 			'amount'			=> $cart_amount,
-            'transactionType'   => (float) $cart->total == 0 ? 'Auth' : $this->plugin_settings['payment_action'],
 			'billingAddress'	=> $addresses['billingAddress'],
 			'userDetails'       => $addresses['billingAddress'],
 			'shippingAddress'	=> $addresses['shippingAddress'],
@@ -67,12 +66,20 @@ class Nuvei_Update_Order extends Nuvei_Request
 					'quantity'	=> 1
 				)
 			),
-			
-//			'merchantDetails'   => array(
-//				'customField1' => json_encode($product_data['subscr_data']), // subscription details
-////				'customField2' => json_encode($product_data['products_data']), // item details
-//			),
 		);
+        
+        // WC Subsc
+        if ($product_data['wc_subscr']) {
+            $oo_params['isRebilling'] = 0;
+            $oo_params['card']['threeD']['v2AdditionalParams'] = [ // some default params
+                'rebillFrequency'   => 30, // days
+                'rebillExpiry '     => date('Ymd', strtotime('+5 years')),
+            ];
+        }
+        else {
+            $oo_params['isRebilling']   = null;
+            $oo_params['card']          = null;
+        }
         
 //        Nuvei_Logger::write(strlen($params['merchantDetails']['customField1']), 'customField1 len');
         

@@ -36,7 +36,7 @@ function nuveiAfterSdkResponse(resp) {
             return;
         }
         
-        jQuery('#nuvei_checkout_errors').html('<b>' + scTrans.TransactionAppr + '</b>');
+//        jQuery('#nuvei_checkout_errors').html('<b>' + scTrans.TransactionAppr + '</b>');
         jQuery('#nuvei_checkout').remove();
         jQuery('form.checkout').trigger('submit');
 		return;
@@ -156,6 +156,9 @@ function nuveiPrePayment(paymentDetails) {
                 
                 if (resp.hasOwnProperty('msg')) {
                     errorMsg = resp.msg;
+                }
+                if (resp.hasOwnProperty('data') && typeof resp.data == 'string') {
+                    errorMsg = resp.data;
                 }
 
                 reject();

@@ -29,6 +29,9 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			exit;
         }
         
+        // just give few seconds to WC to finish the process generating the DMN
+        sleep(3);
+        
         if (!$this->validate_checksum()) {
 			echo wp_json_encode('DMN Error - Checksum validation problem!');
 			exit;
@@ -173,6 +176,11 @@ class Nuvei_Notify_Url extends Nuvei_Request
                 Nuvei_Logger::write('Cashier Order');
                 $order_id = $merchant_unique_id;
             }
+            elseif ('renewal_order' == Nuvei_Http::get_param('customField4')
+                && !empty($client_request_id)
+            ) { // WCS renewal order
+                $order_id = current(explode('_', $client_request_id));
+            }
             elseif($TransactionID) { // SDK
                 Nuvei_Logger::write('SDK Order');
                 $order_id = $this->get_order_by_trans_id($TransactionID, $transactionType);
@@ -221,7 +229,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 
 			$this->change_order_status($order_id, $req_status, $transactionType);
 			$this->subscription_start($transactionType, $clientUniqueId);
-            $this->subscription_cancel($transactionType, $order_id);
+            $this->subscription_cancel($transactionType, $order_id, $req_status);
 			
 			echo wp_json_encode('DMN received.');
 			exit;
@@ -461,6 +469,16 @@ class Nuvei_Notify_Url extends Nuvei_Request
         if (!empty($tr_status)) {
 			$this->sc_order->update_meta_data(NUVEI_TRANS_STATUS, $tr_status);
 		}
+        
+        $is_wc_subscr   = $this->sc_order->get_meta(NUVEI_WC_SUBSCR);
+        $upo_id         = Nuvei_Http::get_param('userPaymentOptionId', 'int');
+        if ($is_wc_subscr && !empty($upo_id)) {
+            $this->sc_order->update_meta_data(NUVEI_UPO, $upo_id);
+        }
+        
+        if ('renewal_order' == Nuvei_Http::get_param('customField4')) {
+            $this->sc_order->update_meta_data(NUVEI_WC_RENEWAL, true);
+        }
 		
 		$this->sc_order->save();
 	}
@@ -477,6 +495,11 @@ class Nuvei_Notify_Url extends Nuvei_Request
     {
         Nuvei_Logger::write('Try to start subscription.');
         
+        if ($this->sc_order->get_meta(NUVEI_WC_SUBSCR)) {
+            Nuvei_Logger::write('WC Subscription.');
+			return;
+        }
+        
         if (!in_array($transactionType, array('Settle', 'Sale', 'Auth'))) {
             Nuvei_Logger::write(
                 ['$transactionType'  => $transactionType],
@@ -490,6 +513,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
             return;
         }
         
+        // The meta key for the Subscription is dynamic.
         $order_all_meta = get_post_meta($order_id);
         
         foreach ($order_all_meta as $key => $data) {
@@ -506,31 +530,30 @@ class Nuvei_Notify_Url extends Nuvei_Request
             
             Nuvei_Logger::write([$key, $subs_data]);
             
-            $prod_plan                      = $subs_data;
-            $prod_plan['clientRequestId']   = $order_id . $key;
+//            $prod_plan                      = $subs_data;
+//            $prod_plan['clientRequestId']   = $order_id . $key;
+            $subs_data['clientRequestId']   = $order_id . $key;
             
             $ns_obj = new Nuvei_Subscription($this->plugin_settings);
-            $resp   = $ns_obj->process($prod_plan);
+//            $resp   = $ns_obj->process($prod_plan);
+            $resp   = $ns_obj->process($subs_data);
 
             // On Error
             if (!$resp || !is_array($resp) || empty($resp['status']) || 'SUCCESS' != $resp['status']) {
                 $msg = __('<b>Error</b> when try to start a Subscription by the Order.', 'nuvei_checkout_woocommerce');
 
                 if (!empty($resp['reason'])) {
-                    $msg .= '<br/>' . __('<b>Reason:</b> ', 'nuvei_checkout_woocommerce') . $resp['reason'];
+                    $msg .= '<br/>' . __('Reason: ', 'nuvei_checkout_woocommerce') . $resp['reason'];
                 }
-
-                $this->sc_order->add_order_note($msg);
-                $this->sc_order->save();
-
-//				break;
             }
-
             // On Success
-            $msg = __('<b>Subscription</b> was created. ') . '<br/>'
-                . __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $resp['subscriptionId'] . '.<br/>' 
-                . __('<b>Recurring amount:</b> ', 'nuvei_checkout_woocommerce') . $this->sc_order->get_currency() . ' '
-                . $prod_plan['recurringAmount'];
+            else {
+                $msg = __('Subscription was created. ') . '<br/>'
+                    . __('Subscription ID: ', 'nuvei_checkout_woocommerce') . $resp['subscriptionId'] . '.<br/>' 
+                    . __('Recurring amount: ', 'nuvei_checkout_woocommerce') . $this->sc_order->get_currency() . ' '
+    //                . $prod_plan['recurringAmount'];
+                    . $subs_data['recurringAmount'];
+            }
             
             $this->sc_order->add_order_note($msg);
             $this->sc_order->save();
@@ -540,15 +563,21 @@ class Nuvei_Notify_Url extends Nuvei_Request
 	}
     
     /**
-     * @param int $transactionType
-     * @param int $order_id
+     * @param int       $transactionType
+     * @param int       $order_id
+     * @param string    $req_status The status of the transaction.
      */
-    private function subscription_cancel($transactionType, $order_id)
+    private function subscription_cancel($transactionType, $order_id, $req_status)
     {
         if ('Void' != $transactionType) {
             Nuvei_Logger::write($transactionType, 'Only Void can cancel a subscription.');
 			return;
 		}
+        
+        if ('approved' != strtolower($req_status)) {
+            Nuvei_Logger::write($transactionType, 'The void was not approved.');
+			return;
+        }
         
         $order_all_meta = get_post_meta($order_id);
         
@@ -577,14 +606,15 @@ class Nuvei_Notify_Url extends Nuvei_Request
 	 * @param string $req_status The Status of the request.
 	 * @param string $transaction_type The type of the transaction.
 	 */
-	private function change_order_status( $order_id, $req_status, $transaction_type ) {
+	private function change_order_status( $order_id, $req_status, $transaction_type )
+    {
 		Nuvei_Logger::write(
 			'Order ' . $order_id . ' was ' . $req_status,
 			'Nuvei change_order_status()'
 		);
         
-        $msg_transaction = '<b>' . __( Nuvei_Http::get_param( 'transactionType' ), 'nuvei_checkout_woocommerce' ) . ' </b> ' 
-            . __( 'request', 'nuvei_checkout_woocommerce' ) . '.<br/>';
+        $msg_transaction = '<b>' . __( Nuvei_Http::get_param( 'transactionType' ), 'nuvei_checkout_woocommerce' )
+            . ' </b> ' . __( 'request', 'nuvei_checkout_woocommerce' ) . '.<br/>';
 
 		$gw_data = $msg_transaction
 			. __( 'Response status: ', 'nuvei_checkout_woocommerce' ) . '<b>' . $req_status . '</b>.<br/>'
@@ -697,20 +727,28 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			case 'ERROR':
 			case 'DECLINED':
 			case 'FAIL':
-				$reason = ',<br/>' . __( '<b>Reason:</b> ', 'nuvei_checkout_woocommerce' );
-				if ( '' != Nuvei_Http::get_param( 'reason' ) ) {
-					$reason .= Nuvei_Http::get_param( 'reason' );
-				} elseif ( '' != Nuvei_Http::get_param( 'Reason' ) ) {
-					$reason .= Nuvei_Http::get_param( 'Reason' );
-				}
+                $message    = Nuvei_Http::get_param( 'message' );
+                $ErrCode    = Nuvei_Http::get_param( 'ErrCode' );
+                $Reason     = Nuvei_Http::get_param( 'Reason' );
+                
+                if (empty($Reason)) {
+                    $Reason = Nuvei_Http::get_param( 'reason' );
+                }
 				
 				$message = $gw_data . '<br/>'
-					. __( 'Error code: ', 'nuvei_checkout_woocommerce' ) . Nuvei_Http::get_param( 'ErrCode' ) . '<br/>'
-					. __( 'Message: ', 'nuvei_checkout_woocommerce' ) . Nuvei_Http::get_param( 'message' ) . $reason;
-				
+                    . (!empty($ErrCode) ? __( 'Error code: ', 'nuvei_checkout_woocommerce' ) . $ErrCode . '<br/>' : '')
+					. (!empty($Reason) ? __( 'Reason: ', 'nuvei_checkout_woocommerce' ) . $Reason . '<br/>' : '')
+					. (!empty($message) ? __( 'Message: ', 'nuvei_checkout_woocommerce' ) . $message : '');
+                        
 				if (in_array($transaction_type, array('Auth', 'Settle', 'Sale'))) {
 					$status = 'failed';
 				}
+                if ('Void' == $transaction_type) {
+                    $status = $this->sc_order->get_meta(NUVEI_PREV_TRANS_STATUS);
+                }
+                if ('Refund' == $transaction_type) {
+                    $status = 'completed';
+                }
 				
 				$this->msg['class'] = 'woocommerce_message';
 				break;
@@ -731,7 +769,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			$this->sc_order->add_order_note( $this->msg['message'] );
 		}
 
-		$this->sc_order->update_status( $status );
+		$this->sc_order->update_status($status);
 		$this->sc_order->save();
 		
 		Nuvei_Logger::write($status, 'Status of Order #' . $order_id . ' was set to');

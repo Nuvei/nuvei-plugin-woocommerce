@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Plugin for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 1.3.2
+ * Version: 1.4.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
@@ -11,7 +11,7 @@
  * Require at least: 4.7
  * Tested up to: 6.2
  * WC requires at least: 3.0
- * WC tested up to: 7.6.0
+ * WC tested up to: 7.7.0
 */
 
 defined('ABSPATH') || die('die');
@@ -194,6 +194,9 @@ function nuvei_init()
 		) {
 			add_filter('woocommerce_get_checkout_order_received_url', 'nuvei_wpml_thank_you_page', 10, 2);
 		}
+        
+        // for the thank-you page
+        add_action('woocommerce_thankyou', 'nuvei_mod_thank_you_page', 100, 1);
 
 		// For the custom column in the Order list
 		add_action( 'manage_shop_order_posts_custom_column', 'nuvei_fill_custom_column' );
@@ -203,51 +206,56 @@ function nuvei_init()
         add_filter( 'woocommerce_cart_needs_payment', 'nuvei_wc_cart_needs_payment', 10, 2 );
         // show custom data into order details, product data
         add_action( 'woocommerce_after_order_itemmeta', 'nuvei_after_order_itemmeta', 10, 3 );
+        // listent for the WC Subscription Payment
+        add_action(
+            'woocommerce_scheduled_subscription_payment_' . NUVEI_GATEWAY_NAME,
+            [$wc_nuvei, 'create_wc_subscr_order'],
+            10,
+            2
+        );
 	}
 	
-	// change Thank-you page title and text
-	if (!is_admin()) {
-		if ('error' === strtolower(Nuvei_Http::get_request_status())
-			|| 'fail' === strtolower(Nuvei_Http::get_param('ppp_status'))
-		) {
-			add_filter('the_title', function ( $title, $id) {
-				if (
-					function_exists('is_order_received_page')
-					&& is_order_received_page()
-					&& get_the_ID() === $id
-				) {
-					$title = esc_html__('Order error', 'nuvei_checkout_woocommerce');
-				}
-
-				return $title;
-			}, 10, 2);
-
-			add_filter(
-				'woocommerce_thankyou_order_received_text',
-
-				function ( $str, $order) {
-					return esc_html__(' There is an error with your order. Please check your Order status for more information.', 'nuvei_checkout_woocommerce');
-				}, 10, 2);
-		}
-        elseif ('canceled' === strtolower(Nuvei_Http::get_request_status())) {
-			add_filter('the_title', function ( $title, $id) {
-				if (
-					function_exists('is_order_received_page')
-					&& is_order_received_page()
-					&& get_the_ID() === $id
-				) {
-					$title = esc_html__('Order canceled', 'nuvei_checkout_woocommerce');
-				}
-
-				return $title;
-			}, 10, 2);
-
-			add_filter('woocommerce_thankyou_order_received_text', function ( $str, $order) {
-				return esc_html__('Please, check the order for details!', 'nuvei_checkout_woocommerce');
-			}, 10, 2);
-		}
-	}
-	// change Thank-you page title and text ENDs
+	// change Thank-you page title and text on error
+//	if (!is_admin()) {
+//		if ('error' === strtolower(Nuvei_Http::get_request_status())
+//			|| 'fail' === strtolower(Nuvei_Http::get_param('ppp_status'))
+//		) {
+//			add_filter('the_title', function ( $title, $id) {
+//				if (function_exists('is_order_received_page')
+//					&& is_order_received_page()
+//					&& get_the_ID() === $id
+//				) {
+//					$title = esc_html__('Order error', 'nuvei_checkout_woocommerce');
+//				}
+//
+//				return $title;
+//			}, 10, 2);
+//
+//			add_filter(
+//				'woocommerce_thankyou_order_received_text',
+//
+//				function ( $str, $order) {
+//					return esc_html__(' There is an error with your order. Please check your Order status for more information.', 'nuvei_checkout_woocommerce');
+//				}, 10, 2);
+//		}
+//        elseif ('canceled' === strtolower(Nuvei_Http::get_request_status())) {
+//			add_filter('the_title', function ( $title, $id) {
+//				if (function_exists('is_order_received_page')
+//					&& is_order_received_page()
+//					&& get_the_ID() === $id
+//				) {
+//					$title = esc_html__('Order canceled', 'nuvei_checkout_woocommerce');
+//				}
+//
+//				return $title;
+//			}, 10, 2);
+//
+//			add_filter('woocommerce_thankyou_order_received_text', function ( $str, $order) {
+//				return esc_html__('Please, check the order for details!', 'nuvei_checkout_woocommerce');
+//			}, 10, 2);
+//		}
+//	}
+	// /change Thank-you page title and text
 	
 	add_filter('woocommerce_pay_order_after_submit', 'nuvei_user_orders', 10, 2);
 	
@@ -275,7 +283,7 @@ function nuvei_init()
  */
 function nuvei_ajax_action()
 {
-	if (!check_ajax_referer('sc-security-nonce', 'security')) {
+	if (!check_ajax_referer('sc-security-nonce', 'security', false)) {
 		wp_send_json_error(__('Invalid security token sent.'));
 		wp_die('Invalid security token sent');
 	}
@@ -465,13 +473,6 @@ function nuvei_load_styles_scripts( $styles)
     if(is_checkout()) {
         $nuvei_helper = new Nuvei_Helper($wc_nuvei->settings);
         
-        // last check for mixed items in the Cart
-//        $items_info = $nuvei_helper->check_for_product_with_plan();
-//        
-//        if($items_info['items'] > 1 && $items_info['item_with_plan']) {
-//            wc_add_notice( __('Your Cart contains a Product with Nuvei Payment paln and another product/s. You must remove the Product with the payment plan or the other product/s to finish your Order!', 'nuvei_checkout_woocommerce'), 'error' );
-//        }
-        
         wp_enqueue_style('nuvei_style');
         wp_enqueue_script('nuvei_checkout_sdk');
         wp_enqueue_script('nuvei_js_reorder');
@@ -570,6 +571,7 @@ function nuvei_enqueue( $hook)
 function nuvei_add_buttons($order)
 {
     Nuvei_Logger::write('nuvei_add_buttons');
+    //echo '<pre style="text-align: left;">'.print_r(get_post_meta($order->get_id()), true) . '</pre>';
     
     // in case this is not Nuvei order
 	if (empty($order->get_payment_method())
@@ -636,6 +638,7 @@ function nuvei_add_buttons($order)
 	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
 		// Show VOID button
 		if (in_array($order_payment_method, NUVEI_APMS_REFUND_VOID)
+            && !empty($order->get_meta(NUVEI_AUTH_CODE_KEY))
             && !$refunds_exists
             && 0 < (float) $order->get_total()
             && time() < $order_time + 172800 // 48 hours
@@ -701,8 +704,7 @@ function nuvei_add_buttons($order)
  * @global WC_SC $wc_nuvei
  */
 function nuvei_rewrite_return_url() {
-	if (
-		isset($_REQUEST['ppp_status']) && '' != $_REQUEST['ppp_status']
+	if (isset($_REQUEST['ppp_status']) && '' != $_REQUEST['ppp_status']
 		&& ( !isset($_REQUEST['wc_sc_redirected']) || 0 ==  $_REQUEST['wc_sc_redirected'] )
 	) {
 		$query_string = '';
@@ -762,6 +764,48 @@ function nuvei_wpml_thank_you_page( $order_received_url, $order)
 	return $order_received_url;
 }
 
+function nuvei_mod_thank_you_page($order_id)
+{
+    $order = wc_get_order($order_id);
+    
+    if ($order->get_payment_method() != NUVEI_GATEWAY_NAME) {
+        return;
+    }
+    
+    $output = '<script>';
+    
+    # Modify title and the text on errors
+    $request_status = Nuvei_Http::get_request_status();
+    $new_msg        = esc_html__('Please check your Order status for more information.', 'nuvei_checkout_woocommerce');
+    $new_title      = '';
+    
+    var_dump($request_status);
+    
+    if ('error' == $request_status
+        || 'fail' == strtolower(Nuvei_Http::get_param('ppp_status'))
+    ) {
+        $new_title  = esc_html__('Order error', 'nuvei_checkout_woocommerce');
+    }
+    elseif ('canceled' == $request_status) {
+        $new_title  = esc_html__('Order canceled', 'nuvei_checkout_woocommerce');
+    }
+    
+    if (!empty($new_title)) {
+        $output .= 'jQuery(".entry-title").html("'. $new_title .'");'
+            . 'jQuery(".woocommerce-thankyou-order-received").html("'. $new_msg .'");';
+    }
+    # /Modify title and the text on errors
+    
+    # when WCS is turn on, remove Pay button
+    if (is_plugin_active('woocommerce-subscriptions' . DIRECTORY_SEPARATOR . 'woocommerce-subscriptions.php')) {
+        $output .= 'jQuery("a.pay").hide();';
+    }
+    
+    $output .= '</script>';
+    
+    echo $output;
+}
+
 function nuvei_edit_order_buttons()
 {
 	$default_text          = __('Place order', 'woocommerce');
@@ -786,8 +830,7 @@ function nuvei_edit_order_buttons()
 }
 
 function nuvei_change_title_order_received( $title, $id) {
-	if (
-		function_exists('is_order_received_page')
+	if (function_exists('is_order_received_page')
 		&& is_order_received_page()
 		&& get_the_ID() === $id
 	) {

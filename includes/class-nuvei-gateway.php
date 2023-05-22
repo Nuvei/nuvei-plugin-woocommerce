@@ -10,7 +10,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	private $plugin_data  = array();
 	private $subscr_units = array('year', 'month', 'day');
 	
-	public function __construct() {
+	public function __construct()
+    {
 		# settings to get/save options
 		$this->id                 = NUVEI_GATEWAY_NAME;
 		$this->method_title       = __('Nuvei Checkout', 'nuvei_checkout_woocommerce' );
@@ -32,7 +33,15 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page']) 
 			? $this->settings['use_wpml_thanks_page'] : 'no';
 		
+        // products are supported by default
 		$this->supports[] = 'refunds'; // to enable auto refund support
+		$this->supports[] = 'subscriptions'; // to enable WC Subscriptions
+		$this->supports[] = 'subscription_cancellation'; // always
+		$this->supports[] = 'subscription_suspension'; // for not more than 400 days
+		$this->supports[] = 'subscription_reactivation'; // after not more than 400 days
+		$this->supports[] = 'subscription_amount_changes'; // always
+		$this->supports[] = 'subscription_date_changes'; // always
+		$this->supports[] = 'multiple_subscriptions'; // TODO - not sure what is this for
 		
 		$this->msg['message'] = '';
 		$this->msg['class']   = '';
@@ -99,7 +108,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	public function generate_nuvei_multiselect_html( $key, $data)
     {
 		# prepare the list with Payment methods
-		$get_st_obj    = new Nuvei_Get_Session_Token($this->settings);
+		$get_st_obj    = new Nuvei_Session_Token($this->settings);
 		$resp          = $get_st_obj->process();
 		$session_token = !empty($resp['sessionToken']) ? $resp['sessionToken'] : '';
 		
@@ -149,7 +158,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	}
 
 	// Generate the HTML For the settings form.
-	public function admin_options() {
+	public function admin_options()
+    {
 		require_once dirname(NUVEI_PLUGIN_FILE) . '/templates/admin/settings.php';
 	}
 
@@ -263,24 +273,31 @@ class Nuvei_Gateway extends WC_Payment_Gateway
          // search for subscr data
         $nuvei_order_details = WC()->session->get('nuvei_order_details');
 
-        // save the Nuvei Subscr data to the order
-        if (!empty($nuvei_order_details[$nuvei_session_token]['subscr_data'])) {
-            foreach ($nuvei_order_details[$nuvei_session_token]['subscr_data'] as $item_prod => $data) {
-                $order->update_meta_data(
-                    NUVEI_ORDER_SUBSCR . '_' . $item_prod,
-                    $data
-                );
+        if (!empty($nuvei_order_details)) {
+            // save the Nuvei Subscr data to the order
+            if (!empty($nuvei_order_details[$nuvei_session_token]['subscr_data'])) {
+//                foreach ($nuvei_order_details[$nuvei_session_token]['subscr_data'] as $item_prod => $data) {
+                foreach ($nuvei_order_details[$nuvei_session_token]['subscr_data'] as $data) {
+                    // set meta key
+                    if (isset($data['product_id'])) {
+                        $meta_key = NUVEI_ORDER_SUBSCR . '_product_' . $data['product_id'];
+                    }
+                    if (isset($data['variation_id'])) {
+                        $meta_key = NUVEI_ORDER_SUBSCR . '_variation_' . $data['variation_id'];
+                    }
+                    
+                    $order->update_meta_data($meta_key, $data);
+                }
             }
             
-//            $order->update_meta_data(
-//                NUVEI_ORDER_SUBSCR,
-//                $nuvei_order_details[$nuvei_session_token]['subscr_data']
-//            );
-//            $order->save();
-
+            // mark order if there is WC Subsc
+            if (!empty($nuvei_order_details[$nuvei_session_token]['wc_subscr'])) {
+                $order->update_meta_data(NUVEI_WC_SUBSCR, true);
+            }
+            
             WC()->session->set('nuvei_order_details', []);
         }
-    
+        
         // Success
 		if (!empty($nuvei_transaction_id)) {
 			Nuvei_Logger::write('Process webSDK Order, transaction ID #' . $nuvei_transaction_id);
@@ -344,7 +361,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * @param int $order_id
 	 * @return void
 	 */
-	public function restock_on_refunded_status( $order_id) {
+	public function restock_on_refunded_status( $order_id)
+    {
 		$order            = wc_get_order($order_id);
 		$items            = $order->get_items();
 		$is_order_restock = $order->get_meta('_scIsRestock');
@@ -624,22 +642,28 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	/**
 	 * Call the Nuvei Checkout SDK form here and pass all parameters.
 	 * 
-	 * @global type $woocommerce
+	 * @global $woocommerce
 	 */
 	public function call_checkout($is_ajax = false)
     {
 		global $woocommerce;
-		
+        
 		# OpenOrder
 		$oo_obj  = new Nuvei_Open_Order($this->settings);
 		$oo_data = $oo_obj->process();
 		
 		if (!$oo_data || empty($oo_data['sessionToken'])) {
-			wp_send_json(array(
+            $msg = __('Unexpected error, please try again later!', 'nuvei_checkout_woocommerce');
+            
+            if (!empty($oo_data['custom_msg'])) {
+                $msg = $oo_data['custom_msg'];
+            }
+			
+            wp_send_json(array(
 				'result'	=> 'failure',
 				'refresh'	=> false,
 				'reload'	=> false,
-				'messages'	=> '<ul id="sc_fake_error" class="woocommerce-error" role="alert"><li>' . __('Unexpected error, please try again later!', 'nuvei_checkout_woocommerce') . '</li></ul>'
+				'messages'	=> '<ul id="sc_fake_error" class="woocommerce-error" role="alert"><li>' . $msg . '</li></ul>'
 			));
 
 			exit;
@@ -656,7 +680,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         if (!empty($prod_details[$oo_data['sessionToken']]['subscr_data'])) {
             $subscr_data = $prod_details[$oo_data['sessionToken']]['subscr_data'];
         }
-			
+        
 		if (!empty($pm_black_list)) {
 			$pm_black_list = explode(',', $pm_black_list);
 		}
@@ -665,10 +689,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         $use_upos   = $save_pm 
                     = (bool) $this->get_setting('use_upos');
         
+        Nuvei_Logger::write($prod_details);
+        
         if(!is_user_logged_in()) {
             $use_upos = $save_pm = false;
         }
-        elseif(!empty($subscr_data)) {
+        elseif(!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
             $save_pm = 'always';
         }
         
@@ -681,16 +707,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'currency'                  => get_woocommerce_currency(),
 			'amount'                    => (string) number_format((float) $cart->total, 2, '.', ''),
 			'renderTo'                  => '#nuvei_checkout',
-		//            'onResult'              => nuveiCheckoutCallback, // pass it in the JS, showNuveiCheckout()
-		//            'userTokenId'           => $ord_details['billingAddress']['email'],
 			'useDCC'                    =>  $this->get_setting('use_dcc', 'enable'),
 			'strict'                    => false,
 			'savePM'                    => $save_pm,
 			'showUserPaymentOptions'    => $use_upos,
-		//            'subMethod'           => '',
 			'pmWhitelist'               => null,
 			'pmBlacklist'               => empty($pm_black_list) ? null : $pm_black_list,
-		//            'blockCards'            => $this->get_setting('blocked_cards', []), set it later
 			'alwaysCollectCvv'          => true,
 			'fullName'                  => $ord_details['billingAddress']['firstName'] . ' ' . $oo_data['billingAddress']['lastName'],
 			'email'                     => $ord_details['billingAddress']['email'],
@@ -704,11 +726,19 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		);
         
 		// check for product with a plan
-		if (!empty($subscr_data)) {
+		if (!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
             $checkout_data['pmWhitelist'] = ['cc_card'];
+            
+            // only for WCS
+            if (1 == $this->get_setting('allow_paypal_rebilling', 0)
+                && empty($subscr_data)
+            ) {
+                $checkout_data['pmWhitelist'][]             = 'apmgw_expresscheckout';
+                $checkout_data['showUserPaymentOptions']    = false;
+            }
+            
             unset($checkout_data['pmBlacklist']);
         }
-		// check for product with a plan END
 		
 		# blocked_cards
 		$blocked_cards     = [];
@@ -765,10 +795,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
     {
 		if ( is_checkout() && ! is_wc_endpoint_url() ) {
             $nuvei_helper   = new Nuvei_Helper($this->settings);
-            $items_info     = $nuvei_helper->check_for_product_with_plan();
+            $items_info     = $nuvei_helper->get_products();
             
-            if($items_info['item_with_plan']
-                && ! empty( $available_gateways[ NUVEI_GATEWAY_NAME ] )
+//            if($items_info['item_with_plan']
+            if (!empty($items_info['subscr_data'])
+                && !empty( $available_gateways[ NUVEI_GATEWAY_NAME ] )
             ) {
                 $filtred_gws[ NUVEI_GATEWAY_NAME ] = $available_gateways[ NUVEI_GATEWAY_NAME ];
                 return $filtred_gws;
@@ -777,6 +808,112 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 
 		return $available_gateways;
 	}
+    
+    /**
+     * Call this function form a hook to process an WC Subscription Order.
+     * 
+     * @param float $amount_to_charge
+     * @param WC_Order $renewal_order The new Order.
+     * @param int $product_id
+     */
+    public function create_wc_subscr_order($amount_to_charge, $renewal_order)
+    {
+        $renewal_order_id   = $renewal_order->get_id();
+//        $subscription       = wc_get_order($_REQUEST['post_ID']);
+        $subscription       = wc_get_order($renewal_order->get_meta('_subscription_renewal'));
+        
+        if (!is_object($subscription)) {
+            Nuvei_Logger::write(
+                [
+                    '$amount_to_charge' => $amount_to_charge,
+                    '$renewal_order' => (array) $renewal_order,
+                    '$_REQUEST' => $_REQUEST,
+                    '$subscription' => $subscription, 
+                    '$renewal_order_id' => $renewal_order_id, 
+                    'get_post_meta' => get_post_meta($renewal_order_id)
+                ],
+                'Error, the Subscription is not an object.'
+            );
+            return;
+        }
+        
+        $parent_order_id    = $subscription->get_parent_id();
+        $parent_order       = wc_get_order($parent_order_id);
+        
+        Nuvei_Logger::write(
+            [
+                '$renewal_order_id' => $renewal_order_id,
+                '$parent_order_id'  => $parent_order_id,
+            ],
+            'create_wc_subscr_order'
+        );
+        
+        if (empty($parent_order->get_meta(NUVEI_TRANS_ID))
+            || empty($parent_order->get_meta(NUVEI_UPO))
+        ) {
+            Nuvei_Logger::write(
+                get_post_meta($parent_order_id),
+                'Error - missing mandatory Parent order data.'
+            );
+            
+            WC_Subscriptions_Manager::process_subscription_payment_failure_on_order($parent_order);
+            return;
+        }
+        
+        // get Session Token
+        $st_obj     = new Nuvei_Session_Token($this->settings);
+        $st_resp    = $st_obj->process();
+        
+        if (empty($st_resp['sessionToken'])) {
+            Nuvei_Logger::write('Error when try to get Session Token');
+            WC_Subscriptions_Manager::process_subscription_payment_failure_on_order($parent_order);
+            return;
+        }
+        // /get Session Token
+        
+        $billing_mail   = $renewal_order->get_meta('_billing_email');
+        $payment_obj    = new Nuvei_Payment($this->settings);
+        $params         = [
+            'sessionToken'          => $st_resp['sessionToken'],
+            'userTokenId'           => $billing_mail,
+            'clientRequestId'       => $renewal_order_id . '_' . $parent_order_id . '_' . uniqid(),
+            'currency'              => $renewal_order->get_currency(),
+            'amount'                => round($renewal_order->get_total(), 2),
+//            'relatedTransactionId'  => $parent_order->get_meta(NUVEI_TRANS_ID),
+//            'upoId'                 => $parent_order->get_meta(NUVEI_UPO),
+//            'bCountry'              => $renewal_order->get_meta('_billing_country'),
+//            'bEmail'                => $billing_mail,
+            'billingAddress'        => [
+                'country'   => $renewal_order->get_meta('_billing_country'),
+                'email'     => $billing_mail,
+            ],
+            'paymentOption'         => ['userPaymentOptionId'   => $parent_order->get_meta(NUVEI_UPO)],
+        ];
+        
+        $parent_payment_method = $parent_order->get_meta(NUVEI_PAYMENT_METHOD);
+        
+//        Nuvei_Logger::write(get_post_meta($parent_order_id), '$parent_order all meta');
+        
+        if ('cc_card' == $parent_payment_method) {
+            $params['isRebilling']          = 1;
+            $params['relatedTransactionId'] = $parent_order->get_meta(NUVEI_TRANS_ID);
+//            $params['upoId']                = $parent_order->get_meta(NUVEI_UPO);
+        }
+        
+        if ('apmgw_expresscheckout' == $parent_payment_method) {
+            Nuvei_Logger::write('PayPal rebilling');
+            
+            $params['clientUniqueId']               = $renewal_order_id . '_' . uniqid();
+            $params['paymentOption']['subMethod']   = ['subMethod' => 'ReferenceTransaction'];
+        }
+        
+        $resp = $payment_obj->process($params);
+        
+        if (empty($resp['status']) || 'success' != strtolower($resp['status'])) {
+            Nuvei_Logger::write('Error when try to get Session Token');
+            WC_Subscriptions_Manager::process_subscription_payment_failure_on_order($parent_order);
+        }
+    }
     
 	/**
 	 * Get a plugin setting by its key.
@@ -1011,6 +1148,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'label' => __('Create and save daily log files. This can help for debugging and catching bugs.', 'nuvei_checkout_woocommerce'),
 				'default' => 'yes'
 			),
+			'disable_wcs_alert' => array(
+				'title' => __('Hide WCS warining', 'nuvei_checkout_woocommerce'),
+				'type' => 'checkbox',
+				'label' => __('Check it to hide WCS waringn permanent.', 'nuvei_checkout_woocommerce'),
+				'default' => 'no'
+			),
 		);
 	}
 	
@@ -1054,6 +1197,27 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'default'       => 'prod',
 				'class'         => 'nuvei_checkout_setting'
             ],
+            'use_upos' => array(
+				'title'         => __('Allow client to use UPOs', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+				'options'       => array(
+					0 => 'No',
+					1 => 'Yes',
+				),
+				'default'       => 0,
+				'class'         => 'nuvei_checkout_setting',
+			),
+            'allow_paypal_rebilling' => array(
+				'title'         => __('Allow rebilling with PayPal', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+				'options'       => array(
+					0 => 'No',
+					1 => 'Yes',
+				),
+				'default'       => 0,
+				'class'         => 'nuvei_checkout_setting',
+                'description'   => __('PayPal is available only for WCS. Using PayPal for rebilling will disable the UPOs.', 'nuvei_checkout_woocommerce'),
+			),
 			'use_dcc' => array(
 				'title'         => __('Use currency conversion', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
@@ -1082,16 +1246,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			),
 			'pm_black_list' => array(
 				'type' => 'nuvei_multiselect',
-			),
-			'use_upos' => array(
-				'title'         => __('Allow client to use UPOs', 'nuvei_checkout_woocommerce'),
-				'type'          => 'select',
-				'options'       => array(
-					0 => 'No',
-					1 => 'Yes',
-				),
-				'default'       => 0,
-				'class'         => 'nuvei_checkout_setting',
 			),
 			'pay_button' => array(
 				'title'         => __('Choose the Text on the Pay button', 'nuvei_checkout_woocommerce'),

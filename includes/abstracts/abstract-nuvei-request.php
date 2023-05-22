@@ -29,7 +29,7 @@ abstract class Nuvei_Request
 	 * 
 	 * @param array $plugin_settings
 	 */
-	public function __construct( array $plugin_settings)
+	public function __construct(array $plugin_settings)
     {
 		$time                  = gmdate('Ymdhis');
 		$this->plugin_settings = $plugin_settings;
@@ -49,36 +49,6 @@ abstract class Nuvei_Request
 		);
 	}
     
-    /**
-     * Check for Item with a Nuvei Payment plan in the cart.
-     * 
-     * @global object $woocommerce
-     * @return array $resp
-     */
-    public function check_for_product_with_plan()
-    {
-        global $woocommerce;
-
-        $cart       = $woocommerce->cart;
-        $cart_items = $cart->get_cart();
-        $resp       = [
-            'items'             => count($cart_items),
-            'item_with_plan'    => false
-        ];
-        
-        foreach ( $cart_items as $item ) {
-            $cart_product   = wc_get_product( $item['product_id'] );
-            $cart_prod_attr = $cart_product->get_attributes();
-            
-            // product with a payment plan
-            if ( ! empty($cart_prod_attr['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
-                $resp['item_with_plan'] = true;
-            }
-        }
-        
-        return $resp;
-    }
-	
 	/**
 	 * Checks if the Order belongs to WC_Order and if the order was made
 	 * with Nuvei payment module.
@@ -367,11 +337,16 @@ abstract class Nuvei_Request
 			return $params;
 		}
 		
-		$all_params = array_merge($this->request_base_params, $params);
+		$all_params = array_merge_recursive($this->request_base_params, $params);
+        
+        // use incoming clientRequestId instead of auto generated one
+        if (!empty($params['clientRequestId'])) {
+            $all_params['clientRequestId'] = $params['clientRequestId'];
+        }
 		
 		// add the checksum
 		$checksum_keys = $this->get_checksum_params();
-		
+        
 		if (is_array($checksum_keys)) {
 			foreach ($checksum_keys as $key) {
 				if (isset($all_params[$key])) {
@@ -552,10 +527,13 @@ abstract class Nuvei_Request
 		
 		$items = $woocommerce->cart->get_cart();
 		$data  = array(
+			'wc_subscr'     => false,
 			'subscr_data'	=> [],
 			'products_data'	=> [],
 			'totals'        => $woocommerce->cart->get_totals(),
 		);
+        
+        Nuvei_Logger::write($items);
         
 		foreach ($items as $item_id => $item) {
 			$cart_product           = wc_get_product( $item['product_id'] );
@@ -564,48 +542,55 @@ abstract class Nuvei_Request
             $nuvei_plan_variation   = 'attribute_' . $nuvei_taxonomy_name;
             
             // get short items data, we use it for Cashier url
-			$data['products_data'][$item['product_id']] = array(
-				'quantity'	=> $item['quantity'],
-				'price'		=> get_post_meta($item['product_id'] , '_price', true),
-				'name'		=> $cart_product->get_title(),
-				'in_stock'  => $cart_product->is_in_stock(),
+			$data['products_data'][] = array(
+                'product_id'    => $item['product_id'],
+				'quantity'      => $item['quantity'],
+				'price'         => get_post_meta($item['product_id'] , '_price', true),
+				'name'          => $cart_product->get_title(),
+				'in_stock'      => $cart_product->is_in_stock(),
+                'item_id'       => $item_id,
 			);
             
-            if (empty($cart_prod_attr[$nuvei_taxonomy_name])) {
-				continue;
-			}
+            Nuvei_Logger::write([
+                'nuvei taxonomy name'   => $nuvei_taxonomy_name,
+                'product attributes'    => $cart_prod_attr
+            ]);
             
-            // check if product has only Nuvei Payment Plan Attribute
-            foreach ($cart_prod_attr as $attr) {
-                if ( $attr->get_variation() ) {
+            // check for WCS
+            if (false !== strpos($cart_product->get_type(), 'subscription')) {
+                $data['wc_subscr'] = true;
+                continue;
+            }
+            
+            # check for product with Nuvei Payment Plan variation
+            // We will not add the products with "empty plan" into subscr_data array!
+            if (!empty($item['variation']) 
+                && 0 != $item['variation_id']
+                && array_key_exists($nuvei_plan_variation, $item['variation'])
+            ) {
+                $term = get_term_by('slug', $item['variation'][$nuvei_plan_variation], $nuvei_taxonomy_name);
+                
+                Nuvei_Logger::write((array) $term, '$term');
+
+                if (is_wp_error($term) || empty($term->term_id)) {
+                    Nuvei_Logger::write(
+                        $item['variation'][$nuvei_plan_variation],
+                        'Error when try to get Term by Slug'
+                    );
+                    
                     continue;
                 }
                 
-                $name = $attr->get_name();
+                $term_meta = get_term_meta($term->term_id);
                 
-                // we need data only for Nuvei attribute
-                if (!$attr->is_taxonomy()) {
-                    continue;
-                }
-                
-                $nuvei_plan_term    = current(wp_get_post_terms( $item['product_id'], $name, 'all' ));
-                $term_meta          = get_term_meta($nuvei_plan_term->term_id);
-                
-//                Nuvei_Logger::write(
-//                    [
-//                        '$nuvei_plan_term' => $nuvei_plan_term,
-//                        '$nuvei_plan_term' => $term_meta,
-//                        'term_id' => $nuvei_plan_term->term_id,
-//                    ],
-//                    'Iteam with attribute'
-//                );
+                Nuvei_Logger::write((array) $term_meta, '$term_meta');
                 
                 if (empty($term_meta['planId'][0])) {
                     continue;
                 }
-                
-                // in this case we do not have variation_id, only product_id
-                $data['subscr_data']['product_' . $item['product_id']] = [
+
+                $data['subscr_data'][] = [
+                    'variation_id'      => $item['variation_id'],
                     'planId'			=> $term_meta['planId'][0],
                     'recurringAmount'	=> number_format($term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', ''),
                     'recurringPeriod'   => [
@@ -617,76 +602,69 @@ abstract class Nuvei_Request
                     'endAfter'          => [
                         $term_meta['endAfterUnit'][0] => $term_meta['endAfterPeriod'][0],
                     ],
+                    'item_id'           => $item_id,
                 ];
                 
-                // pass [pXY => Z], where pXY is for productID, Z is the term ID
-//                $data['subscr_data']['p' . $item['product_id']] = $nuvei_plan_term->term_id;
-            }
-            // /check if product has only Nuvei Payment Plan Attribute
-            
-            if (empty($item['variation']) || 0 == $item['variation_id']) {
                 continue;
             }
+            # /check for product with Nuvei Payment Plan variation
             
-			$term = get_term_by('slug', $item['variation'][$nuvei_plan_variation], $nuvei_taxonomy_name);
-
-			if (is_wp_error($term) || empty($term->term_id)) {
-				Nuvei_Logger::write($item['variation'][$nuvei_plan_variation], 'Error when try to get Term by Slug:');
-				continue;
-			}
-			
-			$term_meta = get_term_meta($term->term_id);
-//            Nuvei_Logger::write(
-//                    [
-//                        '$nuvei_plan_term' => $term,
-//                        'term_id' => $nuvei_plan_term->term_id,
-//                    ],
-//                    'Iteam with variation'
-//                );
-            
-            if (empty($term_meta['planId'][0])) {
-                continue;
+            # check if product has only Nuvei Payment Plan Attribute
+            foreach ($cart_prod_attr as $attr) {
+                Nuvei_Logger::write((array) $attr, '$attr');
+                
+                $name = $attr->get_name();
+                
+                // if the attribute name is not nuvei taxonomy name go to next attribute
+                if ($name != $nuvei_taxonomy_name) {
+                    Nuvei_Logger::write($name, 'Not Nuvei attribute, check the next one.');
+                    continue;
+                }
+                
+                $attr_option = current($attr->get_options());
+                
+                // get all terms for this product ID
+//                $terms = wp_get_post_terms( $item['product_id'], $name, 'all' );
+                $terms = wp_get_post_terms( $item['product_id'], $name, ['term_id' => $attr_option] );
+                
+                if (is_wp_error($terms)) {
+                    continue;
+                }
+                
+                $nuvei_plan_term    = current($terms);
+                $term_meta          = get_term_meta($nuvei_plan_term->term_id);
+                
+                // in case of missing Nuvei Plan ID
+                if (empty($term_meta['planId'][0])) {
+                    Nuvei_Logger::write($term_meta, 'Iteam with attribute $term_meta');
+                    continue;
+                }
+                
+                // in this case we do not have variation_id, only product_id
+                $data['subscr_data'][] = [
+                    'product_id'        => $item['product_id'],
+                    'planId'			=> $term_meta['planId'][0],
+                    'recurringAmount'	=> number_format($term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', ''),
+                    'recurringPeriod'   => [
+                        $term_meta['recurringPeriodUnit'][0] => $term_meta['recurringPeriodPeriod'][0],
+                    ],
+                    'startAfter'        => [
+                        $term_meta['startAfterUnit'][0] => $term_meta['startAfterPeriod'][0],
+                    ],
+                    'endAfter'          => [
+                        $term_meta['endAfterUnit'][0] => $term_meta['endAfterPeriod'][0],
+                    ],
+                    'item_id'           => $item_id,
+                ];
             }
-            
-            $data['subscr_data']['variation_' . $item['variation_id']] = [
-                'planId'			=> $term_meta['planId'][0],
-				'recurringAmount'	=> number_format($term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', ''),
-                'recurringPeriod'   => [
-                    $term_meta['recurringPeriodUnit'][0] => $term_meta['recurringPeriodPeriod'][0],
-                ],
-                'startAfter'        => [
-                    $term_meta['startAfterUnit'][0] => $term_meta['startAfterPeriod'][0],
-                ],
-                'endAfter'          => [
-                    $term_meta['endAfterUnit'][0] => $term_meta['endAfterPeriod'][0],
-                ],
-            ];
-            
-            // pass [vXY => Z], where pXY is for variationID, Z is the term ID
-//            $data['subscr_data']['v' . $item['variation_id']] = $nuvei_plan_term->term_id;
+            # /check if product has only Nuvei Payment Plan Attribute
 		}
 
-        Nuvei_Logger::write($data);
+        Nuvei_Logger::write($data, 'get_products_data() data');
         
 		return $data;
 	}
 	
-//    protected function pass_user_token_id()
-//    {
-//        if($this->plugin_settings('use_upos') == 1) {
-//            return true;
-//        }
-//        else {
-//            $product_data = $this->get_products_data();
-//            
-//            if(!empty($product_data['subscr_data'])) {
-//                return true;
-//            }
-//        }
-//        
-//        return false;
-//    }
-    
     /**
      * A common function to set some data into the session.
      * 
@@ -701,6 +679,7 @@ abstract class Nuvei_Request
             'nuvei_order_details',
             [
                 $session_token => [
+                    'wc_subscr'     => $product_data['wc_subscr'],
                     'subscr_data'   => $product_data['subscr_data'],
 //                    'products_data' => $product_data['products_data'],
                 ]
