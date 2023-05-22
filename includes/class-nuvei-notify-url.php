@@ -557,7 +557,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
             
             $this->sc_order->add_order_note($msg);
             $this->sc_order->save();
-            break;
         }
         
 		return;
