@@ -39,7 +39,7 @@ abstract class Nuvei_Request
 			'merchantSiteId'    => $plugin_settings['merchantSiteId'],
 			'clientRequestId'   => $time . '_' . uniqid(),
 			'timeStamp'         => $time,
-			'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION,
+			'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION . '; Plugin v' . nuvei_get_plugin_version(),
 			'sourceApplication' => NUVEI_SOURCE_APPLICATION,
 			'encoding'          => 'UTF-8',
 			'deviceDetails'     => $this->get_device_details(),

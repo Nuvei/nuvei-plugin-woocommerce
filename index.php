@@ -458,7 +458,8 @@ function nuvei_load_styles_scripts( $styles)
             'useUpos'           => $wc_nuvei->can_use_upos(),
             'isUserLogged'      => is_user_logged_in() ? 1 : 0,
             'isPluginActive'    => $wc_nuvei->settings['enabled'],
-            'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION,
+            'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION
+                . '; Plugin v' . nuvei_get_plugin_version(),
         ]
     );
     
@@ -526,7 +527,8 @@ function nuvei_load_admin_styles_scripts( $hook) {
         [
             'security'          => wp_create_nonce('sc-security-nonce'),
             'nuveiPaymentPlans' => $plans_list,
-            'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION,
+            'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION
+                . '; Plugin v' . nuvei_get_plugin_version(),
         ]
     );
     
@@ -1158,3 +1160,16 @@ function nuvei_after_order_itemmeta($item_id, $item, $_product)
         }
     }
 }
+
+/**
+ * Get the plugin version.
+ * 
+ * @return string
+ */
+function nuvei_get_plugin_version()
+{
+    $plugin_data  = get_plugin_data(__FILE__);
+    return $plugin_data['Version'];
+}
+
+

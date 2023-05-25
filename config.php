@@ -31,7 +31,7 @@ const NUVEI_TRANS_CURR          = '_transactionCurrency';
 const NUVEI_TRANS_STATUS        = '_transactionStatus';
 const NUVEI_PREV_TRANS_STATUS   = '_nuveiPrevTransactionStatus';
 
-const NUVEI_SOURCE_APPLICATION  = 'WOOCOMMERCE_PLUGIN';
+const NUVEI_SOURCE_APPLICATION  = 'wooCommerce Plugin';
 const NUVEI_GLOB_ATTR_NAME      = 'Nuvei Payment Plan'; // the name of the Nuvei Global Product Attribute name
 const NUVEI_LOG_EXT             = 'log';
 const NUVEI_PLANS_FILE          = 'sc_plans.json';
