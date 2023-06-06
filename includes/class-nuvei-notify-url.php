@@ -29,7 +29,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			exit;
         }
         
-        // just give few seconds to WC to finish the process generating the DMN
+        // just give few seconds to WC to finish the process, who generated the DMN
         sleep(3);
         
         if (!$this->validate_checksum()) {
@@ -48,11 +48,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		$client_request_id      = Nuvei_Http::get_param('clientRequestId');
 		$req_status             = Nuvei_Http::get_request_status();
 		
-//		if (empty($req_status) && empty($dmnType)) {
-//			Nuvei_Logger::write('DMN Error - the Status is empty!');
-//			exit(wp_json_encode('DMN Error - the Status is empty!'));
-//		}
-        
         if ('pending' == strtolower($req_status)) {
             $msg = 'Pending DMN, waiting for the next.';
             Nuvei_Logger::write($msg);
@@ -115,12 +110,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			exit;
 		}
 		# Subscription State DMN END
-		
-//		if (empty($TransactionID)) {
-//			Nuvei_Logger::write('DMN error - The TransactionID is empty!');
-//			echo wp_json_encode('DMN error - The TransactionID is empty!');
-//			exit;
-//		}
 		
 		# Subscription Payment DMN
 		if ('subscriptionPayment' == $dmnType && 0 != $TransactionID) {
@@ -220,7 +209,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		if ('' != $clientUniqueId
 			&& ( in_array($transactionType, array('Void', 'Settle'), true) )
 		) {
-			$this->is_order_valid($clientUniqueId);
+			$this->is_order_valid(0 < $order_id ? $order_id : $clientUniqueId);
             $this->check_for_repeating_dmn();
 			
 			if ('Settle' == $transactionType) {
@@ -429,7 +418,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 				$TransactionID
 			)
 		);
-				
+                
 		return $res;
 	}
 	
@@ -515,6 +504,11 @@ class Nuvei_Notify_Url extends Nuvei_Request
         
         // The meta key for the Subscription is dynamic.
         $order_all_meta = get_post_meta($order_id);
+        
+        if (!is_array($order_all_meta) || empty($order_all_meta)) {
+            Nuvei_Logger::write('Order meta is not array or is empty.');
+            return;
+        }
         
         foreach ($order_all_meta as $key => $data) {
             if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
@@ -787,8 +781,14 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		$ref_amount = 0;
 		$tries		= 0;
 		$ref_tr_id	= Nuvei_Http::get_param('TransactionID', 'int');
+        $isCpRefund = strpos(Nuvei_Http::get_param('clientRequestId'), 'gwp_') !== false ? true : false;
+        
+        if ($isCpRefund) {
+            $tries = 5;
+        }
 		
 		// there is chance of slow saving of meta data (in create_refund_record()), so let's wait
+        // in case of CPanel Refund the $refunds meta will be empty
 		do {
             Nuvei_Logger::write('Check for Refund meta data.');
             
@@ -818,7 +818,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		) {
 			$ref_amount = $refunds[$ref_tr_id]['refund_amount'];
 		}
-        elseif (0 == $ref_amount && strpos(Nuvei_Http::get_param('clientRequestId'), 'gwp_') !== false) {
+        elseif (0 == $ref_amount && $isCpRefund) {
 			// in case of CPanel refund - add Refund meta data here
 			$ref_amount = Nuvei_Http::get_param('totalAmount', 'float');
 		}

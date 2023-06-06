@@ -2,6 +2,7 @@
 
 # 1.4.1
     * Changed the value of sourceApplication and webMasterId values.
+    * Fixed the problem when receive DMN from the CPanel.
 
 # 1.4.0
     * Add support for WC Subscriptions plugin.
