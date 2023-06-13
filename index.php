@@ -556,7 +556,7 @@ function nuvei_enqueue( $hook)
 		});
 	}
 	
-	// nuvei checkout step process order, after the internal submit form the checkout
+	// nuvei checkout step process order, after the internal submit from the checkout
 	if ('process-order' == Nuvei_Http::get_param('wc-api')
 		&& !empty(Nuvei_Http::get_param('order_id'))
 	) {

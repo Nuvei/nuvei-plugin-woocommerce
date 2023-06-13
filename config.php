@@ -42,7 +42,7 @@ const NUVEI_REST_ENDPOINT_INT   = 'https://ppp-test.nuvei.com/ppp/api/v1/';
 const NUVEI_REST_ENDPOINT_PROD  = 'https://secure.safecharge.com/ppp/api/v1/';
 
 //const NUVEI_SDK_URL_INT         = 'https://srv-bsf-devpppjs.gw-4u.com/checkoutNext/checkout.js';
-const NUVEI_SDK_URL_PROD        = 'https://cdn.nuvei.com/safecharge_resources/v1/checkout/checkout.js';
+const NUVEI_SDK_URL_PROD        = 'https://cdn.safecharge.com/safecharge_resources/v1/checkout/checkout.js';
 const NUVEI_SDK_AUTOCLOSE_URL   = 'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html';
 
 define('NUVEI_LOGS_DIR', dirname(dirname(dirname(__FILE__))) . DIRECTORY_SEPARATOR 
