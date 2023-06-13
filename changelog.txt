@@ -1,5 +1,9 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.4.2
+    * Removed the "SDK Version" option into the plugin.
+    * Added support for theme picking for SimplyConnect.
+
 # 1.4.1
     * Changed the value of sourceApplication and webMasterId values.
     * Fixed the problem when receive DMN from the CPanel.

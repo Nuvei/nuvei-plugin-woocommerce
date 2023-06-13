@@ -723,6 +723,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'logLevel'                  => $this->get_setting('log_level'),
 			'maskCvv'                   => true,
 			'i18n'                      => json_decode($this->get_setting('translation', ''), true),
+			'theme'                     => $this->get_setting('sdk_theme', 'accordion'),
 		);
         
 		// check for product with a plan
@@ -767,9 +768,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
 		# blocked_cards END
         
-        if($this->get_setting('sdk_version') != 'prod') {
-            $checkout_data['webSdkEnv'] = 'dev';
-        }
+//        if($this->get_setting('sdk_version') != 'prod') {
+//            $checkout_data['webSdkEnv'] = 'dev';
+//        }
 		
 		$resp_data['nuveiPluginUrl'] = plugin_dir_url(NUVEI_PLUGIN_FILE);
 		$resp_data['nuveiSiteUrl']   = get_site_url();
@@ -1186,17 +1187,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				),
 				'class'         => 'nuvei_cashier_setting'
 			),
-            'sdk_version' => [
-                'title'         => __('SDK version', 'nuvei_checkout_woocommerce'),
-				'type'          => 'select',
-				'options'       => array(
-					'prod'        => __('Prod (Recommended)', 'nuvei_checkout_woocommerce'),
-					'dev'         => __('Dev', 'nuvei_checkout_woocommerce'),
-				),
-				'description'   => __('It is not recommended to use Dev version on Production sites.', 'nuvei_checkout_woocommerce'),
-				'default'       => 'prod',
-				'class'         => 'nuvei_checkout_setting'
-            ],
+//            'sdk_version' => [
+//                'title'         => __('SDK version', 'nuvei_checkout_woocommerce'),
+//				'type'          => 'select',
+//				'options'       => array(
+//					'prod'        => __('Prod (Recommended)', 'nuvei_checkout_woocommerce'),
+//					'dev'         => __('Dev', 'nuvei_checkout_woocommerce'),
+//				),
+//				'description'   => __('It is not recommended to use Dev version on Production sites.', 'nuvei_checkout_woocommerce'),
+//				'default'       => 'prod',
+//				'class'         => 'nuvei_checkout_setting'
+//            ],
             'use_upos' => array(
 				'title'         => __('Allow client to use UPOs', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
@@ -1218,6 +1219,16 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'class'         => 'nuvei_checkout_setting',
                 'description'   => __('PayPal is available only for WCS. Using PayPal for rebilling will disable the UPOs.', 'nuvei_checkout_woocommerce'),
 			),
+            'sdk_theme' => [
+                'title'     => __('SimplyConnect theme', 'nuvei_checkout_woocommerce'),
+                'type'      => 'select',
+                'options'   => array(
+					'accordion'     => __('Accordion', 'nuvei_checkout_woocommerce'),
+					'tiles'         => __('Tiles', 'nuvei_checkout_woocommerce'),
+					'horizontal'    => __('Horizontal', 'nuvei_checkout_woocommerce'),
+				),
+                'default'   => 'accordion',
+            ],
 			'use_dcc' => array(
 				'title'         => __('Use currency conversion', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',

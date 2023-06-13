@@ -9,9 +9,9 @@
  * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.2
+ * Tested up to: 6.2.2
  * WC requires at least: 3.0
- * WC tested up to: 7.7.0
+ * WC tested up to: 7.7.2
 */
 
 defined('ABSPATH') || die('die');
@@ -404,15 +404,16 @@ function nuvei_load_styles_scripts( $styles)
 	);
 	
 	// Checkout SDK URL for integration and production
-    $sdk_version = NUVEI_SDK_URL_PROD;
+//    $sdk_version = NUVEI_SDK_URL_PROD;
     
-    if(!empty($wc_nuvei->settings['sdk_version'])) {
-        $sdk_version = $wc_nuvei->settings['sdk_version'];
-    }
+//    if(!empty($wc_nuvei->settings['sdk_version'])) {
+//        $sdk_version = $wc_nuvei->settings['sdk_version'];
+//    }
     
 	wp_register_script(
 		'nuvei_checkout_sdk',
-		($sdk_version == 'prod' ? NUVEI_SDK_URL_PROD : NUVEI_SDK_URL_INT),
+//		($sdk_version == 'prod' ? NUVEI_SDK_URL_PROD : NUVEI_SDK_URL_INT),
+		NUVEI_SDK_URL_PROD,
 		array('jquery'),
 		'1'
 	);
