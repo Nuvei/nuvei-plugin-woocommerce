@@ -3,6 +3,7 @@
 # 1.4.2
     * Removed the "SDK Version" option into the plugin.
     * Added support for theme picking for SimplyConnect.
+    * Replaced safecharge domain into the endpoints with nuvei one, where is possible.
 
 # 1.4.1
     * Changed the value of sourceApplication and webMasterId values.
