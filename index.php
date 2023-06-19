@@ -782,8 +782,6 @@ function nuvei_mod_thank_you_page($order_id)
     $new_msg        = esc_html__('Please check your Order status for more information.', 'nuvei_checkout_woocommerce');
     $new_title      = '';
     
-    var_dump($request_status);
-    
     if ('error' == $request_status
         || 'fail' == strtolower(Nuvei_Http::get_param('ppp_status'))
     ) {
