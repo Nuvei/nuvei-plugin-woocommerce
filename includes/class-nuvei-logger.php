@@ -87,7 +87,7 @@ class Nuvei_Logger
             }
         }
         elseif(is_object($data)) {
-            $data_tmp   = print_r($data, true);
+            $data_tmp   = print_r((array) $data, true);
             $exception  = $beauty_log ? json_encode($data_tmp, JSON_PRETTY_PRINT) : json_encode($data_tmp);
         }
         elseif(is_bool($data)) {

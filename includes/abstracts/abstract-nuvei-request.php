@@ -399,13 +399,8 @@ abstract class Nuvei_Request
 			$resp       = curl_exec($ch);
             $resp_array = json_decode($resp, true);
             
-            Nuvei_Logger::write(
-                array(
-                    'Response'      => is_array($resp_array) ? $resp_array : $resp,
-                    'Response info' => curl_getinfo($ch),
-                ),
-                'Nuvei Response data'
-            );
+            Nuvei_Logger::write(is_array($resp_array) ? $resp_array : $resp, 'Response');
+            Nuvei_Logger::write(curl_getinfo($ch), 'Response info');
             
 			curl_close($ch);
 			
