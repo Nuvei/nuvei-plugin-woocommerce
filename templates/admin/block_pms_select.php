@@ -36,7 +36,7 @@
 				   readonly="" 
 				   value="<?php echo esc_attr($this->get_setting('pm_black_list', '')); ?>" />
 			
-			<button type="button" class="button-secondary" onclick="nuveiCleanBlockedPMs()">
+			<button type="button" id="nuvei_clean_blocked_pms" class="button-secondary" onclick="nuveiCleanBlockedPMs()">
 				<?php echo esc_html('Clean', 'nuvei_checkout_woocommerce'); ?>
 			</button>
 		</fieldset>
