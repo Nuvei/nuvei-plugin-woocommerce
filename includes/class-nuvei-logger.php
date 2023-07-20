@@ -19,19 +19,26 @@ class Nuvei_Logger
      */
 	public static function write( $data, $message = '', $log_level = 'INFO', $span_id = '')
     {
-		$plugin_data = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . 'index.php');
-		$save_logs   = 'yes';
-		$test_mode   = 'yes';
-			
-		if (!empty($_GET['save_logs'])) {
-			$save_logs = filter_var($_GET['save_logs'], FILTER_SANITIZE_STRING);
-		}
-		if (!empty($_GET['test_mode'])) {
-			$test_mode = filter_var($_GET['test_mode'], FILTER_SANITIZE_STRING);
-		}
+		$plugin_data        = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . 'index.php');
+        $nuvei_gw           = WC()->payment_gateways->payment_gateways()[NUVEI_GATEWAY_NAME];
+		$save_logs          = $nuvei_gw->get_option('save_logs');
+		$save_single_log    = $nuvei_gw->get_option('save_single_log');
+		$test_mode          = $nuvei_gw->get_option('test');
         
-		// path is different fore each plugin
-		if (!is_dir(NUVEI_LOGS_DIR) || 'yes' != $save_logs) {
+//		if (!empty($_GET['save_logs'])) {
+//			$save_logs = filter_var($_GET['save_logs'], FILTER_SANITIZE_STRING);
+//		}
+//		if (!empty($_GET['test_mode'])) {
+//			$test_mode = filter_var($_GET['test_mode'], FILTER_SANITIZE_STRING);
+//		}
+        
+//		if (!is_dir(NUVEI_LOGS_DIR) || 'yes' != $save_logs) {
+//			return;
+//		}
+		if (!is_dir(NUVEI_LOGS_DIR)) {
+			return;
+		}
+		if ('no' == $save_logs && 'no' == $save_single_log) {
 			return;
 		}
 		
@@ -122,13 +129,30 @@ class Nuvei_Logger
             . $exception            // the exception, in our case - data to print
         ;
         
-        $string     .= "\r\n\r\n";
-        $file_name  = date('Y-m-d', time());
+        $string             .= "\r\n\r\n";
+        $file_name          = date('Y-m-d', time());
+        $single_file_name   = NUVEI_GATEWAY_NAME;
         
-		$res = file_put_contents(
-			NUVEI_LOGS_DIR . $file_name . '.' . NUVEI_LOG_EXT,
-			$string,
-			FILE_APPEND
-		);
+        if ('yes' == $save_logs) {
+            $res = file_put_contents(
+                NUVEI_LOGS_DIR . $file_name . '.' . NUVEI_LOG_EXT,
+                $string,
+                FILE_APPEND
+            );
+        }
+        
+        if ('yes' == $save_single_log) {
+            $res = file_put_contents(
+                NUVEI_LOGS_DIR . $single_file_name . '.' . NUVEI_LOG_EXT,
+                $string,
+                FILE_APPEND
+            );
+        }
+        
+//        $res = file_put_contents(
+//            NUVEI_LOGS_DIR . $file_name . '.' . NUVEI_LOG_EXT,
+//            $string,
+//            FILE_APPEND
+//        );
 	}
 }

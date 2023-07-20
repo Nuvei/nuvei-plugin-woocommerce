@@ -1144,10 +1144,16 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'description'   => __('This option is for Nuvei Checkout SDK.', 'nuvei_checkout_woocommerce'),
 			),
 			'save_logs' => array(
-				'title' => __('Save logs', 'nuvei_checkout_woocommerce'),
+				'title' => __('Save daily logs', 'nuvei_checkout_woocommerce'),
 				'type' => 'checkbox',
 				'label' => __('Create and save daily log files. This can help for debugging and catching bugs.', 'nuvei_checkout_woocommerce'),
 				'default' => 'yes'
+			),
+			'save_single_log' => array(
+				'title' => __('Save single log file.', 'nuvei_checkout_woocommerce'),
+				'type' => 'checkbox',
+				'label' => __('Create and save the logs into single file.', 'nuvei_checkout_woocommerce'),
+				'default' => 'no'
 			),
 			'disable_wcs_alert' => array(
 				'title' => __('Hide WCS warining', 'nuvei_checkout_woocommerce'),

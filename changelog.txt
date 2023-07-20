@@ -1,8 +1,9 @@
 *** WooCommerce Extension Changelog ***
 
 # 1.4.2
-    * Removed the "SDK Version" option into the plugin.
     * Added support for theme picking for SimplyConnect.
+    * Added option to save logs into second log file - nuvei.log.
+    * Removed the "SDK Version" option into the plugin.
     * Replaced safecharge domain into the endpoints with nuvei one, where is possible.
     * Split the requests response log.
 
