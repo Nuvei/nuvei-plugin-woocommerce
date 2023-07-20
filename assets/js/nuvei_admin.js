@@ -2,7 +2,6 @@ var scSettleBtn		= null;
 var scVoidBtn		= null;
 
 // when the admin select to Settle, Void or Cancel Subscription actions
-//function settleAndCancelOrder(question, action, orderId) {
 function nuveiAction(question, action, orderId, subscrId) {
 	console.log('settleAndCancelOrder')
 	
@@ -233,27 +232,29 @@ function nuveiSyncPaymentPlans() {
 	});
 }
 
-function nuveiDisablePm(_code, _name) {
-    console.log('nuveiDisablePm', _code)
-    console.log('nuveiDisablePm', _name)
+function nuveiDisablePm(_value) {
+    console.log('nuveiDisablePm', _value);
     
+    var selectedOptionId    = '#nuvei_block_pm_' + _value;
 	var selectedPMs			= jQuery('#woocommerce_nuvei_pm_black_list').val();
 	var selectedPMsVisible	= jQuery('#woocommerce_nuvei_pm_black_list_visible').val();
-	
+    
+    jQuery(selectedOptionId).hide();
+    
 	// fill the hidden input
 	if('' == selectedPMs) {
-		selectedPMs += _code;
+		selectedPMs += _value;
 	}
 	else {
-		selectedPMs += ',' + _code;
+		selectedPMs += ',' + _value;
 	}
 	
 	// fill the visible input
 	if('' == selectedPMsVisible) {
-		selectedPMsVisible += _name;
+		selectedPMsVisible += jQuery(selectedOptionId).text();
 	}
 	else {
-		selectedPMsVisible += ', ' + _name;
+		selectedPMsVisible += ', ' + jQuery(selectedOptionId).text();
 	}
 	
 	document.getElementById('nuvei_block_pms_multiselect').selectedIndex  = 0;
@@ -292,8 +293,7 @@ jQuery(function() {
 	// set the flags END
 	
 	// hide Refund button if the status is refunded
-	if (
-		jQuery('#order_status').val() == 'wc-refunded'
+	if (jQuery('#order_status').val() == 'wc-refunded'
 		|| jQuery('#order_status').val() == 'wc-cancelled'
 		|| jQuery('#order_status').val() == 'wc-pending'
 		|| jQuery('#order_status').val() == 'wc-on-hold'
@@ -318,17 +318,6 @@ jQuery(function() {
 		nuvei_show_hide_rest_settings();
 	});
 	
-	// for the disable/enable PM select
-    jQuery('#nuvei_block_pms_multiselect option').on('click', function() {
-        var self = jQuery(this);
-        
-        if('' == self.prop('value')) {
-			return;
-		}
-        
-        nuveiDisablePm(self.val(), self.text());
-        self.hide();
-    });
 });
 // document ready function END
 

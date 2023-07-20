@@ -1193,17 +1193,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				),
 				'class'         => 'nuvei_cashier_setting'
 			),
-//            'sdk_version' => [
-//                'title'         => __('SDK version', 'nuvei_checkout_woocommerce'),
-//				'type'          => 'select',
-//				'options'       => array(
-//					'prod'        => __('Prod (Recommended)', 'nuvei_checkout_woocommerce'),
-//					'dev'         => __('Dev', 'nuvei_checkout_woocommerce'),
-//				),
-//				'description'   => __('It is not recommended to use Dev version on Production sites.', 'nuvei_checkout_woocommerce'),
-//				'default'       => 'prod',
-//				'class'         => 'nuvei_checkout_setting'
-//            ],
             'use_upos' => array(
 				'title'         => __('Allow client to use UPOs', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
