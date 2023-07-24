@@ -11,7 +11,7 @@
  * Require at least: 4.7
  * Tested up to: 6.2.2
  * WC requires at least: 3.0
- * WC tested up to: 7.7.2
+ * WC tested up to: 7.9.0
 */
 
 defined('ABSPATH') || die('die');

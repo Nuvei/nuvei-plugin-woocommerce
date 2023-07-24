@@ -8,11 +8,17 @@ PHP:
 
 Wordpress: 
   - minimum v4.7
-  - tested up to v6.1.1
+  - tested up to v6.2.2
 
 WooCommerce: 
   - minimum v 3.0
-  - tested up to v7.5.0
+  - tested up to v7.9.0
+
+Merchant configuration: 
+  - enabled DMNs
+
+Server configuration: 
+  - public access to the plugin notify URL. Check plugin settings, Help Tools tab.
 
 Stable tag: main
 
