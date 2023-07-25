@@ -630,7 +630,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         if (!is_user_logged_in()) {
             if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
                 wc_add_notice(
-                    __('You must login to add a product with a Payment Plan.', 'nuvei_checkout_woocommerce'),
+                    __('Please create an account or login to subscribe.', 'nuvei_checkout_woocommerce'),
                     'error'
                 );
 
@@ -639,7 +639,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             
             if (false !== strpos($product->get_type(), 'subscription')) {
                 wc_add_notice(
-                    __('You must login to add a product with Woocommerce Subscription.', 'nuvei_checkout_woocommerce'),
+                    __('Please create an account or login to subscribe.', 'nuvei_checkout_woocommerce'),
                     'error'
                 );
 
