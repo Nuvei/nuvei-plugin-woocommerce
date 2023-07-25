@@ -618,23 +618,46 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 */
 	public function add_to_cart_validation($true, $product_id, $quantity)
     {
+        Nuvei_Logger::write(is_user_logged_in(), 'add_to_cart_validation');
+        
 		global $woocommerce;
 		
 		$cart       = $woocommerce->cart;
 		$product    = wc_get_product( $product_id );
 		$attributes = $product->get_attributes();
 		
-		// for guests disable adding products with Nuvei Payment plan to the Cart
-		if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])
-            && !is_user_logged_in()
-        ) {
-            wc_add_notice(
-                __('You must login to add a product with a Payment Plan.', 'nuvei_checkout_woocommerce'),
-                'error'
-            );
+        // for guests disable adding products with Nuvei Payment plan or WCS to the Cart
+        if (!is_user_logged_in()) {
+            if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
+                wc_add_notice(
+                    __('You must login to add a product with a Payment Plan.', 'nuvei_checkout_woocommerce'),
+                    'error'
+                );
+
+                return false;
+            }
             
-            return false;
-		}
+            if (false !== strpos($product->get_type(), 'subscription')) {
+                wc_add_notice(
+                    __('You must login to add a product with Woocommerce Subscription.', 'nuvei_checkout_woocommerce'),
+                    'error'
+                );
+
+                return false;
+            }
+        }
+        
+		// for guests disable adding products with Nuvei Payment plan to the Cart
+//		if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])
+//            && !is_user_logged_in()
+//        ) {
+//            wc_add_notice(
+//                __('You must login to add a product with a Payment Plan.', 'nuvei_checkout_woocommerce'),
+//                'error'
+//            );
+//            
+//            return false;
+//		}
 		
 		return true;
 	}
