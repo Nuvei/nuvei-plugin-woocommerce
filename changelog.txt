@@ -1,7 +1,7 @@
 *** WooCommerce Extension Changelog ***
 
 # 1.4.3
-    * Do not allow Guest users to add products with WCS into the Cart.
+    * Added option to save UPOs for Guest users, when the user try to buy a product with Subscription.
 
 # 1.4.2
     * Added support for theme picking for SimplyConnect.

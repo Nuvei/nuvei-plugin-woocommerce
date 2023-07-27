@@ -627,7 +627,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$attributes = $product->get_attributes();
 		
         // for guests disable adding products with Nuvei Payment plan or WCS to the Cart
-        if (!is_user_logged_in()) {
+        if (!is_user_logged_in()
+            && 0 == $this->get_setting('save_guest_upos')
+        ) {
             if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
                 wc_add_notice(
                     __('Please create an account or login to subscribe.', 'nuvei_checkout_woocommerce'),
@@ -717,7 +719,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         if(!is_user_logged_in()) {
             $use_upos = $save_pm = false;
         }
-        elseif(!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
+        
+        if(!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
             $save_pm = 'always';
         }
         
@@ -1225,7 +1228,19 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				),
 				'default'       => 0,
 				'class'         => 'nuvei_checkout_setting',
+                'description'   => __('Logged users will see their UPOs, and will have option to save UPOs.', 'nuvei_checkout_woocommerce'),
 			),
+            'save_guest_upos' => [
+                'title'         => __('Save UPOs for Guest users', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+				'options'       => array(
+					0 => 'No',
+					1 => 'Yes',
+				),
+				'default'       => 0,
+				'class'         => 'nuvei_checkout_setting',
+                'description'   => __('The UPO will be save only when the Guest user buy Subscription product.', 'nuvei_checkout_woocommerce'),
+            ],
             'allow_paypal_rebilling' => array(
 				'title'         => __('Allow rebilling with PayPal', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',
