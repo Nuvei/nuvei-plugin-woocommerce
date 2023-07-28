@@ -7,9 +7,11 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Notify_Url extends Nuvei_Request
 {
-	public function __construct( $plugin_settings)
+	public function __construct($plugin_settings)
     {
 		$this->plugin_settings = $plugin_settings;
+        
+        parent::__construct($this->plugin_settings);
 	}
 	
 	public function process()
@@ -254,7 +256,18 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		exit;
 	}
 
-	protected function get_checksum_params() {}
+    /**
+     * @param string $method Optional parameter used for Auto-Void
+     * @return array
+     */
+	protected function get_checksum_params($method = '')
+    {
+        if ('voidTransaction' == $method) {
+            return array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'currency', 'relatedTransactionId', 'url', 'timeStamp');
+        }
+        
+        return [];
+    }
 	
 	/**
 	 * Get client unique id.
@@ -365,13 +378,48 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		$max_tries			= 10;
 		$order_request_time	= Nuvei_Http::get_param('customField3', 'int'); // time of create/update order
 		
-		// do not search more than once if the DMN response time is more than 1 houre before now
-		if ($order_request_time > 0
-			&& in_array($transactionType, array('Auth', 'Sale', 'Credit', 'Refund'), true)
-			&& ( time() - $order_request_time > 3600 )
+        # for Auth and Sale implement Auto-Void if more than 30 minutes passed and still no Order
+        if ($order_request_time > 0
+			&& in_array($transactionType, array('Auth', 'Sale'), true)
+			&& ( time() - $order_request_time > 1800 ) // more than 30 minutes
 		) {
-			$max_tries = 0;
+            $notify_url     = Nuvei_String::get_notify_url($this->plugin_settings);
+            $void_params    = [
+                'clientUniqueId'        => gmdate('YmdHis') . '_' . uniqid(),
+                'amount'                => (string) Nuvei_Http::get_param('totalAmount', 'float'),
+                'currency'              => Nuvei_Http::get_param('currency'),
+                'relatedTransactionId'  => Nuvei_Http::get_param('TransactionID', 'int'),
+                'url'                   => $notify_url,
+                'urlDetails'            => ['notificationUrl' => $notify_url],
+            ];
+            
+            Nuvei_Logger::write(
+                [$this->request_base_params, $void_params],
+                'Try to Void a transaction by not existing WC Order.'
+            );
+            
+            $resp = $this->call_rest_api('voidTransaction', $void_params);
+            
+            // Void Success
+            if (!empty($resp['transactionStatus'])
+                && 'APPROVED' == $resp['transactionStatus']
+                && !empty($resp['transactionId'])
+            ) {
+                http_response_code(200);
+                echo wp_json_encode('The searched Order does not exists, a Void request was made for this Transacrion.');
+                exit;
+            }
 		}
+        # /for Auth and Sale implement Auto-Void if more than 30 minutes passed and still no Order
+        
+        
+		// do not search more than once if the DMN response time is more than 1 houre before now
+//		if ($order_request_time > 0
+//			&& in_array($transactionType, array('Auth', 'Sale', 'Credit', 'Refund'), true)
+//			&& ( time() - $order_request_time > 3600 )
+//		) {
+//			$max_tries = 0;
+//		}
 
 		do {
 			$tries++;

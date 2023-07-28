@@ -2,6 +2,7 @@
 
 # 1.4.3
     * Added option to save UPOs for Guest users, when the user try to buy a product with Subscription.
+    * Added Auto-Void functionality in case of payment, but did not created Order in WC.
 
 # 1.4.2
     * Added support for theme picking for SimplyConnect.
