@@ -906,15 +906,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             'clientRequestId'       => $renewal_order_id . '_' . $parent_order_id . '_' . uniqid(),
             'currency'              => $renewal_order->get_currency(),
             'amount'                => round($renewal_order->get_total(), 2),
-//            'relatedTransactionId'  => $parent_order->get_meta(NUVEI_TRANS_ID),
-//            'upoId'                 => $parent_order->get_meta(NUVEI_UPO),
-//            'bCountry'              => $renewal_order->get_meta('_billing_country'),
-//            'bEmail'                => $billing_mail,
             'billingAddress'        => [
                 'country'   => $renewal_order->get_meta('_billing_country'),
                 'email'     => $billing_mail,
             ],
-            'paymentOption'         => ['userPaymentOptionId'   => $parent_order->get_meta(NUVEI_UPO)],
+            'paymentOption'         => ['userPaymentOptionId' => $parent_order->get_meta(NUVEI_UPO)],
         ];
         
         $parent_payment_method = $parent_order->get_meta(NUVEI_PAYMENT_METHOD);

@@ -26,17 +26,7 @@ class Nuvei_Payment extends Nuvei_Request
                 'clientRequestId'       => @$data['clientRequestId'],
                 'currency'              => @$data['currency'],
                 'amount'                => @$data['amount'],
-    //            'transactionType'       => @$data['transactionType'],
                 'transactionType'       => 'Sale',
-    //            'isRebilling'           => 1,
-    //            'relatedTransactionId'  => @$data['relatedTransactionId'],
-    //            'paymentOption'         => [
-    //                'userPaymentOptionId'   => @$data['upoId']
-    //            ],
-    //            'billingAddress'        => [
-    //                'country'   => @$data['bCountry'],
-    //                'email'     => @$data['bEmail'],
-    //            ],
                 'urlDetails'            => ['notificationUrl' => Nuvei_String::get_notify_url($this->plugin_settings)],
                 'merchantDetails'	=> array(
                     'customField4'      => 'renewal_order'
