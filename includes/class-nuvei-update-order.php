@@ -20,17 +20,17 @@ class Nuvei_Update_Order extends Nuvei_Request
 	 */
 	public function process()
     {
-		$nuvei_last_open_order_details = array();
+		$open_order_details = array();
 		
 		if (!empty(WC()->session)) {
-			$nuvei_last_open_order_details = WC()->session->get('nuvei_last_open_order_details');
+			$open_order_details = WC()->session->get('nuvei_last_open_order_details');
 		}
 		
-		if (empty($nuvei_last_open_order_details)
-			|| empty($nuvei_last_open_order_details['sessionToken'])
-			|| empty($nuvei_last_open_order_details['orderId'])
+		if (empty($open_order_details)
+			|| empty($open_order_details['sessionToken'])
+			|| empty($open_order_details['orderId'])
 		) {
-			Nuvei_Logger::write($nuvei_last_open_order_details, 'update_order() - Missing last Order session data.');
+			Nuvei_Logger::write($open_order_details, 'update_order() - Missing last Order session data.');
 			
 			return array('status' => 'ERROR');
 		}
@@ -51,8 +51,8 @@ class Nuvei_Update_Order extends Nuvei_Request
 		
 		// create Order upgrade
 		$params = array(
-			'sessionToken'		=> $nuvei_last_open_order_details['sessionToken'],
-			'orderId'			=> $nuvei_last_open_order_details['orderId'],
+			'sessionToken'		=> $open_order_details['sessionToken'],
+			'orderId'			=> $open_order_details['orderId'],
 			'currency'			=> get_woocommerce_currency(),
 			'amount'			=> $cart_amount,
 			'billingAddress'	=> $addresses['billingAddress'],
@@ -87,20 +87,24 @@ class Nuvei_Update_Order extends Nuvei_Request
 		
 		# Success
 		if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
-			$nuvei_last_open_order_details['amount']                    = $cart_amount;
-			$nuvei_last_open_order_details['billingAddress']['country'] = $params['billingAddress']['country'];
+			$open_order_details['amount']                    = $cart_amount;
+			$open_order_details['billingAddress']['country'] = $params['billingAddress']['country'];
 			
 			// put the new data in the session
-			$nuvei_last_open_order_details = array(
-				'amount'			=> $params['amount'],
-				'sessionToken'		=> $resp['sessionToken'],
-				'orderId'			=> $resp['orderId'],
-				'billingAddress'	=> $params['billingAddress'],
-			);
+//			$open_order_details = array(
+//				'amount'			=> $params['amount'],
+//				'sessionToken'		=> $resp['sessionToken'],
+//				'orderId'			=> $resp['orderId'],
+//				'billingAddress'	=> $params['billingAddress'],
+//			);
+            $open_order_details['amount']           = $params['amount'];
+            $open_order_details['sessionToken']     = $resp['sessionToken'];
+            $open_order_details['orderId']          = $resp['orderId'];
+            $open_order_details['billingAddress']   = $params['billingAddress'];
             
             $this->set_nuvei_session_data(
                 $resp['sessionToken'],
-                $nuvei_last_open_order_details,
+                $open_order_details,
                 $product_data
             );
 			// put the new data in the session END
