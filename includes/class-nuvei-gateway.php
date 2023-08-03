@@ -671,6 +671,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 */
 	public function call_checkout($is_ajax = false)
     {
+        Nuvei_Logger::write('call_checkout()');
+        
 		global $woocommerce;
         
 		# OpenOrder
@@ -695,10 +697,13 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
 		# OpenOrder END
         
+        $nuvei_helper   = new Nuvei_Helper($this->settings);
 		$cart           = $woocommerce->cart;
 		$cart_items     = $cart->get_cart();
-		$ord_details    = WC()->session->get('nuvei_last_open_order_details');
-		$prod_details   = WC()->session->get('nuvei_order_details');
+//		$ord_details    = WC()->session->get('nuvei_last_open_order_details');
+		$ord_details    = $nuvei_helper->get_addresses();
+//		$prod_details   = WC()->session->get('nuvei_order_details');
+		$prod_details   = $nuvei_helper->get_products();
 		$pm_black_list  = trim($this->get_setting('pm_black_list', ''));
         $subscr_data    = [];
         

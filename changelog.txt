@@ -1,5 +1,9 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.4.4
+    * Always pass userTokenId into the openOrder request. The decision for saving UPO is into the SDK.
+    * Changed the logic when to call updateOrder.
+
 # 1.4.3
     * Added option to save UPOs for Guest users, when the user try to buy a product with Subscription.
     * Added Auto-Void functionality in case of payment, but did not created Order in WC.

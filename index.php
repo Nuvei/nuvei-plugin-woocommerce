@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Plugin for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 1.4.3
+ * Version: 1.4.4
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
