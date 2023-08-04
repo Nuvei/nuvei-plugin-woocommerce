@@ -398,13 +398,15 @@ abstract class Nuvei_Request
 
 			$resp       = curl_exec($ch);
             $resp_array = json_decode($resp, true);
+            $resp_info  = curl_getinfo($ch);
             
             Nuvei_Logger::write(is_array($resp_array) ? $resp_array : $resp, 'Response');
-            Nuvei_Logger::write(curl_getinfo($ch), 'Response info');
             
 			curl_close($ch);
 			
 			if (false === $resp) {
+                Nuvei_Logger::write($resp_info, 'Response info');
+                
 				return array(
 					'status' => 'ERROR',
 					'message' => 'REST API ERROR: response is false'

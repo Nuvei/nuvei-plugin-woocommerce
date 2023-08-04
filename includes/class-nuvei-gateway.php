@@ -697,19 +697,20 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
 		# OpenOrder END
         
-        $nuvei_helper   = new Nuvei_Helper($this->settings);
-		$cart           = $woocommerce->cart;
-		$cart_items     = $cart->get_cart();
+        $nuvei_helper           = new Nuvei_Helper($this->settings);
+		$cart                   = $woocommerce->cart;
+		$cart_items             = $cart->get_cart();
 //		$ord_details    = WC()->session->get('nuvei_last_open_order_details');
-		$ord_details    = $nuvei_helper->get_addresses();
+		$ord_details            = $nuvei_helper->get_addresses();
 //		$prod_details   = WC()->session->get('nuvei_order_details');
-		$prod_details   = $nuvei_helper->get_products();
-		$pm_black_list  = trim($this->get_setting('pm_black_list', ''));
-        $subscr_data    = [];
+		$prod_details           = $nuvei_helper->get_products();
+		$pm_black_list          = trim($this->get_setting('pm_black_list', ''));
+        $is_there_subscription  = false;
+//        $subscr_data    = [];
         
-        if (!empty($prod_details[$oo_data['sessionToken']]['subscr_data'])) {
-            $subscr_data = $prod_details[$oo_data['sessionToken']]['subscr_data'];
-        }
+//        if (!empty($prod_details[$oo_data['sessionToken']]['subscr_data'])) {
+//            $subscr_data = $prod_details[$oo_data['sessionToken']]['subscr_data'];
+//        }
         
 		if (!empty($pm_black_list)) {
 			$pm_black_list = explode(',', $pm_black_list);
@@ -725,8 +726,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             $use_upos = $save_pm = false;
         }
         
-        if(!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
-            $save_pm = 'always';
+//        if(!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
+        if( !empty($prod_details['wc_subscr']) || !empty($prod_details['subscr_data']) ) {
+            $save_pm                = 'always';
+            $is_there_subscription  = true;
         }
         
 		$checkout_data = array( // use it in the template
@@ -758,12 +761,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		);
         
 		// check for product with a plan
-		if (!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
+//		if (!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
+		if ($is_there_subscription) {
             $checkout_data['pmWhitelist'] = ['cc_card'];
             
             // only for WCS
             if (1 == $this->get_setting('allow_paypal_rebilling', 0)
-                && empty($subscr_data)
+//                && empty($subscr_data)
+                && !empty($prod_details['wc_subscr'])
             ) {
                 $checkout_data['pmWhitelist'][]             = 'apmgw_expresscheckout';
                 $checkout_data['showUserPaymentOptions']    = false;

@@ -181,7 +181,7 @@ class Nuvei_Open_Order extends Nuvei_Request
         
         // WC Subsc
         if ($products_data['wc_subscr']) {
-            $oo_params['userTokenId'] = $addresses['billingAddress']['email'];
+//            $oo_params['userTokenId'] = $addresses['billingAddress']['email'];
             $oo_params['isRebilling'] = 0;
             $oo_params['card']['threeD']['v2AdditionalParams'] = [ // some default params
                 'rebillFrequency'   => 30, // days

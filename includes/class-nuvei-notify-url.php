@@ -572,12 +572,9 @@ class Nuvei_Notify_Url extends Nuvei_Request
             
             Nuvei_Logger::write([$key, $subs_data]);
             
-//            $prod_plan                      = $subs_data;
-//            $prod_plan['clientRequestId']   = $order_id . $key;
             $subs_data['clientRequestId']   = $order_id . $key;
             
             $ns_obj = new Nuvei_Subscription($this->plugin_settings);
-//            $resp   = $ns_obj->process($prod_plan);
             $resp   = $ns_obj->process($subs_data);
 
             // On Error
@@ -593,7 +590,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
                 $msg = __('Subscription was created. ') . '<br/>'
                     . __('Subscription ID: ', 'nuvei_checkout_woocommerce') . $resp['subscriptionId'] . '.<br/>' 
                     . __('Recurring amount: ', 'nuvei_checkout_woocommerce') . $this->sc_order->get_currency() . ' '
-    //                . $prod_plan['recurringAmount'];
                     . $subs_data['recurringAmount'];
             }
             

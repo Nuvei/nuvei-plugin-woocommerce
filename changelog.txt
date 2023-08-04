@@ -1,6 +1,8 @@
 *** WooCommerce Extension Changelog ***
 
 # 1.4.4
+    * Added new checkout icon for the plugin.
+    * Load front-end scripts and styles in separate methods.
     * Always pass userTokenId into the openOrder request. The decision for saving UPO is into the SDK.
     * Changed the logic when to call updateOrder.
 

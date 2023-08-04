@@ -149,8 +149,10 @@ function nuvei_init()
 	
 	add_action('init', 'nuvei_enqueue');
 	
-	// load WC styles
-    add_filter('woocommerce_enqueue_styles', 'nuvei_load_styles_scripts');
+    // load front-end scripts
+    add_filter('wp_enqueue_scripts', 'nuvei_load_scripts');
+    // load front-end styles
+    add_filter('woocommerce_enqueue_styles', 'nuvei_load_styles');
 	
 	// add admin style
     add_filter('admin_enqueue_scripts', 'nuvei_load_admin_styles_scripts');
@@ -370,21 +372,24 @@ function nuvei_add_gateway( $methods)
 	return $methods;
 }
 
-# Load Styles and Scripts
 /**
- * Loads public styles and scripts
+ * Loads public scripts
  * 
  * @global Nuvei_Gateway $wc_nuvei
  * @global type $wpdb
  * 
- * @param type $styles
+ * @return void
  */
-function nuvei_load_styles_scripts( $styles)
+function nuvei_load_scripts()
 {
-	global $wc_nuvei;
+    if(!is_checkout()) {
+        return;
+    }
+    
+    global $wc_nuvei;
 	global $wpdb;
-	
-	$plugin_url = plugin_dir_url(__FILE__);
+    
+    $plugin_url = plugin_dir_url(__FILE__);
 	
 	if ( (isset($_SERVER['HTTPS']) && 'on' == $_SERVER['HTTPS'])
 		&& (isset($_SERVER['REQUEST_SCHEME']) && 'https' == $_SERVER['REQUEST_SCHEME'])
@@ -393,40 +398,32 @@ function nuvei_load_styles_scripts( $styles)
 			$plugin_url = str_replace('http:', 'https:', $plugin_url);
 		}
 	}
-		
-	// novo style
-	wp_register_style(
-		'nuvei_style',
-		$plugin_url . 'assets/css/nuvei_style.css',
-		'',
-		'1',
-		'all'
-	);
-	
-	// Checkout SDK URL for integration and production
-//    $sdk_version = NUVEI_SDK_URL_PROD;
     
-//    if(!empty($wc_nuvei->settings['sdk_version'])) {
-//        $sdk_version = $wc_nuvei->settings['sdk_version'];
-//    }
-    
-	wp_register_script(
+    // load the SDK
+    wp_register_script(
 		'nuvei_checkout_sdk',
-//		($sdk_version == 'prod' ? NUVEI_SDK_URL_PROD : NUVEI_SDK_URL_INT),
 		NUVEI_SDK_URL_PROD,
 		array('jquery'),
 		'1'
 	);
-
-	// reorder js
+    
+    // reorder.js
 	wp_register_script(
 		'nuvei_js_reorder',
 		$plugin_url . 'assets/js/nuvei_reorder.js',
 		array('jquery'),
 		'1'
 	);
-	
-	// get selected WC price separators
+    
+    // main JS
+	wp_register_script(
+		'nuvei_js_public',
+		$plugin_url . 'assets/js/nuvei_public.js',
+		array('jquery'),
+		'1'
+	);
+    
+    // get selected WC price separators
 	$wcThSep  = '';
 	$wcDecSep = '';
 	
@@ -464,26 +461,52 @@ function nuvei_load_styles_scripts( $styles)
         ]
     );
     
-    // main JS
-	wp_register_script(
-		'nuvei_js_public',
-		$plugin_url . 'assets/js/nuvei_public.js',
-		array('jquery'),
-		'1'
-	);
-	
-    if(is_checkout()) {
-        $nuvei_helper = new Nuvei_Helper($wc_nuvei->settings);
-        
-        wp_enqueue_style('nuvei_style');
-        wp_enqueue_script('nuvei_checkout_sdk');
-        wp_enqueue_script('nuvei_js_reorder');
-        
-        wp_localize_script('nuvei_js_public', 'scTrans', $localizations);
-        wp_enqueue_script('nuvei_js_public');
+    wp_enqueue_script('nuvei_checkout_sdk');
+    wp_enqueue_script('nuvei_js_reorder');
+
+    wp_localize_script('nuvei_js_public', 'scTrans', $localizations);
+    wp_enqueue_script('nuvei_js_public');
+}
+
+/**
+ * Loads public styles
+ * 
+ * @global Nuvei_Gateway $wc_nuvei
+ * @global type $wpdb
+ * 
+ * @param type $styles
+ * 
+ * @return void
+ */
+function nuvei_load_styles( $styles)
+{
+    if(!is_checkout()) {
+        return;
     }
     
-	//return $styles;
+	global $wc_nuvei;
+	global $wpdb;
+	
+	$plugin_url = plugin_dir_url(__FILE__);
+	
+	if ( (isset($_SERVER['HTTPS']) && 'on' == $_SERVER['HTTPS'])
+		&& (isset($_SERVER['REQUEST_SCHEME']) && 'https' == $_SERVER['REQUEST_SCHEME'])
+	) {
+		if (strpos($plugin_url, 'https') === false) {
+			$plugin_url = str_replace('http:', 'https:', $plugin_url);
+		}
+	}
+		
+	// novo style
+	wp_register_style(
+		'nuvei_style',
+		$plugin_url . 'assets/css/nuvei_style.css',
+		'',
+		'1',
+		'all'
+	);
+	
+    wp_enqueue_style('nuvei_style');
 }
 
 /**
