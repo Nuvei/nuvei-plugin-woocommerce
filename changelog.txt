@@ -5,6 +5,7 @@
     * Load front-end scripts and styles in separate methods.
     * Always pass userTokenId into the openOrder request. The decision for saving UPO is into the SDK.
     * Changed the logic when to call updateOrder.
+    * Fix for the unexpected refresh of the Checkout SDK when try to pay.
 
 # 1.4.3
     * Added option to save UPOs for Guest users, when the user try to buy a product with Subscription.
