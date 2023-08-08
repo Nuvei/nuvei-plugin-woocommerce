@@ -17,6 +17,8 @@ const NUVEI_REFUNDS             = '_sc_refunds';
 const NUVEI_UPO                 = '_transactionUpo';
 const NUVEI_WC_SUBSCR           = '_wcSubscription';
 const NUVEI_WC_RENEWAL          = '_wcsRenewal';
+const NUVEI_TRANSACTIONS        = '_nuveiTransactions';
+
 /**
  * @deprecated since version 1.3.0
  */
@@ -24,6 +26,7 @@ const NUVEI_ORDER_SUBSCR_ID     = '_nuveiSubscrIDs';
 /**
  * @deprecated since version 1.3.0
  */
+
 const NUVEI_ORDER_SUBSCR_STATE  = '_nuveiSubscrState';
 const NUVEI_ORDER_SUBSCR        = '_nuveiSubscr'; // replace the deprecated above
 const NUVEI_CUID_POSTFIX        = '_sandbox_apm'; // postfix for Sandbox APM payments

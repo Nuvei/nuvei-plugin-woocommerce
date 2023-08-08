@@ -181,6 +181,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			$this->is_order_valid($order_id);
             $this->check_for_repeating_dmn();
 			$this->save_update_order_numbers();
+			$this->save_transaction_data();
 			
 			$order_status   = strtolower($this->sc_order->get_status());
             $order_total    = round($this->sc_order->get_total(), 2);
@@ -223,6 +224,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			$this->change_order_status($order_id, $req_status, $transactionType);
 			$this->subscription_start($transactionType, $clientUniqueId);
             $this->subscription_cancel($transactionType, $order_id, $req_status);
+            $this->save_transaction_data();
 			
 			echo wp_json_encode('DMN received.');
 			exit;
@@ -235,12 +237,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			}
             
 			$this->create_refund_record($order_id);
-			
-			$this->change_order_status(
-				$order_id,
-				$req_status,
-				$transactionType
-			);
+			$this->change_order_status($order_id, $req_status, $transactionType);
+            $this->save_transaction_data();
 
 			echo wp_json_encode(array('DMN process end for Order #' . $order_id));
 			exit;
@@ -506,6 +504,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 	/**
 	 * Function save_update_order_numbers
 	 * Save or update order AuthCode and TransactionID on status change.
+     * 
+     * @deprecated since version 1.4.5
 	 */
 	private function save_update_order_numbers()
     {
@@ -552,6 +552,54 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		
 		$this->sc_order->save();
 	}
+    
+    /**
+     * Save main transaction data into a block as private meta field.
+     * 
+     * @return void
+     */
+    private function save_transaction_data()
+    {
+        $transaction_id = Nuvei_Http::get_param('TransactionID', 'int');
+        
+        if (empty($transaction_id)) {
+            Nuvei_Logger::write(null, 'save_transaction_data - TransactionID param is empty!', 'CRITICAL');
+            return;
+        }
+        
+        // get previous data if exists
+        $transactions_data = json_decode($this->sc_order->get_meta(NUVEI_TRANSACTIONS), true);
+        // in case it is empty
+        if (empty($transactions_data) || !is_array($transactions_data)) {
+            $transactions_data = [];
+        }
+        
+        $transactionType    = Nuvei_Http::get_param('transactionType');
+        $status             = Nuvei_Http::get_request_status();
+        
+        // check for already existing data
+        if (!empty($transactions_data[$transaction_id])
+            && $transactions_data[$transaction_id]['transactionType'] == $transactionType
+            && $transactions_data[$transaction_id]['status'] == $status
+        ) {
+            Nuvei_Logger::write('We have information for this transaction and will not save it again.');
+            return;
+        }
+        
+        $transactions_data[$transaction_id]  = [
+            'authCode'              => Nuvei_Http::get_param('AuthCode', 'int'),
+            'paymentMethod'         => Nuvei_Http::get_param('payment_method'),
+            'transactionType'       => $transactionType,
+            'currency'              => Nuvei_Http::get_param('currency'),
+            'status'                => $status,
+            'userPaymentOptionId'   => Nuvei_Http::get_param('userPaymentOptionId', 'int'),
+            'wcsRenewal'            => 'renewal_order' == Nuvei_Http::get_param('customField4') ? true : false,
+        ];
+        
+        $this->sc_order->update_meta_data(NUVEI_TRANSACTIONS, $transactions_data);
+		
+		$this->sc_order->save();
+    }
 	
 	/**
 	 * The start of create subscriptions logic.
