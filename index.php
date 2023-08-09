@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Plugin for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 1.4.5
+ * Version: 1.4.6
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
@@ -597,7 +597,9 @@ function nuvei_enqueue( $hook)
 function nuvei_add_buttons($order)
 {
     Nuvei_Logger::write('nuvei_add_buttons');
-    //echo '<pre style="text-align: left;">'.print_r(get_post_meta($order->get_id()), true) . '</pre>';
+//    echo '<pre style="text-align: left;">'.print_r(get_post_meta($order->get_id()), true) . '</pre>';
+//    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TRANSACTIONS), true) . '</pre>';
+//    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TRANS_ID), true) . '</pre>';
     
     // in case this is not Nuvei order
 	if (empty($order->get_payment_method())

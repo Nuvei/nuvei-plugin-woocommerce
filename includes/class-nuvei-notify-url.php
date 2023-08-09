@@ -176,8 +176,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
                 $order_id = $this->get_order_by_trans_id($TransactionID, $transactionType);
             }
             
-            Nuvei_Logger::write($order_id, '$order_id');
-			
 			$this->is_order_valid($order_id);
             $this->check_for_repeating_dmn();
 			$this->save_update_order_numbers();
@@ -222,9 +220,9 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			}
 
 			$this->change_order_status($order_id, $req_status, $transactionType);
+            $this->save_transaction_data();
 			$this->subscription_start($transactionType, $clientUniqueId);
             $this->subscription_cancel($transactionType, $order_id, $req_status);
-            $this->save_transaction_data();
 			
 			echo wp_json_encode('DMN received.');
 			exit;
@@ -236,11 +234,19 @@ class Nuvei_Notify_Url extends Nuvei_Request
 				$order_id = $this->get_order_by_trans_id($relatedTransactionId, $transactionType);
 			}
             
+            $this->is_order_valid($order_id);
+            /**
+             * TODO
+             * check_for_repeating_dmn will start workin after we start to
+             * use the new structure for the transactions data.
+             * Then check_for_repeating_dmn can be called at the beginning of this method.
+             */
+            //$this->check_for_repeating_dmn();
 			$this->create_refund_record($order_id);
 			$this->change_order_status($order_id, $req_status, $transactionType);
             $this->save_transaction_data();
 
-			echo wp_json_encode(array('DMN process end for Order #' . $order_id));
+			echo wp_json_encode('DMN process end for Order #' . $order_id);
 			exit;
 		}
 		
@@ -560,15 +566,17 @@ class Nuvei_Notify_Url extends Nuvei_Request
      */
     private function save_transaction_data()
     {
+        Nuvei_Logger::write('save_transaction_data()');
+        
         $transaction_id = Nuvei_Http::get_param('TransactionID', 'int');
         
         if (empty($transaction_id)) {
-            Nuvei_Logger::write(null, 'save_transaction_data - TransactionID param is empty!', 'CRITICAL');
+            Nuvei_Logger::write(null, 'TransactionID param is empty!', 'CRITICAL');
             return;
         }
         
         // get previous data if exists
-        $transactions_data = json_decode($this->sc_order->get_meta(NUVEI_TRANSACTIONS), true);
+        $transactions_data = $this->sc_order->get_meta(NUVEI_TRANSACTIONS);
         // in case it is empty
         if (empty($transactions_data) || !is_array($transactions_data)) {
             $transactions_data = [];
@@ -590,6 +598,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
             'authCode'              => Nuvei_Http::get_param('AuthCode', 'int'),
             'paymentMethod'         => Nuvei_Http::get_param('payment_method'),
             'transactionType'       => $transactionType,
+            'relatedTransactionId'  => Nuvei_Http::get_param('relatedTransactionId'),
+            'totalAmount'           => Nuvei_Http::get_param('totalAmount'),
             'currency'              => Nuvei_Http::get_param('currency'),
             'status'                => $status,
             'userPaymentOptionId'   => Nuvei_Http::get_param('userPaymentOptionId', 'int'),
@@ -597,7 +607,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
         ];
         
         $this->sc_order->update_meta_data(NUVEI_TRANSACTIONS, $transactions_data);
-		
 		$this->sc_order->save();
     }
 	
@@ -917,7 +926,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		do {
             Nuvei_Logger::write('Check for Refund meta data.');
             
-            $this->is_order_valid($order_id);
+//            $this->is_order_valid($order_id);
 		
             if ( !in_array($this->sc_order->get_status(), array('completed', 'processing')) ) {
                 Nuvei_Logger::write(

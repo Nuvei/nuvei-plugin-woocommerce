@@ -1,5 +1,10 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.4.6
+    * Added few more fields into _nuveiTransactions meta field.
+    * Added and removed few comments.
+    * Changed the place where call the new save_transaction_data method.
+
 # 1.4.5
     * Moved Auto-Void logic after the last try to find the Order in WC.
     * Lowered the maximum tries count when search for existing WC Order.
