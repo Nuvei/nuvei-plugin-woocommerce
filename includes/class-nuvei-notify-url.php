@@ -444,7 +444,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
         }
         
         if ($curr_time - $order_request_time <= 1800) {
-            Nuvei_Logger::write('Let\s wait one more DMN try.');
+            Nuvei_Logger::write("Let's wait one more DMN try.");
             return;
         }
         // /not allowed Auto-Void
@@ -460,10 +460,10 @@ class Nuvei_Notify_Url extends Nuvei_Request
             'customData'            => 'This is Auto-Void transaction',
         ];
 
-        Nuvei_Logger::write(
-            [$this->request_base_params, $void_params],
-            'Try to Void a transaction by not existing WC Order.'
-        );
+//        Nuvei_Logger::write(
+//            [$this->request_base_params, $void_params],
+//            'Try to Void a transaction by not existing WC Order.'
+//        );
 
         $resp = $this->call_rest_api('voidTransaction', $void_params);
 
