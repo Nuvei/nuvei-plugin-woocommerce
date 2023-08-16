@@ -35,8 +35,8 @@ abstract class Nuvei_Request
 		$this->plugin_settings = $plugin_settings;
 		
 		$this->request_base_params = array(
-			'merchantId'        => $plugin_settings['merchantId'],
-			'merchantSiteId'    => $plugin_settings['merchantSiteId'],
+			'merchantId'        => trim($plugin_settings['merchantId']),
+			'merchantSiteId'    => trim($plugin_settings['merchantSiteId']),
 			'clientRequestId'   => $time . '_' . uniqid(),
 			'timeStamp'         => $time,
 			'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION . '; Plugin v' . nuvei_get_plugin_version(),
@@ -319,9 +319,10 @@ abstract class Nuvei_Request
 	 */
 	protected function call_rest_api($method, $params)
     {
-		if (empty($this->plugin_settings['hash_type'])
-			|| empty($this->plugin_settings['secret'])
-		) {
+        $merchant_hash      = $this->plugin_settings['hash_type'];
+        $merchant_secret    = trim($this->plugin_settings['secret']);
+        
+		if (empty($merchant_hash) || empty($merchant_secret)) {
 			return array(
 				'status'    => 'ERROR',
 				'message'   => 'Missing Plugin hash_type and secret params.'
@@ -356,8 +357,8 @@ abstract class Nuvei_Request
 		}
 		
 		$all_params['checksum'] = hash(
-			$this->plugin_settings['hash_type'],
-			$concat . $this->plugin_settings['secret']
+			$merchant_hash,
+			$concat . $merchant_secret
 		);
 		// add the checksum END
 		

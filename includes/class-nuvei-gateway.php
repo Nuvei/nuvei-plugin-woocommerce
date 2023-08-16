@@ -989,8 +989,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		Nuvei_Logger::write($products_data, 'get_cashier_url() $products_data.');
 		
 		$params = array(
-			'merchant_id'           => $this->settings['merchantId'],
-			'merchant_site_id'      => $this->settings['merchantSiteId'],
+			'merchant_id'           => trim($this->settings['merchantId']),
+			'merchant_site_id'      => trim($this->settings['merchantSiteId']),
             'merchant_unique_id'    => $order_id,
 			'version'               => '4.0.0',
             'time_stamp'            => gmdate('Y-m-d H:i:s'),
@@ -1086,7 +1086,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		
 		$params['checksum'] = hash(
 			$this->settings['hash_type'],
-			$this->settings['secret'] . implode('', $params)
+			trim($this->settings['secret']) . implode('', $params)
 		);
 		
 		Nuvei_Logger::write($params, 'get_cashier_url() $params.');

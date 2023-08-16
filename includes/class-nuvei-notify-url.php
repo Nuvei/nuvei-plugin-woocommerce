@@ -310,10 +310,12 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			Nuvei_Logger::write(null, 'advanceResponseChecksum and responsechecksum parameters are empty.', 'CRITICAL');
 			return false;
 		}
+        
+        $merchant_secret = trim($this->plugin_settings['secret']);
 		
 		// advanceResponseChecksum case
 		if (!empty($advanceResponseChecksum)) {
-			$concat = $this->plugin_settings['secret'] 
+			$concat = $merchant_secret 
 				. Nuvei_Http::get_param('totalAmount')
 				. Nuvei_Http::get_param('currency') 
 				. Nuvei_Http::get_param('responseTimeStamp')
@@ -350,7 +352,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		$dmn_params = array_diff_key($request_arr, $custom_params);
 		$concat     = implode('', $dmn_params);
 		
-		$concat_final = $concat . $this->plugin_settings['secret'];
+		$concat_final = $concat . $merchant_secret;
 		$checksum     = hash($this->plugin_settings['hash_type'], $concat_final);
 		
 		if ($responsechecksum !== $checksum) {

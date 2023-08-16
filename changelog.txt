@@ -1,4 +1,6 @@
 *** WooCommerce Extension Changelog ***
+# 2.0.0
+    * Trim the merchant credentials when get them.
 
 # 1.4.6
     * Added few more fields into _nuveiTransactions meta field.
