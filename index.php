@@ -481,7 +481,7 @@ function nuvei_load_scripts()
 function nuvei_load_styles( $styles)
 {
     if(!is_checkout()) {
-        return;
+        return $styles;
     }
     
 	global $wc_nuvei;
@@ -507,6 +507,8 @@ function nuvei_load_styles( $styles)
 	);
 	
     wp_enqueue_style('nuvei_style');
+    
+    return $styles;
 }
 
 /**

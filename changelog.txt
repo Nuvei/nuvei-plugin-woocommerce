@@ -2,6 +2,7 @@
 
 # 1.4.7
     * Fix for the logic who decide will we create update or open order request.
+    * Fix for the loadings styles method.
 
 # 1.4.6
     * Added few more fields into _nuveiTransactions meta field.
