@@ -105,14 +105,18 @@ class Nuvei_Open_Order extends Nuvei_Request
 //            $try_update_order = false;
 //        }
         
-        if ($open_order_details['transactionType'] != $transactionType
-            || $open_order_details['userTokenId'] != @$addresses['billingAddress']['email']
+        # try to update Order or not
+        if (!is_array($open_order_details)
+            || empty($open_order_details['transactionType'])
+            || empty($open_order_details['userTokenId'])
+            || empty($addresses['billingAddress']['email'])
+            || $open_order_details['transactionType'] != $transactionType
+            || $open_order_details['userTokenId'] != $addresses['billingAddress']['email']
         ) {
             Nuvei_Logger::write([
-                    $open_order_details['transactionType'],
-                    $transactionType,
-                    $open_order_details['userTokenId'],
-                    @$addresses['billingAddress']['email'],
+                    '$open_order_details'   => $open_order_details,
+                    '$transactionType'      => $transactionType,
+                    '$addresses'            => $addresses,
                 ],
                 '$try_update_order = false',
                 'DEBUG'

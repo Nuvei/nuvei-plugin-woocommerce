@@ -1,5 +1,8 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.4.7
+    * Fix for the logic who decide will we create update or open order request.
+
 # 1.4.6
     * Added few more fields into _nuveiTransactions meta field.
     * Added and removed few comments.
