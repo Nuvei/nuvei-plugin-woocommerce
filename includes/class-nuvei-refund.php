@@ -27,10 +27,10 @@ class Nuvei_Refund extends Nuvei_Request
 		
 		$time       = gmdate('YmdHis', time());
 		$order      = wc_get_order($data['order_id']);
-		$curr       = get_woocommerce_currency();
+//		$curr       = get_woocommerce_currency();
         $notify_url = Nuvei_String::get_notify_url($this->plugin_settings);
-        $nuvei_data = $this->sc_order->get_meta(NUVEI_TRANSACTIONS);
-        $last_tr    = Nuvei_Helper::get_last_transaction($nuvei_data, ['Sale', 'Settle']);
+        $nuvei_data = $order->get_meta(NUVEI_TRANSACTIONS);
+        $last_tr    = $this->get_last_transaction($nuvei_data, ['Sale', 'Settle']);
         
         if (empty($last_tr['transactionId'])) {
 			wp_send_json(array(

@@ -7,6 +7,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Open_Order extends Nuvei_Request
 {
+	protected $plugin_settings;
+    
 	private $is_ajax;
 	
 	/**
@@ -17,9 +19,10 @@ class Nuvei_Open_Order extends Nuvei_Request
 	 */
 	public function __construct( array $plugin_settings, $is_ajax = false)
     {
-		parent::__construct($plugin_settings);
+		parent::__construct();
 		
-		$this->is_ajax = $is_ajax;
+		$this->plugin_settings  = $plugin_settings;
+		$this->is_ajax          = $is_ajax;
 	}
 
 	/**
@@ -177,7 +180,7 @@ class Nuvei_Open_Order extends Nuvei_Request
 			'sessionToken'		=> $resp['sessionToken'],
 			'orderId'			=> $resp['orderId'],
 			'transactionType'	=> $oo_params['transactionType'], // use it to decide call or not updateOrder
-//			'userTokenId'       => $oo_params['userTokenId'], // use it to decide call or not updateOrder
+			'userTokenId'       => $oo_params['userTokenId'], // use it to decide call or not updateOrder
 		);
         
         $this->set_nuvei_session_data(

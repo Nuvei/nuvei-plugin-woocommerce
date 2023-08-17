@@ -11,8 +11,9 @@ abstract class Nuvei_Request
 	protected $plugin_settings;
 	protected $request_base_params;
 	protected $sc_order;
-	
-	private $device_types = [];
+    protected $nuvei_gw;
+
+    private $device_types = [];
 	
 	abstract public function process();
 	abstract protected function get_checksum_params();
@@ -26,17 +27,16 @@ abstract class Nuvei_Request
 	 *      'customField2'  => string,  // item details as json
 	 *      'customField3'  => int,     // create time time()
 	 *  ),
-	 * 
-	 * @param array $plugin_settings
 	 */
-	public function __construct(array $plugin_settings)
+	public function __construct()
     {
-		$time                  = gmdate('Ymdhis');
-		$this->plugin_settings = $plugin_settings;
+        $plugin_data    = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . 'index.php');
+        $this->nuvei_gw = WC()->payment_gateways->payment_gateways()[NUVEI_GATEWAY_NAME];
+		$time           = gmdate('Ymdhis');
 		
 		$this->request_base_params = array(
-			'merchantId'        => trim($plugin_settings['merchantId']),
-			'merchantSiteId'    => trim($plugin_settings['merchantSiteId']),
+			'merchantId'        => trim($this->nuvei_gw->get_option('merchantId')),
+			'merchantSiteId'    => trim($this->nuvei_gw->get_option('merchantSiteId')),
 			'clientRequestId'   => $time . '_' . uniqid(),
 			'timeStamp'         => $time,
 			'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION . '; Plugin v' . nuvei_get_plugin_version(),
@@ -329,8 +329,8 @@ abstract class Nuvei_Request
 	 */
 	protected function call_rest_api($method, $params)
     {
-        $merchant_hash      = $this->plugin_settings['hash_type'];
-        $merchant_secret    = trim($this->plugin_settings['secret']);
+        $merchant_hash      = $this->nuvei_gw->get_option('hash_type');
+        $merchant_secret    = trim($this->nuvei_gw->get_option('secret'));
         
 		if (empty($merchant_hash) || empty($merchant_secret)) {
 			return array(
@@ -694,6 +694,122 @@ abstract class Nuvei_Request
             ]
         );
     }
+    
+    /**
+     * Just a helper function to extract last of Nuvei transactions.
+     * It is possible to set array of desired types. First found will
+     * be returned.
+     * 
+     * @param array $transactions List with all transactions
+     * @param array $types Search for specific type/s.
+     * 
+     * @return array
+     */
+    protected function get_last_transaction(array $transactions, array $types = [])
+    {
+        if (empty($transactions) || !is_array($transactions)) {
+            Nuvei_Logger::write($transactions, 'Problem with trnsactions array.');
+            return [];
+        }
+        
+        if (empty($types)) {
+            return end($transactions);
+        }
+        
+        foreach (array_reverse($transactions) as $trId => $data) {
+            if (!empty($data['transactionType']) 
+                && in_array($data['transactionType'], $types)
+            ) {
+                return $data;
+            }
+        }
+        
+        return [];
+    }
+    
+    /**
+     * Temp help function until stop using old Order meta fields.
+     * 
+     * @param int|null $order_id WC Order ID
+     * @param array $types Search for specific type/s.
+     * 
+     * @return int
+     */
+    protected function get_tr_id($order_id = null, $types = [])
+    {
+        $order = $this->get_order($order_id);
+        
+        // first check for new meta data
+        $ord_tr_id = $order->get_meta(NUVEI_TR_ID);
+        
+        if (!empty($ord_tr_id)) {
+            return $ord_tr_id;
+        }
+        
+        $nuvei_data = $order->get_meta(NUVEI_TRANSACTIONS);
+        
+        if (!empty($nuvei_data) && is_array($nuvei_data)) {
+            // just get from last transaction
+            if (empty($types)) {
+                $last_tr = end($nuvei_data);
+            }
+            // get last transaction by type
+            else {
+                $last_tr = $this->get_last_transaction($nuvei_data, $types);
+            }
+            
+            if (!empty($last_tr['transactionId'])) {
+                return $last_tr['transactionId'];
+            }
+        }
+        
+        // check for old meta data
+        return $order->get_meta('_transactionId'); // NUVEI_TRANS_ID
+    }
+    
+    /**
+     * Temp help function until stop using old Order meta fields.
+     * 
+     * @param int|null $order_id WC Order ID
+     * @return int
+     */
+    protected function get_tr_status($order_id = null)
+    {
+        $order = $this->get_order($order_id);
+        
+        // first check for new meta data
+        $nuvei_data = $order->get_meta(NUVEI_TRANSACTIONS);
+        
+        if (!empty($nuvei_data) && is_array($nuvei_data)) {
+            $last_tr = end($nuvei_data);
+            
+            if (!empty($last_tr['status'])) {
+                return $last_tr['status'];
+            }
+        }
+        
+        // check for old meta data
+        return $order->get_meta('_transactionStatus'); // NUVEI_TRANS_STATUS
+    }
+    
+    /**
+     * A help function for the above methods.
+     */
+    protected function get_order($order_id)
+    {
+        if (empty($this->sc_order)) {
+            $order = wc_get_order($order_id);
+        }
+        elseif ($order_id == $this->sc_order->get_id()) {
+            $order = $this->sc_order;
+        }
+        else {
+            $order = wc_get_order($order_id);
+        }
+        
+        return $order;
+    }
+    
     /**
 	 * Get the request endpoint - sandbox or production.
 	 * 
@@ -701,7 +817,7 @@ abstract class Nuvei_Request
 	 */
 	private function get_endpoint_base()
     {
-		if ('yes' == $this->plugin_settings['test']) {
+		if ('yes' == $this->nuvei_gw->get_option('test')) {
 			return NUVEI_REST_ENDPOINT_INT;
 		}
 		

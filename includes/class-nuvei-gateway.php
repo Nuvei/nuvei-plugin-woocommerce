@@ -700,7 +700,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
 		# OpenOrder END
         
-        $nuvei_helper           = new Nuvei_Helper($this->settings);
+        $nuvei_helper           = new Nuvei_Helper();
 		$cart                   = $woocommerce->cart;
 		$cart_items             = $cart->get_cart();
 //		$ord_details    = WC()->session->get('nuvei_last_open_order_details');
@@ -834,7 +834,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
     public function hide_payment_gateways( $available_gateways )
     {
 		if ( is_checkout() && ! is_wc_endpoint_url() ) {
-            $nuvei_helper   = new Nuvei_Helper($this->settings);
+            $nuvei_helper   = new Nuvei_Helper();
             $items_info     = $nuvei_helper->get_products();
             
 //            if($items_info['item_with_plan']
@@ -876,10 +876,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             return;
         }
         
+        $helper             = new Nuvei_Helper();
         $parent_order_id    = $subscription->get_parent_id();
         $parent_order       = wc_get_order($parent_order_id);
-        $parent_tr_id       = Nuvei_Helper::get_tr_id($parent_order_id);
-        $parent_tr_upo_id   = Nuvei_Helper::get_tr_upo_id($parent_order_id);
+        $parent_tr_id       = $helper->helper_get_tr_id($parent_order_id);
+        $parent_tr_upo_id   = $helper->get_tr_upo_id($parent_order_id);
         
         Nuvei_Logger::write(
             [
@@ -926,11 +927,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
                 'email'     => $billing_mail,
             ],
 //            'paymentOption'         => ['userPaymentOptionId' => $parent_order->get_meta(NUVEI_UPO)],
-            'paymentOption'         => ['userPaymentOptionId' => Nuvei_Logger::get_tr_upo_id($parent_order_id)],
+            'paymentOption'         => ['userPaymentOptionId' => $helper->get_tr_upo_id($parent_order_id)],
         ];
         
 //        $parent_payment_method = $parent_order->get_meta(NUVEI_PAYMENT_METHOD);
-        $parent_payment_method = Nuvei_Helper::get_payment_method($parent_order_id);
+        $parent_payment_method = $helper->get_payment_method($parent_order_id);
         
         if ('cc_card' == $parent_payment_method) {
             $params['isRebilling']          = 1;
@@ -983,7 +984,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		global $woocommerce;
 		
 		$cart          = $woocommerce->cart;
-		$nuvei_helper  = new Nuvei_Helper($this->settings);
+		$nuvei_helper  = new Nuvei_Helper();
 		$addresses     = $nuvei_helper->get_addresses();
 		$products_data = $nuvei_helper->get_products();
 		$total_amount  = (string) number_format((float) $cart->total, 2, '.', '');

@@ -35,10 +35,10 @@ class Nuvei_Settle_Void extends Nuvei_Request
         $nuvei_data = $this->sc_order->get_meta(NUVEI_TRANSACTIONS);
 		
         if ('voidTransaction' == $data['method']) {
-            $last_tr_id = Nuvei_Helper::get_tr_id($data['order_id'], ['Settle', 'Sale', 'Auth']);
+            $last_tr_id = $this->get_tr_id($data['order_id'], ['Settle', 'Sale', 'Auth']);
         }
         else {
-            $last_tr_id = Nuvei_Helper::get_tr_id($data['order_id'], ['Auth']);
+            $last_tr_id = $this->get_tr_id($data['order_id'], ['Auth']);
         }
 		
 		$params = array(

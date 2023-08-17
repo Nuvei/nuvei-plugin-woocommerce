@@ -768,6 +768,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			'Nuvei change_order_status()'
 		);
         
+        $dmn_amount = Nuvei_Http::get_param('totalAmount', 'float');
+        
         $msg_transaction = '<b>' . __( Nuvei_Http::get_param( 'transactionType' ), 'nuvei_checkout_woocommerce' )
             . ' </b> ' . __( 'request', 'nuvei_checkout_woocommerce' ) . '.<br/>';
 
@@ -778,7 +780,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
             . __( 'Related Transaction ID: ', 'nuvei_checkout_woocommerce' ) 
                 . Nuvei_Http::get_param( 'relatedTransactionId', 'int' ) . '.<br/>'
             . __( 'Transaction Amount: ', 'nuvei_checkout_woocommerce' ) 
-                . number_format(Nuvei_Http::get_param( 'totalAmount', 'float' ), 2, '.', '') 
+                . number_format($dmn_amount, 2, '.', '') 
                 . ' ' . Nuvei_Http::get_param( 'currency') . '.';
 
 		$message = '';
@@ -801,25 +803,17 @@ class Nuvei_Notify_Url extends Nuvei_Request
 					$message = $gw_data;
 
 					$status = 'cancelled';
-				} elseif ( in_array( $transaction_type, array( 'Credit', 'Refund' ), true ) ) {
+				}
+                elseif ( in_array( $transaction_type, array( 'Credit', 'Refund' ), true ) ) {
 					$message = $gw_data;
 					$status  = 'completed';
 					
 					// get current refund amount
-//					$refunds         = json_decode($this->sc_order->get_meta(NUVEI_REFUNDS), true);
 					$currency_code   = $this->sc_order->get_currency();
 					$currency_symbol = get_woocommerce_currency_symbol( $currency_code );
+                    $message        .= '<br/>' . __('<b>Refund: ') . ' #' . $refund_id;
 					
-//					if (isset($refunds[Nuvei_Http::get_param('TransactionID', 'int')]['refund_amount'])) {
-						$message .= '<br/><b>' . __('<b>Refund Amount: ') . '</b>' 
-//							. number_format($refunds[Nuvei_Http::get_param('TransactionID', 'int')]['refund_amount'], 2, '.', '') . $currency_symbol
-							. number_format(Nuvei_Http::get_param('totalAmount', 'float'), 2, '.', '') . $currency_symbol
-							. '<br/><b>' . __('<b>Refund: ') . ' #</b>' . $refund_id
-//							. $refunds[Nuvei_Http::get_param('TransactionID', 'int')]['wc_id']
-                        ;
-//					}
-					
-					if ($order_amount <= $this->sum_order_refunds()) {
+					if ($order_amount == $this->sum_order_refunds() + $dmn_amount) {
 						$status = 'refunded';
 					}
 				} elseif ( 'Auth' === $transaction_type ) {
@@ -839,9 +833,9 @@ class Nuvei_Notify_Url extends Nuvei_Request
 				// check for correct amount and currency
 				if (in_array($transaction_type, array('Auth', 'Sale'), true)) {
 					
-					$dmn_amount   = round(Nuvei_Http::get_param('totalAmount', 'float'), 2);
+//					$dmn_amount   = round(Nuvei_Http::get_param('totalAmount', 'float'), 2);
 					
-					if ($order_amount !== $dmn_amount) {
+					if ($order_amount != $dmn_amount) {
 						$message .= '<br/><b>' . __('Payment ERROR!', 'nuvei_checkout_woocommerce') . '</b> ' 
 							. $dmn_amount . ' ' . Nuvei_Http::get_param('currency')
 							. ' ' . __('paid instead of', 'nuvei_checkout_woocommerce') . ' ' . $order_amount
@@ -1055,11 +1049,13 @@ class Nuvei_Notify_Url extends Nuvei_Request
     {
         Nuvei_Logger::write('check_for_repeating_dmn');
         
-        $nuvei_tr_data      = $this->sc_order->get_meta(NUVEI_TRANSACTIONS);
+//        $helper             = new Nuvei_Helper();
+        $order_id           = $this->sc_order->get_id();
+//        $nuvei_tr_data      = $this->sc_order->get_meta(NUVEI_TRANSACTIONS);
         $dmn_tr_id          = Nuvei_Http::get_param('TransactionID', 'int');
         $dmn_status         = Nuvei_Http::get_request_status();
-        $order_tr_id        = Nuvei_Helper::get_tr_id();
-        $order_tr_status    = Nuvei_Helper::get_tr_status();
+        $order_tr_id        = $this->get_tr_id($this->sc_order->get_id());
+        $order_tr_status    = $this->get_tr_status($order_id);
         
         if($order_tr_id == $dmn_tr_id && $order_tr_status == $dmn_status) {
             Nuvei_Logger::write('Repating DMN message detected. Stop the process.');

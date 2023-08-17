@@ -481,7 +481,7 @@ function nuvei_load_scripts()
 function nuvei_load_styles( $styles)
 {
     if(!is_checkout()) {
-        return;
+        return $styles;
     }
     
 	global $wc_nuvei;
@@ -507,6 +507,8 @@ function nuvei_load_styles( $styles)
 	);
 	
     wp_enqueue_style('nuvei_style');
+    
+    return $styles;
 }
 
 /**
@@ -609,20 +611,34 @@ function nuvei_add_buttons($order)
 	}
     
     // to show Nuvei buttons we must be sure the order is paid via Nuvei Paygate
-    $order_id   = $order->get_id();
-    $ord_tr_id  = Nuvei_Helper::get_tr_id($order_id);
+    $order_id       = $order->get_id();
+    $helper         = new Nuvei_Helper();
+    $ord_tr_id      = $helper->helper_get_tr_id($order_id);
+    $order_data     = $order->get_meta(NUVEI_TRANSACTIONS);
+    $order_refunds  = [];
     
     if (empty($ord_tr_id)) {
         Nuvei_Logger::write($ord_tr_id, 'Invalid Transaction ID!', 'WARN');
         return false;
     }
     
+    if (!empty($order_data) && is_array($order_data)) {
+        foreach ($order_data as $tr) {
+            if (isset($tr['transactionType'], $tr['status'])
+                && in_array($tr['transactionType'], ['Credit', 'Refund'])
+                && 'approved' == strtolower($tr['status'])
+            ) {
+                $order_refunds[] = $tr;
+            }
+        }
+    }
+    
 	try {
 		$order_status           = strtolower($order->get_status());
 //		$order_payment_method   = $order->get_meta(NUVEI_PAYMENT_METHOD);
-		$order_payment_method   = Nuvei_Helper::get_payment_method($order_id);
-		$order_refunds          = json_decode($order->get_meta(NUVEI_REFUNDS), true);
-		$refunds_exists         = false;
+		$order_payment_method   = $helper->get_payment_method($order_id);
+//		$order_refunds          = json_decode($order->get_meta(NUVEI_REFUNDS), true);
+//		$refunds_exists         = false;
         $order_time             = 0;
         
         if (!is_null($order->get_date_created())) {
@@ -632,14 +648,14 @@ function nuvei_add_buttons($order)
             $order_time = $order->get_date_completed()->getTimestamp();
         }
         
-		if (!empty($order_refunds) && is_array($order_refunds)) {
-			foreach ($order_refunds as $data) {
-				if ('approved' == $data['status']) {
-					$refunds_exists = true;
-					break;
-				}
-			}
-		}
+//		if (!empty($order_refunds) && is_array($order_refunds)) {
+//			foreach ($order_refunds as $data) {
+//				if ('approved' == $data['status']) {
+//					$refunds_exists = true;
+//					break;
+//				}
+//			}
+//		}
 	}
     catch (Exception $ex) {
 		echo '<script type="text/javascript">console.error("'
@@ -664,12 +680,12 @@ function nuvei_add_buttons($order)
 //                . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') . '</button>';
 //    }
 	
-	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
+//	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
+	if (in_array($order_status, array('completed', 'pending'))) {
 		// Show VOID button
 		if (in_array($order_payment_method, NUVEI_APMS_REFUND_VOID)
-//            && !empty($order->get_meta(NUVEI_AUTH_CODE_KEY))
-            && !$refunds_exists
-            && 0 < (float) $order->get_total()
+            && empty($order_refunds)
+            && (float) $order->get_total() > 0
             && time() < $order_time + 172800 // 48 hours
         ) {
             $question = sprintf(
@@ -705,7 +721,7 @@ function nuvei_add_buttons($order)
 		// show SETTLE button ONLY if transaction type IS Auth and the Total is not 0
 		if ('pending' == $order_status 
 //            && 'Auth' == $order->get_meta(NUVEI_RESP_TRANS_TYPE)
-            && 'Auth' == Nuvei_Helper::get_tr_type($order_id)
+            && 'Auth' == $helper->get_tr_type($order_id)
             && $order->get_total() > 0
         ) {
 			$question = sprintf(
