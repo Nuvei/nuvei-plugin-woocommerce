@@ -224,6 +224,23 @@ class Nuvei_Helper extends Nuvei_Request
     }
     
     /**
+     * Temp help function until stop using old Order meta fields.
+     * 
+     * @param int|null $order_id WC Order ID
+     * @return int
+     */
+    public function are_there_subscr($order_id = null)
+    {
+        $order = $this->get_order($order_id);
+        
+        // first check for new meta data
+        $subscr_data = $order->get_meta(NUVEI_ORDER_SUBSCR);
+        
+        // check for old meta data
+        return $order->get_meta('_transactionType'); // NUVEI_RESP_TRANS_TYPE
+    }
+    
+    /**
      * A help function for the above methods.
      */
     private function get_order($order_id)

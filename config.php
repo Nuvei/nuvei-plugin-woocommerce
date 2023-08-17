@@ -17,21 +17,15 @@ const NUVEI_GATEWAY_NAME    = 'nuvei'; // the name by WC recognize this Gateway
 //const NUVEI_RESP_TRANS_TYPE     = '_transactionType';
 //const NUVEI_ORDER_HAS_REFUND    = '_scHasRefund';
 //const NUVEI_REFUNDS             = '_sc_refunds';
+//const NUVEI_ORDER_SUBSCR_ID     = '_nuveiSubscrIDs';
+//const NUVEI_ORDER_SUBSCR_STATE  = '_nuveiSubscrState';
 
 const NUVEI_TR_ID               = '_nuveiTrId'; // we will keep this data for fast search in Orders
 const NUVEI_WC_SUBSCR           = '_wcSubscription';
 const NUVEI_WC_RENEWAL          = '_wcsRenewal';
 const NUVEI_TRANSACTIONS        = '_nuveiTransactions';
+const NUVEI_ORDER_SUBSCR        = '_nuveiSubscr';
 
-/**
- * @deprecated since version 1.3.0
- */
-const NUVEI_ORDER_SUBSCR_ID     = '_nuveiSubscrIDs';
-/**
- * @deprecated since version 1.3.0
- */
-const NUVEI_ORDER_SUBSCR_STATE  = '_nuveiSubscrState';
-const NUVEI_ORDER_SUBSCR        = '_nuveiSubscr'; // replace the deprecated above
 const NUVEI_CUID_POSTFIX        = '_sandbox_apm'; // postfix for Sandbox APM payments
 const NUVEI_PREV_TRANS_STATUS   = '_nuveiPrevTransactionStatus';
 
@@ -45,7 +39,6 @@ const NUVEI_GIT_REPO            = 'https://github.com/Nuvei/nuvei-plugin-woocomm
 const NUVEI_REST_ENDPOINT_INT   = 'https://ppp-test.nuvei.com/ppp/api/v1/';
 const NUVEI_REST_ENDPOINT_PROD  = 'https://secure.safecharge.com/ppp/api/v1/';
 
-//const NUVEI_SDK_URL_INT         = 'https://srv-bsf-devpppjs.gw-4u.com/checkoutNext/checkout.js';
 const NUVEI_SDK_URL_PROD        = 'https://cdn.safecharge.com/safecharge_resources/v1/checkout/checkout.js';
 const NUVEI_SDK_AUTOCLOSE_URL   = 'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html';
 

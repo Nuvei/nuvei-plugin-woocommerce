@@ -656,13 +656,13 @@ function nuvei_add_buttons($order)
 	}
     
     # Show Cancel Subscription buttons - Legacy
-    if ('active' == $order->get_meta(NUVEI_ORDER_SUBSCR_STATE)) {
-        echo
-            '<button id="sc_cancel_subs_btn" type="button" onclick="nuveiAction(\''
-                . esc_html__('Are you sure, you want to cancel the subscription for this order?', 'nuvei_checkout_woocommerce')
-                . '\', \'cancelSubscr\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
-                . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') . '</button>';
-    }
+//    if ('active' == $order->get_meta(NUVEI_ORDER_SUBSCR_STATE)) {
+//        echo
+//            '<button id="sc_cancel_subs_btn" type="button" onclick="nuveiAction(\''
+//                . esc_html__('Are you sure, you want to cancel the subscription for this order?', 'nuvei_checkout_woocommerce')
+//                . '\', \'cancelSubscr\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
+//                . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') . '</button>';
+//    }
 	
 	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
 		// Show VOID button
@@ -1001,21 +1001,19 @@ function nuvei_fill_custom_column( $column)
 {
 	global $post;
 	
-	$order              = wc_get_order($post->ID);
-    $old_subscr         = $order->get_meta(NUVEI_ORDER_SUBSCR_ID); // int
-    $new_subscr_data    = $order->get_meta(NUVEI_ORDER_SUBSCR); // array
-    
+//	$order = wc_get_order($post->ID);
+//    $old_subscr         = $order->get_meta(NUVEI_ORDER_SUBSCR_ID); // int
     
     $html_baloon = '<mark class="order-status status-processing tips" style="float: right;"><span>'
         . esc_html__('Nuvei Subscription', 'nuvei_checkout_woocommerce') . '</span></mark>';
     
     // check for old data
-    if (!empty($old_subscr) && 'order_number' === $column) {
-        echo $html_baloon;
-        return;
-    }
+//    if (!empty($old_subscr) && 'order_number' === $column) {
+//        echo $html_baloon;
+//        return;
+//    }
     
-    // check for new data
+    // get all meta fields
     $post_meta = get_post_meta($post->ID);
     
     if (empty($post_meta) || !is_array($post_meta)) {
@@ -1041,10 +1039,25 @@ function nuvei_fill_custom_column( $column)
  * 
  * @param WC_Order $order
  */
-function nuvei_edit_my_account_orders_col( $order) {
+function nuvei_edit_my_account_orders_col( $order)
+{
+    // get all meta fields
+    $post_meta  = get_post_meta($order->get_id());
+    $is_subscr  = false;
+    
+    if (!empty($post_meta) && is_array($post_meta)) {
+        foreach ($post_meta as $key => $data) {
+            if (false !== strpos($key, NUVEI_ORDER_SUBSCR)) {
+                $is_subscr = true;
+                break;
+            }
+        }
+    }
+    
 	echo '<a href="' . esc_url( $order->get_view_order_url() ) . '"';
 	
-	if (!empty($order->get_meta(NUVEI_ORDER_SUBSCR_ID))) {
+//	if (!empty($order->get_meta(NUVEI_ORDER_SUBSCR_ID))) {
+	if ($is_subscr) {
 		echo ' class="nuvei_plan_order" title="' . esc_attr__('Nuvei Payment Plan Order', 'nuvei_checkout_woocommerce') . '"';
 	}
 	
