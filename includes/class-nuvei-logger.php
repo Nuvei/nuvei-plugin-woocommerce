@@ -24,7 +24,6 @@ class Nuvei_Logger
 		$save_logs          = $nuvei_gw->get_option('save_logs');
 		$save_single_log    = $nuvei_gw->get_option('save_single_log');
 		$test_mode          = $nuvei_gw->get_option('test');
-		$test_mode          = $nuvei_gw->get_options
         
 		if (!is_dir(NUVEI_LOGS_DIR)) {
 			return;
