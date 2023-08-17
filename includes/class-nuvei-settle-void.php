@@ -26,29 +26,30 @@ class Nuvei_Settle_Void extends Nuvei_Request
 			return false;
 		}
 		
-		$order      = wc_get_order($data['order_id']);
+        if (empty($this->sc_order)) {
+            $this->sc_order = wc_get_order($data['order_id']);
+        }
+        
 		$curr       = get_woocommerce_currency();
-		$tr_curr    = $order->get_meta(NUVEI_TRANS_CURR);
         $notify_url = Nuvei_String::get_notify_url($this->plugin_settings);
-        $authCode   = $order->get_meta(NUVEI_AUTH_CODE_KEY);
+        $nuvei_data = $this->sc_order->get_meta(NUVEI_TRANSACTIONS);
 		
-		if (!empty($tr_curr)) {
-			$curr = $tr_curr;
-		}
+        if ('voidTransaction' == $data['method']) {
+            $last_tr_id = Nuvei_Helper::get_tr_id($data['order_id'], ['Settle', 'Sale', 'Auth']);
+        }
+        else {
+            $last_tr_id = Nuvei_Helper::get_tr_id($data['order_id'], ['Auth']);
+        }
 		
 		$params = array(
 			'clientUniqueId'        => $data['order_id'],
-			'amount'                => (string) $order->get_total(),
+			'amount'                => (string) $this->sc_order->get_total(),
 			'currency'              => $curr,
-			'relatedTransactionId'  => $order->get_meta(NUVEI_TRANS_ID),
+			'relatedTransactionId'  => $last_tr_id,
             'url'                   => $notify_url,
             'urlDetails'            => ['notificationUrl' => $notify_url],
 		);
         
-        if (!empty($authCode)) {
-            $params['authCode'] = $authCode;
-        }
-
 		return $this->call_rest_api($data['method'], $params);
 	}
 	
@@ -85,6 +86,8 @@ class Nuvei_Settle_Void extends Nuvei_Request
 
 	protected function get_checksum_params()
     {
-		return array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'currency', 'relatedTransactionId', 'authCode', 'url', 'timeStamp');
+		return array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'currency', 'relatedTransactionId'
+//            , 'authCode'
+            , 'url', 'timeStamp');
 	}
 }

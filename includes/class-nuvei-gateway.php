@@ -15,7 +15,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		# settings to get/save options
 		$this->id                 = NUVEI_GATEWAY_NAME;
 		$this->method_title       = __('Nuvei Checkout', 'nuvei_checkout_woocommerce' );
-		$this->method_description = 'Pay with ' . NUVEI_GATEWAY_TITLE . '.';
+		$this->method_description = __('Pay with ', 'nuvei_checkout_woocommerce' ) . NUVEI_GATEWAY_TITLE . '.';
 		$this->method_name        = NUVEI_GATEWAY_TITLE;
 		$this->icon               = plugin_dir_url(NUVEI_PLUGIN_FILE) . 'assets/icons/nuvei.png';
 		$this->has_fields         = false;
@@ -302,7 +302,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		if (!empty($nuvei_transaction_id)) {
 			Nuvei_Logger::write('Process webSDK Order, transaction ID #' . $nuvei_transaction_id);
 			
-			$order->update_meta_data(NUVEI_TRANS_ID, $nuvei_transaction_id);
+            $transactions_data[$nuvei_transaction_id] = [];
+//			$order->update_meta_data(NUVEI_TRANS_ID, $nuvei_transaction_id);
+			$order->update_meta_data(NUVEI_TR_ID, $nuvei_transaction_id);
+			$order->update_meta_data(NUVEI_TRANSACTIONS, $transactions_data);
 			$order->save();
 			
 			return array(
@@ -856,7 +859,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
     public function create_wc_subscr_order($amount_to_charge, $renewal_order)
     {
         $renewal_order_id   = $renewal_order->get_id();
-//        $subscription       = wc_get_order($_REQUEST['post_ID']);
         $subscription       = wc_get_order($renewal_order->get_meta('_subscription_renewal'));
         
         if (!is_object($subscription)) {
@@ -876,6 +878,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         
         $parent_order_id    = $subscription->get_parent_id();
         $parent_order       = wc_get_order($parent_order_id);
+        $parent_tr_id       = Nuvei_Helper::get_tr_id($parent_order_id);
+        $parent_tr_upo_id   = Nuvei_Helper::get_tr_upo_id($parent_order_id);
         
         Nuvei_Logger::write(
             [
@@ -885,11 +889,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             'create_wc_subscr_order'
         );
         
-        if (empty($parent_order->get_meta(NUVEI_TRANS_ID))
-            || empty($parent_order->get_meta(NUVEI_UPO))
-        ) {
+//        if (empty($parent_order->get_meta(NUVEI_TRANS_ID))
+//            || empty($parent_order->get_meta(NUVEI_UPO))
+//        ) {
+        if (empty($parent_tr_upo_id) || empty($parent_tr_id)) {
             Nuvei_Logger::write(
-                get_post_meta($parent_order_id),
+                $parent_order->get_meta_data(),
                 'Error - missing mandatory Parent order data.'
             );
             
@@ -920,17 +925,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway
                 'country'   => $renewal_order->get_meta('_billing_country'),
                 'email'     => $billing_mail,
             ],
-            'paymentOption'         => ['userPaymentOptionId' => $parent_order->get_meta(NUVEI_UPO)],
+//            'paymentOption'         => ['userPaymentOptionId' => $parent_order->get_meta(NUVEI_UPO)],
+            'paymentOption'         => ['userPaymentOptionId' => Nuvei_Logger::get_tr_upo_id($parent_order_id)],
         ];
         
-        $parent_payment_method = $parent_order->get_meta(NUVEI_PAYMENT_METHOD);
-        
-//        Nuvei_Logger::write(get_post_meta($parent_order_id), '$parent_order all meta');
+//        $parent_payment_method = $parent_order->get_meta(NUVEI_PAYMENT_METHOD);
+        $parent_payment_method = Nuvei_Helper::get_payment_method($parent_order_id);
         
         if ('cc_card' == $parent_payment_method) {
             $params['isRebilling']          = 1;
-            $params['relatedTransactionId'] = $parent_order->get_meta(NUVEI_TRANS_ID);
-//            $params['upoId']                = $parent_order->get_meta(NUVEI_UPO);
+//            $params['relatedTransactionId'] = $parent_order->get_meta(NUVEI_TRANS_ID);
+            $params['relatedTransactionId'] = $parent_tr_id;
         }
         
         if ('apmgw_expresscheckout' == $parent_payment_method) {

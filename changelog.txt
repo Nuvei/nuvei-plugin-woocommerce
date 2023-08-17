@@ -1,6 +1,9 @@
 *** WooCommerce Extension Changelog ***
 # 2.0.0
     * Trim the merchant credentials when get them.
+    * Stop using save_update_order_numbers() method and all connected with it meta fields.
+    * Removed few GET parameters from the notification URL. Please provid the new URL to the Integration team!
+    * Added transactionId into Nuvei Transactions meta field.
 
 # 1.4.6
     * Added few more fields into _nuveiTransactions meta field.

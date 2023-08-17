@@ -8,13 +8,17 @@ const NUVEI_GATEWAY_TITLE   = 'Nuvei';
 const NUVEI_GATEWAY_NAME    = 'nuvei'; // the name by WC recognize this Gateway
 
 // keys for order metadata, we make them hiden when starts with underscore
-const NUVEI_AUTH_CODE_KEY       = '_authCode';
-const NUVEI_TRANS_ID            = '_transactionId';
-const NUVEI_RESP_TRANS_TYPE     = '_transactionType';
-const NUVEI_PAYMENT_METHOD      = '_paymentMethod';
-const NUVEI_ORDER_HAS_REFUND    = '_scHasRefund';
-const NUVEI_REFUNDS             = '_sc_refunds';
-const NUVEI_UPO                 = '_transactionUpo';
+//const NUVEI_AUTH_CODE_KEY       = '_authCode';
+//const NUVEI_TRANS_ID            = '_transactionId';
+//const NUVEI_TRANS_STATUS        = '_transactionStatus';
+//const NUVEI_PAYMENT_METHOD      = '_paymentMethod';
+//const NUVEI_TRANS_CURR          = '_transactionCurrency';
+//const NUVEI_UPO                 = '_transactionUpo';
+//const NUVEI_RESP_TRANS_TYPE     = '_transactionType';
+//const NUVEI_ORDER_HAS_REFUND    = '_scHasRefund';
+//const NUVEI_REFUNDS             = '_sc_refunds';
+
+const NUVEI_TR_ID               = '_nuveiTrId'; // we will keep this data for fast search in Orders
 const NUVEI_WC_SUBSCR           = '_wcSubscription';
 const NUVEI_WC_RENEWAL          = '_wcsRenewal';
 const NUVEI_TRANSACTIONS        = '_nuveiTransactions';
@@ -26,12 +30,9 @@ const NUVEI_ORDER_SUBSCR_ID     = '_nuveiSubscrIDs';
 /**
  * @deprecated since version 1.3.0
  */
-
 const NUVEI_ORDER_SUBSCR_STATE  = '_nuveiSubscrState';
 const NUVEI_ORDER_SUBSCR        = '_nuveiSubscr'; // replace the deprecated above
 const NUVEI_CUID_POSTFIX        = '_sandbox_apm'; // postfix for Sandbox APM payments
-const NUVEI_TRANS_CURR          = '_transactionCurrency';
-const NUVEI_TRANS_STATUS        = '_transactionStatus';
 const NUVEI_PREV_TRANS_STATUS   = '_nuveiPrevTransactionStatus';
 
 const NUVEI_SOURCE_APPLICATION  = 'wooCommerce Plugin';

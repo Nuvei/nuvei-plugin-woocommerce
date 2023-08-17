@@ -599,7 +599,6 @@ function nuvei_add_buttons($order)
     Nuvei_Logger::write('nuvei_add_buttons');
 //    echo '<pre style="text-align: left;">'.print_r(get_post_meta($order->get_id()), true) . '</pre>';
 //    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TRANSACTIONS), true) . '</pre>';
-//    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TRANS_ID), true) . '</pre>';
     
     // in case this is not Nuvei order
 	if (empty($order->get_payment_method())
@@ -610,16 +609,18 @@ function nuvei_add_buttons($order)
 	}
     
     // to show Nuvei buttons we must be sure the order is paid via Nuvei Paygate
-    // AMP's transactions does not have Auth code
-    if (!$order->get_meta(NUVEI_AUTH_CODE_KEY) && !$order->get_meta(NUVEI_TRANS_ID)) {
-        Nuvei_Logger::write('', 'Missing Transaction ID and Auth Code!', 'WARN');
+    $order_id   = $order->get_id();
+    $ord_tr_id  = Nuvei_Helper::get_tr_id($order_id);
+    
+    if (empty($ord_tr_id)) {
+        Nuvei_Logger::write($ord_tr_id, 'Invalid Transaction ID!', 'WARN');
         return false;
     }
     
 	try {
-		$order_id               = $order->get_id();
 		$order_status           = strtolower($order->get_status());
-		$order_payment_method   = $order->get_meta('_paymentMethod');
+//		$order_payment_method   = $order->get_meta(NUVEI_PAYMENT_METHOD);
+		$order_payment_method   = Nuvei_Helper::get_payment_method($order_id);
 		$order_refunds          = json_decode($order->get_meta(NUVEI_REFUNDS), true);
 		$refunds_exists         = false;
         $order_time             = 0;
@@ -666,7 +667,7 @@ function nuvei_add_buttons($order)
 	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
 		// Show VOID button
 		if (in_array($order_payment_method, NUVEI_APMS_REFUND_VOID)
-            && !empty($order->get_meta(NUVEI_AUTH_CODE_KEY))
+//            && !empty($order->get_meta(NUVEI_AUTH_CODE_KEY))
             && !$refunds_exists
             && 0 < (float) $order->get_total()
             && time() < $order_time + 172800 // 48 hours
@@ -703,8 +704,9 @@ function nuvei_add_buttons($order)
 		
 		// show SETTLE button ONLY if transaction type IS Auth and the Total is not 0
 		if ('pending' == $order_status 
-            && 'Auth' == $order->get_meta(NUVEI_RESP_TRANS_TYPE)
-            && 0 < $order->get_total()
+//            && 'Auth' == $order->get_meta(NUVEI_RESP_TRANS_TYPE)
+            && 'Auth' == Nuvei_Helper::get_tr_type($order_id)
+            && $order->get_total() > 0
         ) {
 			$question = sprintf(
 				/* translators: %d is replaced with "decimal" */
@@ -1116,7 +1118,7 @@ function nuvei_after_order_itemmeta($item_id, $item, $_product)
 {
     $post_id        = Nuvei_Http::get_param('post', 'int');
     $order          = wc_get_order($post_id);
-    $subs_id        = $order->get_meta(NUVEI_ORDER_SUBSCR_ID);
+//    $subs_id        = $order->get_meta(NUVEI_ORDER_SUBSCR_ID);
     $post_meta      = get_post_meta($post_id);
     
     if (empty($post_meta) || !is_array($post_meta)) {
@@ -1148,11 +1150,6 @@ function nuvei_after_order_itemmeta($item_id, $item, $_product)
             ]);
             continue;
         }
-        
-//        echo '<pre>'.print_r([$mk, $subscr_data],true).'</pre>';
-////        echo '<pre>'.print_r($subscr_data,true).'</pre>';
-//        echo '<pre>'.print_r([$item_id, $product_id],true).'</pre>';
-//        echo '<pre>'.print_r([$item_id, $item->get_variation_id()],true).'</pre>';
         
         if (empty($subscr_data['state']) || empty ($subscr_data['subscr_id'])) {
             // wait for meta data to be created

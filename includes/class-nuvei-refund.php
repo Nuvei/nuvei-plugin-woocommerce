@@ -19,7 +19,7 @@ class Nuvei_Refund extends Nuvei_Request
 		
 		if (empty($data['order_id']) 
 			|| empty($data['ref_amount'])
-			|| empty($data['tr_id'])
+//			|| empty($data['tr_id'])
 		) {
 			Nuvei_Logger::write($data, 'Nuvei_Refund error missing mandatoriy parameters.');
 			return false;
@@ -29,12 +29,22 @@ class Nuvei_Refund extends Nuvei_Request
 		$order      = wc_get_order($data['order_id']);
 		$curr       = get_woocommerce_currency();
         $notify_url = Nuvei_String::get_notify_url($this->plugin_settings);
+        $nuvei_data = $this->sc_order->get_meta(NUVEI_TRANSACTIONS);
+        $last_tr    = Nuvei_Helper::get_last_transaction($nuvei_data, ['Sale', 'Settle']);
+        
+        if (empty($last_tr['transactionId'])) {
+			wp_send_json(array(
+				'status' => 0,
+				'msg' => __('The Order missing Transaction ID.', 'nuvei_checkout_woocommerce')));
+			exit;
+		}
 		
 		$ref_parameters = array(
 			'clientRequestId'       => $data['order_id'] . '_' . $time . '_' . uniqid(),
 			'clientUniqueId'        => $time . '_' . uniqid(),
 			'amount'                => number_format($data['ref_amount'], 2, '.', ''),
-			'relatedTransactionId'  => $data['tr_id'], // GW Transaction ID
+//			'relatedTransactionId'  => $data['tr_id'], // GW Transaction ID
+			'relatedTransactionId'  => $last_tr['transactionId'],
             'url'                   => $notify_url,
             'urlDetails'            => ['notificationUrl' => $notify_url],
 		);
@@ -80,21 +90,21 @@ class Nuvei_Refund extends Nuvei_Request
 			exit;
 		}
 		
-		$tr_id = $this->sc_order->get_meta(NUVEI_TRANS_ID);
+//		$tr_id = $this->sc_order->get_meta(NUVEI_TRANS_ID);
 		
-		if (empty($tr_id)) {
-			wp_send_json(array(
-				'status' => 0,
-				'msg' => __('The Order missing Transaction ID.', 'nuvei_checkout_woocommerce')));
-			exit;
-		}
+//		if (empty($tr_id)) {
+//			wp_send_json(array(
+//				'status' => 0,
+//				'msg' => __('The Order missing Transaction ID.', 'nuvei_checkout_woocommerce')));
+//			exit;
+//		}
 		
 		//      $nr_obj = new Nuvei_Refund($this->plugin_settings);
 		$nr_obj = new Nuvei_Refund($this->plugin_settings);
 		$resp   = $nr_obj->process(array(
 			'order_id'     => $order_id, 
 			'ref_amount'   => $ref_amount, 
-			'tr_id'        => $tr_id
+//			'tr_id'        => $tr_id
 		));
 		$msg    = '';
 
@@ -132,7 +142,7 @@ class Nuvei_Refund extends Nuvei_Request
 		// APPROVED
 		if (!empty($json_arr['transactionStatus']) && 'APPROVED' == $json_arr['transactionStatus']) {
 			$this->sc_order->update_status('processing');
-			$this->save_refund_meta_data($json_arr['transactionId'], $ref_amount);
+//			$this->save_refund_meta_data($json_arr['transactionId'], $ref_amount);
 			
 			wp_send_json(array('status' => 1));
 			exit;

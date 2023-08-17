@@ -128,6 +128,16 @@ abstract class Nuvei_Request
 		// can we override Order status (state) END
 	}
 	
+    /**
+     * @deprecated since version 2.0.0
+     * 
+     * @param int $trans_id
+     * @param float $ref_amount
+     * @param string $status
+     * @param int $wc_id
+     * 
+     * @return int
+     */
 	protected function save_refund_meta_data( $trans_id, $ref_amount, $status = '', $wc_id = 0)
     {
 		Nuvei_Logger::write('save_refund_meta_data()');

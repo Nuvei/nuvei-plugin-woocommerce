@@ -22,13 +22,9 @@ class Nuvei_String
 			return $plugin_settings['notify_url'];
 		}
 		
-		$url_part  = get_site_url();
-		$save_logs = isset($plugin_settings['save_logs']) ? $plugin_settings['save_logs'] : 'no';  
-		$test_mode = isset($plugin_settings['test']) ? $plugin_settings['test'] : 'yes';
-		$url       = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' )
-            . 'wc-api=nuvei_listener'
-			. '&save_logs=' . $save_logs 
-            . '&test_mode=' . $test_mode;
+		$url_part   = get_site_url();
+		$url        = $url_part . ( strpos($url_part, '?') !== false ? '&' : '?' )
+            . 'wc-api=nuvei_listener';
 		
 		// some servers needs / before ?
 		if (strpos($url, '?') !== false && strpos($url, '/?') === false) {
