@@ -561,34 +561,27 @@ function nuvei_load_admin_styles_scripts( $hook) {
 	wp_localize_script('nuvei_js_admin', 'scTrans', $localizations);
 	wp_enqueue_script('nuvei_js_admin');
 }
+# Load Styles and Scripts END
 
 // first method we come in
 function nuvei_enqueue( $hook)
 {
-	global $wc_nuvei;
-		
 	# DMNs catch
     // sc_listener is legacy value
 	if (in_array(Nuvei_Http::get_param('wc-api'), array('sc_listener', 'nuvei_listener'))) {
-		//      add_action('wp_loaded', array($wc_nuvei, 'process_dmns'));
 		add_action('wp_loaded', function() {
-			global $wc_nuvei;
-			
-			//            $wc_nuvei->process_dmns();
-			
-			$nuvei_notify_dmn = new Nuvei_Notify_Url($wc_nuvei->settings);
+			$nuvei_notify_dmn = new Nuvei_Notify_Url();
 			$nuvei_notify_dmn->process();
 		});
 	}
+    
+    global $wc_nuvei;
 	
 	// nuvei checkout step process order, after the internal submit from the checkout
-	if ('process-order' == Nuvei_Http::get_param('wc-api')
-		&& !empty(Nuvei_Http::get_param('order_id'))
-	) {
+	if ('process-order' == Nuvei_Http::get_param('wc-api')) {
 		$wc_nuvei->process_payment(Nuvei_Http::get_param('order_id', 'int', 0));
 	}
 }
-# Load Styles and Scripts END
 
 /**
  * Add buttons for the Nuvei Order actions in Order details page.
@@ -600,7 +593,7 @@ function nuvei_add_buttons($order)
 {
     Nuvei_Logger::write('nuvei_add_buttons');
 //    echo '<pre style="text-align: left;">'.print_r(get_post_meta($order->get_id()), true) . '</pre>';
-//    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TRANSACTIONS), true) . '</pre>';
+//    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TR_ID), true) . '</pre>';
     
     // in case this is not Nuvei order
 	if (empty($order->get_payment_method())
@@ -635,10 +628,7 @@ function nuvei_add_buttons($order)
     
 	try {
 		$order_status           = strtolower($order->get_status());
-//		$order_payment_method   = $order->get_meta(NUVEI_PAYMENT_METHOD);
 		$order_payment_method   = $helper->get_payment_method($order_id);
-//		$order_refunds          = json_decode($order->get_meta(NUVEI_REFUNDS), true);
-//		$refunds_exists         = false;
         $order_time             = 0;
         
         if (!is_null($order->get_date_created())) {
@@ -647,15 +637,6 @@ function nuvei_add_buttons($order)
         if (!is_null($order->get_date_completed())) {
             $order_time = $order->get_date_completed()->getTimestamp();
         }
-        
-//		if (!empty($order_refunds) && is_array($order_refunds)) {
-//			foreach ($order_refunds as $data) {
-//				if ('approved' == $data['status']) {
-//					$refunds_exists = true;
-//					break;
-//				}
-//			}
-//		}
 	}
     catch (Exception $ex) {
 		echo '<script type="text/javascript">console.error("'
@@ -671,19 +652,10 @@ function nuvei_add_buttons($order)
 		echo '<script type="text/javascript">jQuery(\'.refund-items\').prop("disabled", true);</script>';
 	}
     
-    # Show Cancel Subscription buttons - Legacy
-//    if ('active' == $order->get_meta(NUVEI_ORDER_SUBSCR_STATE)) {
-//        echo
-//            '<button id="sc_cancel_subs_btn" type="button" onclick="nuveiAction(\''
-//                . esc_html__('Are you sure, you want to cancel the subscription for this order?', 'nuvei_checkout_woocommerce')
-//                . '\', \'cancelSubscr\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
-//                . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') . '</button>';
-//    }
-	
 //	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
 	if (in_array($order_status, array('completed', 'pending'))) {
 		// Show VOID button
-		if (in_array($order_payment_method, NUVEI_APMS_REFUND_VOID)
+		if ('cc_card' == $order_payment_method
             && empty($order_refunds)
             && (float) $order->get_total() > 0
             && time() < $order_time + 172800 // 48 hours
@@ -720,7 +692,6 @@ function nuvei_add_buttons($order)
 		
 		// show SETTLE button ONLY if transaction type IS Auth and the Total is not 0
 		if ('pending' == $order_status 
-//            && 'Auth' == $order->get_meta(NUVEI_RESP_TRANS_TYPE)
             && 'Auth' == $helper->get_tr_type($order_id)
             && $order->get_total() > 0
         ) {

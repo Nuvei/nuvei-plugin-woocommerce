@@ -65,7 +65,7 @@ abstract class Nuvei_Request
 		$this->sc_order = wc_get_order( $order_id );
 		
 		if ( ! is_a( $this->sc_order, 'WC_Order') ) {
-			Nuvei_Logger::write('is_order_valid() Error - Provided Order ID is not a WC Order');
+			Nuvei_Logger::write('Error - Provided Order ID is not a WC Order');
 			
 			if ($return) {
 				return;

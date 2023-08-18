@@ -17,17 +17,13 @@ class Nuvei_Refund extends Nuvei_Request
     {
 		$data = current(func_get_args());
 		
-		if (empty($data['order_id']) 
-			|| empty($data['ref_amount'])
-//			|| empty($data['tr_id'])
-		) {
+		if (empty($data['order_id']) || empty($data['ref_amount'])) {
 			Nuvei_Logger::write($data, 'Nuvei_Refund error missing mandatoriy parameters.');
 			return false;
 		}
 		
 		$time       = gmdate('YmdHis', time());
 		$order      = wc_get_order($data['order_id']);
-//		$curr       = get_woocommerce_currency();
         $notify_url = Nuvei_String::get_notify_url($this->plugin_settings);
         $nuvei_data = $order->get_meta(NUVEI_TRANSACTIONS);
         $last_tr    = $this->get_last_transaction($nuvei_data, ['Sale', 'Settle']);
@@ -40,10 +36,9 @@ class Nuvei_Refund extends Nuvei_Request
 		}
 		
 		$ref_parameters = array(
-			'clientRequestId'       => $data['order_id'] . '_' . $time . '_' . uniqid(),
-			'clientUniqueId'        => $time . '_' . uniqid(),
+			'clientRequestId'       => $time . '_' . uniqid(),
+			'clientUniqueId'        => $data['order_id'] . '_' . $time . '_' . uniqid(),
 			'amount'                => number_format($data['ref_amount'], 2, '.', ''),
-//			'relatedTransactionId'  => $data['tr_id'], // GW Transaction ID
 			'relatedTransactionId'  => $last_tr['transactionId'],
             'url'                   => $notify_url,
             'urlDetails'            => ['notificationUrl' => $notify_url],

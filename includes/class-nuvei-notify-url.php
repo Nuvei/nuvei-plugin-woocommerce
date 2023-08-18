@@ -7,12 +7,12 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Notify_Url extends Nuvei_Request
 {
-	public function __construct($plugin_settings)
-    {
-		$this->plugin_settings = $plugin_settings;
-        
-        parent::__construct($this->plugin_settings);
-	}
+//	public function __construct($plugin_settings)
+//    {
+//		$this->plugin_settings = $plugin_settings;
+//        
+//        parent::__construct($this->plugin_settings);
+//	}
 	
 	public function process()
     {
@@ -225,9 +225,13 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		
 		# Refund
 		if (in_array($transactionType, array('Credit', 'Refund'), true)) {
-			if (0 == $order_id) {
-				$order_id = $this->get_order_by_trans_id($relatedTransactionId, $transactionType);
-			}
+//			if (0 == $order_id) {
+//				$order_id = $this->get_order_by_trans_id($relatedTransactionId, $transactionType);
+//			}
+            
+            $order_id = $this->get_order_by_trans_id($relatedTransactionId, $transactionType);
+            
+            Nuvei_Logger::write($order_id);
             
             $this->is_order_valid($order_id);
             $this->check_for_repeating_dmn();
@@ -290,7 +294,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
     {
 		$clientUniqueId = Nuvei_Http::get_param('clientUniqueId');
 		
-		if ('yes' != $this->plugin_settings['test']) {
+		if ('yes' != $this->nuvei_gw->get_option('test')) {
 			return $clientUniqueId;
 		}
 		
@@ -316,7 +320,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			return false;
 		}
         
-        $merchant_secret = trim($this->plugin_settings['secret']);
+        $merchant_secret = trim($this->nuvei_gw->get_option('secret'));
 		
 		// advanceResponseChecksum case
 		if (!empty($advanceResponseChecksum)) {
@@ -328,7 +332,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 				. Nuvei_Http::get_request_status()
 				. Nuvei_Http::get_param('productId');
 			
-			$str = hash($this->plugin_settings['hash_type'], $concat);
+			$str = hash($this->nuvei_gw->get_option('hash_type'), $concat);
 
 			if (strval($str) == $advanceResponseChecksum) {
 				return true;
@@ -359,14 +363,14 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		$concat     = implode('', $dmn_params);
 		
 		$concat_final = $concat . $merchant_secret;
-		$checksum     = hash($this->plugin_settings['hash_type'], $concat_final);
+		$checksum     = hash($this->nuvei_gw->get_option('hash_type'), $concat_final);
 		
 		if ($responsechecksum !== $checksum) {
             $log_data = [];
             
-            if('yes' == $this->plugin_settings['test']) {
+            if('yes' == $this->nuvei_gw->get_option('test')) {
                 $log_data['string concat']  = $concat;
-                $log_data['hash']           = $this->plugin_settings['hash_type'];
+                $log_data['hash']           = $this->nuvei_gw->get_option('hash_type');
                 $log_data['checksum']       = $checksum;
             }
             
@@ -627,7 +631,11 @@ class Nuvei_Notify_Url extends Nuvei_Request
         }
         
         $this->sc_order->update_meta_data(NUVEI_TRANSACTIONS, $transactions_data);
-        $this->sc_order->update_meta_data(NUVEI_TR_ID, $transaction_id);
+        
+        // update it only for Auth, Settle and Sale. They are base an we will need this TrID
+        if (in_array($transactionType, ['Auth', 'Settle', 'Sale'])) {
+            $this->sc_order->update_meta_data(NUVEI_TR_ID, $transaction_id);
+        }
         
         if ('renewal_order' == Nuvei_Http::get_param('customField4')) {
             $this->sc_order->update_meta_data(NUVEI_WC_RENEWAL, true);
@@ -1049,15 +1057,14 @@ class Nuvei_Notify_Url extends Nuvei_Request
     {
         Nuvei_Logger::write('check_for_repeating_dmn');
         
-//        $helper             = new Nuvei_Helper();
-        $order_id           = $this->sc_order->get_id();
-//        $nuvei_tr_data      = $this->sc_order->get_meta(NUVEI_TRANSACTIONS);
-        $dmn_tr_id          = Nuvei_Http::get_param('TransactionID', 'int');
-        $dmn_status         = Nuvei_Http::get_request_status();
-        $order_tr_id        = $this->get_tr_id($this->sc_order->get_id());
-        $order_tr_status    = $this->get_tr_status($order_id);
+        $order_data = $this->sc_order->get_meta(NUVEI_TRANSACTIONS);
+        $dmn_tr_id  = Nuvei_Http::get_param('TransactionID', 'int');
+        $dmn_status = Nuvei_Http::get_request_status();
         
-        if($order_tr_id == $dmn_tr_id && $order_tr_status == $dmn_status) {
+        if (!empty($order_data[$dmn_tr_id])
+            && !empty($order_data[$dmn_tr_id]['status'])
+            && $dmn_status == $order_data[$dmn_tr_id]['status']
+        ) {
             Nuvei_Logger::write('Repating DMN message detected. Stop the process.');
 			exit(wp_json_encode('This DMN is already received.'));
         }
