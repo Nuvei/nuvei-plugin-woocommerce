@@ -32,6 +32,20 @@ add_action('admin_init', 'nuvei_admin_init');
 add_filter('woocommerce_payment_gateways', 'nuvei_add_gateway');
 add_action('plugins_loaded', 'nuvei_init', 0);
 
+// register the plugin REST endpoint
+add_action('rest_api_init', function() {
+    // TODO for develop only!
+    add_filter( 'woocommerce_store_api_disable_nonce_check', '__return_true' );
+    
+    register_rest_route('nuvei-checkout/v1', '/action', array(
+        'methods'               => WP_REST_Server::READABLE,
+        'callback'              => 'nuvei_rest_method',
+        'permission_callback'   => function() {
+            return (is_user_logged_in() && current_user_can('activate_plugins'));
+        }
+    ));
+});
+
 /**
  * On activate try to create custom logs directory.
  */
@@ -1193,4 +1207,56 @@ function nuvei_get_plugin_version()
     return $plugin_data['Version'];
 }
 
+function nuvei_rest_method()
+{
+//    Nuvei_Logger::write(is_object(WC()));
+//    Nuvei_Logger::write(WC());
+    
+//    Nuvei_Logger::write(@WC()->cart->get_cart_item('1ff1de774005f8da13f42943881c655f'));
+//    Nuvei_Logger::write(@WC()->cart->get_cart_contents('1ff1de774005f8da13f42943881c655f'));
+    
+    
+    # try to get cart by user id
+    $user               = wp_get_current_user();
+    $user_id            = $user->ID;
+    $session_handler    = new WC_Session_Handler();
+    $session            = $session_handler->get_session($user_id);
+    $cart_items         = isset($session['cart']) ? maybe_unserialize($session['cart']) : [];
+    
+    Nuvei_Logger::write($cart_items, '$session cart');
+    Nuvei_Logger::write(WC()->cart, 'WC cart');
+    Nuvei_Logger::write($cart_items, '$cart_items');
+    
+    global $woocommerce;
+    
+//    $cart = $woocommerce->cart;
+//    
+//    Nuvei_Logger::write($cart->get_customer()->get_billing_first_name(), 'get_billing_first_name');
+    
+    
+//    return rest_ensure_response( 'Hello World, this is the WordPress REST API.' );
+    
+    $url    = 'https://woocomm-dev.gw-4u.com/wp-json/wc/store/checkout';
+    $header =  array(
+        'Content-Type: application/json',
+    );
+    
+    $ch = curl_init();
 
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+//    curl_setopt($ch, CURLOPT_POSTFIELDS, $json_post);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+    $resp       = curl_exec($ch);
+    $resp_array = json_decode($resp, true);
+    $resp_info  = curl_getinfo($ch);
+    
+    Nuvei_Logger::write([$resp_array, $resp_info], 'checkout data');
+    
+    
+    return wp_json_encode($_GET);
+}

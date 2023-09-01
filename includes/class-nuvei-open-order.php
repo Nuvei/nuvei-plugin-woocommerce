@@ -47,6 +47,7 @@ class Nuvei_Open_Order extends Nuvei_Request
         $try_update_order   = true;
         
         Nuvei_Logger::write($open_order_details, '$open_order_details');
+        Nuvei_Logger::write($cart, '$cart');
         
         // do not allow WCS and Nuvei Subscription in same Order
         if (!empty($products_data['subscr_data']) && $products_data['wc_subscr']) {

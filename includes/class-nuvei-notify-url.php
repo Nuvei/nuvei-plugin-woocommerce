@@ -614,7 +614,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
         }
         
         $transactions_data[$transaction_id]  = [
-            'authCode'              => Nuvei_Http::get_param('AuthCode', 'int'),
+            'authCode'              => Nuvei_Http::get_param('AuthCode'),
             'paymentMethod'         => Nuvei_Http::get_param('payment_method'),
             'transactionType'       => $transactionType,
             'transactionId'         => $transaction_id,
