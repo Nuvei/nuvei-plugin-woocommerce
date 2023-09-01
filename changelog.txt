@@ -5,6 +5,11 @@
     * Removed few GET parameters from the notification URL. Please provid the new URL to the Integration team!
     * Added transactionId into Nuvei Transactions meta field.
 
+# 1.4.7
+    * Fix for the logic who decide will we create update or open order request.
+    * Fix for the loadings styles method.
+    * Do not use the authCode as Int.
+
 # 1.4.6
     * Added few more fields into _nuveiTransactions meta field.
     * Added and removed few comments.

@@ -7,8 +7,9 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Gateway extends WC_Payment_Gateway
 {
-	private $plugin_data  = array();
-	private $subscr_units = array('year', 'month', 'day');
+	private $plugin_data    = [];
+	private $subscr_units   = ['year', 'month', 'day'];
+    private $rest_params    = []; // Cart data passed from REST API call.
 	
 	public function __construct()
     {
@@ -671,16 +672,20 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * Call the Nuvei Checkout SDK form here and pass all parameters.
 	 * 
 	 * @global $woocommerce
+     * 
+     * @param bool $is_ajax
+     * @param bool $is_rest
 	 */
-	public function call_checkout($is_ajax = false)
+	public function call_checkout($is_ajax = false, $is_rest = false)
     {
         Nuvei_Logger::write('call_checkout()');
         
 		global $woocommerce;
         
 		# OpenOrder
-		$oo_obj  = new Nuvei_Open_Order($this->settings);
-		$oo_data = $oo_obj->process();
+//        $is_rest    = empty($this->rest_params) ? false : true;
+		$oo_obj     = new Nuvei_Open_Order($this->settings, false, $this->rest_params);
+		$oo_data    = $oo_obj->process();
 		
 		if (!$oo_data || empty($oo_data['sessionToken'])) {
             $msg = __('Unexpected error, please try again later!', 'nuvei_checkout_woocommerce');
@@ -702,18 +707,18 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         
         $nuvei_helper           = new Nuvei_Helper();
 		$cart                   = $woocommerce->cart;
-		$cart_items             = $cart->get_cart();
-//		$ord_details    = WC()->session->get('nuvei_last_open_order_details');
 		$ord_details            = $nuvei_helper->get_addresses();
-//		$prod_details   = WC()->session->get('nuvei_order_details');
 		$prod_details           = $nuvei_helper->get_products();
 		$pm_black_list          = trim($this->get_setting('pm_black_list', ''));
         $is_there_subscription  = false;
-//        $subscr_data    = [];
+        $total                  = '0.00';
         
-//        if (!empty($prod_details[$oo_data['sessionToken']]['subscr_data'])) {
-//            $subscr_data = $prod_details[$oo_data['sessionToken']]['subscr_data'];
-//        }
+        if (!$is_rest && isset($woocommerce->cart->total)) {
+            $total = (string) number_format((float) $cart->total, 2, '.', '');
+        }
+        elseif (isset($this->rest_params['amount'])) {
+            $total = (string) number_format((float) $this->rest_params['amount'], 2, '.', '');
+        }
         
 		if (!empty($pm_black_list)) {
 			$pm_black_list = explode(',', $pm_black_list);
@@ -729,7 +734,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             $use_upos = $save_pm = false;
         }
         
-//        if(!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
         if( !empty($prod_details['wc_subscr']) || !empty($prod_details['subscr_data']) ) {
             $save_pm                = 'always';
             $is_there_subscription  = true;
@@ -742,7 +746,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'merchantSiteId'            => $this->get_setting('merchantSiteId'),
 			'country'                   => $ord_details['billingAddress']['country'],
 			'currency'                  => get_woocommerce_currency(),
-			'amount'                    => (string) number_format((float) $cart->total, 2, '.', ''),
+			'amount'                    => $total,
 			'renderTo'                  => '#nuvei_checkout',
 			'useDCC'                    =>  $this->get_setting('use_dcc', 'enable'),
 			'strict'                    => false,
@@ -764,13 +768,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		);
         
 		// check for product with a plan
-//		if (!empty($subscr_data) || !empty($prod_details[$oo_data['sessionToken']]['wc_subscr'])) {
 		if ($is_there_subscription) {
             $checkout_data['pmWhitelist'] = ['cc_card'];
             
             // only for WCS
             if (1 == $this->get_setting('allow_paypal_rebilling', 0)
-//                && empty($subscr_data)
                 && !empty($prod_details['wc_subscr'])
             ) {
                 $checkout_data['pmWhitelist'][]             = 'apmgw_expresscheckout';
@@ -807,10 +809,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
 		# blocked_cards END
         
-//        if($this->get_setting('sdk_version') != 'prod') {
-//            $checkout_data['webSdkEnv'] = 'dev';
-//        }
-		
 		$resp_data['nuveiPluginUrl'] = plugin_dir_url(NUVEI_PLUGIN_FILE);
 		$resp_data['nuveiSiteUrl']   = get_site_url();
 			
@@ -952,6 +950,23 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             Nuvei_Logger::write('Error when try to get Session Token');
             WC_Subscriptions_Manager::process_subscription_payment_failure_on_order($parent_order);
         }
+    }
+    
+    /**
+     * Get and return SimplyConnect data to REST API caller.
+     * 
+     * @param array $params Expected Cart data.
+     * @return array
+     */
+    public function get_simply_connect_data($params)
+    {
+        $this->rest_params = $params;
+        
+        $resp = $this->call_checkout(false, true);
+        
+        Nuvei_Logger::write($resp);
+        
+        return $resp;
     }
     
 	/**

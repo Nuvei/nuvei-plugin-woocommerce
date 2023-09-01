@@ -7,10 +7,10 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Update_Order extends Nuvei_Request
 {
-	public function __construct( array $plugin_settings)
-    {
-		parent::__construct($plugin_settings);
-	}
+//	public function __construct( array $plugin_settings)
+//    {
+//		parent::__construct($plugin_settings);
+//	}
 	
 	/**
 	 * Main method

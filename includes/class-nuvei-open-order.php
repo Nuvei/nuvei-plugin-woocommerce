@@ -9,20 +9,26 @@ class Nuvei_Open_Order extends Nuvei_Request
 {
 	protected $plugin_settings;
     
+	private $rest_params = [];
 	private $is_ajax;
+	private $is_rest;
 	
 	/**
 	 * Set is_ajax parameter to the Process metohd.
 	 * 
 	 * @param array $plugin_settings
 	 * @param bool  $is_ajax
+	 * @param bool  $is_rest
 	 */
-	public function __construct( array $plugin_settings, $is_ajax = false)
+//	public function __construct( array $plugin_settings, $is_ajax = false, $is_rest = false)
+	public function __construct( array $plugin_settings, $is_ajax = false, $rest_params = [])
     {
 		parent::__construct();
 		
 		$this->plugin_settings  = $plugin_settings;
 		$this->is_ajax          = $is_ajax;
+		$this->rest_params      = $rest_params;
+//		$this->is_rest          = $is_rest;
 	}
 
 	/**
@@ -36,19 +42,26 @@ class Nuvei_Open_Order extends Nuvei_Request
         Nuvei_Logger::write('OpenOrder class.');
         
 		global $woocommerce;
+        
+        if (!empty($this->rest_params)) {
+            $open_order_details = [];
+            $products_data      = $this->get_products_data($this->rest_params);
+            $cart_total         = $products_data['totals'];
+            $addresses          = $this->get_order_addresses();
+        }
+        else {
+            $ajax_params        = [];
+//            $open_order_details = WC()->session->get('nuvei_last_open_order_details');
+            $open_order_details = $woocommerce->session->get('nuvei_last_open_order_details');
+            $products_data      = $this->get_products_data();
+            $cart_total         = (float) $products_data['totals'];
+            $addresses          = $this->get_order_addresses();
+            $transactionType    = $cart_total == 0 ? 'Auth' : $this->plugin_settings['payment_action'];
+            $try_update_order   = true;
+
+            Nuvei_Logger::write($open_order_details, '$open_order_details');
+        }
 		
-		$cart               = $woocommerce->cart;
-		$ajax_params        = [];
-        $open_order_details = WC()->session->get('nuvei_last_open_order_details');
-        $products_data      = $this->get_products_data();
-        $cart_total         = (float) $cart->total;
-        $addresses          = $this->get_order_addresses();
-        $transactionType    = (float) $cart->total == 0 ? 'Auth' : $this->plugin_settings['payment_action'];
-        $try_update_order   = true;
-        
-        Nuvei_Logger::write($open_order_details, '$open_order_details');
-        Nuvei_Logger::write($cart, '$cart');
-        
         // do not allow WCS and Nuvei Subscription in same Order
         if (!empty($products_data['subscr_data']) && $products_data['wc_subscr']) {
             $msg = 'It is not allowed to put product with WCS and product witn Nuvei Subscription in same Order! Please, contact the site administrator for this problem!';
