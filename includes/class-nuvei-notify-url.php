@@ -516,7 +516,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 	private function save_update_order_numbers()
     {
 		// save or update AuthCode and Transaction ID
-		$auth_code = Nuvei_Http::get_param('AuthCode', 'int');
+		$auth_code = Nuvei_Http::get_param('AuthCode');
 		if (!empty($auth_code)) {
 			$this->sc_order->update_meta_data(NUVEI_AUTH_CODE_KEY, $auth_code);
 		}
@@ -595,7 +595,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
         }
         
         $transactions_data[$transaction_id]  = [
-            'authCode'              => Nuvei_Http::get_param('AuthCode', 'int'),
+            'authCode'              => Nuvei_Http::get_param('AuthCode'),
             'paymentMethod'         => Nuvei_Http::get_param('payment_method'),
             'transactionType'       => $transactionType,
             'relatedTransactionId'  => Nuvei_Http::get_param('relatedTransactionId'),
