@@ -1,5 +1,8 @@
 *** WooCommerce Extension Changelog ***
 
+# 1.4.8
+    * Do not use AuthCode for Void and Settle.
+
 # 1.4.7
     * Fix for the logic who decide will we create update or open order request.
     * Fix for the loadings styles method.

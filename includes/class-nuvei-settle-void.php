@@ -30,7 +30,7 @@ class Nuvei_Settle_Void extends Nuvei_Request
 		$curr       = get_woocommerce_currency();
 		$tr_curr    = $order->get_meta(NUVEI_TRANS_CURR);
         $notify_url = Nuvei_String::get_notify_url($this->plugin_settings);
-        $authCode   = $order->get_meta(NUVEI_AUTH_CODE_KEY);
+//        $authCode   = $order->get_meta(NUVEI_AUTH_CODE_KEY);
 		
 		if (!empty($tr_curr)) {
 			$curr = $tr_curr;
@@ -45,9 +45,9 @@ class Nuvei_Settle_Void extends Nuvei_Request
             'urlDetails'            => ['notificationUrl' => $notify_url],
 		);
         
-        if (!empty($authCode)) {
-            $params['authCode'] = $authCode;
-        }
+//        if (!empty($authCode)) {
+//            $params['authCode'] = $authCode;
+//        }
 
 		return $this->call_rest_api($data['method'], $params);
 	}
@@ -85,6 +85,6 @@ class Nuvei_Settle_Void extends Nuvei_Request
 
 	protected function get_checksum_params()
     {
-		return array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'currency', 'relatedTransactionId', 'authCode', 'url', 'timeStamp');
+		return array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'currency', 'relatedTransactionId', 'url', 'timeStamp');
 	}
 }
