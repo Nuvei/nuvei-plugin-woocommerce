@@ -180,7 +180,33 @@ abstract class Nuvei_Request
     {
         // REST API flow
         if (!empty($rest_params)) {
-            // TODO
+            $shipping_addr = trim( ($rest_params['shipping_address']['address_1'] ?? '')
+                . ' ' . ($rest_params['shipping_address']['address_2'] ?? '') );
+            
+            $billing_addr = trim( ($rest_params['billing_address']['address_1'] ?? '')
+                . ' ' . ($rest_params['billing_address']['address_2'] ?? '') );
+            
+            return array(
+                'billingAddress'	=> [
+                    "firstName" => $rest_params['billing_address']['first_name'] ?? '',
+                    "lastName"  => $rest_params['billing_address']['last_name'] ?? '',
+                    "address"   => $billing_addr,
+                    "phone"     => $rest_params['billing_address']['phone'] ?? '',
+                    "zip"       => $rest_params['billing_address']['postcode'] ?? '',
+                    "city"      => $rest_params['billing_address']['city'] ?? '',
+                    "country"   => $rest_params['billing_address']['country'] ?? '',
+                    "state"     => $rest_params['billing_address']['state'] ?? '',
+                    "email"     => $rest_params['billing_address']['email'] ?? '',
+                ],
+                'shippingAddress'	=> [
+                    'firstName'	=> $rest_params['shipping_address']['first_name'] ?? '',
+                    'lastName'  => $rest_params['shipping_address']['last_name'] ?? '',
+                    'address'   => $shipping_addr,
+                    'zip'       => $rest_params['shipping_address']['postcode'] ?? '',
+                    'city'      => $rest_params['shipping_address']['city'] ?? '',
+                    'country'   => $rest_params['shipping_address']['country'] ?? '',
+                ],
+            );
         }
         
         #################################
@@ -695,14 +721,8 @@ abstract class Nuvei_Request
         #################################
         
         // REST API flow
-        $items = $rest_params['items'] ?? [];
-
-        if (isset($rest_params['totals'], $rest_params['currency_minor_unit'])) {
-            $data['totals'] = round(
-                number_format($rest_params['totals'], $rest_params['currency_minor_unit'], '.', ''),
-                2
-            );
-        }
+        $items          = $rest_params['items'] ?? [];
+        $data['totals'] = $this->get_total_from_rest_params($rest_params);
         
         foreach ($items as $item) {
             $cart_product           = wc_get_product( $item['id'] );
@@ -833,7 +853,26 @@ abstract class Nuvei_Request
 
         return $data;
 	}
-	
+    
+    /**
+     * A help function to extract the total from Cart passed with REST API request.
+     * 
+     * @param array $rest_params
+     * @return string
+     */
+    protected function get_total_from_rest_params($rest_params)
+    {
+        if (isset($rest_params['totals'], $rest_params['currency_minor_unit'])) {
+            return (string) round(
+                number_format($rest_params['totals'], $rest_params['currency_minor_unit'], '.', ''),
+                2
+            );
+        }
+        
+        return '0';
+    }
+
+
     /**
      * A common function to set some data into the session.
      * 

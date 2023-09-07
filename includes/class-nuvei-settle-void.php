@@ -86,8 +86,6 @@ class Nuvei_Settle_Void extends Nuvei_Request
 
 	protected function get_checksum_params()
     {
-		return array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'currency', 'relatedTransactionId'
-//            , 'authCode'
-            , 'url', 'timeStamp');
+		return array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'currency', 'relatedTransactionId', 'url', 'timeStamp');
 	}
 }

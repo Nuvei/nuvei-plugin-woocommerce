@@ -683,7 +683,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		global $woocommerce;
         
 		# OpenOrder
-//        $is_rest    = empty($this->rest_params) ? false : true;
 		$oo_obj     = new Nuvei_Open_Order($this->settings, false, $this->rest_params);
 		$oo_data    = $oo_obj->process();
 		
@@ -703,23 +702,23 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 
 			exit;
 		}
-		# OpenOrder END
+		# /OpenOrder
         
         $nuvei_helper           = new Nuvei_Helper();
-		$cart                   = $woocommerce->cart;
-		$ord_details            = $nuvei_helper->get_addresses();
-		$prod_details           = $nuvei_helper->get_products();
+//		$cart                   = $woocommerce->cart;
+		$ord_details            = $nuvei_helper->get_addresses($this->rest_params);
+		$prod_details           = $nuvei_helper->get_products($this->rest_params);
 		$pm_black_list          = trim($this->get_setting('pm_black_list', ''));
         $is_there_subscription  = false;
         $total                  = '0.00';
         
-        if (!$is_rest && isset($woocommerce->cart->total)) {
-            $total = (string) number_format((float) $cart->total, 2, '.', '');
+        if (isset($woocommerce->cart->total)) {
+            $total = (string) number_format((float) $woocommerce->cart->total, 2, '.', '');
         }
-        elseif (isset($this->rest_params['amount'])) {
-            $total = (string) number_format((float) $this->rest_params['amount'], 2, '.', '');
+        elseif (!empty($this->rest_params)) {
+            $total = $nuvei_helper->get_rest_total($this->rest_params);
         }
-        
+
 		if (!empty($pm_black_list)) {
 			$pm_black_list = explode(',', $pm_black_list);
 		}
@@ -817,6 +816,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         if ($is_ajax) {
             wp_send_json($checkout_data);
 			exit;
+        }
+        
+        if (!empty($this->rest_params)) {
+            return $checkout_data;
         }
 
 		wp_send_json(array(

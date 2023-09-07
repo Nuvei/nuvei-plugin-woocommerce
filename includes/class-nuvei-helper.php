@@ -18,14 +18,14 @@ class Nuvei_Helper extends Nuvei_Request
 		
 	}
 
-	public function get_addresses()
+	public function get_addresses($rest_params = [])
     {
-		return $this->get_order_addresses();
+		return $this->get_order_addresses($rest_params);
 	}
 	
-	public function get_products()
+	public function get_products($rest_params = [])
     {
-		return $this->get_products_data();
+		return $this->get_products_data($rest_params);
 	}
     
     public function helper_get_tr_id($order_id = null, $types = [])
@@ -106,6 +106,11 @@ class Nuvei_Helper extends Nuvei_Request
         
         // check for old meta data
         return $order->get_meta('_transactionType'); // NUVEI_RESP_TRANS_TYPE
+    }
+    
+    public function get_rest_total($rest_params)
+    {
+        return $this->get_total_from_rest_params($rest_params);
     }
     
 }

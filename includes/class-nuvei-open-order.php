@@ -43,11 +43,15 @@ class Nuvei_Open_Order extends Nuvei_Request
         
 		global $woocommerce;
         
+        $try_update_order = true;
+        
         if (!empty($this->rest_params)) {
-            $open_order_details = [];
+            $open_order_details = []; // TODO - in this flow how to keep $open_order_details
             $products_data      = $this->get_products_data($this->rest_params);
             $cart_total         = $products_data['totals'];
-            $addresses          = $this->get_order_addresses();
+            $addresses          = $this->get_order_addresses($this->rest_params);
+            $transactionType    = $this->get_total_from_rest_params($this->rest_params) == 0 
+                ? 'Auth' : $this->plugin_settings['payment_action'];
         }
         else {
             $ajax_params        = [];
@@ -57,10 +61,9 @@ class Nuvei_Open_Order extends Nuvei_Request
             $cart_total         = (float) $products_data['totals'];
             $addresses          = $this->get_order_addresses();
             $transactionType    = $cart_total == 0 ? 'Auth' : $this->plugin_settings['payment_action'];
-            $try_update_order   = true;
-
-            Nuvei_Logger::write($open_order_details, '$open_order_details');
         }
+        
+        Nuvei_Logger::write($open_order_details, '$open_order_details');
 		
         // do not allow WCS and Nuvei Subscription in same Order
         if (!empty($products_data['subscr_data']) && $products_data['wc_subscr']) {
@@ -197,13 +200,16 @@ class Nuvei_Open_Order extends Nuvei_Request
 			'userTokenId'       => $oo_params['userTokenId'], // use it to decide call or not updateOrder
 		);
         
-        $this->set_nuvei_session_data(
-            $resp['sessionToken'],
-            $open_order_details,
-            $products_data
-        );
+        // TODO can we save $open_order_details in REST API flow
+        if (empty($this->rest_params)) {
+            $this->set_nuvei_session_data(
+                $resp['sessionToken'],
+                $open_order_details,
+                $products_data
+            );
 		
-		Nuvei_Logger::write($open_order_details, 'session open_order_details');
+            Nuvei_Logger::write($open_order_details, 'session open_order_details');
+        }
 		
 		if ($this->is_ajax) {
 			wp_send_json(array(
