@@ -359,8 +359,6 @@ function nuvei_ajax_action()
 	
 	// Update Order before submit
 	if (Nuvei_Http::get_param('updateOrder', 'int') == 1) {
-//		$oo_obj = new Nuvei_Open_Order($wc_nuvei->settings, true);
-//		$oo_obj->process();
         $wc_nuvei->call_checkout($is_ajax = true);
 	}
 	
@@ -609,6 +607,7 @@ function nuvei_add_buttons($order)
     Nuvei_Logger::write('nuvei_add_buttons');
 //    echo '<pre style="text-align: left;">'.print_r(get_post_meta($order->get_id()), true) . '</pre>';
 //    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TR_ID), true) . '</pre>';
+//    echo '<pre style="text-align: left;">'.print_r($order->get_meta('_nuveiSubscr_variation_63'), true) . '</pre>';
     
     // in case this is not Nuvei order
 	if (empty($order->get_payment_method())
@@ -1276,24 +1275,40 @@ function nuvei_rest_method($request_data)
         return $res;
     }
     
-    $method_name = str_replace('-', '_', $params['action']);
+//    $method_name = str_replace('-', '_', $params['action']);
     
     // error
-    if (!method_exists($wc_nuvei, $method_name)) {
+//    if (!method_exists($wc_nuvei, $method_name)) {
+//        $res = new WP_REST_Response([
+//            'code'      => 'unknown_action',
+//            'message'   => __('The action you require is unknown.', 'nuvei_checkout_woocommerce'),
+//            'data'      => ['status' => 405],
+//        ]);
+//        $res->set_status(405);
+//
+//        return $res;
+//    }
+    
+    if (in_array($params['action'], ['get-simply-connect-data', 'update-order'])) {
+        $resp = $wc_nuvei->rest_get_simply_connect_data($params);
+        
+        $rest_resp = new WP_REST_Response($resp);
+        $rest_resp->set_status(200);
+    }
+    else {
         $res = new WP_REST_Response([
             'code'      => 'unknown_action',
             'message'   => __('The action you require is unknown.', 'nuvei_checkout_woocommerce'),
             'data'      => ['status' => 405],
         ]);
         $res->set_status(405);
-
-        return $res;
     }
     
-    $resp = $wc_nuvei->$method_name($params);
+//    $method_name    = 'rest_' . $method_name;
+//    $resp           = $wc_nuvei->$method_name($params);
     
-    $rest_resp = new WP_REST_Response($resp);
-    $rest_resp->set_status(200);
+//    $rest_resp = new WP_REST_Response($resp);
+//    $rest_resp->set_status(200);
 
     return $rest_resp;
 }

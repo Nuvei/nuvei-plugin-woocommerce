@@ -7,24 +7,42 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Update_Order extends Nuvei_Request
 {
-//	public function __construct( array $plugin_settings)
-//    {
-//		parent::__construct($plugin_settings);
-//	}
-	
+    public function __construct($rest_params = [])
+    {
+        if (!empty($rest_params)) {
+            $this->rest_params = $rest_params;
+        }
+        
+        parent::__construct();
+    }
+    
 	/**
 	 * Main method
 	 * 
 	 * @global Woocommerce $woocommerce
+     * 
+     * @param array $open_order_details Pass them only in REST API flow.
+     * 
 	 * @return array
 	 */
-	public function process()
+	public function process($open_order_details = [])
     {
-		$open_order_details = array();
+        global $woocommerce;
+        
+//		$open_order_details = array();
 		
-		if (!empty(WC()->session)) {
-			$open_order_details = WC()->session->get('nuvei_last_open_order_details');
+//		if (!empty(WC()->session)) {
+        // default flow
+		if (empty($this->rest_params) && !empty($woocommerce->session)) {
+//			$open_order_details = WC()->session->get('nuvei_last_open_order_details');
+			$open_order_details = $woocommerce->session->get('nuvei_last_open_order_details');
+            $cart         = $woocommerce->cart;
+            $cart_amount  = (string) number_format((float) $cart->total, 2, '.', '');
 		}
+        // REST API flow
+        else {
+            $cart_amount  = (string) number_format((float) $this->get_total_from_rest_params(), 2, '.', '');
+        }
 		
 		if (empty($open_order_details)
 			|| empty($open_order_details['sessionToken'])
@@ -35,10 +53,6 @@ class Nuvei_Update_Order extends Nuvei_Request
 			return array('status' => 'ERROR');
 		}
 		
-		global $woocommerce;
-		
-		$cart         = $woocommerce->cart;
-		$cart_amount  = (string) number_format((float) $cart->total, 2, '.', '');
 		$addresses    = $this->get_order_addresses();
 		$product_data = $this->get_products_data();
 		
@@ -87,27 +101,26 @@ class Nuvei_Update_Order extends Nuvei_Request
 		
 		# Success
 		if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
-			$open_order_details['amount']                    = $cart_amount;
-			$open_order_details['billingAddress']['country'] = $params['billingAddress']['country'];
-			
-			// put the new data in the session
-//			$open_order_details = array(
-//				'amount'			=> $params['amount'],
-//				'sessionToken'		=> $resp['sessionToken'],
-//				'orderId'			=> $resp['orderId'],
-//				'billingAddress'	=> $params['billingAddress'],
-//			);
-            $open_order_details['amount']           = $params['amount'];
-            $open_order_details['sessionToken']     = $resp['sessionToken'];
-            $open_order_details['orderId']          = $resp['orderId'];
-            $open_order_details['billingAddress']   = $params['billingAddress'];
-            
-            $this->set_nuvei_session_data(
-                $resp['sessionToken'],
-                $open_order_details,
-                $product_data
-            );
-			// put the new data in the session END
+            // in default flow
+            if (empty($this->rest_params)) {
+                // put the new data in the session
+                $open_order_details['amount']                       = $cart_amount;
+                $open_order_details['billingAddress']['country']    = $params['billingAddress']['country'];
+                $open_order_details['amount']                       = $params['amount'];
+                $open_order_details['sessionToken']                 = $resp['sessionToken'];
+                $open_order_details['orderId']                      = $resp['orderId'];
+                $open_order_details['billingAddress']               = $params['billingAddress'];
+                
+                $this->set_nuvei_session_data(
+                    $resp['sessionToken'],
+                    $open_order_details,
+                    $product_data
+                );
+            }
+			// REST API flow
+            else {
+                $params['transactionType'] = $this->rest_params['transactionType'];
+            }
 			
 			return array_merge($params, $resp);
 		}

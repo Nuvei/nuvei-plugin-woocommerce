@@ -8,6 +8,7 @@ defined( 'ABSPATH' ) || exit;
  */
 abstract class Nuvei_Request
 {
+    protected $rest_params = [];
 	protected $plugin_settings;
 	protected $request_base_params;
 	protected $sc_order;
@@ -173,38 +174,37 @@ abstract class Nuvei_Request
 	 * 
 	 * @global Woocommerce $woocommerce
      * 
-     * @param array $rest_params
 	 * @return array
 	 */
-	protected function get_order_addresses($rest_params = [])
+	protected function get_order_addresses()
     {
         // REST API flow
-        if (!empty($rest_params)) {
-            $shipping_addr = trim( ($rest_params['shipping_address']['address_1'] ?? '')
-                . ' ' . ($rest_params['shipping_address']['address_2'] ?? '') );
+        if (!empty($this->rest_params)) {
+            $shipping_addr = trim( ($this->rest_params['shipping_address']['address_1'] ?? '')
+                . ' ' . ($this->rest_params['shipping_address']['address_2'] ?? '') );
             
-            $billing_addr = trim( ($rest_params['billing_address']['address_1'] ?? '')
-                . ' ' . ($rest_params['billing_address']['address_2'] ?? '') );
+            $billing_addr = trim( ($this->rest_params['billing_address']['address_1'] ?? '')
+                . ' ' . ($this->rest_params['billing_address']['address_2'] ?? '') );
             
             return array(
                 'billingAddress'	=> [
-                    "firstName" => $rest_params['billing_address']['first_name'] ?? '',
-                    "lastName"  => $rest_params['billing_address']['last_name'] ?? '',
+                    "firstName" => $this->rest_params['billing_address']['first_name'] ?? '',
+                    "lastName"  => $this->rest_params['billing_address']['last_name'] ?? '',
                     "address"   => $billing_addr,
-                    "phone"     => $rest_params['billing_address']['phone'] ?? '',
-                    "zip"       => $rest_params['billing_address']['postcode'] ?? '',
-                    "city"      => $rest_params['billing_address']['city'] ?? '',
-                    "country"   => $rest_params['billing_address']['country'] ?? '',
-                    "state"     => $rest_params['billing_address']['state'] ?? '',
-                    "email"     => $rest_params['billing_address']['email'] ?? '',
+                    "phone"     => $this->rest_params['billing_address']['phone'] ?? '',
+                    "zip"       => $this->rest_params['billing_address']['postcode'] ?? '',
+                    "city"      => $this->rest_params['billing_address']['city'] ?? '',
+                    "country"   => $this->rest_params['billing_address']['country'] ?? '',
+                    "state"     => $this->rest_params['billing_address']['state'] ?? '',
+                    "email"     => $this->rest_params['billing_address']['email'] ?? '',
                 ],
                 'shippingAddress'	=> [
-                    'firstName'	=> $rest_params['shipping_address']['first_name'] ?? '',
-                    'lastName'  => $rest_params['shipping_address']['last_name'] ?? '',
+                    'firstName'	=> $this->rest_params['shipping_address']['first_name'] ?? '',
+                    'lastName'  => $this->rest_params['shipping_address']['last_name'] ?? '',
                     'address'   => $shipping_addr,
-                    'zip'       => $rest_params['shipping_address']['postcode'] ?? '',
-                    'city'      => $rest_params['shipping_address']['city'] ?? '',
-                    'country'   => $rest_params['shipping_address']['country'] ?? '',
+                    'zip'       => $this->rest_params['shipping_address']['postcode'] ?? '',
+                    'city'      => $this->rest_params['shipping_address']['city'] ?? '',
+                    'country'   => $this->rest_params['shipping_address']['country'] ?? '',
                 ],
             );
         }
@@ -563,10 +563,9 @@ abstract class Nuvei_Request
 	/**
 	 * A help function to get Products data from the Cart and pass it to the OpenOrder or UpdateOrder.
 	 * 
-     * @param array $rest_params
 	 * @return array $data
 	 */
-	protected function get_products_data($rest_params = [])
+	protected function get_products_data()
     {
         // main variable to fill
         $data  = array(
@@ -580,7 +579,7 @@ abstract class Nuvei_Request
         $nuvei_plan_variation   = 'attribute_' . $nuvei_taxonomy_name;
         
         // default plugin flow
-        if (empty($rest_params)) {
+        if (empty($this->rest_params)) {
             global $woocommerce;
 
             $items          = $woocommerce->cart->get_cart();
@@ -721,8 +720,8 @@ abstract class Nuvei_Request
         #################################
         
         // REST API flow
-        $items          = $rest_params['items'] ?? [];
-        $data['totals'] = $this->get_total_from_rest_params($rest_params);
+        $items          = $this->rest_params['items'] ?? [];
+        $data['totals'] = $this->get_total_from_rest_params($this->rest_params);
         
         foreach ($items as $item) {
             $cart_product           = wc_get_product( $item['id'] );
@@ -860,11 +859,12 @@ abstract class Nuvei_Request
      * @param array $rest_params
      * @return string
      */
-    protected function get_total_from_rest_params($rest_params)
+//    protected function get_total_from_rest_params($rest_params)
+    protected function get_total_from_rest_params()
     {
-        if (isset($rest_params['totals'], $rest_params['currency_minor_unit'])) {
+        if (isset($this->rest_params['totals'], $this->rest_params['currency_minor_unit'])) {
             return (string) round(
-                number_format($rest_params['totals'], $rest_params['currency_minor_unit'], '.', ''),
+                number_format($this->rest_params['totals'], $this->rest_params['currency_minor_unit'], '.', ''),
                 2
             );
         }

@@ -705,7 +705,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		# /OpenOrder
         
         $nuvei_helper           = new Nuvei_Helper();
-//		$cart                   = $woocommerce->cart;
 		$ord_details            = $nuvei_helper->get_addresses($this->rest_params);
 		$prod_details           = $nuvei_helper->get_products($this->rest_params);
 		$pm_black_list          = trim($this->get_setting('pm_black_list', ''));
@@ -818,7 +817,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			exit;
         }
         
+        // REST API call
         if (!empty($this->rest_params)) {
+            $checkout_data['transactionType']   = $oo_data['transactionType'];
+            $checkout_data['orderId']           = $oo_data['orderId'];
+            
             return $checkout_data;
         }
 
@@ -961,7 +964,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
      * @param array $params Expected Cart data.
      * @return array
      */
-    public function get_simply_connect_data($params)
+    public function rest_get_simply_connect_data($params)
     {
         $this->rest_params = $params;
         

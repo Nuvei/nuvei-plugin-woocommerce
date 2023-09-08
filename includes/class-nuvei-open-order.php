@@ -9,18 +9,14 @@ class Nuvei_Open_Order extends Nuvei_Request
 {
 	protected $plugin_settings;
     
-	private $rest_params = [];
 	private $is_ajax;
-	private $is_rest;
 	
 	/**
 	 * Set is_ajax parameter to the Process metohd.
 	 * 
 	 * @param array $plugin_settings
 	 * @param bool  $is_ajax
-	 * @param bool  $is_rest
 	 */
-//	public function __construct( array $plugin_settings, $is_ajax = false, $is_rest = false)
 	public function __construct( array $plugin_settings, $is_ajax = false, $rest_params = [])
     {
 		parent::__construct();
@@ -28,7 +24,6 @@ class Nuvei_Open_Order extends Nuvei_Request
 		$this->plugin_settings  = $plugin_settings;
 		$this->is_ajax          = $is_ajax;
 		$this->rest_params      = $rest_params;
-//		$this->is_rest          = $is_rest;
 	}
 
 	/**
@@ -46,11 +41,16 @@ class Nuvei_Open_Order extends Nuvei_Request
         $try_update_order = true;
         
         if (!empty($this->rest_params)) {
-            $open_order_details = []; // TODO - in this flow how to keep $open_order_details
+            $open_order_details = [
+                'transactionType'   => $this->rest_params['transactionType'] ?? '',
+                'orderId'           => $this->rest_params['orderId'] ?? 0,
+                'userTokenId'       => $this->rest_params['email'] ?? '',
+                'sessionToken'      => $this->rest_params['sessionToken'] ?? '',
+            ];
             $products_data      = $this->get_products_data($this->rest_params);
             $cart_total         = $products_data['totals'];
-            $addresses          = $this->get_order_addresses($this->rest_params);
-            $transactionType    = $this->get_total_from_rest_params($this->rest_params) == 0 
+            $addresses          = $this->get_order_addresses();
+            $transactionType    = $this->get_total_from_rest_params() == 0 
                 ? 'Auth' : $this->plugin_settings['payment_action'];
         }
         else {
@@ -116,8 +116,9 @@ class Nuvei_Open_Order extends Nuvei_Request
         }
         
         if ($try_update_order) {
-            $uo_obj = new Nuvei_Update_Order($this->plugin_settings);
-            $resp   = $uo_obj->process();
+//            $uo_obj = new Nuvei_Update_Order($this->plugin_settings);
+            $uo_obj = new Nuvei_Update_Order($this->rest_params);
+            $resp   = $uo_obj->process($open_order_details);
 
             if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
                 if ($this->is_ajax) {
@@ -192,16 +193,16 @@ class Nuvei_Open_Order extends Nuvei_Request
 			return false;
 		}
 		
-		// set them to session for the check before submit the data to the webSDK
-		$open_order_details = array(
-			'sessionToken'		=> $resp['sessionToken'],
-			'orderId'			=> $resp['orderId'],
-			'transactionType'	=> $oo_params['transactionType'], // use it to decide call or not updateOrder
-			'userTokenId'       => $oo_params['userTokenId'], // use it to decide call or not updateOrder
-		);
-        
-        // TODO can we save $open_order_details in REST API flow
+        // in default flow
         if (empty($this->rest_params)) {
+            // set them to session for the check before submit the data to the webSDK
+            $open_order_details = array(
+                'sessionToken'		=> $resp['sessionToken'],
+                'orderId'			=> $resp['orderId'],
+                'transactionType'	=> $oo_params['transactionType'], // use it to decide call or not updateOrder
+                'userTokenId'       => $oo_params['userTokenId'], // use it to decide call or not updateOrder
+            );
+            
             $this->set_nuvei_session_data(
                 $resp['sessionToken'],
                 $open_order_details,

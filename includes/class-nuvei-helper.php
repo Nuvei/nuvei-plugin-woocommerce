@@ -20,12 +20,20 @@ class Nuvei_Helper extends Nuvei_Request
 
 	public function get_addresses($rest_params = [])
     {
-		return $this->get_order_addresses($rest_params);
+        if (!empty($rest_params)) {
+            $this->rest_params = $rest_params;
+        }
+        
+		return $this->get_order_addresses();
 	}
 	
 	public function get_products($rest_params = [])
     {
-		return $this->get_products_data($rest_params);
+        if (!empty($rest_params)) {
+            $this->rest_params = $rest_params;
+        }
+        
+		return $this->get_products_data();
 	}
     
     public function helper_get_tr_id($order_id = null, $types = [])
@@ -110,7 +118,9 @@ class Nuvei_Helper extends Nuvei_Request
     
     public function get_rest_total($rest_params)
     {
-        return $this->get_total_from_rest_params($rest_params);
+        $this->rest_params = $rest_params;
+        
+        return $this->get_total_from_rest_params();
     }
     
 }
