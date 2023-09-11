@@ -1289,7 +1289,8 @@ function nuvei_rest_method($request_data)
 //        return $res;
 //    }
     
-    if (in_array($params['action'], ['get-simply-connect-data', 'update-order'])) {
+//    if (in_array($params['action'], ['get-simply-connect-data', 'update-order'])) {
+    if ('get-simply-connect-data' == $params['action']) {
         $resp = $wc_nuvei->rest_get_simply_connect_data($params);
         
         $rest_resp = new WP_REST_Response($resp);

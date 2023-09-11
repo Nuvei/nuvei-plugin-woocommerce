@@ -678,7 +678,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 */
 	public function call_checkout($is_ajax = false, $is_rest = false)
     {
-        Nuvei_Logger::write('call_checkout()');
+        Nuvei_Logger::write([$is_rest, $this->rest_params], 'call_checkout()');
         
 		global $woocommerce;
         

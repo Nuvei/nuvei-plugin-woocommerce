@@ -862,11 +862,19 @@ abstract class Nuvei_Request
 //    protected function get_total_from_rest_params($rest_params)
     protected function get_total_from_rest_params()
     {
-        if (isset($this->rest_params['totals'], $this->rest_params['currency_minor_unit'])) {
-            return (string) round(
-                number_format($this->rest_params['totals'], $this->rest_params['currency_minor_unit'], '.', ''),
-                2
-            );
+        if (isset($this->rest_params['totals']['total_price'], 
+                $this->rest_params['totals']['currency_minor_unit'])
+        ) {
+            $min_unit   = $this->rest_params['totals']['currency_minor_unit'];
+            $delimeter  = 1;
+            
+            for ($cnt = 0; $cnt < $min_unit; $cnt++) {
+                $delimeter *= 10;
+            }
+            
+            $price = round(($this->rest_params['totals']['total_price'] / $delimeter), 2);
+            
+            return (string) number_format($price, 2, '.', '');
         }
         
         return '0';
