@@ -7,13 +7,6 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Notify_Url extends Nuvei_Request
 {
-//	public function __construct($plugin_settings)
-//    {
-//		$this->plugin_settings = $plugin_settings;
-//        
-//        parent::__construct($this->plugin_settings);
-//	}
-	
 	public function process()
     {
 		Nuvei_Logger::write($_REQUEST, 'DMN params');
@@ -395,7 +388,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
         
 		// try to get Order ID by its meta key
 		$tries		= 0;
-		$max_tries  = 4;
+		$max_tries  = 'yes' == $this->nuvei_gw->get_option('test') ? 10 : 4;
+        $wait_time  = 3;
         
 		do {
 			$tries++;
@@ -403,7 +397,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			$res = $this->get_order_data($trans_id);
 
 			if (empty($res[0]->post_id)) {
-				sleep(3);
+				sleep($wait_time);
 			}
 		} while ($tries <= $max_tries && empty($res[0]->post_id));
 
