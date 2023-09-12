@@ -413,7 +413,9 @@ class Nuvei_Notify_Url extends Nuvei_Request
 				'The searched Order does not exists.'
 			);
 			
-			http_response_code(400);
+            // return 400 only for the parent transactions as Auth and Sale.
+            // In all other cases the Order must exists into the WC system.
+			http_response_code(in_array($transactionType, ['Auth', 'Sale']) ? 400 : 200);
 			exit(wp_json_encode('The searched Order does not exists.'));
 		}
 

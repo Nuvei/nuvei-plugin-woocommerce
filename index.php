@@ -9,9 +9,9 @@
  * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.3
+ * Tested up to: 6.3.1
  * WC requires at least: 3.0
- * WC tested up to: 8.0.1
+ * WC tested up to: 8.0.3
 */
 
 defined('ABSPATH') || die('die');
@@ -200,81 +200,8 @@ function nuvei_init()
 	
 	// use this to change button text, because of the cache the jQuery not always works
 	add_filter('woocommerce_order_button_text', 'nuvei_edit_order_buttons');
-	
-	// those actions are valid only when the plugin is enabled
-	$plugin_enabled = isset($wc_nuvei->settings['enabled']) ? $wc_nuvei->settings['enabled'] : 'no';
-	
-	if ('yes' == $plugin_enabled) {
-		// for WPML plugin
-		if (is_plugin_active('sitepress-multilingual-cms' . DIRECTORY_SEPARATOR . 'sitepress.php')
-			&& 'yes' == $wc_nuvei->settings['use_wpml_thanks_page']
-		) {
-			add_filter('woocommerce_get_checkout_order_received_url', 'nuvei_wpml_thank_you_page', 10, 2);
-		}
-        
-        // for the thank-you page
-        add_action('woocommerce_thankyou', 'nuvei_mod_thank_you_page', 100, 1);
-
-		// For the custom column in the Order list
-		add_action( 'manage_shop_order_posts_custom_column', 'nuvei_fill_custom_column' );
-		// for the Store > My Account > Orders list
-		add_action( 'woocommerce_my_account_my_orders_column_order-number', 'nuvei_edit_my_account_orders_col' );
-        // show payment methods on checkout when total is 0
-        add_filter( 'woocommerce_cart_needs_payment', 'nuvei_wc_cart_needs_payment', 10, 2 );
-        // show custom data into order details, product data
-        add_action( 'woocommerce_after_order_itemmeta', 'nuvei_after_order_itemmeta', 10, 3 );
-        // listent for the WC Subscription Payment
-        add_action(
-            'woocommerce_scheduled_subscription_payment_' . NUVEI_GATEWAY_NAME,
-            [$wc_nuvei, 'create_wc_subscr_order'],
-            10,
-            2
-        );
-	}
-	
-	// change Thank-you page title and text on error
-//	if (!is_admin()) {
-//		if ('error' === strtolower(Nuvei_Http::get_request_status())
-//			|| 'fail' === strtolower(Nuvei_Http::get_param('ppp_status'))
-//		) {
-//			add_filter('the_title', function ( $title, $id) {
-//				if (function_exists('is_order_received_page')
-//					&& is_order_received_page()
-//					&& get_the_ID() === $id
-//				) {
-//					$title = esc_html__('Order error', 'nuvei_checkout_woocommerce');
-//				}
-//
-//				return $title;
-//			}, 10, 2);
-//
-//			add_filter(
-//				'woocommerce_thankyou_order_received_text',
-//
-//				function ( $str, $order) {
-//					return esc_html__(' There is an error with your order. Please check your Order status for more information.', 'nuvei_checkout_woocommerce');
-//				}, 10, 2);
-//		}
-//        elseif ('canceled' === strtolower(Nuvei_Http::get_request_status())) {
-//			add_filter('the_title', function ( $title, $id) {
-//				if (function_exists('is_order_received_page')
-//					&& is_order_received_page()
-//					&& get_the_ID() === $id
-//				) {
-//					$title = esc_html__('Order canceled', 'nuvei_checkout_woocommerce');
-//				}
-//
-//				return $title;
-//			}, 10, 2);
-//
-//			add_filter('woocommerce_thankyou_order_received_text', function ( $str, $order) {
-//				return esc_html__('Please, check the order for details!', 'nuvei_checkout_woocommerce');
-//			}, 10, 2);
-//		}
-//	}
-	// /change Thank-you page title and text
-	
-	add_filter('woocommerce_pay_order_after_submit', 'nuvei_user_orders', 10, 2);
+    
+    add_filter('woocommerce_pay_order_after_submit', 'nuvei_user_orders', 10, 2);
 	
 	if (!empty($_GET['sc_msg'])) {
 		add_filter('woocommerce_before_cart', 'nuvei_show_message_on_cart', 10, 2);
@@ -293,6 +220,42 @@ function nuvei_init()
 	add_filter( 'woocommerce_add_to_cart_validation', array($wc_nuvei, 'add_to_cart_validation'), 10, 3 );
     // Show/hide payment gateways in case of product with Nuvei Payment plan in the Cart
     add_filter( 'woocommerce_available_payment_gateways', array($wc_nuvei, 'hide_payment_gateways'), 100, 1 );
+	
+	// those actions are valid only when the plugin is enabled
+	$plugin_enabled = isset($wc_nuvei->settings['enabled']) ? $wc_nuvei->settings['enabled'] : 'no';
+	
+    if ('no' == $plugin_enabled) {
+        return;
+    }
+    
+//	if ('yes' == $plugin_enabled) {
+    // for WPML plugin
+    if (is_plugin_active('sitepress-multilingual-cms' . DIRECTORY_SEPARATOR . 'sitepress.php')
+        && 'yes' == $wc_nuvei->settings['use_wpml_thanks_page']
+    ) {
+        add_filter('woocommerce_get_checkout_order_received_url', 'nuvei_wpml_thank_you_page', 10, 2);
+    }
+
+    // for the thank-you page
+    add_action('woocommerce_thankyou', 'nuvei_mod_thank_you_page', 100, 1);
+
+    // For the custom column in the Order list
+    add_action( 'manage_shop_order_posts_custom_column', 'nuvei_fill_custom_column' );
+    // for the Store > My Account > Orders list
+    add_action( 'woocommerce_my_account_my_orders_column_order-number', 'nuvei_edit_my_account_orders_col' );
+    // show payment methods on checkout when total is 0
+    add_filter( 'woocommerce_cart_needs_payment', 'nuvei_wc_cart_needs_payment', 10, 2 );
+    // show custom data into order details, product data
+    add_action( 'woocommerce_after_order_itemmeta', 'nuvei_after_order_itemmeta', 10, 3 );
+    // listent for the WC Subscription Payment
+    add_action(
+        'woocommerce_scheduled_subscription_payment_' . NUVEI_GATEWAY_NAME,
+        [$wc_nuvei, 'create_wc_subscr_order'],
+        10,
+        2
+    );
+//	}
+	
 }
 
 /**
@@ -588,12 +551,14 @@ function nuvei_enqueue( $hook)
 		});
 	}
     
-    global $wc_nuvei;
-	
-	// nuvei checkout step process order, after the internal submit from the checkout
-	if ('process-order' == Nuvei_Http::get_param('wc-api')) {
-		$wc_nuvei->process_payment(Nuvei_Http::get_param('order_id', 'int', 0));
-	}
+//    global $wc_nuvei;
+//	
+//	// nuvei checkout step process order, after the internal submit from the checkout
+//	if ('process-order' == Nuvei_Http::get_param('wc-api')) {
+//        Nuvei_Logger::write(@$_REQUEST, 'nuvei_enqueue process-order');
+//        
+//		$wc_nuvei->process_payment(Nuvei_Http::get_param('order_id', 'int', 0));
+//	}
 }
 
 /**
@@ -604,6 +569,10 @@ function nuvei_enqueue( $hook)
  */
 function nuvei_add_buttons($order)
 {
+    if (!is_a($order, 'WC_Order') || is_a($order, 'WC_Subscription')) {
+        return false;
+    }
+    
     Nuvei_Logger::write('nuvei_add_buttons');
 //    echo '<pre style="text-align: left;">'.print_r(get_post_meta($order->get_id()), true) . '</pre>';
 //    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TR_ID), true) . '</pre>';
@@ -625,7 +594,7 @@ function nuvei_add_buttons($order)
     $order_refunds  = [];
     
     if (empty($ord_tr_id)) {
-        Nuvei_Logger::write($ord_tr_id, 'Invalid Transaction ID!', 'WARN');
+        Nuvei_Logger::write($ord_tr_id, 'Invalid Transaction ID! May be this post is not an Order.');
         return false;
     }
     

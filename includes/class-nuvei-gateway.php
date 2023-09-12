@@ -109,7 +109,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	public function generate_nuvei_multiselect_html( $key, $data)
     {
 		# prepare the list with Payment methods
-		$get_st_obj    = new Nuvei_Session_Token($this->settings);
+//		$get_st_obj    = new Nuvei_Session_Token($this->settings);
+		$get_st_obj    = new Nuvei_Session_Token();
 		$resp          = $get_st_obj->process();
 		$session_token = !empty($resp['sessionToken']) ? $resp['sessionToken'] : '';
 		
@@ -183,14 +184,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	  * @param int $order_id
 	  * @return array
 	 */
-	public function process_payment( $order_id)
+	public function process_payment($order_id)
     {
-		Nuvei_Logger::write($order_id, 'Process payment(), Order');
-		Nuvei_Logger::write(WC()->session->get('nuvei_order_details'), 'nuvei_order_details');
+		Nuvei_Logger::write(
+            [
+                '$order_id'             => $order_id,
+                'request params'        => $_REQUEST,
+                'nuvei_order_details'   => WC()->session->get('nuvei_order_details'),
+            ],
+            'Process payment(), Order'
+        );
 		
-        // clean last open order details
-//        WC()->session->set('nuvei_last_open_order_details', []);
-        
 		$sc_nonce = Nuvei_Http::get_param('sc_nonce');
 		
 		if (!empty($sc_nonce)
@@ -337,7 +341,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 *
 	 * @return boolean
 	 */
-	public function process_refund( $order_id, $amount = null, $reason = '') {
+	public function process_refund( $order_id, $amount = null, $reason = '')
+    {
 		if ('true' == Nuvei_Http::get_param('api_refund')) {
 			return true;
 		}
@@ -345,7 +350,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		return false;
 	}
 	
-	public function return_settle_btn( $and_taxes, $order) {
+	public function return_settle_btn( $and_taxes, $order)
+    {
+        if (!is_a($order, 'WC_Order') || is_a($order, 'WC_Subscription')) {
+            return false;
+        }
+        
 		if (!method_exists($order, 'get_payment_method')
 			|| empty($order->get_payment_method())
 			|| !in_array($order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))
@@ -383,7 +393,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		return;
 	}
 	
-	public function reorder() {
+	public function reorder()
+    {
 		global $woocommerce;
 		
 		$products_ids = json_decode(Nuvei_Http::get_param('product_ids'), true);
@@ -1294,6 +1305,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 					'horizontal'    => __('Horizontal', 'nuvei_checkout_woocommerce'),
 				),
                 'default'   => 'accordion',
+                'class'     => 'nuvei_checkout_setting',
             ],
 			'use_dcc' => array(
 				'title'         => __('Use currency conversion', 'nuvei_checkout_woocommerce'),

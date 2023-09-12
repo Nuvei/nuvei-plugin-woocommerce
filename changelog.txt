@@ -4,6 +4,10 @@
     * Stop using save_update_order_numbers() method and all connected with it meta fields.
     * Removed few GET parameters from the notification URL. Please provid the new URL to the Integration team!
     * Added transactionId into Nuvei Transactions meta field.
+    * Hide "SimplyConnect theme" setting, when Cashier was set as payment option.
+    * When DMN can not find the Order, return 400 only for the parent transactions as Auth and Sale.
+    * Changed the order of few hooks.
+    * When place Nuvei buttons in the admin, do it only for WC_Order objects.
 
 # 1.4.7
     * Fix for the logic who decide will we create update or open order request.
