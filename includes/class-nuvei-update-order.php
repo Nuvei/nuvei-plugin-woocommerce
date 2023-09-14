@@ -53,8 +53,8 @@ class Nuvei_Update_Order extends Nuvei_Request
 			return array('status' => 'ERROR');
 		}
 		
-		$addresses    = $this->get_order_addresses();
-		$product_data = $this->get_products_data();
+		$addresses      = $this->get_order_addresses();
+		$products_data  = $this->get_products_data();
 		
 		// prevent update with empty values
 		foreach ($addresses['billingAddress'] as $key => $val) {
@@ -83,7 +83,7 @@ class Nuvei_Update_Order extends Nuvei_Request
 		);
         
         // WC Subsc
-        if ($product_data['wc_subscr']) {
+        if ($products_data['wc_subscr']) {
             $oo_params['isRebilling'] = 0;
             $oo_params['card']['threeD']['v2AdditionalParams'] = [ // some default params
                 'rebillFrequency'   => 30, // days
@@ -114,13 +114,12 @@ class Nuvei_Update_Order extends Nuvei_Request
                 $this->set_nuvei_session_data(
                     $resp['sessionToken'],
                     $open_order_details,
-                    $product_data
+                    $products_data
                 );
             }
-			// REST API flow
-            else {
-                $params['transactionType'] = $this->rest_params['transactionType'];
-            }
+            
+            $params['transactionType']  = $this->rest_params['transactionType'];
+            $params['products_data']    = $products_data;
 			
 			return array_merge($params, $resp);
 		}

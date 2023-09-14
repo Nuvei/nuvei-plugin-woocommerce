@@ -724,8 +724,8 @@ abstract class Nuvei_Request
         $data['totals'] = $this->get_total_from_rest_params($this->rest_params);
         
         foreach ($items as $item) {
-            $cart_product           = wc_get_product( $item['id'] );
-            $cart_prod_attr         = $cart_product->get_attributes();
+            $cart_product   = wc_get_product( $item['id'] );
+            $cart_prod_attr = $cart_product->get_attributes();
             
             // get short items data, we use it for Cashier url
             $data['products_data'][] = array(
@@ -779,7 +779,8 @@ abstract class Nuvei_Request
                 }
 
                 $data['subscr_data'][] = [
-                    'variation_id'      => $item['variation_id'],
+//                    'variation_id'      => $item['variation_id'],
+                    'variation_id'      => $item['id'],
                     'planId'			=> $term_meta['planId'][0],
                     'recurringAmount'	=> number_format($term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', ''),
                     'recurringPeriod'   => [

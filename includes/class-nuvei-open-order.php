@@ -221,6 +221,8 @@ class Nuvei_Open_Order extends Nuvei_Request
 			exit;
 		}
 		
+        $resp['products_data'] = $products_data;
+        
 		return array_merge($resp, $oo_params);
 	}
 	

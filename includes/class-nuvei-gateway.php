@@ -700,6 +700,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		if (!$oo_data || empty($oo_data['sessionToken'])) {
             $msg = __('Unexpected error, please try again later!', 'nuvei_checkout_woocommerce');
             
+            Nuvei_Logger::write($msg);
+            
             if (!empty($oo_data['custom_msg'])) {
                 $msg = $oo_data['custom_msg'];
             }
@@ -717,7 +719,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         
         $nuvei_helper           = new Nuvei_Helper();
 		$ord_details            = $nuvei_helper->get_addresses($this->rest_params);
-		$prod_details           = $nuvei_helper->get_products($this->rest_params);
+//		$prod_details           = $nuvei_helper->get_products($this->rest_params);
+		$prod_details           = $oo_data['products_data'];
 		$pm_black_list          = trim($this->get_setting('pm_black_list', ''));
         $is_there_subscription  = false;
         $total                  = '0.00';
@@ -821,9 +824,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$resp_data['nuveiPluginUrl'] = plugin_dir_url(NUVEI_PLUGIN_FILE);
 		$resp_data['nuveiSiteUrl']   = get_site_url();
 			
-		Nuvei_Logger::write($checkout_data, '$checkout_data');
-		
         if ($is_ajax) {
+            Nuvei_Logger::write($checkout_data, '$checkout_data');
             wp_send_json($checkout_data);
 			exit;
         }
@@ -832,10 +834,15 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         if (!empty($this->rest_params)) {
             $checkout_data['transactionType']   = $oo_data['transactionType'];
             $checkout_data['orderId']           = $oo_data['orderId'];
+            $checkout_data['products_data']     = $prod_details;
+            
+            Nuvei_Logger::write($checkout_data, 'REST API CALL $checkout_data');
             
             return $checkout_data;
         }
 
+        Nuvei_Logger::write($checkout_data, '$checkout_data');
+        
 		wp_send_json(array(
 			'result'	=> 'failure', // this is just to stop WC send the form, and show APMs
 			'refresh'	=> false,
@@ -979,11 +986,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
     {
         $this->rest_params = $params;
         
-        $resp = $this->call_checkout(false, true);
-        
-        Nuvei_Logger::write($resp);
-        
-        return $resp;
+        return $this->call_checkout(false, true);
     }
     
 	/**

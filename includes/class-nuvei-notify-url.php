@@ -15,15 +15,14 @@ class Nuvei_Notify_Url extends Nuvei_Request
 //        exit(wp_json_encode('DMN was stopped, please run it manually!'));
 		
         if ('CARD_TOKENIZATION' == Nuvei_Http::get_param('type')) {
-			exit(wp_json_encode('Tokenization DMN, waiting for the next one.'));
+			exit('Tokenization DMN, waiting for the next one.');
         }
         
         // just give few seconds to WC to finish the process, who generated the DMN
         sleep(3);
         
         if (!$this->validate_checksum()) {
-			echo wp_json_encode('DMN Error - Checksum validation problem!');
-			exit;
+			exit('DMN Error - Checksum validation problem!');
 		}
         
 		// santitized get variables
@@ -41,7 +40,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
         if ('pending' == strtolower($req_status)) {
             $msg = 'Pending DMN, waiting for the next.';
             Nuvei_Logger::write($msg);
-			exit(wp_json_encode($msg));
+			exit($msg);
         }
         
 		# Subscription State DMN
@@ -53,8 +52,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			
 			if (empty($cri_parts) || empty($cri_parts[0]) || !is_numeric($cri_parts[0])) {
 				Nuvei_Logger::write($cri_parts, 'DMN Subscription Error with Client Request Id parts:');
-				echo wp_json_encode('DMN Subscription Error with Client Request Id parts.');
-				exit;
+				exit('DMN Subscription Error with Client Request Id parts.');
 			}
             
             $subs_data_key = str_replace($cri_parts[0], '', $client_request_id);
@@ -96,8 +94,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 				$this->sc_order->save();
 			}
 
-			echo wp_json_encode('DMN received.');
-			exit;
+			exit('DMN received.');
 		}
 		# Subscription State DMN END
 		
@@ -109,8 +106,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			
 			if (empty($cri_parts) || empty($cri_parts[0]) || !is_numeric($cri_parts[0])) {
 				Nuvei_Logger::write($cri_parts, 'DMN Subscription Payment Error with Client Request Id parts:');
-				echo wp_json_encode('DMN Subscription Payment Error with Client Request Id parts.');
-				exit;
+				exit('DMN Subscription Payment Error with Client Request Id parts.');
 			}
 			
 			$this->is_order_valid((int) $cri_parts[0]);
@@ -143,8 +139,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
             $this->sc_order->add_order_note($msg);
             $this->sc_order->save();
             
-			echo wp_json_encode('DMN received.');
-			exit;
+			exit('DMN received.');
 		}
 		# Subscription Payment DMN END
 		
@@ -186,7 +181,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
             Nuvei_Logger::write($msg);
             
             http_response_code(200);
-			exit(wp_json_encode($msg));
+			exit($msg);
 		}
 		
 		// try to get the Order ID
@@ -200,7 +195,14 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		if ('' != $clientUniqueId
 			&& ( in_array($transactionType, array('Void', 'Settle'), true) )
 		) {
-			$this->is_order_valid(0 < $order_id ? $order_id : $clientUniqueId);
+            $order_id   = 0 < $order_id ? $order_id : $clientUniqueId;
+			$resp       = $this->is_order_valid($order_id, true);
+            
+            if (!$resp) {
+                http_response_code(200);
+                exit('Error - Provided Order ID is not a WC Order');
+            }
+            
             $this->check_for_repeating_dmn();
 			
 //			if ('Settle' == $transactionType) {
@@ -212,8 +214,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			$this->subscription_start($transactionType, $clientUniqueId);
             $this->subscription_cancel($transactionType, $order_id, $req_status);
 			
-			echo wp_json_encode('DMN received.');
-			exit;
+			exit('DMN received.');
 		}
 		
 		# Refund
@@ -239,7 +240,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
             if (is_a($refund, 'WP_Error')) {
                 http_response_code(400);
                 Nuvei_Logger::write((array) $refund, 'The Refund process in WC returns error: ');
-                exit(wp_json_encode('The Refund process in WC returns error.'));
+                exit('The Refund process in WC returns error.');
             }
             # /create Refund in WC
             
@@ -248,8 +249,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			$this->change_order_status($order_id, $req_status, $transactionType, $refund_id);
             $this->save_transaction_data($refund_id);
 
-			echo wp_json_encode('DMN process end for Order #' . $order_id);
-			exit;
+			exit('DMN process end for Order #' . $order_id);
 		}
 		
 		Nuvei_Logger::write(
@@ -260,8 +260,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			'DMN was not recognized.'
 		);
 		
-		echo wp_json_encode('DMN was not recognized.');
-		exit;
+		exit('DMN was not recognized.');
 	}
 
     /**
@@ -416,7 +415,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
             // return 400 only for the parent transactions as Auth and Sale.
             // In all other cases the Order must exists into the WC system.
 			http_response_code(in_array($transactionType, ['Auth', 'Sale']) ? 400 : 200);
-			exit(wp_json_encode('The searched Order does not exists.'));
+			exit('The searched Order does not exists.');
 		}
 
 		return $res[0]->post_id;
@@ -486,9 +485,13 @@ class Nuvei_Notify_Url extends Nuvei_Request
             && 'APPROVED' == $resp['transactionStatus']
             && !empty($resp['transactionId'])
         ) {
+            Nuvei_Logger::write("Auto-Void request approved.");
+            
             http_response_code(200);
-            exit(wp_json_encode('The searched Order does not exists, a Void request was made for this Transacrion.'));
+            exit('The searched Order does not exists, a Void request was made for this Transacrion.');
         }
+        
+        Nuvei_Logger::write($resp, "Problem with Auto-Void request.");
         
         return;
     }
@@ -962,7 +965,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
                     'DMN Refund Error - the Order status does not allow refunds, the status is:'
                 );
 
-                exit(wp_json_encode(array('DMN Refund Error - the Order status does not allow refunds.')));
+                exit('DMN Refund Error - the Order status does not allow refunds.');
             }
             
 			$refunds = json_decode($this->sc_order->get_meta(NUVEI_REFUNDS), true);
@@ -997,7 +1000,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		
 		if (is_a($refund, 'WP_Error')) {
 			Nuvei_Logger::write($refund, 'The Refund process in WC returns error: ');
-			exit(wp_json_encode(array('The Refund process in WC returns error.')));
+			exit('The Refund process in WC returns error.');
 		}
 		
 //		$this->save_refund_meta_data(
@@ -1062,7 +1065,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
             && $dmn_status == $order_data[$dmn_tr_id]['status']
         ) {
             Nuvei_Logger::write('Repating DMN message detected. Stop the process.');
-			exit(wp_json_encode('This DMN is already received.'));
+			exit('This DMN is already received.');
         }
         
         return;
