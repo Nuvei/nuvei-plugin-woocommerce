@@ -742,7 +742,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         
         Nuvei_Logger::write($prod_details);
         
-        if(!is_user_logged_in()) {
+        if(!is_user_logged_in() || empty($this->rest_params['isUserLogged'])) {
             $use_upos = $save_pm = false;
         }
         
