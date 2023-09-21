@@ -976,7 +976,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	private function generate_cashier_url( $success_url, $error_url, $order_id)
     {
 		global $woocommerce;
-		
+		$order = wc_get_order($order_id);
 		$cart          = $woocommerce->cart;
 		$nuvei_helper  = new Nuvei_Helper($this->settings);
 		$addresses     = $nuvei_helper->get_addresses();
@@ -986,6 +986,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$handling      = '0.00'; // put the tax here, because for Cashier the tax is in %
 		$discount      = '0.00';
 		
+
+		if ($order) {
+			$total_amount = (string) number_format((float) $order->get_total(), 2, '.', '');
+		} else {
+			// Handle error case where order is not found
+			$total_amount = '0.00';
+		}
+
 		Nuvei_Logger::write($products_data, 'get_cashier_url() $products_data.');
 		
 		$params = array(
@@ -1021,6 +1029,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'total_amount'      => $total_amount,
             'encoding'          => 'UTF-8'
 		);
+
+		if ($order) {
+			$params['first_name'] = '';
+			$params['last_name'] = '';
+			$params['address1'] = '';
+			$params['phone1'] = '';
+			$params['first_name'] = $order->get_billing_first_name();
+			$params['last_name'] = $order->get_billing_last_name();
+			$params['address1'] = $order->get_billing_address_1();
+			$params['phone1'] = $order->get_billing_phone();
+		}
 		
 		if (1 == $this->settings['use_upos']) {
 			$params['user_token_id'] = $addresses['billingAddress']['email'];
