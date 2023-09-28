@@ -180,14 +180,27 @@ abstract class Nuvei_Request
     {
         // REST API flow
         if (!empty($this->rest_params)) {
-            $shipping_addr = trim( ($this->rest_params['shipping_address']['address_1'] ?? '')
-                . ' ' . ($this->rest_params['shipping_address']['address_2'] ?? '') );
+            $addresses = [];
             
-            $billing_addr = trim( ($this->rest_params['billing_address']['address_1'] ?? '')
-                . ' ' . ($this->rest_params['billing_address']['address_2'] ?? '') );
+            if (!empty($this->rest_params['shipping_address'])) {
+                $shipping_addr = trim( ($this->rest_params['shipping_address']['address_1'] ?? '')
+                    . ' ' . ($this->rest_params['shipping_address']['address_2'] ?? '') );
+                
+                $addresses['shippingAddress'] = [
+                    'firstName'	=> $this->rest_params['shipping_address']['first_name'] ?? '',
+                    'lastName'  => $this->rest_params['shipping_address']['last_name'] ?? '',
+                    'address'   => $shipping_addr,
+                    'zip'       => $this->rest_params['shipping_address']['postcode'] ?? '',
+                    'city'      => $this->rest_params['shipping_address']['city'] ?? '',
+                    'country'   => $this->rest_params['shipping_address']['country'] ?? '',
+                ];
+            }
             
-            return array(
-                'billingAddress'	=> [
+            if (!empty($this->rest_params['billing_address'])) {
+                $billing_addr = trim( ($this->rest_params['billing_address']['address_1'] ?? '')
+                    . ' ' . ($this->rest_params['billing_address']['address_2'] ?? '') );
+                
+                $addresses['billingAddress'] = [
                     "firstName" => $this->rest_params['billing_address']['first_name'] ?? '',
                     "lastName"  => $this->rest_params['billing_address']['last_name'] ?? '',
                     "address"   => $billing_addr,
@@ -197,16 +210,10 @@ abstract class Nuvei_Request
                     "country"   => $this->rest_params['billing_address']['country'] ?? '',
                     "state"     => $this->rest_params['billing_address']['state'] ?? '',
                     "email"     => $this->rest_params['billing_address']['email'] ?? '',
-                ],
-                'shippingAddress'	=> [
-                    'firstName'	=> $this->rest_params['shipping_address']['first_name'] ?? '',
-                    'lastName'  => $this->rest_params['shipping_address']['last_name'] ?? '',
-                    'address'   => $shipping_addr,
-                    'zip'       => $this->rest_params['shipping_address']['postcode'] ?? '',
-                    'city'      => $this->rest_params['shipping_address']['city'] ?? '',
-                    'country'   => $this->rest_params['shipping_address']['country'] ?? '',
-                ],
-            );
+                ];
+            }
+            
+            return $addresses;
         }
         
         #################################
@@ -724,17 +731,19 @@ abstract class Nuvei_Request
         $data['totals'] = $this->get_total_from_rest_params($this->rest_params);
         
         foreach ($items as $item) {
-            $cart_product   = wc_get_product( $item['id'] );
+            $product_id     = $item['product_id'] ?? $item['id'];
+            $cart_product   = wc_get_product( $product_id );
             $cart_prod_attr = $cart_product->get_attributes();
             
             // get short items data, we use it for Cashier url
             $data['products_data'][] = array(
-                'product_id'    => $item['id'],
+                'product_id'    => $product_id,
                 'quantity'      => $item['quantity'],
-                'price'         => get_post_meta($item['id'] , '_price', true),
+//                'price'         => get_post_meta($item['id'] , '_price', true),
+                'price'         => get_post_meta($product_id , '_price', true),
                 'name'          => $cart_product->get_title(),
                 'in_stock'      => $cart_product->is_in_stock(),
-                'item_id'       => $item['key'],
+                'item_id'       => $item['key'] ?? '',
             );
             
             Nuvei_Logger::write([
@@ -792,7 +801,7 @@ abstract class Nuvei_Request
                     'endAfter'          => [
                         $term_meta['endAfterUnit'][0] => $term_meta['endAfterPeriod'][0],
                     ],
-                    'item_id'           => $item['key'],
+                    'item_id'           => $item['key'] ?? '',
                 ];
 
                 continue;
@@ -843,7 +852,7 @@ abstract class Nuvei_Request
                     'endAfter'          => [
                         $term_meta['endAfterUnit'][0] => $term_meta['endAfterPeriod'][0],
                     ],
-                    'item_id'           => $item['key'],
+                    'item_id'           => $item['key'] ?? '',
                 ];
             }
             # /check if product has only Nuvei Payment Plan Attribute

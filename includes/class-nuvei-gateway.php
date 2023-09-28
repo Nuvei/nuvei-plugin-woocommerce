@@ -10,6 +10,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	private $plugin_data    = [];
 	private $subscr_units   = ['year', 'month', 'day'];
     private $rest_params    = []; // Cart data passed from REST API call.
+    private $order; // get the Order in process_payment()
 	
 	public function __construct()
     {
@@ -262,7 +263,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         ) {
 			Nuvei_Logger::write('Process Cashier payment.');
 			
-			$url = $this->generate_cashier_url($return_success_url, $return_error_url, $order_id);
+            $this->order = $order;
+            
+			$url = $this->generate_cashier_url(
+                $return_success_url,
+                $return_error_url//,
+//                $order_id,
+//                $order->get_total()
+            );
 
 			if (!empty($url)) {
 				return array(
@@ -989,6 +997,72 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         return $this->call_checkout(false, true);
     }
     
+    public function rest_get_cashier_link($params)
+    {
+        // error
+        if (empty($params['id']) || empty($params['successUrl']) || empty(['returnUrl'])) {
+            $msg = __('Missing incoming parameters.', 'nuvei_checkout_woocommerce');
+            Nuvei_Logger::write($params, $msg);
+            
+            return [
+                'code'      => 'missing_parameters',
+                'message'   => $msg,
+                'data'      => ['status' => 400],
+            ];
+        }
+        
+        $order_id   = (int) $params['id'];
+        $order      = wc_get_order($order_id);
+		
+        // error
+		if (!$order) {
+            $msg = __('Order is false for order id ', 'nuvei_checkout_woocommerce') . $order_id;
+			Nuvei_Logger::write($msg);
+			
+            return [
+                'code'      => 'invalid_order',
+                'message'   => $msg,
+                'data'      => ['status' => 400],
+            ];
+		}
+		
+        // error
+		if ($order->get_payment_method() != NUVEI_GATEWAY_NAME) {
+            $msg = __('Process payment Error - Order payment does not belongs to ', 'nuvei_checkout_woocommerce') 
+                . NUVEI_GATEWAY_NAME;
+			Nuvei_Logger::write($msg);
+			
+            return [
+                'code'      => 'not_nuvei_order',
+                'message'   => $msg,
+                'data'      => ['status' => 400],
+            ];
+		}
+        
+        $this->order = $order;
+        
+        $url = $this->generate_cashier_url(
+            $params['successUrl'],
+            $params['successUrl'], // error and success URLs are same
+            $params['backUrl'],
+        );
+
+        // error
+        if (empty($url)) {
+            $msg = __('Error empty Cashier URL.', 'nuvei_checkout_woocommerce');
+            Nuvei_Logger::write($msg);
+            
+            return [
+                'code'      => 'empty_cashier_url',
+                'message'   => $msg,
+                'data'      => ['status' => 400],
+            ];
+        }
+        
+        // success
+        return ['url' => $url];
+    }
+    
 	/**
 	 * Get a plugin setting by its key.
 	 * If key does not exists, return default value.
@@ -1008,31 +1082,64 @@ class Nuvei_Gateway extends WC_Payment_Gateway
     /**
      * @global type $woocommerce
      * 
-     * @param string $success_url
-     * @param string $error_url
-     * @param int $order_id
+     * @param string    $success_url
+     * @param string    $error_url
+     * @param string    $back_url It is only passed in REST API flow.
+     * @param int       $order_id
+     * @param float     $total Order total amount.
+     * @param array     $order_data Pass some additional data in REST API flow.
      * 
      * @return string
      */
-	private function generate_cashier_url( $success_url, $error_url, $order_id)
+//	private function generate_cashier_url( $success_url, $error_url, $order_id, $total, $order_data = [])
+	private function generate_cashier_url($success_url, $error_url, $back_url = '')
     {
-		global $woocommerce;
+//        Nuvei_Logger::write($order_data, 'get_cashier_url() $order_data.');
+        
+//		global $woocommerce;
 		
-		$cart          = $woocommerce->cart;
+//		$cart          = $woocommerce->cart;
 		$nuvei_helper  = new Nuvei_Helper();
-		$addresses     = $nuvei_helper->get_addresses();
-		$products_data = $nuvei_helper->get_products();
-		$total_amount  = (string) number_format((float) $cart->total, 2, '.', '');
+//		$total_amount  = (string) number_format((float) $cart->total, 2, '.', '');
+//        $addresses     = $nuvei_helper->get_addresses($order_data);
+        $addresses     = $nuvei_helper->get_addresses(['billing_address' => $this->order->get_address()]);
+//		$total_amount  = (string) number_format((float) $total, 2, '.', '');
+		$total_amount  = (string) number_format((float) $this->order->get_total(), 2, '.', '');
 		$shipping      = '0.00';
 		$handling      = '0.00'; // put the tax here, because for Cashier the tax is in %
 		$discount      = '0.00';
+        
+        // REST API flow
+//        if (isset($order_data['items'])) {
+//            $products_data = $order_data['items'];
+//        }
+//        // standart flow
+//        else {
+//            $products_data = $nuvei_helper->get_products();
+//        }
+        
+        $items_data['items'] = [];
+        
+        foreach ($this->order->get_items() as $item) {
+            $items_data['items'][] = $item->get_data();
+        }
+        
+        Nuvei_Logger::write($items_data, 'get_cashier_url() $items_data.');
+        
+        $products_data = $nuvei_helper->get_products($items_data);
+        
+        // check for the totals, when want Cashier URL totals is 0.
+        if (empty($products_data['totals'])) {
+            $products_data['totals'] = $total_amount;
+        }
 		
 		Nuvei_Logger::write($products_data, 'get_cashier_url() $products_data.');
 		
 		$params = array(
 			'merchant_id'           => trim($this->settings['merchantId']),
 			'merchant_site_id'      => trim($this->settings['merchantSiteId']),
-            'merchant_unique_id'    => $order_id,
+//            'merchant_unique_id'    => $order_id,
+            'merchant_unique_id'    => $this->order->get_id(),
 			'version'               => '4.0.0',
             'time_stamp'            => gmdate('Y-m-d H:i:s'),
 			
@@ -1051,7 +1158,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'success_url'       => $success_url,
 			'error_url'         => $error_url,
 			'pending_url'       => $success_url,
-			'back_url'          => wc_get_checkout_url(),
+			'back_url'          => !empty($back_url) ? $back_url : wc_get_checkout_url(),
 			
 			'customField1'      => '', // subscription details as json
 //			'customField2'      => json_encode($products_data['products_data']), // item details as json
@@ -1081,9 +1188,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			$params['item_quantity_1'] = 1;
 			$params['item_amount_1']   = $total_amount;
 			$params['numberofitems']   = 1;
-		} else { // add all the items
-			$cnt           = 1;
-			$contol_amount = 0;
+		}
+        else { // add all the items
+			$cnt                        = 1;
+			$contol_amount              = 0;
+            $params['numberofitems']    = 0;
 
 			foreach ($products_data['products_data'] as $item) {
 				$params['item_name_' . $cnt]     = ( $item['name'] );

@@ -1,4 +1,5 @@
 *** WooCommerce Extension Changelog ***
+
 # 2.0.0
     * Trim the merchant credentials when get them.
     * Stop using save_update_order_numbers() method and all connected with it meta fields.
