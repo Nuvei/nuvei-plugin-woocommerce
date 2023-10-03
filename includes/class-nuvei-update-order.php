@@ -117,9 +117,11 @@ class Nuvei_Update_Order extends Nuvei_Request
                     $products_data
                 );
             }
+//            else {
+//                $params['transactionType']  = $this->rest_params['transactionType'];
+//            }
             
-            $params['transactionType']  = $this->rest_params['transactionType'];
-            $params['products_data']    = $products_data;
+            $params['products_data'] = $products_data;
 			
 			return array_merge($params, $resp);
 		}

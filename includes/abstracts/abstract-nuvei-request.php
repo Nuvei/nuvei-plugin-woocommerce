@@ -59,20 +59,22 @@ abstract class Nuvei_Request
 	 * 
 	 * @return void
 	 */
-	protected function is_order_valid($order_id, $return = false)
+//	protected function is_order_valid($order_id, $return = false)
+	protected function is_order_valid($order_id)
     {
 		Nuvei_Logger::write($order_id, 'is_order_valid() check.');
 		
 		$this->sc_order = wc_get_order( $order_id );
 		
 		if ( ! is_a( $this->sc_order, 'WC_Order') ) {
-			Nuvei_Logger::write('Error - Provided Order ID is not a WC Order');
+            $msg = 'Error - Provided Order ID is not a WC Order';
+			Nuvei_Logger::write($order_id, $msg);
 			
-			if ($return) {
-				return;
-			}
+//			if ($return) {
+//				return;
+//			}
 			
-			exit(wp_json_encode('is_order_valid() Error - Provided Order ID is not a WC Order'));
+			exit($msg);
 		}
 		
 		Nuvei_Logger::write('The Order is valid.');
@@ -84,47 +86,47 @@ abstract class Nuvei_Request
 		
 		// check for 'sc' also because of the older Orders
 		if (!in_array($this->sc_order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))) {
+            $msg = 'Error - the order does not belongs to Nuvei.';
 			Nuvei_Logger::write(
 				array(
 					'order_id'          => $order_id,
 					'payment_method'    => $this->sc_order->get_payment_method()
 				), 
-				'DMN Error - the order does not belongs to Nuvei.'
+				$msg
 			);
 			
-			if ($return) {
-				return;
-			}
+//			if ($return) {
+//				return;
+//			}
 			
-			exit(wp_json_encode('DMN Error - the order does not belongs to Nuvei.'));
+			exit($msg);
 		}
 		
 		// can we override Order status (state)
 		$ord_status = strtolower($this->sc_order->get_status());
 		
 		if ( in_array($ord_status, array('cancelled', 'refunded')) ) {
-			Nuvei_Logger::write($this->sc_order->get_payment_method(), 'DMN Error - can not override status of Voided/Refunded Order.');
+            $msg = 'Error - can not override status of Voided/Refunded Order.';
+            Nuvei_Logger::write($this->sc_order->get_payment_method(), $msg);
 			
-			if ($return) {
-				return;
-			}
-			
-			exit(wp_json_encode('DMN Error - can not override status of Voided/Refunded Order.'));
+//			if ($return) {
+//				return;
+//			}
+//			
+			exit($msg);
 		}
 		
 		if ('completed' == $ord_status
 			&& 'auth' == strtolower(Nuvei_Http::get_param('transactionType'))
 		) {
-			Nuvei_Logger::write(
-                $this->sc_order->get_payment_method(),
-                'DMN Error - can not override status Completed with Auth.'
-            );
+            $msg = 'Error - can not override status Completed with Auth.';
+			Nuvei_Logger::write($this->sc_order->get_payment_method(), $msg);
 			
-			if ($return) {
-				return;
-			}
+//			if ($return) {
+//				return;
+//			}
 			
-			exit(wp_json_encode('DMN Error - can not override status Completed with Auth.'));
+			exit($msg);
 		}
 		// can we override Order status (state) END
 	}

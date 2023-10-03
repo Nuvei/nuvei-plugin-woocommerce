@@ -152,6 +152,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
             elseif ('renewal_order' == Nuvei_Http::get_param('customField4')
                 && !empty($client_request_id)
             ) { // WCS renewal order
+                Nuvei_Logger::write('Renewal Order');
                 $order_id = current(explode('_', $client_request_id));
             }
             elseif($TransactionID) { // SDK
@@ -196,13 +197,23 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			&& ( in_array($transactionType, array('Void', 'Settle'), true) )
 		) {
             $order_id   = 0 < $order_id ? $order_id : $clientUniqueId;
-			$resp       = $this->is_order_valid($order_id, true);
+//			$resp       = $this->is_order_valid($order_id, true);
+//            
+//            if (!$resp) {
+//                $msg = 'Error - Provided Order ID is not a WC Order';
+//                Nuvei_Logger::write(
+//                    [
+//                        '$order_id'         => $order_id,
+//                        '$clientUniqueId'   => $clientUniqueId,
+//                    ],
+//                    $msg
+//                );
+//                
+//                http_response_code(200);
+//                exit($msg);
+//            }
             
-            if (!$resp) {
-                http_response_code(200);
-                exit('Error - Provided Order ID is not a WC Order');
-            }
-            
+            $this->is_order_valid($order_id);
             $this->check_for_repeating_dmn();
 			
 //			if ('Settle' == $transactionType) {
