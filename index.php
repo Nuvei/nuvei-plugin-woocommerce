@@ -9,7 +9,7 @@
  * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.3.1
+ * Tested up to: 6.3.2
  * WC requires at least: 3.0
  * WC tested up to: 8.2.0
 */

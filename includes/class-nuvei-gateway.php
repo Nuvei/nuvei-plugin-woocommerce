@@ -705,15 +705,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * Call the Nuvei Checkout SDK form here and pass all parameters.
 	 * 
 	 * @global $woocommerce
-     * 
-     * @param bool $is_ajax
      * @param bool $is_rest
-     * 
-     * TODO - remove $is_ajax parameter!
 	 */
-	public function call_checkout($is_ajax = false, $is_rest = false)
+//	public function call_checkout($is_ajax = false, $is_rest = false)
+	public function call_checkout($is_rest = false)
     {
-        Nuvei_Logger::write([$is_ajax, $is_rest, $this->rest_params], 'call_checkout()');
+        Nuvei_Logger::write([$is_rest, $this->rest_params], 'call_checkout()');
         
 		global $woocommerce;
         
@@ -850,11 +847,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$resp_data['nuveiPluginUrl'] = plugin_dir_url(NUVEI_PLUGIN_FILE);
 		$resp_data['nuveiSiteUrl']   = get_site_url();
 			
-        if ($is_ajax) {
-            Nuvei_Logger::write($checkout_data, '$checkout_data');
-            wp_send_json($checkout_data);
-			exit;
-        }
+//        if ($is_ajax) {
+//            Nuvei_Logger::write($checkout_data, '$checkout_data');
+//            wp_send_json($checkout_data);
+//			exit;
+//        }
         
         // REST API call
         if (!empty($this->rest_params)) {
