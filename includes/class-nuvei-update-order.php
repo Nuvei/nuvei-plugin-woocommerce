@@ -21,27 +21,35 @@ class Nuvei_Update_Order extends Nuvei_Request
 	 * 
 	 * @global Woocommerce $woocommerce
      * 
+     * @param array $products_data
      * @param array $open_order_details Pass them only in REST API flow.
      * 
 	 * @return array
 	 */
-	public function process($open_order_details = [])
+//	public function process($products_data, $open_order_details = [])
+	public function process()
     {
         global $woocommerce;
+        
+        $func_params        = current(func_get_args());
+        $products_data      = $func_params['products_data'] ?? [];
+        $open_order_details = $func_params['open_order_details'] ?? [];
         
 //		$open_order_details = array();
 		
 //		if (!empty(WC()->session)) {
         // default flow
 		if (empty($this->rest_params) && !empty($woocommerce->session)) {
-//			$open_order_details = WC()->session->get('nuvei_last_open_order_details');
-			$open_order_details = $woocommerce->session->get('nuvei_last_open_order_details');
-            $cart         = $woocommerce->cart;
-            $cart_amount  = (string) number_format((float) $cart->total, 2, '.', '');
+//			$open_order_details = WC()->session->get(NUVEI_SESSION_OO_DETAILS);
+			$open_order_details = $woocommerce->session->get(NUVEI_SESSION_OO_DETAILS);
+//            $cart         = $woocommerce->cart;
+//            $cart_amount  = (string) number_format((float) $cart->total, 2, '.', '');
+            $cart_amount  = (string) number_format((float) $woocommerce->cart->total, 2, '.', '');
 		}
         // REST API flow
         else {
-            $cart_amount  = (string) number_format((float) $this->get_total_from_rest_params(), 2, '.', '');
+//            $cart_amount  = (string) number_format((float) $this->get_total_from_rest_params(), 2, '.', '');
+            $cart_amount  = (string) number_format((float) $products_data['totals'], 2, '.', '');
         }
 		
 		if (empty($open_order_details)
@@ -54,7 +62,7 @@ class Nuvei_Update_Order extends Nuvei_Request
 		}
 		
 		$addresses      = $this->get_order_addresses();
-		$products_data  = $this->get_products_data();
+//		$products_data  = $this->get_products_data();
 		
 		// prevent update with empty values
 		foreach ($addresses['billingAddress'] as $key => $val) {
@@ -83,7 +91,7 @@ class Nuvei_Update_Order extends Nuvei_Request
 		);
         
         // WC Subsc
-        if ($products_data['wc_subscr']) {
+        if (!empty($products_data['wc_subscr'])) {
             $oo_params['isRebilling'] = 0;
             $oo_params['card']['threeD']['v2AdditionalParams'] = [ // some default params
                 'rebillFrequency'   => 30, // days

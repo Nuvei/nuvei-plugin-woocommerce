@@ -902,14 +902,15 @@ abstract class Nuvei_Request
      */
     protected function set_nuvei_session_data($session_token, $last_req_details, $product_data)
     {
-        WC()->session->set('nuvei_last_open_order_details', $last_req_details);
+        WC()->session->set(NUVEI_SESSION_OO_DETAILS, $last_req_details);
         WC()->session->set(
-            'nuvei_order_details',
+            NUVEI_SESSION_ORDER_DETAILS,
             [
                 $session_token => [
-                    'wc_subscr'     => $product_data['wc_subscr'],
-                    'subscr_data'   => $product_data['subscr_data'],
+                    'wc_subscr'             => $product_data['wc_subscr'],
+                    'subscr_data'           => $product_data['subscr_data'],
 //                    'products_data' => $product_data['products_data'],
+                    'products_data_hash'    => md5(serialize($product_data)),
                 ]
             ]
         );

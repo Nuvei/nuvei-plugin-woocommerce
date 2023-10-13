@@ -834,26 +834,47 @@ class Nuvei_Notify_Url extends Nuvei_Request
 					if ($order_amount == $this->sum_order_refunds() + $dmn_amount) {
 						$status = 'refunded';
 					}
-				} elseif ( 'Auth' === $transaction_type ) {
+				}
+                elseif ( 'Auth' === $transaction_type ) {
 					$message = $gw_data;
 					$status  = 'pending';
                     
                     if (0 == $order_amount) {
                         $status  = 'completed';
                     }
-				} elseif ( in_array( $transaction_type, array( 'Settle', 'Sale' ), true ) ) {
+				}
+                elseif ( in_array( $transaction_type, array( 'Settle', 'Sale' ), true ) ) {
 					$message = $gw_data;
 					$status  = 'completed';
 					
 					$this->sc_order->payment_complete($order_id);
 				}
 				
-				// check for correct amount and currency
+                $dcc_data = $this->sc_order->get_meta(NUVEI_DCC_DATA);
+                
+				// check for correct amount
 				if (in_array($transaction_type, array('Auth', 'Sale'), true)) {
-					
 //					$dmn_amount   = round(Nuvei_Http::get_param('totalAmount', 'float'), 2);
+                    $set_amount_warning = false;
+                    
+                    if ($order_amount != $dmn_amount) {
+                        $set_amount_warning = true;
+                        
+                        if (isset($dcc_data['converted_amount'])
+                            && '' != $dcc_data['converted_amount']
+                            && $dcc_data['converted_amount'] == $dmn_amount
+                        ) {
+                            $set_amount_warning = false;
+                        }
+                    }
+                    
+                    Nuvei_Logger::write(
+                        [$set_amount_warning, $order_amount, ],
+                        'Nuvei change_order_status()'
+                    );
 					
-					if ($order_amount != $dmn_amount) {
+//					if ($order_amount != $dmn_amount) {
+					if ($set_amount_warning) {
 						$message .= '<br/><b>' . __('Payment ERROR!', 'nuvei_checkout_woocommerce') . '</b> ' 
 							. $dmn_amount . ' ' . Nuvei_Http::get_param('currency')
 							. ' ' . __('paid instead of', 'nuvei_checkout_woocommerce') . ' ' . $order_amount
@@ -871,7 +892,26 @@ class Nuvei_Notify_Url extends Nuvei_Request
 					}
 				}
 				
-				if ($this->sc_order->get_currency() !== Nuvei_Http::get_param('currency')) {
+                // check for correct currency
+                $set_curr_warning = false;
+                
+                if ($this->sc_order->get_currency() !== Nuvei_Http::get_param('currency')) {
+                    $set_curr_warning = true;
+                    
+                    if (!empty($dcc_data['currency'])
+                        && $dcc_data['currency'] == Nuvei_Http::get_param('currency')
+                    ) {
+                        $set_curr_warning = false;
+                    }
+                }
+                
+                Nuvei_Logger::write(
+                    $set_curr_warning,
+                    'Nuvei change_order_status()'
+                );
+                
+//				if ($this->sc_order->get_currency() !== Nuvei_Http::get_param('currency')) {
+				if ($set_curr_warning) {
 					$message .= '<br/><b>' . __('Payment ERROR!', 'nuvei_checkout_woocommerce') . '</b> '
 							. __('The Order currency is ', 'nuvei_checkout_woocommerce') 
 							. $this->sc_order->get_currency()

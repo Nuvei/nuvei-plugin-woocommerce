@@ -11,7 +11,7 @@
  * Require at least: 4.7
  * Tested up to: 6.3.1
  * WC requires at least: 3.0
- * WC tested up to: 8.0.3
+ * WC tested up to: 8.2.0
 */
 
 defined('ABSPATH') || die('die');
@@ -318,7 +318,8 @@ function nuvei_ajax_action()
 	
 	// Update Order before submit
 	if (Nuvei_Http::get_param('updateOrder', 'int') == 1) {
-        $wc_nuvei->call_checkout($is_ajax = true);
+//        $wc_nuvei->call_checkout($is_ajax = true);
+        $wc_nuvei->checkout_prepayment_check();
 	}
 	
 	// when Reorder
@@ -572,7 +573,7 @@ function nuvei_add_buttons($order)
     Nuvei_Logger::write('nuvei_add_buttons');
 //    echo '<pre style="text-align: left;">'.print_r(get_post_meta($order->get_id()), true) . '</pre>';
 //    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TR_ID), true) . '</pre>';
-//    echo '<pre style="text-align: left;">'.print_r($order->get_meta('_nuveiSubscr_variation_63'), true) . '</pre>';
+//    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TRANSACTIONS), true) . '</pre>';
     
     // in case this is not Nuvei order
 	if (empty($order->get_payment_method())
@@ -970,8 +971,11 @@ function nuvei_fill_custom_column( $column)
 //	$order = wc_get_order($post->ID);
 //    $old_subscr         = $order->get_meta(NUVEI_ORDER_SUBSCR_ID); // int
     
-    $html_baloon = '<mark class="order-status status-processing tips" style="float: right;"><span>'
+    $final_html     = '';
+    $subscr_baloon  = '<mark class="order-status status-processing tips" style="float: right;"><span>'
         . esc_html__('Nuvei Subscription', 'nuvei_checkout_woocommerce') . '</span></mark>';
+    $dcc_baloon     = '<mark class="order-status status-on-hold tips" style="float: right;"><span>'
+        . esc_html__('Nuvei DCC', 'nuvei_checkout_woocommerce') . '</span></mark>';
     
     // check for old data
 //    if (!empty($old_subscr) && 'order_number' === $column) {
@@ -987,15 +991,30 @@ function nuvei_fill_custom_column( $column)
     }
     
     foreach ($post_meta as $key => $data) {
-        if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
-            continue;
+        if (false !== strpos($key, NUVEI_ORDER_SUBSCR)
+            && 'order_number' === $column
+        ) {
+            $final_html .= $subscr_baloon;
         }
         
-        if ('order_number' === $column) {
-            echo $html_baloon;
-            return;
+        if (false !== strpos($key, NUVEI_DCC_DATA)
+            && 'order_number' === $column
+        ) {
+            $final_html .= $dcc_baloon;
         }
+        
+        
+//        if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
+//            continue;
+//        }
+//        
+//        if ('order_number' === $column) {
+//            echo $html_baloon;
+//            return;
+//        }
     }
+    
+    echo $final_html;
 }
 # For the custom column in the Order list END
 

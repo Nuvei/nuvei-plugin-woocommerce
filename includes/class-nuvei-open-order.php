@@ -40,6 +40,7 @@ class Nuvei_Open_Order extends Nuvei_Request
         
         $try_update_order = true;
         
+        // REST call
         if (!empty($this->rest_params)) {
             $open_order_details = [
                 'transactionType'   => $this->rest_params['transactionType'] ?? '',
@@ -53,12 +54,13 @@ class Nuvei_Open_Order extends Nuvei_Request
             $transactionType    = $this->get_total_from_rest_params() == 0 
                 ? 'Auth' : $this->plugin_settings['payment_action'];
         }
+        // default flow
         else {
             $ajax_params        = [];
-//            $open_order_details = WC()->session->get('nuvei_last_open_order_details');
-            $open_order_details = $woocommerce->session->get('nuvei_last_open_order_details');
+//            $open_order_details = WC()->session->get(NUVEI_SESSION_OO_DETAILS);
+            $open_order_details = $woocommerce->session->get(NUVEI_SESSION_OO_DETAILS);
             $products_data      = $this->get_products_data();
-            $cart_total         = (float) $products_data['totals'];
+            $cart_total         = (float) $products_data['totals']['total'];
             $addresses          = $this->get_order_addresses();
             $transactionType    = $cart_total == 0 ? 'Auth' : $this->plugin_settings['payment_action'];
         }
@@ -118,7 +120,14 @@ class Nuvei_Open_Order extends Nuvei_Request
         if ($try_update_order) {
 //            $uo_obj = new Nuvei_Update_Order($this->plugin_settings);
             $uo_obj = new Nuvei_Update_Order($this->rest_params);
-            $resp   = $uo_obj->process($open_order_details);
+            $resp   = $uo_obj->process([
+                'open_order_details'    => $open_order_details,
+                'products_data'         => $products_data
+            ]);
+            $resp   = $uo_obj->process([
+                'open_order_details'    => $open_order_details,
+                'products_data'         => $products_data
+            ]);
 
             if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
                 if ($this->is_ajax) {

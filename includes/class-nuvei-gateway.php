@@ -187,11 +187,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 */
 	public function process_payment($order_id)
     {
+        $nuvei_order_details    = WC()->session->get(NUVEI_SESSION_ORDER_DETAILS);
+        $nuvei_oo_details       = WC()->session->get(NUVEI_SESSION_OO_DETAILS);
+        
 		Nuvei_Logger::write(
             [
-                '$order_id'             => $order_id,
-                'request params'        => $_REQUEST,
-                'nuvei_order_details'   => WC()->session->get('nuvei_order_details'),
+                '$order_id'                 => $order_id,
+                'request params'            => $_REQUEST,
+                NUVEI_SESSION_ORDER_DETAILS => $nuvei_order_details,
             ],
             'Process payment(), Order'
         );
@@ -284,8 +287,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		# /in case we use Cashier
 		
          // search for subscr data
-        $nuvei_order_details = WC()->session->get('nuvei_order_details');
-
         if (!empty($nuvei_order_details)) {
             // save the Nuvei Subscr data to the order
             if (!empty($nuvei_order_details[$nuvei_session_token]['subscr_data'])) {
@@ -308,7 +309,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
                 $order->update_meta_data(NUVEI_WC_SUBSCR, true);
             }
             
-            WC()->session->set('nuvei_order_details', []);
+            WC()->session->set(NUVEI_SESSION_ORDER_DETAILS, []);
         }
         
         // Success
@@ -319,6 +320,19 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 //			$order->update_meta_data(NUVEI_TRANS_ID, $nuvei_transaction_id);
 			$order->update_meta_data(NUVEI_TR_ID, $nuvei_transaction_id);
 			$order->update_meta_data(NUVEI_TRANSACTIONS, $transactions_data);
+            
+            Nuvei_Logger::write($nuvei_oo_details);
+            
+            // save as meta DCC data if exists
+            if (!empty($nuvei_oo_details['dcc']['currency'])
+                && !empty($nuvei_oo_details['dcc']['converted_amount'])
+            ) {
+                $order->update_meta_data(NUVEI_DCC_DATA, [
+                    'currency'          => $nuvei_oo_details['dcc']['currency'],
+                    'converted_amount'  => $nuvei_oo_details['dcc']['converted_amount'],
+                ]);
+            }
+            
 			$order->save();
 			
 			return array(
@@ -694,10 +708,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
      * 
      * @param bool $is_ajax
      * @param bool $is_rest
+     * 
+     * TODO - remove $is_ajax parameter!
 	 */
 	public function call_checkout($is_ajax = false, $is_rest = false)
     {
-        Nuvei_Logger::write([$is_rest, $this->rest_params], 'call_checkout()');
+        Nuvei_Logger::write([$is_ajax, $is_rest, $this->rest_params], 'call_checkout()');
         
 		global $woocommerce;
         
@@ -862,6 +878,61 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 
 		exit;
 	}
+    
+    public function checkout_prepayment_check()
+    {
+        Nuvei_Logger::write('checkout_prepayment_check()');
+        
+		global $woocommerce;
+        
+        $nuvei_helper           = new Nuvei_Helper();
+        $total                  = $woocommerce->cart->get_totals();
+        $nuvei_order_details    = $woocommerce->session->get(NUVEI_SESSION_ORDER_DETAILS);
+        $open_order_details     = $woocommerce->session->get(NUVEI_SESSION_OO_DETAILS);
+        $products_data          = $nuvei_helper->get_products();
+        
+        Nuvei_Logger::write($woocommerce->cart);
+        
+        if (!empty($open_order_details['sessionToken'])
+            && !empty($products_data_hash = $nuvei_order_details[$open_order_details['sessionToken']]['products_data_hash'])
+            && $products_data_hash == md5(serialize($products_data))
+        ) {
+            
+            // save converted order amount to the session and later as meta field
+            if (!empty($_POST['dcc']['currency'])
+                && 0 < $amount = $_POST['dcc']['converted_amount']
+                && get_woocommerce_currency() != $_POST['dcc']['currency']
+            ) {
+                $open_order_details['dcc'] = [
+                    'currency'          => filter_var($_POST['dcc']['currency']),
+                    'converted_amount'  => (float) $_POST['dcc']['converted_amount'],
+                ];
+                
+                Nuvei_Logger::write($open_order_details);
+                
+                WC()->session->set(NUVEI_SESSION_OO_DETAILS, $open_order_details);
+            }
+            
+            wp_send_json(array(
+                'success' => 1,
+            ));
+
+            exit;
+        }
+        
+        Nuvei_Logger::write([
+            '$total'                => $total,
+            '$nuvei_order_details'  => $nuvei_order_details,
+            '$open_order_details'   => $open_order_details,
+            '$products_data'        => $products_data,
+        ]);
+        
+        wp_send_json(array(
+			'success' => 0,
+		));
+
+		exit;
+    }
     
     public function hide_payment_gateways( $available_gateways )
     {

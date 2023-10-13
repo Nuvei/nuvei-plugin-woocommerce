@@ -25,6 +25,7 @@ const NUVEI_WC_SUBSCR           = '_wcSubscription';
 const NUVEI_WC_RENEWAL          = '_wcsRenewal';
 const NUVEI_TRANSACTIONS        = '_nuveiTransactions';
 const NUVEI_ORDER_SUBSCR        = '_nuveiSubscr';
+const NUVEI_DCC_DATA            = '_nuveiDccData';
 
 const NUVEI_CUID_POSTFIX        = '_sandbox_apm'; // postfix for Sandbox APM payments
 const NUVEI_PREV_TRANS_STATUS   = '_nuveiPrevTransactionStatus';
@@ -41,6 +42,9 @@ const NUVEI_REST_ENDPOINT_PROD  = 'https://secure.safecharge.com/ppp/api/v1/';
 
 const NUVEI_SDK_URL_PROD        = 'https://cdn.safecharge.com/safecharge_resources/v1/checkout/checkout.js';
 const NUVEI_SDK_AUTOCLOSE_URL   = 'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html';
+
+const NUVEI_SESSION_OO_DETAILS      = 'nuvei_last_open_order_details'; // a session key
+const NUVEI_SESSION_ORDER_DETAILS   = 'nuvei_order_details'; // a session key for additional details based on the session token
 
 define('NUVEI_LOGS_DIR', dirname(dirname(dirname(__FILE__))) . DIRECTORY_SEPARATOR 
     . 'uploads' . DIRECTORY_SEPARATOR . 'nuvei-logs' . DIRECTORY_SEPARATOR);
