@@ -77,54 +77,33 @@ function nuvei_admin_init()
 		// /check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin
 
 		// check in GIT for new version
-		$file         = NUVEI_LOGS_DIR . 'nuvei-latest-version.json';
+        if (!session_id()) {
+            session_start([
+                'cookie_lifetime'   => 86400, // a day
+                'cookie_httponly'   => true,
+            ]);
+        }
+        
 		$plugin_data  = get_plugin_data(__FILE__);
 		$curr_version = (int) str_replace('.', '', $plugin_data['Version']);
 		$git_version  = 0;
-		$date_check   = 0;
 
-		if (!file_exists($file)) {
-			$data = nuvei_get_file_form_git($file);
-
-			if (!empty($data['git_v'])) {
-				$git_version = $data['git_v'];
+        if (!empty($_SESSION[NUVEI_SESSION_PLUGIN_GIT_V])) {
+            $git_version = $_SESSION[NUVEI_SESSION_PLUGIN_GIT_V];
+        }
+        else {
+            $data = nuvei_get_file_form_git();
+            
+            if (!empty($data['git_v'])) {
+				$_SESSION[NUVEI_SESSION_PLUGIN_GIT_V] = $git_version = $data['git_v'];
 			}
-			if (!empty($data['date'])) {
-				$date_check = $data['date'];
-			}
-		}
-
-		// read file if need to
-		if (is_readable($file) 
-			&& ( 0 == $date_check || 0 == $git_version )
-		) {
-			$version_file_data = json_decode(file_get_contents($file), true);
-
-			if (!empty($version_file_data['date'])) {
-				$date_check = $version_file_data['date'];
-			}
-			if (!empty($version_file_data['git_v'])) {
-				$git_version = $version_file_data['git_v'];
-			}
-		}
-
-		// check file date and get new file if current one is more than a week old
-		if (strtotime('-1 Week') > strtotime($date_check)) {
-			$data = nuvei_get_file_form_git($file);
-
-			if (!empty($data['git_v'])) {
-				$git_version = $data['git_v'];
-			}
-			if (!empty($data['date'])) {
-				$date_check = $data['date'];
-			}
-		}
+        }
 
 		// compare versions and show message if need to
 		if ($git_version > $curr_version) {
 			add_action('admin_notices', function() {
 				$class     = 'notice notice-info is-dismissible';
-				$url       = NUVEI_GIT_REPO . '/blob/main/changelog.txt';
+				$url       = 'https://github.com/Nuvei/nuvei-plugin-woocommerce/blob/main/changelog.txt';
 				$message_1 = __('There is a new version of Nuvei Plugin available.', 'nuvei_checkout_woocommerce' );
 				$message_2 = __('View version details.', 'nuvei_checkout_woocommerce' );
 
@@ -138,7 +117,8 @@ function nuvei_admin_init()
 			});
 		}
 		// check in GIT for new version END
-	} catch (Exception $e) {
+	}
+    catch (Exception $e) {
 		Nuvei_Logger::write($e->getMessage(), 'Exception in admin init');
 	}
 }
@@ -1052,17 +1032,17 @@ function nuvei_edit_my_account_orders_col( $order)
 /**
  * Repeating code from Version Checker logic.
  * 
- * @param string $file the path to the file we will save
  * @return array
  */
-function nuvei_get_file_form_git( $file) {
+function nuvei_get_file_form_git()
+{
 	$matches = array();
 	$ch      = curl_init();
 
 	curl_setopt(
 		$ch,
 		CURLOPT_URL,
-		NUVEI_GIT_REPO . '/main/index.php'
+		'https://raw.githubusercontent.com/Nuvei/nuvei-plugin-woocommerce/main/index.php'
 	);
 
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -1082,8 +1062,6 @@ function nuvei_get_file_form_git( $file) {
 		'git_v' => (int) str_replace('.', '', trim($matches[2])),
 	);
 
-	file_put_contents($file, json_encode($array));
-	
 	return $array;
 }
 

@@ -35,7 +35,6 @@ const NUVEI_GLOB_ATTR_NAME      = 'Nuvei Payment Plan'; // the name of the Nuvei
 const NUVEI_LOG_EXT             = 'log';
 const NUVEI_PLANS_FILE          = 'sc_plans.json';
 const NUVEI_APMS_REFUND_VOID    = ['cc_card', 'apmgw_expresscheckout'];
-const NUVEI_GIT_REPO            = 'https://github.com/Nuvei/nuvei-plugin-woocommerce';
 
 const NUVEI_REST_ENDPOINT_INT   = 'https://ppp-test.nuvei.com/ppp/api/v1/';
 const NUVEI_REST_ENDPOINT_PROD  = 'https://secure.safecharge.com/ppp/api/v1/';
@@ -45,6 +44,7 @@ const NUVEI_SDK_AUTOCLOSE_URL   = 'https://cdn.safecharge.com/safecharge_resourc
 
 const NUVEI_SESSION_OO_DETAILS      = 'nuvei_last_open_order_details'; // a session key
 const NUVEI_SESSION_ORDER_DETAILS   = 'nuvei_order_details'; // a session key for additional details based on the session token
+const NUVEI_SESSION_PLUGIN_GIT_V    = 'nuvei_plugin_git_version';
 
 define('NUVEI_LOGS_DIR', dirname(dirname(dirname(__FILE__))) . DIRECTORY_SEPARATOR 
     . 'uploads' . DIRECTORY_SEPARATOR . 'nuvei-logs' . DIRECTORY_SEPARATOR);
