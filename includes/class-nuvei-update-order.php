@@ -35,21 +35,16 @@ class Nuvei_Update_Order extends Nuvei_Request
         $products_data      = $func_params['products_data'] ?? [];
         $open_order_details = $func_params['open_order_details'] ?? [];
         
-//		$open_order_details = array();
-		
-//		if (!empty(WC()->session)) {
+        Nuvei_Logger::write(json_encode($woocommerce->cart->cart_contents));
+        
         // default flow
 		if (empty($this->rest_params) && !empty($woocommerce->session)) {
-//			$open_order_details = WC()->session->get(NUVEI_SESSION_OO_DETAILS);
 			$open_order_details = $woocommerce->session->get(NUVEI_SESSION_OO_DETAILS);
-//            $cart         = $woocommerce->cart;
-//            $cart_amount  = (string) number_format((float) $cart->total, 2, '.', '');
-            $cart_amount  = (string) number_format((float) $woocommerce->cart->total, 2, '.', '');
+            $cart_amount        = (string) number_format((float) $woocommerce->cart->total, 2, '.', '');
 		}
         // REST API flow
         else {
-//            $cart_amount  = (string) number_format((float) $this->get_total_from_rest_params(), 2, '.', '');
-            $cart_amount  = (string) number_format((float) $products_data['totals'], 2, '.', '');
+            $cart_amount = (string) number_format((float) $products_data['totals'], 2, '.', '');
         }
 		
 		if (empty($open_order_details)
@@ -61,8 +56,7 @@ class Nuvei_Update_Order extends Nuvei_Request
 			return array('status' => 'ERROR');
 		}
 		
-		$addresses      = $this->get_order_addresses();
-//		$products_data  = $this->get_products_data();
+		$addresses = $this->get_order_addresses();
 		
 		// prevent update with empty values
 		foreach ($addresses['billingAddress'] as $key => $val) {

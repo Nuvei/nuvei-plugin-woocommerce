@@ -66,14 +66,10 @@ abstract class Nuvei_Request
 		
 		$this->sc_order = wc_get_order( $order_id );
 		
+        // error
 		if ( ! is_a( $this->sc_order, 'WC_Order') ) {
             $msg = 'Error - Provided Order ID is not a WC Order';
 			Nuvei_Logger::write($order_id, $msg);
-			
-//			if ($return) {
-//				return;
-//			}
-			
 			exit($msg);
 		}
 		
@@ -95,10 +91,6 @@ abstract class Nuvei_Request
 				$msg
 			);
 			
-//			if ($return) {
-//				return;
-//			}
-			
 			exit($msg);
 		}
 		
@@ -109,22 +101,15 @@ abstract class Nuvei_Request
             $msg = 'Error - can not override status of Voided/Refunded Order.';
             Nuvei_Logger::write($this->sc_order->get_payment_method(), $msg);
 			
-//			if ($return) {
-//				return;
-//			}
-//			
 			exit($msg);
 		}
 		
+        // do not replace "completed" with "auth" status
 		if ('completed' == $ord_status
 			&& 'auth' == strtolower(Nuvei_Http::get_param('transactionType'))
 		) {
             $msg = 'Error - can not override status Completed with Auth.';
 			Nuvei_Logger::write($this->sc_order->get_payment_method(), $msg);
-			
-//			if ($return) {
-//				return;
-//			}
 			
 			exit($msg);
 		}
@@ -904,7 +889,7 @@ abstract class Nuvei_Request
     {
         WC()->session->set(NUVEI_SESSION_OO_DETAILS, $last_req_details);
         WC()->session->set(
-            NUVEI_SESSION_ORDER_DETAILS,
+            NUVEI_SESSION_PROD_DETAILS,
             [
                 $session_token => [
                     'wc_subscr'             => $product_data['wc_subscr'],

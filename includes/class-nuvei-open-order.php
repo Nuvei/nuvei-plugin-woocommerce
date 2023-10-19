@@ -206,8 +206,8 @@ class Nuvei_Open_Order extends Nuvei_Request
         if (empty($this->rest_params)) {
             // set them to session for the check before submit the data to the webSDK
             $open_order_details = array(
-                'sessionToken'		=> $resp['sessionToken'],
-                'orderId'			=> $resp['orderId'],
+                'sessionToken'		=> $resp['sessionToken'], // use it in updateOrder
+                'orderId'			=> $resp['orderId'], // use it in updateOrder, this is PPP_TransactionID in the DMN
                 'transactionType'	=> $oo_params['transactionType'], // use it to decide call or not updateOrder
                 'userTokenId'       => $oo_params['userTokenId'], // use it to decide call or not updateOrder
             );

@@ -296,8 +296,8 @@ function nuvei_ajax_action()
 		exit;
 	}
 	
-	// Update Order before submit
-	if (Nuvei_Http::get_param('updateOrder', 'int') == 1) {
+	// Check Cart on SDK pre-payment event
+	if (Nuvei_Http::get_param('prePayment', 'int') == 1) {
 //        $wc_nuvei->call_checkout($is_ajax = true);
         $wc_nuvei->checkout_prepayment_check();
 	}
@@ -943,19 +943,53 @@ function nuvei_edit_term_meta( $term_id, $tt_id)
 }
 // Attributes, Terms and Meta functions END
 
-# For the custom column in the Order list
+# For the custom baloon in Order column in the Order list
 function nuvei_fill_custom_column( $column)
 {
+    // the column we put our baloons
+    if ('order_number' !== $column) {
+        return;
+    }
+    
 	global $post;
 	
-//	$order = wc_get_order($post->ID);
+	$order = wc_get_order($post->ID);
 //    $old_subscr         = $order->get_meta(NUVEI_ORDER_SUBSCR_ID); // int
+    
+    if ($order->get_payment_method() != NUVEI_GATEWAY_NAME) {
+        return;
+    }
     
     $final_html     = '';
     $subscr_baloon  = '<mark class="order-status status-processing tips" style="float: right;"><span>'
         . esc_html__('Nuvei Subscription', 'nuvei_checkout_woocommerce') . '</span></mark>';
-    $dcc_baloon     = '<mark class="order-status status-on-hold tips" style="float: right;"><span>'
-        . esc_html__('Nuvei DCC', 'nuvei_checkout_woocommerce') . '</span></mark>';
+//    $dcc_baloon     = '<mark class="order-status status-on-hold tips" style="float: right;"><span>'
+//        . esc_html__('Nuvei DCC', 'nuvei_checkout_woocommerce') . '</span></mark>';
+//    $total_baloon   = '<mark class="order-status status-on-hold tips" style="float: right;"><span>'
+//        . esc_html__('Changed total.', 'nuvei_checkout_woocommerce') . '</span></mark>';
+//    $curr_baloon    = '<mark class="order-status status-on-hold tips" style="float: right;"><span>'
+//        . esc_html__('Changed currency.', 'nuvei_checkout_woocommerce') . '</span></mark>';
+    
+    $changes_text = '';
+    
+    $nuvei_subscr   = $order->get_meta(NUVEI_ORDER_SUBSCR);
+    $order_changes  = $order->get_meta(NUVEI_ORDER_CHANGES);
+    
+    if (!empty($nuvei_subscr)) {
+        $final_html .= $subscr_baloon;
+    }
+    
+    if (!empty($order_changes['total_change'])) {
+        $changes_text = esc_html__('Changed total', 'nuvei_checkout_woocommerce');
+    }
+    if (!empty($order_changes['curr_change'])) {
+        $changes_text = esc_html__('Nuvei DCC', 'nuvei_checkout_woocommerce');
+    }
+    
+    if (!empty($changes_text)) {
+        $final_html .= '<mark class="order-status status-on-hold tips" style="float: right;"><span>'
+        . $changes_text . '</span></mark>';
+    }
     
     // check for old data
 //    if (!empty($old_subscr) && 'order_number' === $column) {
@@ -964,35 +998,35 @@ function nuvei_fill_custom_column( $column)
 //    }
     
     // get all meta fields
-    $post_meta = get_post_meta($post->ID);
+//    $post_meta = get_post_meta($post->ID);
+//    
+//    if (empty($post_meta) || !is_array($post_meta)) {
+//        return;
+//    }
     
-    if (empty($post_meta) || !is_array($post_meta)) {
-        return;
-    }
-    
-    foreach ($post_meta as $key => $data) {
-        if (false !== strpos($key, NUVEI_ORDER_SUBSCR)
-            && 'order_number' === $column
-        ) {
-            $final_html .= $subscr_baloon;
-        }
-        
-        if (false !== strpos($key, NUVEI_DCC_DATA)
-            && 'order_number' === $column
-        ) {
-            $final_html .= $dcc_baloon;
-        }
-        
-        
-//        if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
-//            continue;
+//    foreach ($post_meta as $key => $data) {
+//        if (false !== strpos($key, NUVEI_ORDER_SUBSCR)
+//            && 'order_number' === $column
+//        ) {
+//            $final_html .= $subscr_baloon;
 //        }
 //        
-//        if ('order_number' === $column) {
-//            echo $html_baloon;
-//            return;
-//        }
-    }
+////        if (false !== strpos($key, NUVEI_DCC_DATA)
+////            && 'order_number' === $column
+////        ) {
+////            $final_html .= $dcc_baloon;
+////        }
+//        
+//        
+////        if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
+////            continue;
+////        }
+////        
+////        if ('order_number' === $column) {
+////            echo $html_baloon;
+////            return;
+////        }
+//    }
     
     echo $final_html;
 }
