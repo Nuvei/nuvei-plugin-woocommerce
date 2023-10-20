@@ -722,7 +722,7 @@ abstract class Nuvei_Request
             $cart_product   = wc_get_product( $product_id );
             $cart_prod_attr = $cart_product->get_attributes();
             
-            // get short items data, we use it for Cashier url
+            // get short items data
             $data['products_data'][] = array(
                 'product_id'    => $product_id,
                 'quantity'      => $item['quantity'],

@@ -119,19 +119,11 @@ function nuveiShowErrorMsg(text) {
 function nuveiPrePayment(paymentDetails) {
 	console.log('nuveiPrePayment');
     
-    var errorMsg    = scTrans.paymentError + ' ' + scTrans.TryAgainLater;
     var postData    = {
         action: 'sc-ajax-action',
         security: scTrans.security,
         prePayment: 1
     };
-    
-//    if (jQuery('#nuvei_checkout input[name="useDcc"]').is(':checked')) {
-//        postData.dcc = {
-//            currency: jQuery('#nuvei_checkout select.currency').val(),
-//            converted_amount: jQuery('#nuvei_checkout input.converted_amount').val()
-//        };
-//    } 
     
 	return new Promise((resolve, reject) => {
 		jQuery.ajax({
@@ -154,38 +146,6 @@ function nuveiPrePayment(paymentDetails) {
                 
                 resolve();
                 return;
-        
-//                if(resp.hasOwnProperty('sessionToken') && '' != resp.sessionToken) {
-//                    if(resp.sessionToken == nuveiCheckoutSdkParams.sessionToken) {
-//                        resolve();
-//                        return;
-//                    }
-//                    
-//                    console.log('tokens error', resp.sessionToken, nuveiCheckoutSdkParams.sessionToken);
-
-                // reload the Checkout
-//					nuveiCheckoutSdkParams.sessionToken	= resp.sessionToken;
-//					nuveiCheckoutSdkParams.amount		= resp.amount;
-
-//                    jQuery('#nuvei_checkout').html('');
-
-//                    reject();
-//                    showNuveiCheckout(resp);
-//                    
-//                    jQuery('#nuvei_session_token').val(resp.sessionToken);
-//                    
-//                    return;
-//                }
-                
-//                if (resp.hasOwnProperty('msg')) {
-//                    errorMsg = resp.msg;
-//                }
-//                if (resp.hasOwnProperty('data') && typeof resp.data == 'string') {
-//                    errorMsg = resp.data;
-//                }
-//
-//                reject();
-//                nuveiShowErrorMsg(errorMsg);
             });
 	});
 }

@@ -719,7 +719,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		global $woocommerce;
         
 		# OpenOrder
-		$oo_obj     = new Nuvei_Open_Order($this->settings, false, $this->rest_params);
+		$oo_obj     = new Nuvei_Open_Order($this->settings, $this->rest_params);
 		$oo_data    = $oo_obj->process();
 		
 		if (!$oo_data || empty($oo_data['sessionToken'])) {
@@ -794,7 +794,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'pmWhitelist'               => null,
 			'pmBlacklist'               => empty($pm_black_list) ? null : $pm_black_list,
 			'alwaysCollectCvv'          => true,
-			'fullName'                  => $ord_details['billingAddress']['firstName'] . ' ' . $oo_data['billingAddress']['lastName'],
+			'fullName'                  => $ord_details['billingAddress']['firstName'] . ' ' 
+                . $oo_data['billingAddress']['lastName'],
 			'email'                     => $ord_details['billingAddress']['email'],
 			'payButton'                 => $this->get_setting('pay_button', 'amountButton'),
 			'showResponseMessage'       => false, // shows/hide the response popups
@@ -851,12 +852,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$resp_data['nuveiPluginUrl'] = plugin_dir_url(NUVEI_PLUGIN_FILE);
 		$resp_data['nuveiSiteUrl']   = get_site_url();
 			
-//        if ($is_ajax) {
-//            Nuvei_Logger::write($checkout_data, '$checkout_data');
-//            wp_send_json($checkout_data);
-//			exit;
-//        }
-        
         // REST API call
         if (!empty($this->rest_params)) {
             $checkout_data['transactionType']   = $oo_data['transactionType'];
@@ -899,22 +894,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             && !empty($products_data_hash = $nuvei_order_details[$open_order_details['sessionToken']]['products_data_hash'])
             && $products_data_hash == md5(serialize($products_data))
         ) {
-            
-            // save converted order amount to the session and later as meta field
-//            if (!empty($_POST['dcc']['currency'])
-//                && 0 < $amount = $_POST['dcc']['converted_amount']
-//                && get_woocommerce_currency() != $_POST['dcc']['currency']
-//            ) {
-//                $open_order_details['dcc'] = [
-//                    'currency'          => filter_var($_POST['dcc']['currency']),
-//                    'converted_amount'  => (float) $_POST['dcc']['converted_amount'],
-//                ];
-//                
-//                Nuvei_Logger::write($open_order_details);
-//                
-//                WC()->session->set(NUVEI_SESSION_OO_DETAILS, $open_order_details);
-//            }
-            
             wp_send_json(array(
                 'success' => 1,
             ));
@@ -923,7 +902,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         }
         
         Nuvei_Logger::write([
-//            '$total'                => $total,
             '$nuvei_order_details'  => $nuvei_order_details,
             '$open_order_details'   => $open_order_details,
             '$products_data'        => $products_data,
@@ -1069,7 +1047,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
     {
         $this->rest_params = $params;
         
-        return $this->call_checkout(false, true);
+        return $this->call_checkout(true);
     }
     
     public function rest_get_cashier_link($params)

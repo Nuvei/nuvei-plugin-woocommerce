@@ -9,7 +9,7 @@ class Nuvei_Open_Order extends Nuvei_Request
 {
 	protected $plugin_settings;
     
-	private $is_ajax;
+//	private $is_ajax;
 	
 	/**
 	 * Set is_ajax parameter to the Process metohd.
@@ -17,12 +17,13 @@ class Nuvei_Open_Order extends Nuvei_Request
 	 * @param array $plugin_settings
 	 * @param bool  $is_ajax
 	 */
-	public function __construct( array $plugin_settings, $is_ajax = false, $rest_params = [])
+//	public function __construct( array $plugin_settings, $is_ajax, $rest_params = [])
+	public function __construct( array $plugin_settings, $rest_params = [])
     {
 		parent::__construct();
 		
 		$this->plugin_settings  = $plugin_settings;
-		$this->is_ajax          = $is_ajax;
+//		$this->is_ajax          = $is_ajax;
 		$this->rest_params      = $rest_params;
 	}
 
@@ -48,7 +49,7 @@ class Nuvei_Open_Order extends Nuvei_Request
                 'userTokenId'       => $this->rest_params['email'] ?? '',
                 'sessionToken'      => $this->rest_params['sessionToken'] ?? '',
             ];
-            $products_data      = $this->get_products_data($this->rest_params);
+            $products_data      = $this->get_products_data();
             $cart_total         = $products_data['totals'];
             $addresses          = $this->get_order_addresses();
             $transactionType    = $this->get_total_from_rest_params() == 0 
@@ -57,7 +58,6 @@ class Nuvei_Open_Order extends Nuvei_Request
         // default flow
         else {
             $ajax_params        = [];
-//            $open_order_details = WC()->session->get(NUVEI_SESSION_OO_DETAILS);
             $open_order_details = $woocommerce->session->get(NUVEI_SESSION_OO_DETAILS);
             $products_data      = $this->get_products_data();
             $cart_total         = (float) $products_data['totals']['total'];
@@ -130,13 +130,13 @@ class Nuvei_Open_Order extends Nuvei_Request
             ]);
 
             if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
-                if ($this->is_ajax) {
-                    wp_send_json(array(
-                        'status'        => 1,
-                        'sessionToken'	=> $resp['sessionToken']
-                    ));
-                    exit;
-                }
+//                if ($this->is_ajax) {
+//                    wp_send_json(array(
+//                        'status'        => 1,
+//                        'sessionToken'	=> $resp['sessionToken']
+//                    ));
+//                    exit;
+//                }
 
                 return $resp;
             }
@@ -191,13 +191,13 @@ class Nuvei_Open_Order extends Nuvei_Request
 			|| empty($resp['sessionToken'])
 			|| 'SUCCESS' != $resp['status']
 		) {
-			if ($this->is_ajax) {
-				wp_send_json(array(
-					'status'	=> 0,
-					'msg'		=> $resp
-				));
-				exit;
-			}
+//			if ($this->is_ajax) {
+//				wp_send_json(array(
+//					'status'	=> 0,
+//					'msg'		=> $resp
+//				));
+//				exit;
+//			}
 			
 			return false;
 		}
@@ -221,14 +221,14 @@ class Nuvei_Open_Order extends Nuvei_Request
             Nuvei_Logger::write($open_order_details, 'session open_order_details');
         }
 		
-		if ($this->is_ajax) {
-			wp_send_json(array(
-				'status'        => 1,
-				'sessionToken'  => $resp['sessionToken'],
-				'amount'        => $oo_params['amount']
-			));
-			exit;
-		}
+//		if ($this->is_ajax) {
+//			wp_send_json(array(
+//				'status'        => 1,
+//				'sessionToken'  => $resp['sessionToken'],
+//				'amount'        => $oo_params['amount']
+//			));
+//			exit;
+//		}
 		
         $resp['products_data'] = $products_data;
         
