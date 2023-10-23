@@ -1,6 +1,7 @@
-*** WooCommerce Extension Changelog ***
+# WooCommerce Extension Changelog
 
 # 2.0.0
+```
     * Trim the merchant credentials when get them.
     * Stop using save_update_order_numbers() method and all connected with it meta fields.
     * Removed few GET parameters from the notification URL. Please provide the new URL to the Integration team!
@@ -11,34 +12,46 @@
     * When place Nuvei buttons in the admin, do it only for WC_Order objects.
     * Fixed the wrong Failed status of the Order when DCC was used.
     * Fixed the check for new plugin version in Git.
+```
 
 # 1.4.7
+```
     * Fix for the logic who decide will we create update or open order request.
     * Fix for the loadings styles method.
     * Do not use the authCode as Int.
+```
 
 # 1.4.6
+```
     * Added few more fields into _nuveiTransactions meta field.
     * Added and removed few comments.
     * Changed the place where call the new save_transaction_data method.
+```
 
 # 1.4.5
+```
     * Moved Auto-Void logic after the last try to find the Order in WC.
     * Lowered the maximum tries count when search for existing WC Order.
     * Added _nuveiTransactions private Order meta field to save main data for each transaction.
+```
 
 # 1.4.4
+```
     * Added new checkout icon for the plugin.
     * Load front-end scripts and styles in separate methods.
     * Always pass userTokenId into the openOrder request. The decision for saving UPO is into the SDK.
     * Changed the logic when to call updateOrder.
     * Fix for the unexpected refresh of the Checkout SDK when try to pay.
+```
 
 # 1.4.3
+```
     * Added option to save UPOs for Guest users, when the user try to buy a product with Subscription.
     * Added Auto-Void functionality in case of payment, but did not created Order in WC.
+```
 
 # 1.4.2
+```
     * Added support for theme picking for SimplyConnect.
     * Added option to save logs into second log file - nuvei.log.
     * Added id attribute to the "Block Payment methods" setting "Clean" button.
@@ -46,12 +59,16 @@
     * Fixed the problem with Chrome and plugin "Block Payment methods" dropdown.
     * Replaced safecharge domain into the endpoints with nuvei one, where is possible.
     * Split the requests response log.
+```
 
 # 1.4.1
+```
     * Changed the value of sourceApplication and webMasterId values.
     * Fixed the problem when receive DMN from the CPanel.
+```
 
 # 1.4.0
+```
     * Add support for WC Subscriptions plugin.
     * Added a script to remove the WCS Pay button on Thank-you page.
     * On Thank-you page hooks check if the order belongs to Nuvei.
@@ -59,14 +76,18 @@
     * Added _nuveiPrevTransactionStatus custom field to the Order. It will be used in case of declined Void to return Order to original status.
     * Void button will be available only for orders with AuthCode.
     * For WCS Renewal order try to generate unique clientUniqueId parameter.
+```
 
 # 1.3.1
+```
     * Added the possibility to create empty Payment Plan. The merchant must leave the Payment Plan field empty.
     * When create Nuvei Payment plan "Select a Plan..." option was renamed to "Without Plan".
     * When edit Nuvei Payment plans "Without Plan" option is available.
     * Force transaction type to Auth when Order total amount is 0.
+```
 
 # 1.3.0
+```
     * Allow checkout with any combination of products.
     * Enable using Nuvei Payment Plans for product with attribute only, without variations.
     * Do not pass Product data by open/updateOrder request.
@@ -75,13 +96,17 @@
     * Removed old log directory from the plugin.
     * Removed the option to change the DMN URL.
     * Removed the option to read the Today log file. Any file manager plugin can be use instead.
+```
 
 # 1.2.4
+```
     * Fix for the case when updateOrder does not upgrade empty userTokenId.
     * Do not validate and process the Tokenization DMNs.
     * When click on Pay button check if the products are still in stock.
+```
 
 # 1.2.3
+```
     * Fix the links to Nuvei documentation into the plugin settings.
     * Do not process Pending DMNs.
     * Check for set integration_type before try to use it.
@@ -89,40 +114,58 @@
     * Added NUVEI_LOGS_DIR constant. Save all plugin generated files in it.
     * Removed tmp folder.
     * The Notify URL provided to Nuvei Integration/TechSupport Team must be updated!
+```
 
 # 1.2.2
+```
     * Fixed the missing message for Insufficient funds.
     * Tested on WP 6.1.1 and WC 7.3.0.
+```
 
 # 1.2.1
+```
     * After approved transaction, do not click on #place_order button, but submit form.checkout if exists.
     * Tested on WP 6.1.1 and WC 7.1.0.
+```
 
 # 1.2.0
+```
     * Hide Void button 48 hours after the Order is made.
     * Hide Void button for Zero Orders.
     * Added "Cancel Subscription" button, when the Subscription was confirmed as Active.
+```
 
 # 1.1.2
+```
     * Tested on WP 6.1 and WC 7.0.1.
+```
 
 # 1.1.1
+```
     * Disable Nuvei Rebilling products for Guest users.
+```
 
 # 1.1.0
+```
     * Unify products with plan in a single subscription, and multiply subscription amount by their quantity.
     * Tested on WC 6.9.2.
+```
 
 # 1.0.4
+```
     * Show better error message if the client get "Insufficient funds" error.
     * Upgraded latest tested WC version.
+```
 
 # 1.0.3
+```
     * Tested on WP 6.0.1 and WC 6.7.0.
     * Do not get all information in debug_backtrace().
     * Added link to the Documentation for "Block Payment methods" setting.
+```
 
 # 1.0.2
+```
     * Added default encoding into Cashier URL.
     * Removed set_cuid() method.
     * For Cashier URL, clientUniqueId was replaced with merchant_unique_id.
@@ -132,9 +175,14 @@
     * Do not print pretty merchant payment methods list.
     * Added userData.billingAddress into Checkout SDK parameters.
     * The option for using Checkout SDK or Cashier was moved at the top of the Advanced settings. When change it, the unselected group of settings will hide.
+```
 
 # 1.0.1
+```
     * Added billing "state" parameters in the requests.
+```
 
 # 1.0.0
+```
 	* Based on latest version of Nuvei Woocommerce plugin, but use Checkout SDK instead Web SDK.
+```

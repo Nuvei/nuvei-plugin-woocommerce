@@ -103,7 +103,7 @@ function nuvei_admin_init()
 		if ($git_version > $curr_version) {
 			add_action('admin_notices', function() {
 				$class     = 'notice notice-info is-dismissible';
-				$url       = 'https://github.com/Nuvei/nuvei-plugin-woocommerce/blob/main/changelog.txt';
+				$url       = 'https://github.com/Nuvei/nuvei-plugin-woocommerce/blob/main/CHANGELOG.md';
 				$message_1 = __('There is a new version of Nuvei Plugin available.', 'nuvei_checkout_woocommerce' );
 				$message_2 = __('View version details.', 'nuvei_checkout_woocommerce' );
 
