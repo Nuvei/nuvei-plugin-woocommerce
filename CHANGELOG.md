@@ -12,6 +12,7 @@
     * When place Nuvei buttons in the admin, do it only for WC_Order objects.
     * Fixed the wrong Failed status of the Order when DCC was used.
     * Fixed the check for new plugin version in Git.
+    * Replaced the changelog file.
 ```
 
 # 1.4.7
