@@ -9,7 +9,16 @@ class Nuvei_Notify_Url extends Nuvei_Request
 {
 	public function process()
     {
-		Nuvei_Logger::write($_REQUEST, 'DMN params');
+		Nuvei_Logger::write(
+            [
+                'Request params'    => @$_REQUEST,
+                'REMOTE_ADDR'       => @$_SERVER['REMOTE_ADDR'],
+                'REMOTE_PORT'       => @$_SERVER['REMOTE_PORT'],
+                'REQUEST_METHOD'    => @$_SERVER['REQUEST_METHOD'],
+                'HTTP_USER_AGENT'   => @$_SERVER['HTTP_USER_AGENT'],
+            ],
+            'DMN params'
+        );
 		
 		# stop DMNs only on test mode
 //        exit(wp_json_encode('DMN was stopped, please run it manually!'));
