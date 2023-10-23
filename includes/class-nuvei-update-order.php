@@ -64,12 +64,14 @@ class Nuvei_Update_Order extends Nuvei_Request
 				unset($addresses['billingAddress'][$key]);
 			}
 		}
+        
+        $currency = get_woocommerce_currency();
 		
 		// create Order upgrade
 		$params = array(
 			'sessionToken'		=> $open_order_details['sessionToken'],
 			'orderId'			=> $open_order_details['orderId'],
-			'currency'			=> get_woocommerce_currency(),
+			'currency'			=> $currency,
 			'amount'			=> $cart_amount,
 			'billingAddress'	=> $addresses['billingAddress'],
 			'userDetails'       => $addresses['billingAddress'],
@@ -82,6 +84,11 @@ class Nuvei_Update_Order extends Nuvei_Request
 					'quantity'	=> 1
 				)
 			),
+            
+            'merchantDetails'   => [
+                'customField1'      => $cart_amount,
+                'customField2'      => $currency,
+            ],
 		);
         
         // WC Subsc

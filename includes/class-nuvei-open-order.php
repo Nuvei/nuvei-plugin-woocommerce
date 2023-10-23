@@ -164,16 +164,23 @@ class Nuvei_Open_Order extends Nuvei_Request
                                         = NUVEI_SDK_AUTOCLOSE_URL;
         }
         
+        $amount     = (string) number_format($cart_total, 2, '.', '');
+        $currency   = get_woocommerce_currency();
+        
 		$oo_params = array(
 			'clientUniqueId'    => gmdate('YmdHis') . '_' . uniqid(),
-			'currency'          => get_woocommerce_currency(),
-			'amount'            => (string) number_format($cart_total, 2, '.', ''),
+			'currency'          => $currency,
+			'amount'            => $amount,
 			'shippingAddress'	=> $addresses['shippingAddress'],
 			'billingAddress'	=> $addresses['billingAddress'],
 			'userDetails'       => $addresses['billingAddress'],
 			'transactionType'   => $transactionType,
             'urlDetails'        => $url_details,
             'userTokenId'       => $addresses['billingAddress']['email'], // the decision to save UPO is in the SDK
+            'merchantDetails'   => [
+                'customField1'      => $amount,
+                'customField2'      => $currency,
+            ],
 		);
 		
         // WC Subsc

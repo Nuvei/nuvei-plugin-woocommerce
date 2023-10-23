@@ -24,8 +24,8 @@ abstract class Nuvei_Request
 	 * Description of merchantDetails:
 	 * 
 	 * 'merchantDetails'	=> array(
-	 *      'customField1'  => string,  // subscription details as json
-	 *      'customField2'  => string,  // item details as json
+	 *      'customField1'  => string,  // WC Order total
+	 *      'customField2'  => string,  // WC Order currency
 	 *      'customField3'  => int,     // create time time()
 	 *  ),
 	 */
@@ -44,10 +44,12 @@ abstract class Nuvei_Request
 			'sourceApplication' => NUVEI_SOURCE_APPLICATION,
 			'encoding'          => 'UTF-8',
 			'deviceDetails'     => $this->get_device_details(),
-			'merchantDetails'	=> array(
-				'customField3'      => time(), // create time
-			),
+//			'merchantDetails'	=> array(
+//				'customField3'      => time(), // create time
+//			),
 		);
+        
+        $this->request_base_params['customField3'] = time();
 	}
     
 	/**

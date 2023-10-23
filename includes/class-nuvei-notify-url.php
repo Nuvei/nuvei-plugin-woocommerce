@@ -805,14 +805,14 @@ class Nuvei_Notify_Url extends Nuvei_Request
 					$this->sc_order->payment_complete($order_id);
 				}
 				
-//                $dcc_data = $this->sc_order->get_meta(NUVEI_DCC_DATA);
-                
 				// check for correct amount
 				if (in_array($transaction_type, array('Auth', 'Sale'), true)) {
 //					$dmn_amount   = round(Nuvei_Http::get_param('totalAmount', 'float'), 2);
                     $set_amount_warning = false;
                     
-                    if ($order_amount != $dmn_amount) {
+                    if ($order_amount != $dmn_amount
+                        && $order_amount != Nuvei_Http::get_param('customField1')
+                    ) {
                         $set_amount_warning = true;
                         
 //                        if (isset($dcc_data['converted_amount'])
@@ -849,7 +849,9 @@ class Nuvei_Notify_Url extends Nuvei_Request
                     // check for correct currency
                     $set_curr_warning = false;
                     
-                    if ($this->sc_order->get_currency() !== Nuvei_Http::get_param('currency')) {
+                    if ($this->sc_order->get_currency() !== Nuvei_Http::get_param('currency')
+                        && $this->sc_order->get_currency() !== Nuvei_Http::get_param('customField2')
+                    ) {
                         $set_curr_warning = true;
                     }
 

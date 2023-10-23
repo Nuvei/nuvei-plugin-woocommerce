@@ -216,7 +216,7 @@ function nuvei_init()
     add_action('woocommerce_thankyou', 'nuvei_mod_thank_you_page', 100, 1);
 
     // For the custom column in the Order list
-    add_action( 'manage_shop_order_posts_custom_column', 'nuvei_fill_custom_column' );
+    add_action( 'manage_shop_order_posts_custom_column', 'nuvei_edit_order_list_columns', 10, 2);
     // for the Store > My Account > Orders list
     add_action( 'woocommerce_my_account_my_orders_column_order-number', 'nuvei_edit_my_account_orders_col' );
     // show payment methods on checkout when total is 0
@@ -944,91 +944,45 @@ function nuvei_edit_term_meta( $term_id, $tt_id)
 // Attributes, Terms and Meta functions END
 
 # For the custom baloon in Order column in the Order list
-function nuvei_fill_custom_column( $column)
+function nuvei_edit_order_list_columns($column, $col_id)
 {
-    // the column we put our baloons
-    if ('order_number' !== $column) {
+    // the column we put/edit baloons
+    if (!in_array($column, ['order_number', 'order_status'])) {
         return;
     }
     
 	global $post;
 	
 	$order = wc_get_order($post->ID);
-//    $old_subscr         = $order->get_meta(NUVEI_ORDER_SUBSCR_ID); // int
     
     if ($order->get_payment_method() != NUVEI_GATEWAY_NAME) {
         return;
     }
     
-    $final_html     = '';
-    $subscr_baloon  = '<mark class="order-status status-processing tips" style="float: right;"><span>'
-        . esc_html__('Nuvei Subscription', 'nuvei_checkout_woocommerce') . '</span></mark>';
-//    $dcc_baloon     = '<mark class="order-status status-on-hold tips" style="float: right;"><span>'
-//        . esc_html__('Nuvei DCC', 'nuvei_checkout_woocommerce') . '</span></mark>';
-//    $total_baloon   = '<mark class="order-status status-on-hold tips" style="float: right;"><span>'
-//        . esc_html__('Changed total.', 'nuvei_checkout_woocommerce') . '</span></mark>';
-//    $curr_baloon    = '<mark class="order-status status-on-hold tips" style="float: right;"><span>'
-//        . esc_html__('Changed currency.', 'nuvei_checkout_woocommerce') . '</span></mark>';
-    
-    $changes_text = '';
-    
-    $nuvei_subscr   = $order->get_meta(NUVEI_ORDER_SUBSCR);
+    $all_meta       = get_post_meta($post->ID);
+    $nuvei_subscr   = [];
     $order_changes  = $order->get_meta(NUVEI_ORDER_CHANGES);
     
-    if (!empty($nuvei_subscr)) {
-        $final_html .= $subscr_baloon;
+    foreach ($all_meta as $key => $data) {
+        if (false !== strpos($key, NUVEI_ORDER_SUBSCR)) {
+            $nuvei_subscr = $order->get_meta($key);
+            break;
+        }
     }
     
-    if (!empty($order_changes['total_change'])) {
-        $changes_text = esc_html__('Changed total', 'nuvei_checkout_woocommerce');
-    }
-    if (!empty($order_changes['curr_change'])) {
-        $changes_text = esc_html__('Nuvei DCC', 'nuvei_checkout_woocommerce');
-    }
-    
-    if (!empty($changes_text)) {
-        $final_html .= '<mark class="order-status status-on-hold tips" style="float: right;"><span>'
-        . $changes_text . '</span></mark>';
+    // put subscription baloon
+    if ('order_number' == $column && !empty($nuvei_subscr)) {
+        echo '<mark class="order-status status-processing tips" style="float: right;"><span>'
+            . esc_html__('Nuvei Subscription', 'nuvei_checkout_woocommerce') . '</span></mark>';
     }
     
-    // check for old data
-//    if (!empty($old_subscr) && 'order_number' === $column) {
-//        echo $html_baloon;
-//        return;
-//    }
-    
-    // get all meta fields
-//    $post_meta = get_post_meta($post->ID);
-//    
-//    if (empty($post_meta) || !is_array($post_meta)) {
-//        return;
-//    }
-    
-//    foreach ($post_meta as $key => $data) {
-//        if (false !== strpos($key, NUVEI_ORDER_SUBSCR)
-//            && 'order_number' === $column
-//        ) {
-//            $final_html .= $subscr_baloon;
-//        }
-//        
-////        if (false !== strpos($key, NUVEI_DCC_DATA)
-////            && 'order_number' === $column
-////        ) {
-////            $final_html .= $dcc_baloon;
-////        }
-//        
-//        
-////        if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
-////            continue;
-////        }
-////        
-////        if ('order_number' === $column) {
-////            echo $html_baloon;
-////            return;
-////        }
-//    }
-    
-    echo $final_html;
+    // edit status baloon
+    if ('order_status' == $column
+        && ( !empty($order_changes['total_change']) || !empty($order_changes['curr_change']))
+    ) {
+        echo '<mark class="order-status status-on-hold tips" style="float: left; margin-right: 2px;" title="'
+            . esc_html__('Please check transaction Total and Currency!', 'nuvei_checkout_woocommerce') .'"><span>!</span></mark>';
+    }
 }
 # For the custom column in the Order list END
 

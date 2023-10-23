@@ -1187,11 +1187,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         }
 		
 		Nuvei_Logger::write($products_data, 'get_cashier_url() $products_data.');
+        
+        $currency = get_woocommerce_currency();
 		
 		$params = array(
 			'merchant_id'           => trim($this->settings['merchantId']),
 			'merchant_site_id'      => trim($this->settings['merchantSiteId']),
-//            'merchant_unique_id'    => $order_id,
             'merchant_unique_id'    => $this->order->get_id(),
 			'version'               => '4.0.0',
             'time_stamp'            => gmdate('Y-m-d H:i:s'),
@@ -1213,11 +1214,13 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'pending_url'       => $success_url,
 			'back_url'          => !empty($back_url) ? $back_url : wc_get_checkout_url(),
 			
-			'customField1'      => '', // subscription details as json
+//			'customField1'      => '', // subscription details as json
 //			'customField2'      => json_encode($products_data['products_data']), // item details as json
+			'customField1'      => $total_amount,
+			'customField2'      => $currency,
 			'customField3'      => time(), // create time time()
 			
-			'currency'          => get_woocommerce_currency(),
+			'currency'          => $currency,
 			'total_tax'         => 0,
 			'total_amount'      => $total_amount,
             'encoding'          => 'UTF-8'
@@ -1229,7 +1232,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		
 		// check for subscription data
 		if (!empty($products_data['subscr_data'])) {
-			$params['customField1']        = json_encode($products_data['subscr_data']);
+//			$params['customField1']        = json_encode($products_data['subscr_data']);
 			$params['user_token_id']       = $addresses['billingAddress']['email'];
 			$params['payment_method']      = 'cc_card'; // only cards are allowed for Subscribtions
 			$params['payment_method_mode'] = 'filter';
