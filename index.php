@@ -11,7 +11,7 @@
  * Require at least: 4.7
  * Tested up to: 6.3.2
  * WC requires at least: 3.0
- * WC tested up to: 8.2.0
+ * WC tested up to: 8.2.1
 */
 
 defined('ABSPATH') || die('die');
@@ -204,7 +204,6 @@ function nuvei_init()
         return;
     }
     
-//	if ('yes' == $plugin_enabled) {
     // for WPML plugin
     if (is_plugin_active('sitepress-multilingual-cms' . DIRECTORY_SEPARATOR . 'sitepress.php')
         && 'yes' == $wc_nuvei->settings['use_wpml_thanks_page']
@@ -230,8 +229,6 @@ function nuvei_init()
         10,
         2
     );
-//	}
-	
 }
 
 /**
@@ -674,13 +671,13 @@ function nuvei_add_buttons($order)
 }
 
 /**
- * Function nuvei_rewrite_return_url
  * When user have problem with white spaces in the URL, it have option to
  * rewrite the return URL and redirect to new one.
  *
  * @global WC_SC $wc_nuvei
  */
-function nuvei_rewrite_return_url() {
+function nuvei_rewrite_return_url()
+{
 	if (isset($_REQUEST['ppp_status']) && '' != $_REQUEST['ppp_status']
 		&& ( !isset($_REQUEST['wc_sc_redirected']) || 0 ==  $_REQUEST['wc_sc_redirected'] )
 	) {
@@ -1063,6 +1060,12 @@ function nuvei_get_file_form_git()
  */
 function nuvei_wc_cart_needs_payment($needs_payment, $cart)
 {
+    global $wc_nuvei;
+    
+    if (1 == $wc_nuvei->settings['allow_zero_checkout']) {
+        return true;
+    }
+    
     $cart_items = $cart->get_cart();
 
     foreach ( $cart_items as $item ) {
@@ -1071,7 +1074,7 @@ function nuvei_wc_cart_needs_payment($needs_payment, $cart)
 
         // check for product with a payment plan
         if ( ! empty( $cart_prod_attr[ 'pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ) ] )) {
-            $needs_payment = true;
+            return true;
         }
     }
     

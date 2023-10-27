@@ -916,20 +916,30 @@ class Nuvei_Gateway extends WC_Payment_Gateway
     
     public function hide_payment_gateways( $available_gateways )
     {
-		if ( is_checkout() && ! is_wc_endpoint_url() ) {
-            $nuvei_helper   = new Nuvei_Helper();
-            $items_info     = $nuvei_helper->get_products();
-            
-//            if($items_info['item_with_plan']
-            if (!empty($items_info['subscr_data'])
-                && !empty( $available_gateways[ NUVEI_GATEWAY_NAME ] )
-            ) {
-                $filtred_gws[ NUVEI_GATEWAY_NAME ] = $available_gateways[ NUVEI_GATEWAY_NAME ];
-                return $filtred_gws;
-            }
-		}
+        Nuvei_Logger::write($available_gateways, 'hide_payment_gateways');
+        
+        if (!is_checkout() || is_wc_endpoint_url()) {
+            return $available_gateways;
+        }
+        
+        if (!isset($available_gateways[ NUVEI_GATEWAY_NAME ])) {
+            return $available_gateways;
+        }
+        
+        $nuvei_helper                       = new Nuvei_Helper();
+        $items_info                         = $nuvei_helper->get_products();
+        $filtred_gws[NUVEI_GATEWAY_NAME]    = $available_gateways[NUVEI_GATEWAY_NAME];
 
-		return $available_gateways;
+        if (!empty($items_info['subscr_data'])) {
+            return $filtred_gws;
+        }
+        elseif (1 == $this->get_setting('allow_zero_checkout')
+            && 0 == $items_info['totals']['total']
+        ) {
+            return $filtred_gws;
+        }
+
+        return $available_gateways;
 	}
     
     /**
@@ -1430,6 +1440,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 					0 => __('No', 'nuvei_checkout_woocommerce'),
 				),
 				'class'         => 'nuvei_cashier_setting'
+			),
+            'allow_zero_checkout' => array(
+				'title'         => __('Enable Nuvei GW for Zero-total products.', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+				'options'       => array(
+					0 => 'No',
+					1 => 'Yes',
+				),
+				'default'       => 0,
+				'class'         => 'nuvei_checkout_setting',
+                'description'   => __('If enalbe this option, only Nuvei GW will be listed as payment option. This option can be used for Card authentication.<br/>Zero-total checkout for rebilling products is enable by default.', 'nuvei_checkout_woocommerce'),
 			),
             'use_upos' => array(
 				'title'         => __('Allow client to use UPOs', 'nuvei_checkout_woocommerce'),
