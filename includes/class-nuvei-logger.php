@@ -120,8 +120,8 @@ class Nuvei_Logger
         ;
         
         $string             .= "\r\n\r\n";
-        $file_name          = date('Y-m-d', time());
-        $single_file_name   = NUVEI_GATEWAY_NAME;
+        $file_name          = date('Y-m-d', time()) . '-' . md5($nuvei_gw->get_option('secret') . date('Ymd'));
+        $single_file_name   = NUVEI_GATEWAY_NAME . '-' . md5($nuvei_gw->get_option('secret'));
         
         if ('yes' == $save_logs) {
             $res = file_put_contents(

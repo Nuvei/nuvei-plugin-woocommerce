@@ -44,22 +44,37 @@ add_action('rest_api_init', function() {
 });
 
 /**
- * On activate try to create custom logs directory.
+ * On activate try to create custom logs directory and few files.
  */
 function nuvei_plugin_activate()
 {
-    $content_dir        = dirname(dirname(dirname(__FILE__)));
-    $custom_logs_dir    = $content_dir . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'nuvei-logs';
-    $htaccess_file      = $custom_logs_dir . DIRECTORY_SEPARATOR . '.htaccess';
+    $content_dir    = dirname(dirname(dirname(__FILE__)));
+//    $custom_logs_dir    = $content_dir . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'nuvei-logs';
+    $htaccess_file  = NUVEI_LOGS_DIR . '.htaccess';
+    $index_file     = NUVEI_LOGS_DIR . 'index.html';
     
-    if (is_dir($custom_logs_dir) && file_exists($htaccess_file)) {
-        return;
+    if (!is_dir(NUVEI_LOGS_DIR)) {
+        mkdir(NUVEI_LOGS_DIR);
     }
     
-    // try to create them if not exists
-    if (mkdir($custom_logs_dir)) {
-        file_put_contents($htaccess_file, 'deny from all');
+    if (is_dir(NUVEI_LOGS_DIR)) {
+        if (!file_exists($htaccess_file)) {
+            file_put_contents($htaccess_file, 'deny from all');
+        }
+        
+        if (!file_exists($index_file)) {
+            file_put_contents($index_file, '');
+        }
     }
+    
+//    if (is_dir(NUVEI_LOGS_DIR) && file_exists($htaccess_file)) {
+//        return;
+//    }
+//    
+//    // try to create them if not exists
+//    if (mkdir(NUVEI_LOGS_DIR)) {
+//        file_put_contents($htaccess_file, 'deny from all');
+//    }
 }
 
 function nuvei_admin_init()
