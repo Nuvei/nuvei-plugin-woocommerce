@@ -1398,7 +1398,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'default' => 'yes'
 			),
 			'save_single_log' => array(
-				'title' => __('Save single log file.', 'nuvei_checkout_woocommerce'),
+				'title' => __('Save single log file', 'nuvei_checkout_woocommerce'),
 				'type' => 'checkbox',
 				'label' => __('Create and save the logs into single file.', 'nuvei_checkout_woocommerce'),
 				'default' => 'no'
