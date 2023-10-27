@@ -7,7 +7,7 @@
     * Removed few GET parameters from the notification URL. Please provide the new URL to the Integration team!
     * Added transactionId into Nuvei Transactions meta field.
     * Added an option into the plugin settings to enable Nuvei GW for Zero-Total checkout.
-    * Added additional secure for the log files.
+    * Added additional security for the log files.
     * Hide "SimplyConnect theme" setting, when Cashier was set as payment option.
     * When DMN can not find the Order, return 400 only for the parent transactions as Auth and Sale.
     * Changed the order of few hooks.
