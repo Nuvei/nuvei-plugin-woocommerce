@@ -821,6 +821,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             
             unset($checkout_data['pmBlacklist']);
         }
+        // in case of Zero-Total and enabled allow_zero_checkout option
+        elseif (0 == $total && 1 == $this->get_setting('allow_zero_checkout')) {
+            $checkout_data['pmWhitelist'] = ['cc_card'];
+            unset($checkout_data['pmBlacklist']);
+        }
 		
 		# blocked_cards
 		$blocked_cards     = [];
