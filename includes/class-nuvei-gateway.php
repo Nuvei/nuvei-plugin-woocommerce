@@ -921,7 +921,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
     
     public function hide_payment_gateways( $available_gateways )
     {
-        Nuvei_Logger::write($available_gateways, 'hide_payment_gateways');
+        Nuvei_Logger::write('hide_payment_gateways');
         
         if (!is_checkout() || is_wc_endpoint_url()) {
             return $available_gateways;

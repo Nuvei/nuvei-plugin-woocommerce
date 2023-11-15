@@ -122,11 +122,8 @@ class Nuvei_Open_Order extends Nuvei_Request
             $uo_obj = new Nuvei_Update_Order($this->rest_params);
             $resp   = $uo_obj->process([
                 'open_order_details'    => $open_order_details,
-                'products_data'         => $products_data
-            ]);
-            $resp   = $uo_obj->process([
-                'open_order_details'    => $open_order_details,
-                'products_data'         => $products_data
+                'products_data'         => $products_data,
+                'plugin_settings'       => $this->plugin_settings,
             ]);
 
             if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {

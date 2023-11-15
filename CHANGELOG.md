@@ -14,7 +14,9 @@
     * When place Nuvei buttons in the admin, do it only for WC_Order objects.
     * Fixed the wrong Failed status of the Order when DCC was used.
     * Fixed the check for new plugin version in Git.
+    * Fix for the checkout page when the plugin get response for "Pending" transaction status.
     * Replaced the changelog file.
+    * Do not create Refund record in WC after error in Nuvei Refund request.
 ```
 
 # 1.4.7

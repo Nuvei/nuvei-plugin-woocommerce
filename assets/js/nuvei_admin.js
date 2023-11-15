@@ -87,7 +87,7 @@ function scCreateRefund(question) {
 	refAmount		= refAmount.replaceAll(",", ".");
 	refAmount		= refAmount.replace(/\.(?=.*\.)/, '');
 	refAmount		= parseFloat(refAmount);
-	
+
 	if(isNaN(refAmount) || refAmount < 0.001) {
 		jQuery('#refund_amount').css('border-color', 'red');
 		jQuery('#refund_amount').on('focus', function() {

@@ -34,8 +34,9 @@ class Nuvei_Update_Order extends Nuvei_Request
         $func_params        = current(func_get_args());
         $products_data      = $func_params['products_data'] ?? [];
         $open_order_details = $func_params['open_order_details'] ?? [];
+        $plugin_settings    = $func_params['plugin_settings'] ?? [];
         
-        Nuvei_Logger::write(json_encode($woocommerce->cart->cart_contents));
+//        Nuvei_Logger::write(json_encode($woocommerce->cart->cart_contents));
         
         // default flow
 		if (empty($this->rest_params) && !empty($woocommerce->session)) {
@@ -66,7 +67,18 @@ class Nuvei_Update_Order extends Nuvei_Request
 		}
         
         $currency = get_woocommerce_currency();
-		
+        
+        $url_details = [
+            'notificationUrl'   => Nuvei_String::get_notify_url($this->plugin_settings),
+            'backUrl'           => wc_get_checkout_url(),
+        ];
+        
+        if(1 == $plugin_settings['close_popup']) {
+            $url_details['successUrl']  = $url_details['failureUrl'] 
+                                        = $url_details['pendingUrl'] 
+                                        = NUVEI_SDK_AUTOCLOSE_URL;
+        }
+        
 		// create Order upgrade
 		$params = array(
 			'sessionToken'		=> $open_order_details['sessionToken'],
@@ -76,6 +88,7 @@ class Nuvei_Update_Order extends Nuvei_Request
 			'billingAddress'	=> $addresses['billingAddress'],
 			'userDetails'       => $addresses['billingAddress'],
 			'shippingAddress'	=> $addresses['shippingAddress'],
+            'urlDetails'        => $url_details,
 			
 			'items'				=> array(
 				array(

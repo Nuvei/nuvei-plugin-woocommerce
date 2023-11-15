@@ -30,7 +30,7 @@ function nuveiAfterSdkResponse(resp) {
 		return;
 	}
 	
-	if (resp.result == 'APPROVED' 
+	if ( (resp.result == 'APPROVED' || resp.result == 'PENDING') 
 		&& typeof resp.transactionId != 'undefined' 
 		&& resp.transactionId != 'undefined'
 	) {

@@ -256,27 +256,32 @@ class Nuvei_Notify_Url extends Nuvei_Request
             Nuvei_Logger::write($order_id);
             
             $this->is_order_valid($order_id);
-            $this->check_for_repeating_dmn();
-//			$this->create_refund_record($order_id);
             
-            # create Refund in WC
-            $refund = wc_create_refund(array(
-                'amount'	=> $total,
-                'order_id'	=> $order_id,
-            ));
+            if ('APPROVED' == $req_status) {
+                $this->check_for_repeating_dmn();
+    //			$this->create_refund_record($order_id);
 
-            if (is_a($refund, 'WP_Error')) {
-                http_response_code(400);
-                Nuvei_Logger::write((array) $refund, 'The Refund process in WC returns error: ');
-                exit('The Refund process in WC returns error.');
+
+
+                # create Refund in WC
+                $refund = wc_create_refund(array(
+                    'amount'	=> $total,
+                    'order_id'	=> $order_id,
+                ));
+
+                if (is_a($refund, 'WP_Error')) {
+                    http_response_code(400);
+                    Nuvei_Logger::write((array) $refund, 'The Refund process in WC returns error: ');
+                    exit('The Refund process in WC returns error.');
+                }
+                # /create Refund in WC
+
+                $refund_id = $refund->get_id();
+
+                $this->change_order_status($order_id, $req_status, $transactionType, $refund_id);
+                $this->save_transaction_data($refund_id);
             }
-            # /create Refund in WC
             
-            $refund_id = $refund->get_id();
-            
-			$this->change_order_status($order_id, $req_status, $transactionType, $refund_id);
-            $this->save_transaction_data($refund_id);
-
 			exit('DMN process end for Order #' . $order_id);
 		}
 		
