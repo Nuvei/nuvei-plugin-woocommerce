@@ -46,11 +46,11 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		$req_status             = Nuvei_Http::get_request_status();
         $total                  = Nuvei_Http::get_param('totalAmount', 'float');
 		
-        if ('pending' == strtolower($req_status)) {
-            $msg = 'Pending DMN, waiting for the next.';
-            Nuvei_Logger::write($msg);
-			exit($msg);
-        }
+//        if ('pending' == strtolower($req_status)) {
+//            $msg = 'Pending DMN, waiting for the next.';
+//            Nuvei_Logger::write($msg);
+//			exit($msg);
+//        }
         
 		# Subscription State DMN
 		if ('subscription' == $dmnType) {
@@ -958,13 +958,13 @@ class Nuvei_Notify_Url extends Nuvei_Request
 				break;
 
 			case 'PENDING':
-				if ( 'processing' === $status || 'completed' === $status ) {
-					break;
-				}
+//				if ( 'processing' === $status || 'completed' === $status ) {
+//					break;
+//				}
 
 				$message            = $gw_data;
 				$this->msg['class'] = 'woocommerce_message woocommerce_message_info';
-				$status             = 'on-hold';
+//				$status             = 'on-hold';
 				break;
 		}
 		

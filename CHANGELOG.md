@@ -17,6 +17,7 @@
     * Fix for the checkout page when the plugin get response for "Pending" transaction status.
     * Replaced the changelog file.
     * Do not create Refund record in WC after error in Nuvei Refund request.
+    * Save a Note in WC Orders when Pendin DMN come.
 ```
 
 # 1.4.7

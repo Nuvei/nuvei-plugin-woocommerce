@@ -44,12 +44,9 @@ abstract class Nuvei_Request
 			'sourceApplication' => NUVEI_SOURCE_APPLICATION,
 			'encoding'          => 'UTF-8',
 			'deviceDetails'     => $this->get_device_details(),
-//			'merchantDetails'	=> array(
-//				'customField3'      => time(), // create time
-//			),
 		);
         
-        $this->request_base_params['customField3'] = time();
+        $this->request_base_params['merchantDetails']['customField3'] = time();
 	}
     
 	/**
