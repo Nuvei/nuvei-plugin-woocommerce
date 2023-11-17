@@ -154,25 +154,33 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		
 		# Sale and Auth
 		if (in_array($transactionType, array('Sale', 'Auth'), true)) {
-            if($merchant_unique_id) { // Cashier
+            $is_sdk_order = false;
+            
+            // Cashier
+            if($merchant_unique_id) {
                 Nuvei_Logger::write('Cashier Order');
                 $order_id = $merchant_unique_id;
             }
+            // WCS renewal order
             elseif ('renewal_order' == Nuvei_Http::get_param('customField4')
                 && !empty($client_request_id)
-            ) { // WCS renewal order
+            ) {
                 Nuvei_Logger::write('Renewal Order');
                 $order_id = current(explode('_', $client_request_id));
             }
-            elseif($TransactionID) { // SDK
+            // SDK
+            elseif($TransactionID) {
                 Nuvei_Logger::write('SDK Order');
-                $order_id = $this->get_order_by_trans_id($TransactionID, $transactionType);
+                $is_sdk_order   = true;
+                $order_id       = $this->get_order_by_trans_id($TransactionID, $transactionType);
             }
             
 			$this->is_order_valid($order_id);
             
-            // error
-            if ($this->sc_order->get_meta(NUVEI_ORDER_ID) != Nuvei_Http::get_param('PPP_TransactionID')) {
+            // error check for SDK orders only
+            if ($is_sdk_order
+                && $this->sc_order->get_meta(NUVEI_ORDER_ID) != Nuvei_Http::get_param('PPP_TransactionID')
+            ) {
                 $msg = 'Saved Nuvei Order ID is different than the ID in the DMN.';
                 Nuvei_Logger::write($msg);
                 exit($msg);
