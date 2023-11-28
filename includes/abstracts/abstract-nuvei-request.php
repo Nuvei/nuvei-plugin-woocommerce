@@ -371,13 +371,14 @@ abstract class Nuvei_Request
 		$concat = '';
 		$resp   = false;
 		$url    = $this->get_endpoint_base() . $method . '.do';
-		$params = $this->validate_parameters($params); // validate parameters
-		
+        
 		if (isset($params['status']) && 'ERROR' == $params['status']) {
 			return $params;
 		}
 		
 		$all_params = array_merge_recursive($this->request_base_params, $params);
+        // validate all params
+        $all_params = $this->validate_parameters($all_params);
         
         // use incoming clientRequestId instead of auto generated one
         if (!empty($params['clientRequestId'])) {
@@ -1037,6 +1038,8 @@ abstract class Nuvei_Request
 	 */
 	private function validate_parameters( $params)
     {
+        Nuvei_Logger::write('validate_parameters');
+        
 		// directly check the mails
 		if (isset($params['billingAddress']['email'])) {
 			if (!filter_var($params['billingAddress']['email'], NUVEI_PARAMS_VALIDATION_EMAIL['flag'])) {
