@@ -778,6 +778,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             $is_there_subscription  = true;
         }
         
+        $useDCC = $this->get_setting('use_dcc', 'enable');
+        
+        if ($total == 0) {
+            $useDCC = 'false';
+        }
+        
 		$checkout_data = array( // use it in the template
 			'sessionToken'              => $oo_data['sessionToken'],
 			'env'                       => 'yes' == $this->get_setting('test') ? 'test' : 'prod',
@@ -787,7 +793,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'currency'                  => get_woocommerce_currency(),
 			'amount'                    => $total,
 			'renderTo'                  => '#nuvei_checkout',
-			'useDCC'                    =>  $this->get_setting('use_dcc', 'enable'),
+			'useDCC'                    =>  $useDCC,
 			'strict'                    => false,
 			'savePM'                    => $save_pm,
 			'showUserPaymentOptions'    => $use_upos,

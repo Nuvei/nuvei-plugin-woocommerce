@@ -19,6 +19,7 @@
     * Replaced the changelog file.
     * Do not create Refund record in WC after error in Nuvei Refund request.
     * Save a Note in WC Orders when Pendin DMN come.
+    * Disable DCC when the Total is Zero.
 ```
 
 # 1.4.7
