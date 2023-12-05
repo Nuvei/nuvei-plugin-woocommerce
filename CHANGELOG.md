@@ -20,6 +20,7 @@
     * Do not create Refund record in WC after error in Nuvei Refund request.
     * Save a Note in WC Orders when Pendin DMN come.
     * Disable DCC when the Total is Zero.
+    * Added high priority when loading plugin scripts and libraries.
 ```
 
 # 1.4.7

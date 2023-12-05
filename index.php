@@ -156,7 +156,7 @@ function nuvei_init()
 	add_action('init', 'nuvei_enqueue');
 	
     // load front-end scripts
-    add_filter('wp_enqueue_scripts', 'nuvei_load_scripts');
+    add_filter('wp_enqueue_scripts', 'nuvei_load_scripts', 1);
     // load front-end styles
     add_filter('woocommerce_enqueue_styles', 'nuvei_load_styles');
 	
