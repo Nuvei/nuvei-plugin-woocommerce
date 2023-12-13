@@ -7,7 +7,9 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Open_Order extends Nuvei_Request
 {
-	private $is_ajax;
+	protected $plugin_settings;
+    
+//	private $is_ajax;
 	
 	/**
 	 * Set is_ajax parameter to the Process metohd.
@@ -15,11 +17,14 @@ class Nuvei_Open_Order extends Nuvei_Request
 	 * @param array $plugin_settings
 	 * @param bool  $is_ajax
 	 */
-	public function __construct( array $plugin_settings, $is_ajax = false)
+//	public function __construct( array $plugin_settings, $is_ajax, $rest_params = [])
+	public function __construct( array $plugin_settings, $rest_params = [])
     {
-		parent::__construct($plugin_settings);
+		parent::__construct();
 		
-		$this->is_ajax = $is_ajax;
+		$this->plugin_settings  = $plugin_settings;
+//		$this->is_ajax          = $is_ajax;
+		$this->rest_params      = $rest_params;
 	}
 
 	/**
@@ -33,18 +38,35 @@ class Nuvei_Open_Order extends Nuvei_Request
         Nuvei_Logger::write('OpenOrder class.');
         
 		global $woocommerce;
-		
-		$cart               = $woocommerce->cart;
-		$ajax_params        = [];
-        $open_order_details = WC()->session->get('nuvei_last_open_order_details');
-        $products_data      = $this->get_products_data();
-        $cart_total         = (float) $cart->total;
-        $addresses          = $this->get_order_addresses();
-        $transactionType    = (float) $cart->total == 0 ? 'Auth' : $this->plugin_settings['payment_action'];
-        $try_update_order   = true;
+        
+        $try_update_order = true;
+        
+        // REST call
+        if (!empty($this->rest_params)) {
+            $open_order_details = [
+                'transactionType'   => $this->rest_params['transactionType'] ?? '',
+                'orderId'           => $this->rest_params['orderId'] ?? 0,
+                'userTokenId'       => $this->rest_params['email'] ?? '',
+                'sessionToken'      => $this->rest_params['sessionToken'] ?? '',
+            ];
+            $products_data      = $this->get_products_data();
+            $cart_total         = $products_data['totals'];
+            $addresses          = $this->get_order_addresses();
+            $transactionType    = $this->get_total_from_rest_params() == 0 
+                ? 'Auth' : $this->plugin_settings['payment_action'];
+        }
+        // default flow
+        else {
+            $ajax_params        = [];
+            $open_order_details = $woocommerce->session->get(NUVEI_SESSION_OO_DETAILS);
+            $products_data      = $this->get_products_data();
+            $cart_total         = (float) $products_data['totals']['total'];
+            $addresses          = $this->get_order_addresses();
+            $transactionType    = $cart_total == 0 ? 'Auth' : $this->plugin_settings['payment_action'];
+        }
         
         Nuvei_Logger::write($open_order_details, '$open_order_details');
-        
+		
         // do not allow WCS and Nuvei Subscription in same Order
         if (!empty($products_data['subscr_data']) && $products_data['wc_subscr']) {
             $msg = 'It is not allowed to put product with WCS and product witn Nuvei Subscription in same Order! Please, contact the site administrator for this problem!';
@@ -76,36 +98,6 @@ class Nuvei_Open_Order extends Nuvei_Request
 //        }
         
         # try to update Order or not
-//        if ( !( empty($open_order_details['userTokenId'])
-//            && !empty($products_data['subscr_data'])
-//        ) ) {
-//            $try_update_order = true;
-//        }
-        
-//        if (empty($open_order_details['transactionType'])) {
-//            $try_update_order = false;
-//        }
-        
-//        if ($cart_total == 0
-//            && (empty($open_order_details['transactionType'])
-//                || 'Auth' != $open_order_details['transactionType']
-//            )
-//        ) {
-//        if ($cart_total == 0
-//            &&  'Auth' != $open_order_details['transactionType']
-//        ) {
-//            $try_update_order = false;
-//        }
-//        
-//        if ($cart_total > 0
-//            && !empty($open_order_details['transactionType'])
-//            && 'Auth' == $open_order_details['transactionType']
-//            && $open_order_details['transactionType'] != $this->plugin_settings['payment_action']
-//        ) {
-//            $try_update_order = false;
-//        }
-        
-        # try to update Order or not
         if (!is_array($open_order_details)
             || empty($open_order_details['transactionType'])
             || empty($open_order_details['userTokenId'])
@@ -126,17 +118,22 @@ class Nuvei_Open_Order extends Nuvei_Request
         }
         
         if ($try_update_order) {
-            $uo_obj = new Nuvei_Update_Order($this->plugin_settings);
-            $resp   = $uo_obj->process();
+//            $uo_obj = new Nuvei_Update_Order($this->plugin_settings);
+            $uo_obj = new Nuvei_Update_Order($this->rest_params);
+            $resp   = $uo_obj->process([
+                'open_order_details'    => $open_order_details,
+                'products_data'         => $products_data,
+                'plugin_settings'       => $this->plugin_settings,
+            ]);
 
             if (!empty($resp['status']) && 'SUCCESS' == $resp['status']) {
-                if ($this->is_ajax) {
-                    wp_send_json(array(
-                        'status'        => 1,
-                        'sessionToken'	=> $resp['sessionToken']
-                    ));
-                    exit;
-                }
+//                if ($this->is_ajax) {
+//                    wp_send_json(array(
+//                        'status'        => 1,
+//                        'sessionToken'	=> $resp['sessionToken']
+//                    ));
+//                    exit;
+//                }
 
                 return $resp;
             }
@@ -164,28 +161,27 @@ class Nuvei_Open_Order extends Nuvei_Request
                                         = NUVEI_SDK_AUTOCLOSE_URL;
         }
         
+        $amount     = (string) number_format($cart_total, 2, '.', '');
+        $currency   = get_woocommerce_currency();
+        
 		$oo_params = array(
 			'clientUniqueId'    => gmdate('YmdHis') . '_' . uniqid(),
-			'currency'          => get_woocommerce_currency(),
-			'amount'            => (string) number_format($cart_total, 2, '.', ''),
+			'currency'          => $currency,
+			'amount'            => $amount,
 			'shippingAddress'	=> $addresses['shippingAddress'],
 			'billingAddress'	=> $addresses['billingAddress'],
 			'userDetails'       => $addresses['billingAddress'],
 			'transactionType'   => $transactionType,
             'urlDetails'        => $url_details,
             'userTokenId'       => $addresses['billingAddress']['email'], // the decision to save UPO is in the SDK
+            'merchantDetails'   => [
+                'customField1'      => $amount,
+                'customField2'      => $currency,
+            ],
 		);
 		
-        // add or not userTokenId
-//		if (!empty($products_data['subscr_data'])
-//            || 1 == $this->plugin_settings['use_upos']
-//        ) {
-//			$oo_params['userTokenId'] = $addresses['billingAddress']['email'];
-//		}
-        
         // WC Subsc
         if ($products_data['wc_subscr']) {
-//            $oo_params['userTokenId'] = $addresses['billingAddress']['email'];
             $oo_params['isRebilling'] = 0;
             $oo_params['card']['threeD']['v2AdditionalParams'] = [ // some default params
                 'rebillFrequency'   => 30, // days
@@ -199,53 +195,47 @@ class Nuvei_Open_Order extends Nuvei_Request
 			|| empty($resp['sessionToken'])
 			|| 'SUCCESS' != $resp['status']
 		) {
-			if ($this->is_ajax) {
-				wp_send_json(array(
-					'status'	=> 0,
-					'msg'		=> $resp
-				));
-				exit;
-			}
+//			if ($this->is_ajax) {
+//				wp_send_json(array(
+//					'status'	=> 0,
+//					'msg'		=> $resp
+//				));
+//				exit;
+//			}
 			
 			return false;
 		}
 		
-		// set them to session for the check before submit the data to the webSDK
-		$open_order_details = array(
-//			'amount'			=> $oo_params['amount'],
-			'sessionToken'		=> $resp['sessionToken'],
-			'orderId'			=> $resp['orderId'],
-//			'billingAddress'	=> $oo_params['billingAddress'],
-			'transactionType'	=> $oo_params['transactionType'], // use it to decide call or not updateOrder
-			'userTokenId'       => $oo_params['userTokenId'], // use it to decide call or not updateOrder
-		);
-        
-//        if (!empty($oo_params['userTokenId'])) {
-//            $open_order_details['userTokenId'] = $oo_params['userTokenId'];
-//        }
-        
-//        $open_order_details = [
-//            'oo_hash'           => md5(json_encode($oo_params)),
-//            'transactionType'   => $oo_params['transactionType'],
-//        ];
-        
-        $this->set_nuvei_session_data(
-            $resp['sessionToken'],
-            $open_order_details,
-            $products_data
-        );
+        // in default flow
+        if (empty($this->rest_params)) {
+            // set them to session for the check before submit the data to the webSDK
+            $open_order_details = array(
+                'sessionToken'		=> $resp['sessionToken'], // use it in updateOrder
+                'orderId'			=> $resp['orderId'], // use it in updateOrder, this is PPP_TransactionID in the DMN
+                'transactionType'	=> $oo_params['transactionType'], // use it to decide call or not updateOrder
+                'userTokenId'       => $oo_params['userTokenId'], // use it to decide call or not updateOrder
+            );
+            
+            $this->set_nuvei_session_data(
+                $resp['sessionToken'],
+                $open_order_details,
+                $products_data
+            );
 		
-		Nuvei_Logger::write($open_order_details, 'session open_order_details');
+            Nuvei_Logger::write($open_order_details, 'session open_order_details');
+        }
 		
-		if ($this->is_ajax) {
-			wp_send_json(array(
-				'status'        => 1,
-				'sessionToken'  => $resp['sessionToken'],
-				'amount'        => $oo_params['amount']
-			));
-			exit;
-		}
+//		if ($this->is_ajax) {
+//			wp_send_json(array(
+//				'status'        => 1,
+//				'sessionToken'  => $resp['sessionToken'],
+//				'amount'        => $oo_params['amount']
+//			));
+//			exit;
+//		}
 		
+        $resp['products_data'] = $products_data;
+        
 		return array_merge($resp, $oo_params);
 	}
 	

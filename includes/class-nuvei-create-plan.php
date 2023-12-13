@@ -12,9 +12,10 @@ class Nuvei_Create_Plan extends Nuvei_Request {
 	 * 
 	 * @return array|false
 	 */
-	public function process() {
+	public function process()
+    {
 		$create_params = array(
-			'name'              => 'Default_plan_for_site_' . $this->plugin_settings['merchantSiteId'],
+			'name'              => 'Default_plan_for_site_' . trim($this->plugin_settings['merchantSiteId']),
 			'initialAmount'     => 0,
 			'recurringAmount'   => 1,
 			'currency'          => get_woocommerce_currency(),

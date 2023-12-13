@@ -26,29 +26,54 @@ class Nuvei_Settle_Void extends Nuvei_Request
 			return false;
 		}
 		
-		$order      = wc_get_order($data['order_id']);
+        if (empty($this->sc_order)) {
+            $this->sc_order = wc_get_order($data['order_id']);
+        }
+        
 		$curr       = get_woocommerce_currency();
-		$tr_curr    = $order->get_meta(NUVEI_TRANS_CURR);
+        $amount     = (string) $this->sc_order->get_total();
         $notify_url = Nuvei_String::get_notify_url($this->plugin_settings);
-//        $authCode   = $order->get_meta(NUVEI_AUTH_CODE_KEY);
+        $nuvei_data = $this->sc_order->get_meta(NUVEI_TRANSACTIONS);
+        $dcc_data   = $this->sc_order->get_meta(NUVEI_DCC_DATA);
 		
-		if (!empty($tr_curr)) {
-			$curr = $tr_curr;
-		}
+        if ('voidTransaction' == $data['method']) {
+            $last_tr_id = $this->get_tr_id($data['order_id'], ['Settle', 'Sale', 'Auth']);
+            
+//            if (!empty($dcc_data)) {
+//                foreach (array_reverse($nuvei_data, true) as $trData) {
+//                    if (!in_array($trData['transactionType'], ['Settle', 'Sale', 'Auth'])) {
+//                        continue;
+//                    }
+//                    
+//                    $curr   = $trData['currency'];
+//                    $amount = $trData['totalAmount'];
+//                }
+//            }
+        }
+        else {
+            $last_tr_id = $this->get_tr_id($data['order_id'], ['Auth']);
+            
+//            if (!empty($dcc_data)) {
+//                foreach (array_reverse($nuvei_data, true) as $trData) {
+//                    if ('Auth' != $trData['transactionType']) {
+//                        continue;
+//                    }
+//                    
+//                    $curr   = $trData['currency'];
+//                    $amount = $trData['totalAmount'];
+//                }
+//            }
+        }
 		
 		$params = array(
 			'clientUniqueId'        => $data['order_id'],
-			'amount'                => (string) $order->get_total(),
+			'amount'                => $amount,
 			'currency'              => $curr,
-			'relatedTransactionId'  => $order->get_meta(NUVEI_TRANS_ID),
+			'relatedTransactionId'  => $last_tr_id,
             'url'                   => $notify_url,
             'urlDetails'            => ['notificationUrl' => $notify_url],
 		);
         
-//        if (!empty($authCode)) {
-//            $params['authCode'] = $authCode;
-//        }
-
 		return $this->call_rest_api($data['method'], $params);
 	}
 	

@@ -8,6 +8,12 @@ var nuveiCheckoutSdkParams = {};
 function nuveiAfterSdkResponse(resp) {
 	console.log('nuveiAfterSdkResponse', resp);
 	
+    // expired session
+    if (resp.hasOwnProperty('session_expired') && resp.session_expired) {
+        window.location.reload();
+        return;
+    }
+    
     // a specific Error
     if(resp.hasOwnProperty('status')
         && resp.status == 'ERROR'
@@ -24,7 +30,7 @@ function nuveiAfterSdkResponse(resp) {
 		return;
 	}
 	
-	if (resp.result == 'APPROVED' 
+	if ( (resp.result == 'APPROVED' || resp.result == 'PENDING') 
 		&& typeof resp.transactionId != 'undefined' 
 		&& resp.transactionId != 'undefined'
 	) {
@@ -113,17 +119,17 @@ function nuveiShowErrorMsg(text) {
 function nuveiPrePayment(paymentDetails) {
 	console.log('nuveiPrePayment');
     
-    var errorMsg = scTrans.paymentError + ' ' + scTrans.TryAgainLater;
+    var postData    = {
+        action: 'sc-ajax-action',
+        security: scTrans.security,
+        prePayment: 1
+    };
     
 	return new Promise((resolve, reject) => {
 		jQuery.ajax({
             type: "POST",
             url: scTrans.ajaxurl,
-            data: {
-                action			: 'sc-ajax-action',
-                security		: scTrans.security,
-                updateOrder		: 1
-            },
+            data: postData,
             dataType: 'json'
         })
             .fail(function(){
@@ -131,38 +137,15 @@ function nuveiPrePayment(paymentDetails) {
             })
             .done(function(resp) {
                 console.log(resp);
-
-                if(resp.hasOwnProperty('sessionToken') && '' != resp.sessionToken) {
-                    if(resp.sessionToken == nuveiCheckoutSdkParams.sessionToken) {
-                        resolve();
-                        return;
-                    }
-                    
-                    console.log('tokens error', resp.sessionToken, nuveiCheckoutSdkParams.sessionToken);
-
-                // reload the Checkout
-//					nuveiCheckoutSdkParams.sessionToken	= resp.sessionToken;
-//					nuveiCheckoutSdkParams.amount		= resp.amount;
-
-//                    jQuery('#nuvei_checkout').html('');
-
+        
+                if (!resp.hasOwnProperty('success') || 0 == resp.success) {
                     reject();
-                    showNuveiCheckout(resp);
-                    
-                    jQuery('#nuvei_session_token').val(resp.sessionToken);
-                    
+                    window.location.reload();
                     return;
                 }
                 
-                if (resp.hasOwnProperty('msg')) {
-                    errorMsg = resp.msg;
-                }
-                if (resp.hasOwnProperty('data') && typeof resp.data == 'string') {
-                    errorMsg = resp.data;
-                }
-
-                reject();
-                nuveiShowErrorMsg(errorMsg);
+                resolve();
+                return;
             });
 	});
 }
@@ -220,5 +203,22 @@ jQuery(function() {
 		}
 	});
 	// when on multistep checkout -> Checkout SDK view, someone click on previous/next button END
+    
+    // detect click on DCC option
+//    jQuery('#nuvei_checkout').on('click', 'input[name="useDcc"]', function() {
+//        let _self = jQuery(this);
+//        
+//        console.log('DCC click', _self.is(':checked'));
+//        
+//        if (!_self.is(':checked')) {
+//            return;
+//        }
+//    });
+//    
+//    jQuery('#nuvei_checkout').on('change', 'select.currency', function() {
+//        let _self = jQuery(this);
+//        
+//        console.log('currency changed to ', _self.val());
+//    });
 });
 // document ready function END

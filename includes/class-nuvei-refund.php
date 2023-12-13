@@ -17,24 +17,30 @@ class Nuvei_Refund extends Nuvei_Request
     {
 		$data = current(func_get_args());
 		
-		if (empty($data['order_id']) 
-			|| empty($data['ref_amount'])
-			|| empty($data['tr_id'])
-		) {
+		if (empty($data['order_id']) || empty($data['ref_amount'])) {
 			Nuvei_Logger::write($data, 'Nuvei_Refund error missing mandatoriy parameters.');
 			return false;
 		}
 		
 		$time       = gmdate('YmdHis', time());
 		$order      = wc_get_order($data['order_id']);
-		$curr       = get_woocommerce_currency();
         $notify_url = Nuvei_String::get_notify_url($this->plugin_settings);
+        $nuvei_data = $order->get_meta(NUVEI_TRANSACTIONS);
+        $last_tr    = $this->get_last_transaction($nuvei_data, ['Sale', 'Settle']);
+        
+        if (empty($last_tr['transactionId'])) {
+			wp_send_json(array(
+				'status' => 0,
+				'msg' => __('The Order missing Transaction ID.', 'nuvei_checkout_woocommerce')));
+			exit;
+		}
 		
 		$ref_parameters = array(
-			'clientRequestId'       => $data['order_id'] . '_' . $time . '_' . uniqid(),
-			'clientUniqueId'        => $time . '_' . uniqid(),
+			'clientRequestId'       => $time . '_' . uniqid(),
+			'clientUniqueId'        => $data['order_id'] . '_' . $time . '_' . uniqid(),
 			'amount'                => number_format($data['ref_amount'], 2, '.', ''),
-			'relatedTransactionId'  => $data['tr_id'], // GW Transaction ID
+			'currency'              => get_woocommerce_currency(),
+			'relatedTransactionId'  => $last_tr['transactionId'],
             'url'                   => $notify_url,
             'urlDetails'            => ['notificationUrl' => $notify_url],
 		);
@@ -43,10 +49,10 @@ class Nuvei_Refund extends Nuvei_Request
 	}
 	
 	/**
-	 * Function create_refund
-	 * 
-	 * Create Refund in SC by Refund from WC, after the merchant
-	 * click refund button or set Status to Refunded
+	 * Create Refund from WC, after the merchant click refund button or set Status to Refunded.
+     * 
+     * @param int $order_id
+     * @param float|string $ref_amount
 	 */
 	public function create_refund_request( $order_id, $ref_amount)
     {
@@ -69,7 +75,7 @@ class Nuvei_Refund extends Nuvei_Request
 				'msg' => __('Invalid Refund amount.', 'nuvei_checkout_woocommerce')));
 			exit;
 		}
-		
+        
 		$this->is_order_valid($order_id);
 		
 		if (!$this->sc_order) {
@@ -79,24 +85,24 @@ class Nuvei_Refund extends Nuvei_Request
 			));
 			exit;
 		}
+        
+//		$tr_id = $this->sc_order->get_meta(NUVEI_TRANS_ID);
 		
-		$tr_id = $this->sc_order->get_meta(NUVEI_TRANS_ID);
-		
-		if (empty($tr_id)) {
-			wp_send_json(array(
-				'status' => 0,
-				'msg' => __('The Order missing Transaction ID.', 'nuvei_checkout_woocommerce')));
-			exit;
-		}
-		
-		//      $nr_obj = new Nuvei_Refund($this->plugin_settings);
-		$nr_obj = new Nuvei_Refund($this->plugin_settings);
-		$resp   = $nr_obj->process(array(
+//		if (empty($tr_id)) {
+//			wp_send_json(array(
+//				'status' => 0,
+//				'msg' => __('The Order missing Transaction ID.', 'nuvei_checkout_woocommerce')));
+//			exit;
+//		}
+        
+        $msg    = '';
+//		$nr_obj = new Nuvei_Refund($this->plugin_settings);
+//		$resp   = $nr_obj->process(array(
+		$resp   = $this->process(array(
 			'order_id'     => $order_id, 
 			'ref_amount'   => $ref_amount, 
-			'tr_id'        => $tr_id
+//			'tr_id'        => $tr_id
 		));
-		$msg    = '';
 
 		if (false === $resp) {
 			$msg = __('The REST API retun false.', 'nuvei_checkout_woocommerce');
@@ -132,7 +138,7 @@ class Nuvei_Refund extends Nuvei_Request
 		// APPROVED
 		if (!empty($json_arr['transactionStatus']) && 'APPROVED' == $json_arr['transactionStatus']) {
 			$this->sc_order->update_status('processing');
-			$this->save_refund_meta_data($json_arr['transactionId'], $ref_amount);
+//			$this->save_refund_meta_data($json_arr['transactionId'], $ref_amount);
 			
 			wp_send_json(array('status' => 1));
 			exit;
@@ -158,8 +164,8 @@ class Nuvei_Refund extends Nuvei_Request
 		if (isset($json_arr['status']) && 'ERROR' === $json_arr['status']) {
 			$msg = __('Request ERROR: ', 'nuvei_checkout_woocommerce') . $json_arr['reason'];
 
-			$this->sc_order->add_order_note($msg);
-			$this->sc_order->save();
+//			$this->sc_order->add_order_note($msg);
+//			$this->sc_order->save();
 			
 			Nuvei_Logger::write($msg);
 			
@@ -223,6 +229,6 @@ class Nuvei_Refund extends Nuvei_Request
 
 	protected function get_checksum_params()
     {
-		return  array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'relatedTransactionId', 'url', 'timeStamp');
+		return  array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'currency', 'relatedTransactionId', 'url', 'timeStamp');
 	}
 }

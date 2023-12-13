@@ -3,15 +3,15 @@
  * Plugin Name: Nuvei Plugin for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 1.4.7
+ * Version: 2.0.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.3
+ * Tested up to: 6.4.1
  * WC requires at least: 3.0
- * WC tested up to: 8.0.1
+ * WC tested up to: 8.2.2
 */
 
 defined('ABSPATH') || die('die');
@@ -32,23 +32,49 @@ add_action('admin_init', 'nuvei_admin_init');
 add_filter('woocommerce_payment_gateways', 'nuvei_add_gateway');
 add_action('plugins_loaded', 'nuvei_init', 0);
 
+// register the plugin REST endpoint
+add_action('rest_api_init', function() {
+    register_rest_route('wc', '/nuvei', array(
+        'methods'               => WP_REST_Server::ALLMETHODS,
+        'callback'              => 'nuvei_rest_method',
+        'permission_callback'   => function() {
+            return (is_user_logged_in() && current_user_can('activate_plugins'));
+        }
+    ));
+});
+
 /**
- * On activate try to create custom logs directory.
+ * On activate try to create custom logs directory and few files.
  */
 function nuvei_plugin_activate()
 {
-    $content_dir        = dirname(dirname(dirname(__FILE__)));
-    $custom_logs_dir    = $content_dir . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'nuvei-logs';
-    $htaccess_file      = $custom_logs_dir . DIRECTORY_SEPARATOR . '.htaccess';
+    $content_dir    = dirname(dirname(dirname(__FILE__)));
+//    $custom_logs_dir    = $content_dir . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'nuvei-logs';
+    $htaccess_file  = NUVEI_LOGS_DIR . '.htaccess';
+    $index_file     = NUVEI_LOGS_DIR . 'index.html';
     
-    if (is_dir($custom_logs_dir) && file_exists($htaccess_file)) {
-        return;
+    if (!is_dir(NUVEI_LOGS_DIR)) {
+        mkdir(NUVEI_LOGS_DIR);
     }
     
-    // try to create them if not exists
-    if (mkdir($custom_logs_dir)) {
-        file_put_contents($htaccess_file, 'deny from all');
+    if (is_dir(NUVEI_LOGS_DIR)) {
+        if (!file_exists($htaccess_file)) {
+            file_put_contents($htaccess_file, 'deny from all');
+        }
+        
+        if (!file_exists($index_file)) {
+            file_put_contents($index_file, '');
+        }
     }
+    
+//    if (is_dir(NUVEI_LOGS_DIR) && file_exists($htaccess_file)) {
+//        return;
+//    }
+//    
+//    // try to create them if not exists
+//    if (mkdir(NUVEI_LOGS_DIR)) {
+//        file_put_contents($htaccess_file, 'deny from all');
+//    }
 }
 
 function nuvei_admin_init()
@@ -66,54 +92,33 @@ function nuvei_admin_init()
 		// /check if there is the version with "nuvei" in the name of directory, in this case deactivate the current plugin
 
 		// check in GIT for new version
-		$file         = NUVEI_LOGS_DIR . 'nuvei-latest-version.json';
+        if (!session_id()) {
+            session_start([
+                'cookie_lifetime'   => 86400, // a day
+                'cookie_httponly'   => true,
+            ]);
+        }
+        
 		$plugin_data  = get_plugin_data(__FILE__);
 		$curr_version = (int) str_replace('.', '', $plugin_data['Version']);
 		$git_version  = 0;
-		$date_check   = 0;
 
-		if (!file_exists($file)) {
-			$data = nuvei_get_file_form_git($file);
-
-			if (!empty($data['git_v'])) {
-				$git_version = $data['git_v'];
+        if (!empty($_SESSION[NUVEI_SESSION_PLUGIN_GIT_V])) {
+            $git_version = $_SESSION[NUVEI_SESSION_PLUGIN_GIT_V];
+        }
+        else {
+            $data = nuvei_get_file_form_git();
+            
+            if (!empty($data['git_v'])) {
+				$_SESSION[NUVEI_SESSION_PLUGIN_GIT_V] = $git_version = $data['git_v'];
 			}
-			if (!empty($data['date'])) {
-				$date_check = $data['date'];
-			}
-		}
-
-		// read file if need to
-		if (is_readable($file) 
-			&& ( 0 == $date_check || 0 == $git_version )
-		) {
-			$version_file_data = json_decode(file_get_contents($file), true);
-
-			if (!empty($version_file_data['date'])) {
-				$date_check = $version_file_data['date'];
-			}
-			if (!empty($version_file_data['git_v'])) {
-				$git_version = $version_file_data['git_v'];
-			}
-		}
-
-		// check file date and get new file if current one is more than a week old
-		if (strtotime('-1 Week') > strtotime($date_check)) {
-			$data = nuvei_get_file_form_git($file);
-
-			if (!empty($data['git_v'])) {
-				$git_version = $data['git_v'];
-			}
-			if (!empty($data['date'])) {
-				$date_check = $data['date'];
-			}
-		}
+        }
 
 		// compare versions and show message if need to
 		if ($git_version > $curr_version) {
 			add_action('admin_notices', function() {
 				$class     = 'notice notice-info is-dismissible';
-				$url       = NUVEI_GIT_REPO . '/blob/main/changelog.txt';
+				$url       = 'https://github.com/Nuvei/nuvei-plugin-woocommerce/blob/main/CHANGELOG.md';
 				$message_1 = __('There is a new version of Nuvei Plugin available.', 'nuvei_checkout_woocommerce' );
 				$message_2 = __('View version details.', 'nuvei_checkout_woocommerce' );
 
@@ -127,7 +132,8 @@ function nuvei_admin_init()
 			});
 		}
 		// check in GIT for new version END
-	} catch (Exception $e) {
+	}
+    catch (Exception $e) {
 		Nuvei_Logger::write($e->getMessage(), 'Exception in admin init');
 	}
 }
@@ -150,7 +156,7 @@ function nuvei_init()
 	add_action('init', 'nuvei_enqueue');
 	
     // load front-end scripts
-    add_filter('wp_enqueue_scripts', 'nuvei_load_scripts');
+    add_filter('wp_enqueue_scripts', 'nuvei_load_scripts', 1);
     // load front-end styles
     add_filter('woocommerce_enqueue_styles', 'nuvei_load_styles');
 	
@@ -185,81 +191,8 @@ function nuvei_init()
 	
 	// use this to change button text, because of the cache the jQuery not always works
 	add_filter('woocommerce_order_button_text', 'nuvei_edit_order_buttons');
-	
-	// those actions are valid only when the plugin is enabled
-	$plugin_enabled = isset($wc_nuvei->settings['enabled']) ? $wc_nuvei->settings['enabled'] : 'no';
-	
-	if ('yes' == $plugin_enabled) {
-		// for WPML plugin
-		if (is_plugin_active('sitepress-multilingual-cms' . DIRECTORY_SEPARATOR . 'sitepress.php')
-			&& 'yes' == $wc_nuvei->settings['use_wpml_thanks_page']
-		) {
-			add_filter('woocommerce_get_checkout_order_received_url', 'nuvei_wpml_thank_you_page', 10, 2);
-		}
-        
-        // for the thank-you page
-        add_action('woocommerce_thankyou', 'nuvei_mod_thank_you_page', 100, 1);
-
-		// For the custom column in the Order list
-		add_action( 'manage_shop_order_posts_custom_column', 'nuvei_fill_custom_column' );
-		// for the Store > My Account > Orders list
-		add_action( 'woocommerce_my_account_my_orders_column_order-number', 'nuvei_edit_my_account_orders_col' );
-        // show payment methods on checkout when total is 0
-        add_filter( 'woocommerce_cart_needs_payment', 'nuvei_wc_cart_needs_payment', 10, 2 );
-        // show custom data into order details, product data
-        add_action( 'woocommerce_after_order_itemmeta', 'nuvei_after_order_itemmeta', 10, 3 );
-        // listent for the WC Subscription Payment
-        add_action(
-            'woocommerce_scheduled_subscription_payment_' . NUVEI_GATEWAY_NAME,
-            [$wc_nuvei, 'create_wc_subscr_order'],
-            10,
-            2
-        );
-	}
-	
-	// change Thank-you page title and text on error
-//	if (!is_admin()) {
-//		if ('error' === strtolower(Nuvei_Http::get_request_status())
-//			|| 'fail' === strtolower(Nuvei_Http::get_param('ppp_status'))
-//		) {
-//			add_filter('the_title', function ( $title, $id) {
-//				if (function_exists('is_order_received_page')
-//					&& is_order_received_page()
-//					&& get_the_ID() === $id
-//				) {
-//					$title = esc_html__('Order error', 'nuvei_checkout_woocommerce');
-//				}
-//
-//				return $title;
-//			}, 10, 2);
-//
-//			add_filter(
-//				'woocommerce_thankyou_order_received_text',
-//
-//				function ( $str, $order) {
-//					return esc_html__(' There is an error with your order. Please check your Order status for more information.', 'nuvei_checkout_woocommerce');
-//				}, 10, 2);
-//		}
-//        elseif ('canceled' === strtolower(Nuvei_Http::get_request_status())) {
-//			add_filter('the_title', function ( $title, $id) {
-//				if (function_exists('is_order_received_page')
-//					&& is_order_received_page()
-//					&& get_the_ID() === $id
-//				) {
-//					$title = esc_html__('Order canceled', 'nuvei_checkout_woocommerce');
-//				}
-//
-//				return $title;
-//			}, 10, 2);
-//
-//			add_filter('woocommerce_thankyou_order_received_text', function ( $str, $order) {
-//				return esc_html__('Please, check the order for details!', 'nuvei_checkout_woocommerce');
-//			}, 10, 2);
-//		}
-//	}
-	// /change Thank-you page title and text
-	
-	add_filter('woocommerce_pay_order_after_submit', 'nuvei_user_orders', 10, 2);
+    
+    add_filter('woocommerce_pay_order_after_submit', 'nuvei_user_orders', 10, 2);
 	
 	if (!empty($_GET['sc_msg'])) {
 		add_filter('woocommerce_before_cart', 'nuvei_show_message_on_cart', 10, 2);
@@ -278,6 +211,39 @@ function nuvei_init()
 	add_filter( 'woocommerce_add_to_cart_validation', array($wc_nuvei, 'add_to_cart_validation'), 10, 3 );
     // Show/hide payment gateways in case of product with Nuvei Payment plan in the Cart
     add_filter( 'woocommerce_available_payment_gateways', array($wc_nuvei, 'hide_payment_gateways'), 100, 1 );
+	
+	// those actions are valid only when the plugin is enabled
+	$plugin_enabled = isset($wc_nuvei->settings['enabled']) ? $wc_nuvei->settings['enabled'] : 'no';
+	
+    if ('no' == $plugin_enabled) {
+        return;
+    }
+    
+    // for WPML plugin
+    if (is_plugin_active('sitepress-multilingual-cms' . DIRECTORY_SEPARATOR . 'sitepress.php')
+        && 'yes' == $wc_nuvei->settings['use_wpml_thanks_page']
+    ) {
+        add_filter('woocommerce_get_checkout_order_received_url', 'nuvei_wpml_thank_you_page', 10, 2);
+    }
+
+    // for the thank-you page
+    add_action('woocommerce_thankyou', 'nuvei_mod_thank_you_page', 100, 1);
+
+    // For the custom column in the Order list
+    add_action( 'manage_shop_order_posts_custom_column', 'nuvei_edit_order_list_columns', 10, 2);
+    // for the Store > My Account > Orders list
+    add_action( 'woocommerce_my_account_my_orders_column_order-number', 'nuvei_edit_my_account_orders_col' );
+    // show payment methods on checkout when total is 0
+    add_filter( 'woocommerce_cart_needs_payment', 'nuvei_wc_cart_needs_payment', 10, 2 );
+    // show custom data into order details, product data
+    add_action( 'woocommerce_after_order_itemmeta', 'nuvei_after_order_itemmeta', 10, 3 );
+    // listent for the WC Subscription Payment
+    add_action(
+        'woocommerce_scheduled_subscription_payment_' . NUVEI_GATEWAY_NAME,
+        [$wc_nuvei, 'create_wc_subscr_order'],
+        10,
+        2
+    );
 }
 
 /**
@@ -342,11 +308,10 @@ function nuvei_ajax_action()
 		exit;
 	}
 	
-	// Update Order before submit
-	if (Nuvei_Http::get_param('updateOrder', 'int') == 1) {
-//		$oo_obj = new Nuvei_Open_Order($wc_nuvei->settings, true);
-//		$oo_obj->process();
-        $wc_nuvei->call_checkout($is_ajax = true);
+	// Check Cart on SDK pre-payment event
+	if (Nuvei_Http::get_param('prePayment', 'int') == 1) {
+//        $wc_nuvei->call_checkout($is_ajax = true);
+        $wc_nuvei->checkout_prepayment_check();
 	}
 	
 	// when Reorder
@@ -561,34 +526,29 @@ function nuvei_load_admin_styles_scripts( $hook) {
 	wp_localize_script('nuvei_js_admin', 'scTrans', $localizations);
 	wp_enqueue_script('nuvei_js_admin');
 }
+# Load Styles and Scripts END
 
 // first method we come in
 function nuvei_enqueue( $hook)
 {
-	global $wc_nuvei;
-		
 	# DMNs catch
     // sc_listener is legacy value
 	if (in_array(Nuvei_Http::get_param('wc-api'), array('sc_listener', 'nuvei_listener'))) {
-		//      add_action('wp_loaded', array($wc_nuvei, 'process_dmns'));
 		add_action('wp_loaded', function() {
-			global $wc_nuvei;
-			
-			//            $wc_nuvei->process_dmns();
-			
-			$nuvei_notify_dmn = new Nuvei_Notify_Url($wc_nuvei->settings);
+			$nuvei_notify_dmn = new Nuvei_Notify_Url();
 			$nuvei_notify_dmn->process();
 		});
 	}
-	
-	// nuvei checkout step process order, after the internal submit from the checkout
-	if ('process-order' == Nuvei_Http::get_param('wc-api')
-		&& !empty(Nuvei_Http::get_param('order_id'))
-	) {
-		$wc_nuvei->process_payment(Nuvei_Http::get_param('order_id', 'int', 0));
-	}
+    
+//    global $wc_nuvei;
+//	
+//	// nuvei checkout step process order, after the internal submit from the checkout
+//	if ('process-order' == Nuvei_Http::get_param('wc-api')) {
+//        Nuvei_Logger::write(@$_REQUEST, 'nuvei_enqueue process-order');
+//        
+//		$wc_nuvei->process_payment(Nuvei_Http::get_param('order_id', 'int', 0));
+//	}
 }
-# Load Styles and Scripts END
 
 /**
  * Add buttons for the Nuvei Order actions in Order details page.
@@ -598,10 +558,14 @@ function nuvei_enqueue( $hook)
  */
 function nuvei_add_buttons($order)
 {
+    if (!is_a($order, 'WC_Order') || is_a($order, 'WC_Subscription')) {
+        return false;
+    }
+    
     Nuvei_Logger::write('nuvei_add_buttons');
 //    echo '<pre style="text-align: left;">'.print_r(get_post_meta($order->get_id()), true) . '</pre>';
+//    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TR_ID), true) . '</pre>';
 //    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TRANSACTIONS), true) . '</pre>';
-//    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TRANS_ID), true) . '</pre>';
     
     // in case this is not Nuvei order
 	if (empty($order->get_payment_method())
@@ -612,18 +576,31 @@ function nuvei_add_buttons($order)
 	}
     
     // to show Nuvei buttons we must be sure the order is paid via Nuvei Paygate
-    // AMP's transactions does not have Auth code
-    if (!$order->get_meta(NUVEI_AUTH_CODE_KEY) && !$order->get_meta(NUVEI_TRANS_ID)) {
-        Nuvei_Logger::write('', 'Missing Transaction ID and Auth Code!', 'WARN');
+    $order_id       = $order->get_id();
+    $helper         = new Nuvei_Helper();
+    $ord_tr_id      = $helper->helper_get_tr_id($order_id);
+    $order_data     = $order->get_meta(NUVEI_TRANSACTIONS);
+    $order_refunds  = [];
+    
+    if (empty($ord_tr_id)) {
+        Nuvei_Logger::write($ord_tr_id, 'Invalid Transaction ID! May be this post is not an Order.');
         return false;
     }
     
+    if (!empty($order_data) && is_array($order_data)) {
+        foreach ($order_data as $tr) {
+            if (isset($tr['transactionType'], $tr['status'])
+                && in_array($tr['transactionType'], ['Credit', 'Refund'])
+                && 'approved' == strtolower($tr['status'])
+            ) {
+                $order_refunds[] = $tr;
+            }
+        }
+    }
+    
 	try {
-		$order_id               = $order->get_id();
 		$order_status           = strtolower($order->get_status());
-		$order_payment_method   = $order->get_meta('_paymentMethod');
-		$order_refunds          = json_decode($order->get_meta(NUVEI_REFUNDS), true);
-		$refunds_exists         = false;
+		$order_payment_method   = $helper->get_payment_method($order_id);
         $order_time             = 0;
         
         if (!is_null($order->get_date_created())) {
@@ -632,15 +609,6 @@ function nuvei_add_buttons($order)
         if (!is_null($order->get_date_completed())) {
             $order_time = $order->get_date_completed()->getTimestamp();
         }
-        
-		if (!empty($order_refunds) && is_array($order_refunds)) {
-			foreach ($order_refunds as $data) {
-				if ('approved' == $data['status']) {
-					$refunds_exists = true;
-					break;
-				}
-			}
-		}
 	}
     catch (Exception $ex) {
 		echo '<script type="text/javascript">console.error("'
@@ -656,21 +624,12 @@ function nuvei_add_buttons($order)
 		echo '<script type="text/javascript">jQuery(\'.refund-items\').prop("disabled", true);</script>';
 	}
     
-    # Show Cancel Subscription buttons - Legacy
-    if ('active' == $order->get_meta(NUVEI_ORDER_SUBSCR_STATE)) {
-        echo
-            '<button id="sc_cancel_subs_btn" type="button" onclick="nuveiAction(\''
-                . esc_html__('Are you sure, you want to cancel the subscription for this order?', 'nuvei_checkout_woocommerce')
-                . '\', \'cancelSubscr\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
-                . esc_html__('Cancel Subscription', 'nuvei_checkout_woocommerce') . '</button>';
-    }
-	
-	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
+//	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
+	if (in_array($order_status, array('completed', 'pending'))) {
 		// Show VOID button
-		if (in_array($order_payment_method, NUVEI_APMS_REFUND_VOID)
-            && !empty($order->get_meta(NUVEI_AUTH_CODE_KEY))
-            && !$refunds_exists
-            && 0 < (float) $order->get_total()
+		if ('cc_card' == $order_payment_method
+            && empty($order_refunds)
+            && (float) $order->get_total() > 0
             && time() < $order_time + 172800 // 48 hours
         ) {
             $question = sprintf(
@@ -705,8 +664,8 @@ function nuvei_add_buttons($order)
 		
 		// show SETTLE button ONLY if transaction type IS Auth and the Total is not 0
 		if ('pending' == $order_status 
-            && 'Auth' == $order->get_meta(NUVEI_RESP_TRANS_TYPE)
-            && 0 < $order->get_total()
+            && 'Auth' == $helper->get_tr_type($order_id)
+            && $order->get_total() > 0
         ) {
 			$question = sprintf(
 				/* translators: %d is replaced with "decimal" */
@@ -727,13 +686,13 @@ function nuvei_add_buttons($order)
 }
 
 /**
- * Function nuvei_rewrite_return_url
  * When user have problem with white spaces in the URL, it have option to
  * rewrite the return URL and redirect to new one.
  *
  * @global WC_SC $wc_nuvei
  */
-function nuvei_rewrite_return_url() {
+function nuvei_rewrite_return_url()
+{
 	if (isset($_REQUEST['ppp_status']) && '' != $_REQUEST['ppp_status']
 		&& ( !isset($_REQUEST['wc_sc_redirected']) || 0 ==  $_REQUEST['wc_sc_redirected'] )
 	) {
@@ -996,41 +955,45 @@ function nuvei_edit_term_meta( $term_id, $tt_id)
 }
 // Attributes, Terms and Meta functions END
 
-# For the custom column in the Order list
-function nuvei_fill_custom_column( $column)
+# For the custom baloon in Order column in the Order list
+function nuvei_edit_order_list_columns($column, $col_id)
 {
+    // the column we put/edit baloons
+    if (!in_array($column, ['order_number', 'order_status'])) {
+        return;
+    }
+    
 	global $post;
 	
-	$order              = wc_get_order($post->ID);
-    $old_subscr         = $order->get_meta(NUVEI_ORDER_SUBSCR_ID); // int
-    $new_subscr_data    = $order->get_meta(NUVEI_ORDER_SUBSCR); // array
+	$order = wc_get_order($post->ID);
     
-    
-    $html_baloon = '<mark class="order-status status-processing tips" style="float: right;"><span>'
-        . esc_html__('Nuvei Subscription', 'nuvei_checkout_woocommerce') . '</span></mark>';
-    
-    // check for old data
-    if (!empty($old_subscr) && 'order_number' === $column) {
-        echo $html_baloon;
+    if ($order->get_payment_method() != NUVEI_GATEWAY_NAME) {
         return;
     }
     
-    // check for new data
-    $post_meta = get_post_meta($post->ID);
+    $all_meta       = get_post_meta($post->ID);
+    $nuvei_subscr   = [];
+    $order_changes  = $order->get_meta(NUVEI_ORDER_CHANGES);
     
-    if (empty($post_meta) || !is_array($post_meta)) {
-        return;
+    foreach ($all_meta as $key => $data) {
+        if (false !== strpos($key, NUVEI_ORDER_SUBSCR)) {
+            $nuvei_subscr = $order->get_meta($key);
+            break;
+        }
     }
     
-    foreach ($post_meta as $key => $data) {
-        if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
-            continue;
-        }
-        
-        if ('order_number' === $column) {
-            echo $html_baloon;
-            return;
-        }
+    // put subscription baloon
+    if ('order_number' == $column && !empty($nuvei_subscr)) {
+        echo '<mark class="order-status status-processing tips" style="float: right;"><span>'
+            . esc_html__('Nuvei Subscription', 'nuvei_checkout_woocommerce') . '</span></mark>';
+    }
+    
+    // edit status baloon
+    if ('order_status' == $column
+        && ( !empty($order_changes['total_change']) || !empty($order_changes['curr_change']))
+    ) {
+        echo '<mark class="order-status status-on-hold tips" style="float: left; margin-right: 2px;" title="'
+            . esc_html__('Please check transaction Total and Currency!', 'nuvei_checkout_woocommerce') .'"><span>!</span></mark>';
     }
 }
 # For the custom column in the Order list END
@@ -1041,10 +1004,25 @@ function nuvei_fill_custom_column( $column)
  * 
  * @param WC_Order $order
  */
-function nuvei_edit_my_account_orders_col( $order) {
+function nuvei_edit_my_account_orders_col( $order)
+{
+    // get all meta fields
+    $post_meta  = get_post_meta($order->get_id());
+    $is_subscr  = false;
+    
+    if (!empty($post_meta) && is_array($post_meta)) {
+        foreach ($post_meta as $key => $data) {
+            if (false !== strpos($key, NUVEI_ORDER_SUBSCR)) {
+                $is_subscr = true;
+                break;
+            }
+        }
+    }
+    
 	echo '<a href="' . esc_url( $order->get_view_order_url() ) . '"';
 	
-	if (!empty($order->get_meta(NUVEI_ORDER_SUBSCR_ID))) {
+//	if (!empty($order->get_meta(NUVEI_ORDER_SUBSCR_ID))) {
+	if ($is_subscr) {
 		echo ' class="nuvei_plan_order" title="' . esc_attr__('Nuvei Payment Plan Order', 'nuvei_checkout_woocommerce') . '"';
 	}
 	
@@ -1054,17 +1032,17 @@ function nuvei_edit_my_account_orders_col( $order) {
 /**
  * Repeating code from Version Checker logic.
  * 
- * @param string $file the path to the file we will save
  * @return array
  */
-function nuvei_get_file_form_git( $file) {
+function nuvei_get_file_form_git()
+{
 	$matches = array();
 	$ch      = curl_init();
 
 	curl_setopt(
 		$ch,
 		CURLOPT_URL,
-		NUVEI_GIT_REPO . '/main/index.php'
+		'https://raw.githubusercontent.com/Nuvei/nuvei-plugin-woocommerce/main/index.php'
 	);
 
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -1084,8 +1062,6 @@ function nuvei_get_file_form_git( $file) {
 		'git_v' => (int) str_replace('.', '', trim($matches[2])),
 	);
 
-	file_put_contents($file, json_encode($array));
-	
 	return $array;
 }
 
@@ -1099,6 +1075,12 @@ function nuvei_get_file_form_git( $file) {
  */
 function nuvei_wc_cart_needs_payment($needs_payment, $cart)
 {
+    global $wc_nuvei;
+    
+    if (1 == $wc_nuvei->settings['allow_zero_checkout']) {
+        return true;
+    }
+    
     $cart_items = $cart->get_cart();
 
     foreach ( $cart_items as $item ) {
@@ -1107,7 +1089,7 @@ function nuvei_wc_cart_needs_payment($needs_payment, $cart)
 
         // check for product with a payment plan
         if ( ! empty( $cart_prod_attr[ 'pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ) ] )) {
-            $needs_payment = true;
+            return true;
         }
     }
     
@@ -1118,7 +1100,7 @@ function nuvei_after_order_itemmeta($item_id, $item, $_product)
 {
     $post_id        = Nuvei_Http::get_param('post', 'int');
     $order          = wc_get_order($post_id);
-    $subs_id        = $order->get_meta(NUVEI_ORDER_SUBSCR_ID);
+//    $subs_id        = $order->get_meta(NUVEI_ORDER_SUBSCR_ID);
     $post_meta      = get_post_meta($post_id);
     
     if (empty($post_meta) || !is_array($post_meta)) {
@@ -1150,11 +1132,6 @@ function nuvei_after_order_itemmeta($item_id, $item, $_product)
             ]);
             continue;
         }
-        
-//        echo '<pre>'.print_r([$mk, $subscr_data],true).'</pre>';
-////        echo '<pre>'.print_r($subscr_data,true).'</pre>';
-//        echo '<pre>'.print_r([$item_id, $product_id],true).'</pre>';
-//        echo '<pre>'.print_r([$item_id, $item->get_variation_id()],true).'</pre>';
         
         if (empty($subscr_data['state']) || empty ($subscr_data['subscr_id'])) {
             // wait for meta data to be created
@@ -1198,4 +1175,49 @@ function nuvei_get_plugin_version()
     return $plugin_data['Version'];
 }
 
+function nuvei_rest_method($request_data)
+{
+    Nuvei_Logger::write('nuvei_rest_method');
+    
+    global $wc_nuvei;
+    
+	$wc_nuvei   = new Nuvei_Gateway();
+    $params     = $request_data->get_params();
+    
+    // error
+    if (empty($params['action'])) {
+        $res = new WP_REST_Response([
+            'code'      => 'unknown_action',
+            'message'   => __('The action you require is unknown.', 'nuvei_checkout_woocommerce'),
+            'data'      => ['status' => 405],
+        ]);
+        $res->set_status(405);
 
+        return $res;
+    }
+    
+    if ('get-simply-connect-data' == $params['action']) {
+        $resp = $wc_nuvei->rest_get_simply_connect_data($params);
+        
+        $rest_resp = new WP_REST_Response($resp);
+        $rest_resp->set_status(200);
+        return $rest_resp;
+    }
+    
+    if ('get-cashier-link' == $params['action']) {
+        $resp = $wc_nuvei->rest_get_cashier_link($params);
+        
+        $rest_resp = new WP_REST_Response($resp);
+        $rest_resp->set_status(200);
+        return $rest_resp;
+    }
+    
+    $res = new WP_REST_Response([
+        'code'      => 'unknown_action',
+        'message'   => __('The action you require is unknown.', 'nuvei_checkout_woocommerce'),
+        'data'      => ['status' => 405],
+    ]);
+    $res->set_status(405);
+    
+    return $rest_resp;
+}
