@@ -33,36 +33,12 @@ class Nuvei_Settle_Void extends Nuvei_Request
 		$curr       = get_woocommerce_currency();
         $amount     = (string) $this->sc_order->get_total();
         $notify_url = Nuvei_String::get_notify_url($this->plugin_settings);
-        $nuvei_data = $this->sc_order->get_meta(NUVEI_TRANSACTIONS);
-        $dcc_data   = $this->sc_order->get_meta(NUVEI_DCC_DATA);
 		
         if ('voidTransaction' == $data['method']) {
             $last_tr_id = $this->get_tr_id($data['order_id'], ['Settle', 'Sale', 'Auth']);
-            
-//            if (!empty($dcc_data)) {
-//                foreach (array_reverse($nuvei_data, true) as $trData) {
-//                    if (!in_array($trData['transactionType'], ['Settle', 'Sale', 'Auth'])) {
-//                        continue;
-//                    }
-//                    
-//                    $curr   = $trData['currency'];
-//                    $amount = $trData['totalAmount'];
-//                }
-//            }
         }
         else {
             $last_tr_id = $this->get_tr_id($data['order_id'], ['Auth']);
-            
-//            if (!empty($dcc_data)) {
-//                foreach (array_reverse($nuvei_data, true) as $trData) {
-//                    if ('Auth' != $trData['transactionType']) {
-//                        continue;
-//                    }
-//                    
-//                    $curr   = $trData['currency'];
-//                    $amount = $trData['totalAmount'];
-//                }
-//            }
         }
 		
 		$params = array(
@@ -87,8 +63,9 @@ class Nuvei_Settle_Void extends Nuvei_Request
     {
 		$this->is_order_valid($order_id);
         
-		$method = 'settle' == $action ? 'settleTransaction' : 'voidTransaction';
-		$resp   = $this->process(array(
+        $ord_status = 0;
+		$method     = 'settle' == $action ? 'settleTransaction' : 'voidTransaction';
+		$resp       = $this->process(array(
 			'order_id' => $order_id, 
 			'action'   => $action, 
 			'method'   => $method
@@ -98,13 +75,23 @@ class Nuvei_Settle_Void extends Nuvei_Request
 			$ord_status = 1;
             
             $this->sc_order->update_meta_data(NUVEI_PREV_TRANS_STATUS, $this->sc_order->get_status());
-			$this->sc_order->update_status('processing');
+//			$this->sc_order->update_status('processing');
+            // change order status
+			$this->sc_order->update_status($this->nuvei_gw->get_option('status_pending'));
+            
+            // save the Refund into transactions, but without status, unitl DMN come
+            unset($resp['status']);
+            $resp['transactionType'] = ucfirst($action);
+            
+            $this->save_transaction_data($resp);
+            
             $this->sc_order->save();
-		} else {
-			$ord_status = 0;
 		}
 		
-		wp_send_json(array('status' => $ord_status, 'data' => $resp));
+		wp_send_json(array(
+            'status'    => $ord_status,
+            'data'      => $resp
+        ));
 		exit;
 	}
 

@@ -539,15 +539,6 @@ function nuvei_enqueue( $hook)
 			$nuvei_notify_dmn->process();
 		});
 	}
-    
-//    global $wc_nuvei;
-//	
-//	// nuvei checkout step process order, after the internal submit from the checkout
-//	if ('process-order' == Nuvei_Http::get_param('wc-api')) {
-//        Nuvei_Logger::write(@$_REQUEST, 'nuvei_enqueue process-order');
-//        
-//		$wc_nuvei->process_payment(Nuvei_Http::get_param('order_id', 'int', 0));
-//	}
 }
 
 /**
@@ -558,6 +549,7 @@ function nuvei_enqueue( $hook)
  */
 function nuvei_add_buttons($order)
 {
+    // error
     if (!is_a($order, 'WC_Order') || is_a($order, 'WC_Subscription')) {
         return false;
     }
@@ -567,7 +559,7 @@ function nuvei_add_buttons($order)
 //    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TR_ID), true) . '</pre>';
 //    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TRANSACTIONS), true) . '</pre>';
     
-    // in case this is not Nuvei order
+    // error - in case this is not Nuvei order
 	if (empty($order->get_payment_method())
 		|| !in_array($order->get_payment_method(), array(NUVEI_GATEWAY_NAME, 'sc'))
 	) {
@@ -580,14 +572,17 @@ function nuvei_add_buttons($order)
     $helper         = new Nuvei_Helper();
     $ord_tr_id      = $helper->helper_get_tr_id($order_id);
     $order_data     = $order->get_meta(NUVEI_TRANSACTIONS);
+    $last_tr_data   = [];
     $order_refunds  = [];
     
+    // error
     if (empty($ord_tr_id)) {
         Nuvei_Logger::write($ord_tr_id, 'Invalid Transaction ID! May be this post is not an Order.');
         return false;
     }
     
     if (!empty($order_data) && is_array($order_data)) {
+        // get Refund transactions
         foreach ($order_data as $tr) {
             if (isset($tr['transactionType'], $tr['status'])
                 && in_array($tr['transactionType'], ['Credit', 'Refund'])
@@ -596,6 +591,9 @@ function nuvei_add_buttons($order)
                 $order_refunds[] = $tr;
             }
         }
+        
+        // get last transaction
+        $last_tr_data = end($order_data);
     }
     
 	try {
@@ -616,69 +614,85 @@ function nuvei_add_buttons($order)
 		exit;
 	}
     
-	// hide Refund Button
+	// hide Refund Button, it is visible by default
 	if (!in_array($order_payment_method, NUVEI_APMS_REFUND_VOID)
-		|| 'processing' == $order_status
+//		|| 'processing' == $order_status
+        || !in_array($last_tr_data['transactionType'], ['Sale', 'Settle'])
+        || 'approved' != strtolower($last_tr_data['status'])
         || 0 == $order->get_total()
 	) {
 		echo '<script type="text/javascript">jQuery(\'.refund-items\').prop("disabled", true);</script>';
 	}
     
-//	if (in_array($order_status, array('completed', 'pending', 'failed'))) {
-	if (in_array($order_status, array('completed', 'pending'))) {
-		// Show VOID button
-		if ('cc_card' == $order_payment_method
-            && empty($order_refunds)
-            && (float) $order->get_total() > 0
-            && time() < $order_time + 172800 // 48 hours
-        ) {
-            $question = sprintf(
-				/* translators: %d is replaced with "decimal" */
-				__('Are you sure, you want to Cancel Order #%d?', 'nuvei_checkout_woocommerce'),
-				$order_id
-			);
-            
-            // check for active subscriptions
-            $all_meta = get_post_meta($order->get_id());
-            
-            foreach ($all_meta as $meta_key => $meta_data) {
-                if (false !== strpos($meta_key, NUVEI_ORDER_SUBSCR)) {
-                    $subscr_data = $order->get_meta($meta_key);
-                    
-                    if (!empty($subscr_data['state'])
-                        && 'active' == $subscr_data['state']
-                    ) {
-                        $question = __('Are you sure, you want to Cancel this Order? This will also deactivate all Active Subscriptions.', 'nuvei_checkout_woocommerce');
-                        break;
-                    }
+    /**
+     * Error. If last transaction is not Approved.
+     * 
+     * If the status is missing then DMN is not received or there is some error
+     * with the transaction.
+     * In case the Status is Pending this is an APM payment and the plugin still
+     * wait for approval DMN. Till then no actions are allowed.
+     * In above check we will hide the Refund button if last Transaction is
+     * Refund/Credit, but without Status.
+     */
+    if ('approved' != strtolower($last_tr_data['status'])) {
+        Nuvei_Logger::write($last_tr_data, 'Last Transaction is not yet approved.');
+        return false;
+    }
+    
+    // Show VOID button
+    if ('cc_card' == $order_payment_method
+        && empty($order_refunds)
+        && in_array($last_tr_data['transactionType'], ['Sale', 'Settle', 'Auth'])
+        && (float) $order->get_total() > 0
+        && time() < $order_time + 172800 // 48 hours
+    ) {
+        $question = sprintf(
+            /* translators: %d is replaced with "decimal" */
+            __('Are you sure, you want to Cancel Order #%d?', 'nuvei_checkout_woocommerce'),
+            $order_id
+        );
+
+        // check for active subscriptions
+        $all_meta = get_post_meta($order->get_id());
+
+        foreach ($all_meta as $meta_key => $meta_data) {
+            if (false !== strpos($meta_key, NUVEI_ORDER_SUBSCR)) {
+                $subscr_data = $order->get_meta($meta_key);
+
+                if (!empty($subscr_data['state'])
+                    && 'active' == $subscr_data['state']
+                ) {
+                    $question = __('Are you sure, you want to Cancel this Order? This will also deactivate all Active Subscriptions.', 'nuvei_checkout_woocommerce');
+                    break;
                 }
             }
-            // /check for active subscriptions
-			
-			echo
-				'<button id="sc_void_btn" type="button" onclick="nuveiAction(\''
-					. esc_html($question) . '\', \'void\', ' . esc_html($order_id)
-					. ')" class="button generate-items">'
-					. esc_html__('Void', 'nuvei_checkout_woocommerce') . '</button>';
-		}
-		
-		// show SETTLE button ONLY if transaction type IS Auth and the Total is not 0
-		if ('pending' == $order_status 
-            && 'Auth' == $helper->get_tr_type($order_id)
-            && $order->get_total() > 0
-        ) {
-			$question = sprintf(
-				/* translators: %d is replaced with "decimal" */
-				__('Are you sure, you want to Settle Order #%d?', 'nuvei_checkout_woocommerce'),
-				$order_id
-			);
-			
-			echo
-				'<button id="sc_settle_btn" type="button" onclick="nuveiAction(\''
-					. esc_html($question)
-					. '\', \'settle\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
-					. esc_html__('Settle', 'nuvei_checkout_woocommerce') . '</button>';
-		}
+        }
+        // /check for active subscriptions
+
+        echo
+            '<button id="sc_void_btn" type="button" onclick="nuveiAction(\''
+                . esc_html($question) . '\', \'void\', ' . esc_html($order_id)
+                . ')" class="button generate-items">'
+                . esc_html__('Void', 'nuvei_checkout_woocommerce') . '</button>';
+    }
+    
+    // show SETTLE button ONLY if transaction type IS Auth and the Total is not 0
+    if (//'pending' == $order_status 
+//        && 'Auth' == $helper->get_tr_type($order_id)
+        'Auth' == $last_tr_data['transactionType']
+        && $order->get_total() > 0
+    ) {
+        $question = sprintf(
+            /* translators: %d is replaced with "decimal" */
+            __('Are you sure, you want to Settle Order #%d?', 'nuvei_checkout_woocommerce'),
+            $order_id
+        );
+
+        echo
+            '<button id="sc_settle_btn" type="button" onclick="nuveiAction(\''
+                . esc_html($question)
+                . '\', \'settle\', \'' . esc_html($order_id) . '\')" class="button generate-items">'
+                . esc_html__('Settle', 'nuvei_checkout_woocommerce') . '</button>';
     }
     
     // add loading screen

@@ -1,5 +1,11 @@
 # WooCommerce Extension Changelog
 
+# 2.1.0
+```
+    * Removed old commented parts of code.
+    * In the plugin options was added possibility to set custom statuses for the Order.
+```
+
 # 2.0.0
 ```
     * Trim the merchant credentials when get them.

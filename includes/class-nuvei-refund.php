@@ -54,8 +54,9 @@ class Nuvei_Refund extends Nuvei_Request
      * @param int $order_id
      * @param float|string $ref_amount
 	 */
-	public function create_refund_request( $order_id, $ref_amount)
+	public function create_refund_request($order_id, $ref_amount)
     {
+        // error
 		if ($order_id < 1) {
 			Nuvei_Logger::write($order_id, 'create_refund_request() Error - Post parameter is less than 1.');
 			
@@ -69,6 +70,7 @@ class Nuvei_Refund extends Nuvei_Request
 		
 		$ref_amount = round($ref_amount, 2);
 		
+        // error
 		if ($ref_amount < 0) {
 			wp_send_json(array(
 				'status' => 0,
@@ -78,6 +80,7 @@ class Nuvei_Refund extends Nuvei_Request
         
 		$this->is_order_valid($order_id);
 		
+        // error
 		if (!$this->sc_order) {
 			wp_send_json(array(
 				'status' => 0,
@@ -86,24 +89,13 @@ class Nuvei_Refund extends Nuvei_Request
 			exit;
 		}
         
-//		$tr_id = $this->sc_order->get_meta(NUVEI_TRANS_ID);
-		
-//		if (empty($tr_id)) {
-//			wp_send_json(array(
-//				'status' => 0,
-//				'msg' => __('The Order missing Transaction ID.', 'nuvei_checkout_woocommerce')));
-//			exit;
-//		}
-        
         $msg    = '';
-//		$nr_obj = new Nuvei_Refund($this->plugin_settings);
-//		$resp   = $nr_obj->process(array(
 		$resp   = $this->process(array(
 			'order_id'     => $order_id, 
 			'ref_amount'   => $ref_amount, 
-//			'tr_id'        => $tr_id
 		));
 
+        // error
 		if (false === $resp) {
 			$msg = __('The REST API retun false.', 'nuvei_checkout_woocommerce');
 
@@ -118,10 +110,12 @@ class Nuvei_Refund extends Nuvei_Request
 		}
 
 		$json_arr = $resp;
-		if (!is_array($resp)) {
+		
+        if (!is_array($resp)) {
 			parse_str($resp, $json_arr);
 		}
 
+        // error
 		if (!is_array($json_arr)) {
 			$msg = __('Invalid API response.', 'nuvei_checkout_woocommerce');
 
@@ -137,8 +131,14 @@ class Nuvei_Refund extends Nuvei_Request
 
 		// APPROVED
 		if (!empty($json_arr['transactionStatus']) && 'APPROVED' == $json_arr['transactionStatus']) {
-			$this->sc_order->update_status('processing');
-//			$this->save_refund_meta_data($json_arr['transactionId'], $ref_amount);
+            // change order status
+			$this->sc_order->update_status($this->nuvei_gw->get_option('status_pending'));
+            
+            // save the Refund into transactions, but without status, unitl DMN come
+            unset($json_arr['status']);
+            $json_arr['transactionType'] = 'Credit';
+            
+            $this->save_transaction_data($json_arr);
 			
 			wp_send_json(array('status' => 1));
 			exit;
@@ -164,9 +164,6 @@ class Nuvei_Refund extends Nuvei_Request
 		if (isset($json_arr['status']) && 'ERROR' === $json_arr['status']) {
 			$msg = __('Request ERROR: ', 'nuvei_checkout_woocommerce') . $json_arr['reason'];
 
-//			$this->sc_order->add_order_note($msg);
-//			$this->sc_order->save();
-			
 			Nuvei_Logger::write($msg);
 			
 			wp_send_json(array(
@@ -229,6 +226,6 @@ class Nuvei_Refund extends Nuvei_Request
 
 	protected function get_checksum_params()
     {
-		return  array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'currency', 'relatedTransactionId', 'url', 'timeStamp');
+		return array('merchantId', 'merchantSiteId', 'clientRequestId', 'clientUniqueId', 'amount', 'currency', 'relatedTransactionId', 'url', 'timeStamp');
 	}
 }

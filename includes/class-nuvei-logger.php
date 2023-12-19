@@ -138,11 +138,5 @@ class Nuvei_Logger
                 FILE_APPEND
             );
         }
-        
-//        $res = file_put_contents(
-//            NUVEI_LOGS_DIR . $file_name . '.' . NUVEI_LOG_EXT,
-//            $string,
-//            FILE_APPEND
-//        );
 	}
 }

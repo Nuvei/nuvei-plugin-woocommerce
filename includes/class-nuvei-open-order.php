@@ -9,21 +9,17 @@ class Nuvei_Open_Order extends Nuvei_Request
 {
 	protected $plugin_settings;
     
-//	private $is_ajax;
-	
 	/**
 	 * Set is_ajax parameter to the Process metohd.
 	 * 
 	 * @param array $plugin_settings
 	 * @param bool  $is_ajax
 	 */
-//	public function __construct( array $plugin_settings, $is_ajax, $rest_params = [])
 	public function __construct( array $plugin_settings, $rest_params = [])
     {
 		parent::__construct();
 		
 		$this->plugin_settings  = $plugin_settings;
-//		$this->is_ajax          = $is_ajax;
 		$this->rest_params      = $rest_params;
 	}
 

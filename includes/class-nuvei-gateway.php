@@ -269,14 +269,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         ) {
 			Nuvei_Logger::write('Process Cashier payment.');
 			
-            $this->order = $order;
-            
-			$url = $this->generate_cashier_url(
-                $return_success_url,
-                $return_error_url//,
-//                $order_id,
-//                $order->get_total()
-            );
+            $this->order    = $order;
+			$url            = $this->generate_cashier_url($return_success_url, $return_error_url);
 
 			if (!empty($url)) {
 				return array(
@@ -293,7 +287,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         if (!empty($nuvei_order_details)) {
             // save the Nuvei Subscr data to the order
             if (!empty($nuvei_order_details[$nuvei_session_token]['subscr_data'])) {
-//                foreach ($nuvei_order_details[$nuvei_session_token]['subscr_data'] as $item_prod => $data) {
                 foreach ($nuvei_order_details[$nuvei_session_token]['subscr_data'] as $data) {
                     // set meta key
                     if (isset($data['product_id'])) {
@@ -320,22 +313,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			Nuvei_Logger::write('Process webSDK Order, transaction ID #' . $nuvei_transaction_id);
 			
             $transactions_data[$nuvei_transaction_id] = [];
-//			$order->update_meta_data(NUVEI_TRANS_ID, $nuvei_transaction_id);
 			$order->update_meta_data(NUVEI_TR_ID, $nuvei_transaction_id);
 			$order->update_meta_data(NUVEI_TRANSACTIONS, $transactions_data);
 			$order->update_meta_data(NUVEI_ORDER_ID, $nuvei_oo_details['orderId']);
             
             Nuvei_Logger::write($nuvei_oo_details);
-            
-            // save as meta DCC data if exists
-//            if (!empty($nuvei_oo_details['dcc']['currency'])
-//                && !empty($nuvei_oo_details['dcc']['converted_amount'])
-//            ) {
-//                $order->update_meta_data(NUVEI_DCC_DATA, [
-//                    'currency'          => $nuvei_oo_details['dcc']['currency'],
-//                    'converted_amount'  => $nuvei_oo_details['dcc']['converted_amount'],
-//                ]);
-//            }
             
 			$order->save();
 			
@@ -1437,6 +1419,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 */
 	private function init_form_advanced_fields($fields_append = false)
     {
+        // remove 'wc-' from WC Statuses keys
+        $wc_statuses    = wc_get_order_statuses();
+        $statuses       = [];
+        
+        array_walk(
+            $wc_statuses,
+            function($val, $key) use (&$statuses) {
+                $statuses[str_replace('wc-', '', $key)] = $val;
+            }
+        );
+        
 		$fields = array(
             'integration_type' => array(
 				'title'         => __('Integration type', 'nuvei_checkout_woocommerce'),
@@ -1447,6 +1440,49 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				),
 				'default'       => 0,
 			),
+            // pending dmn -> proccessing
+            'status_pending' => [
+                'title'     => __('Status Pending DMN', 'nuvei_checkout_woocommerce'),
+				'type'      => 'select',
+                'options'   => $statuses,
+                'default'   => 'processing',
+            ],
+            // auth -> pending payment
+            'status_auth' => [
+                'title'     => __('Status Authorized', 'nuvei_checkout_woocommerce'),
+				'type'      => 'select',
+                'options'   => $statuses,
+                'default'   => 'pending',
+            ],
+            // settle & sale -> completed
+            'status_paid' => [
+                'title'         => __('Status Paid', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+                'options'       => $statuses,
+                'default'       => 'completed',
+                'description'   => __('The status for Settle and Sale flow is same. It shows the Order is Paid.', 'nuvei_checkout_woocommerce'),
+            ],
+            // refund -> refunded
+            'status_refund' => [
+                'title'         => __('Status Refunded', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+                'options'       => $statuses,
+                'default'       => 'refunded',
+            ],
+            // void -> cancelled
+            'status_void' => [
+                'title'         => __('Status Voided', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+                'options'       => $statuses,
+                'default'       => 'cancelled',
+            ],
+            // failed -> failed
+            'status_fail' => [
+                'title'         => __('Status Failed', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+                'options'       => $statuses,
+                'default'       => 'failed',
+            ],
 			'combine_cashier_products' => array(
 				'title'         => __('Combine Cashier products into one', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',

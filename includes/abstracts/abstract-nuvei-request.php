@@ -1017,6 +1017,78 @@ abstract class Nuvei_Request
     }
     
     /**
+     * Save main transaction data into a block as private meta field.
+     * 
+     * @param array $params     Optional list of parameters to search in.
+     * @param int $wc_refund_id 
+     * @return void
+     */
+    protected function save_transaction_data($params = [], $wc_refund_id = null)
+    {
+        Nuvei_Logger::write([$params, $wc_refund_id], 'save_transaction_data()');
+        
+        $transaction_id = Nuvei_Http::get_param('TransactionID', 'int', '', $params);
+        
+        if (empty($transaction_id)) {
+            $transaction_id = Nuvei_Http::get_param('transactionId', 'int', '', $params);
+        }
+        if (empty($transaction_id)) {
+            Nuvei_Logger::write($transaction_id, 'TransactionID param is empty!', 'CRITICAL');
+            return;
+        }
+        
+        // get previous data if exists
+        $transactions_data = $this->sc_order->get_meta(NUVEI_TRANSACTIONS);
+        // in case it is empty
+        if (empty($transactions_data) || !is_array($transactions_data)) {
+            $transactions_data = [];
+        }
+        
+        $transactionType    = Nuvei_Http::get_param('transactionType', 'string', '', $params);
+        $status             = Nuvei_Http::get_request_status();
+        
+        // check for already existing data
+        if (!empty($transactions_data[$transaction_id])
+            && $transactions_data[$transaction_id]['transactionType'] == $transactionType
+            && $transactions_data[$transaction_id]['status'] == $status
+        ) {
+            Nuvei_Logger::write('We have information for this transaction and will not save it again.');
+            return;
+        }
+        
+        $transactions_data[$transaction_id]  = [
+            'authCode'              => Nuvei_Http::get_param('AuthCode', 'string', '', $params),
+            'paymentMethod'         => Nuvei_Http::get_param('payment_method', 'string', '', $params),
+            'transactionType'       => $transactionType,
+            'transactionId'         => $transaction_id,
+            'relatedTransactionId'  => Nuvei_Http::get_param('relatedTransactionId','int', 0, $params),
+            'totalAmount'           => Nuvei_Http::get_param('totalAmount', 'float', 0, $params),
+            'currency'              => Nuvei_Http::get_param('currency', 'string', '', $params),
+            'status'                => $status,
+            'userPaymentOptionId'   => Nuvei_Http::get_param('userPaymentOptionId', 'int'),
+            'wcsRenewal'            => 'renewal_order' == Nuvei_Http::get_param('customField4', 'string', '', $params) 
+                ? true : false,
+        ];
+        
+        if (null !== $wc_refund_id) {
+            $transactions_data[$transaction_id]['wcRefundId'] = $wc_refund_id;
+        }
+        
+        $this->sc_order->update_meta_data(NUVEI_TRANSACTIONS, $transactions_data);
+        
+        // update it only for Auth, Settle and Sale. They are base an we will need this TrID
+        if (in_array($transactionType, ['Auth', 'Settle', 'Sale'])) {
+            $this->sc_order->update_meta_data(NUVEI_TR_ID, $transaction_id);
+        }
+        
+        if (isset($transactions_data['wcsRenewal'])) {
+            $this->sc_order->update_meta_data(NUVEI_WC_RENEWAL, true);
+        }
+		
+        $this->sc_order->save();
+    }
+    
+    /**
 	 * Get the request endpoint - sandbox or production.
 	 * 
 	 * @return string
