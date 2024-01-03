@@ -1557,11 +1557,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 					'force'         => __('Enabled and expanded', 'nuvei_checkout_woocommerce'),
 					'false'         => __('Disabled', 'nuvei_checkout_woocommerce'),
 				),
-				'description'   => sprintf(
-					'<a href="%s" class="class" target="_blank">%s</a>',
-					esc_html('https://docs.nuvei.com/documentation/accept-payment/simply-connect/payment-customization/#dynamic-currency-conversion'),
-					__('To work DCC, it must be enabled on merchant level also. Check the Documentation.', 'nuvei_checkout_woocommerce')
-				),
+				'description'   => __('To work DCC, it must be enabled on merchant level also.', 'nuvei_checkout_woocommerce') . ' '
+                    . sprintf(
+                        '<a href="%s" class="class" target="_blank">%s</a>',
+                        esc_html('https://docs.nuvei.com/documentation/accept-payment/simply-connect/payment-customization/#dynamic-currency-conversion'),
+                        __('Check the Documentation.', 'nuvei_checkout_woocommerce')
+                    ),
 				'default'       => 'enabled',
 				'class'         => 'nuvei_checkout_setting'
 			),
@@ -1628,21 +1629,15 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'title'         => __('Translations', 'nuvei_checkout_woocommerce'),
 				'description'   => sprintf(
 					__('This filed is the only way to translate Checkout SDK strings. Put the translations for all desired languages as shown in the placeholder. For examples', 'nuvei_checkout_woocommerce')
-						. ' <a href="%s" class="class">%s</a>',
+						. ' <a href="%s" class="class" target="_blank">%s</a>',
 					esc_html('https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation'),
 					__('check the Documentation.', 'nuvei_checkout_woocommerce')
 				),
 				'type'          => 'textarea',
 				'class'         => 'nuvei_checkout_setting',
 				'placeholder'   => '{
-    "de": { 
-        "doNotHonor": "you dont have enough money",
-        "DECLINE": "declined"
-    },
-    "es": { 
-        "doNotHonor": "you dont have enough money",
-        "DECLINE": "declined"
-    }
+    "doNotHonor": "you dont have enough money",
+    "DECLINE": "declined"
 }',
 			),
 		);

@@ -4,6 +4,8 @@
 ```
     * Removed old commented parts of code.
     * In the plugin options was added possibility to set custom statuses for the Order.
+    * Fixes for plugin settings links to Nuvei documentation.
+    * Fixed the example for SimplyConnect translations.
 ```
 
 # 2.0.0
