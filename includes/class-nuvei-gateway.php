@@ -1605,8 +1605,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'type'          => 'textarea',
 				'class'         => 'nuvei_checkout_setting',
 				'placeholder'   => '{
-    "doNotHonor": "you dont have enough money",
-    "DECLINE": "declined"
+"doNotHonor": "you dont have enough money",
+"DECLINE": "declined"
 }',
 			),
 		);
