@@ -110,7 +110,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	public function generate_nuvei_multiselect_html( $key, $data)
     {
 		# prepare the list with Payment methods
-//		$get_st_obj    = new Nuvei_Session_Token($this->settings);
 		$get_st_obj    = new Nuvei_Session_Token();
 		$resp          = $get_st_obj->process();
 		$session_token = !empty($resp['sessionToken']) ? $resp['sessionToken'] : '';
@@ -693,7 +692,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * @global $woocommerce
      * @param bool $is_rest
 	 */
-//	public function call_checkout($is_ajax = false, $is_rest = false)
 	public function call_checkout($is_rest = false)
     {
         Nuvei_Logger::write([$is_rest, $this->rest_params], 'call_checkout()');
@@ -726,7 +724,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         
         $nuvei_helper           = new Nuvei_Helper();
 		$ord_details            = $nuvei_helper->get_addresses($this->rest_params);
-//		$prod_details           = $nuvei_helper->get_products($this->rest_params);
 		$prod_details           = $oo_data['products_data'];
 		$pm_black_list          = trim($this->get_setting('pm_black_list', ''));
         $is_there_subscription  = false;
@@ -875,12 +872,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		global $woocommerce;
         
         $nuvei_helper           = new Nuvei_Helper();
-//        $total                  = $woocommerce->cart->get_totals();
         $nuvei_order_details    = $woocommerce->session->get(NUVEI_SESSION_PROD_DETAILS);
         $open_order_details     = $woocommerce->session->get(NUVEI_SESSION_OO_DETAILS);
         $products_data          = $nuvei_helper->get_products();
-        
-//        Nuvei_Logger::write($woocommerce->cart);
         
         // success
         if (!empty($open_order_details['sessionToken'])
@@ -915,8 +909,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
      */
     public function hide_payment_gateways( $available_gateways )
     {
-//        Nuvei_Logger::write('hide_payment_gateways');
-        
         if (!is_checkout() || is_wc_endpoint_url()) {
             return $available_gateways;
         }
@@ -946,7 +938,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
      * 
      * @param float $amount_to_charge
      * @param WC_Order $renewal_order The new Order.
-     * @param int $product_id
      */
     public function create_wc_subscr_order($amount_to_charge, $renewal_order)
     {
@@ -982,9 +973,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             'create_wc_subscr_order'
         );
         
-//        if (empty($parent_order->get_meta(NUVEI_TRANS_ID))
-//            || empty($parent_order->get_meta(NUVEI_UPO))
-//        ) {
         if (empty($parent_tr_upo_id) || empty($parent_tr_id)) {
             Nuvei_Logger::write(
                 $parent_order->get_meta_data(),
@@ -1018,16 +1006,13 @@ class Nuvei_Gateway extends WC_Payment_Gateway
                 'country'   => $renewal_order->get_meta('_billing_country'),
                 'email'     => $billing_mail,
             ],
-//            'paymentOption'         => ['userPaymentOptionId' => $parent_order->get_meta(NUVEI_UPO)],
             'paymentOption'         => ['userPaymentOptionId' => $helper->get_tr_upo_id($parent_order_id)],
         ];
         
-//        $parent_payment_method = $parent_order->get_meta(NUVEI_PAYMENT_METHOD);
         $parent_payment_method = $helper->get_payment_method($parent_order_id);
         
         if ('cc_card' == $parent_payment_method) {
             $params['isRebilling']          = 1;
-//            $params['relatedTransactionId'] = $parent_order->get_meta(NUVEI_TRANS_ID);
             $params['relatedTransactionId'] = $parent_tr_id;
         }
         
@@ -1147,38 +1132,19 @@ class Nuvei_Gateway extends WC_Payment_Gateway
      * @param string    $success_url
      * @param string    $error_url
      * @param string    $back_url It is only passed in REST API flow.
-     * @param int       $order_id
-     * @param float     $total Order total amount.
-     * @param array     $order_data Pass some additional data in REST API flow.
      * 
      * @return string
      */
-//	private function generate_cashier_url( $success_url, $error_url, $order_id, $total, $order_data = [])
 	private function generate_cashier_url($success_url, $error_url, $back_url = '')
     {
-//        Nuvei_Logger::write($order_data, 'get_cashier_url() $order_data.');
+        Nuvei_Logger::write('get_cashier_url()');
         
-//		global $woocommerce;
-		
-//		$cart          = $woocommerce->cart;
 		$nuvei_helper  = new Nuvei_Helper();
-//		$total_amount  = (string) number_format((float) $cart->total, 2, '.', '');
-//        $addresses     = $nuvei_helper->get_addresses($order_data);
         $addresses     = $nuvei_helper->get_addresses(['billing_address' => $this->order->get_address()]);
-//		$total_amount  = (string) number_format((float) $total, 2, '.', '');
 		$total_amount  = (string) number_format((float) $this->order->get_total(), 2, '.', '');
 		$shipping      = '0.00';
 		$handling      = '0.00'; // put the tax here, because for Cashier the tax is in %
 		$discount      = '0.00';
-        
-        // REST API flow
-//        if (isset($order_data['items'])) {
-//            $products_data = $order_data['items'];
-//        }
-//        // standart flow
-//        else {
-//            $products_data = $nuvei_helper->get_products();
-//        }
         
         $items_data['items'] = [];
         
@@ -1223,8 +1189,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'pending_url'       => $success_url,
 			'back_url'          => !empty($back_url) ? $back_url : wc_get_checkout_url(),
 			
-//			'customField1'      => '', // subscription details as json
-//			'customField2'      => json_encode($products_data['products_data']), // item details as json
 			'customField1'      => $total_amount,
 			'customField2'      => $currency,
 			'customField3'      => time(), // create time time()
@@ -1241,7 +1205,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		
 		// check for subscription data
 		if (!empty($products_data['subscr_data'])) {
-//			$params['customField1']        = json_encode($products_data['subscr_data']);
 			$params['user_token_id']       = $addresses['billingAddress']['email'];
 			$params['payment_method']      = 'cc_card'; // only cards are allowed for Subscribtions
 			$params['payment_method_mode'] = 'filter';
