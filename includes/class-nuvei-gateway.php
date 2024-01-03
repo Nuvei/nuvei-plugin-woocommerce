@@ -727,6 +727,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$prod_details           = $oo_data['products_data'];
 		$pm_black_list          = trim($this->get_setting('pm_black_list', ''));
         $is_there_subscription  = false;
+        $locale                 = substr(get_locale(), 0, 2);
         $total                  = '0.00';
         
         if (isset($woocommerce->cart->total)) {
@@ -784,12 +785,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'email'                     => $ord_details['billingAddress']['email'],
 			'payButton'                 => $this->get_setting('pay_button', 'amountButton'),
 			'showResponseMessage'       => false, // shows/hide the response popups
-			'locale'                    => substr(get_locale(), 0, 2),
+			'locale'                    => $locale,
 			'autoOpenPM'                => (bool) $this->get_setting('auto_open_pm', 1),
 			'logLevel'                  => $this->get_setting('log_level'),
 			'maskCvv'                   => true,
 			'i18n'                      => json_decode($this->get_setting('translation', ''), true),
 			'theme'                     => $this->get_setting('sdk_theme', 'accordion'),
+            'apmConfig'                 => [
+                'googlePay' => [
+                    'locale' => $locale
+                ]
+            ],
 		);
         
 		// check for product with a plan
