@@ -829,32 +829,27 @@ class Nuvei_Notify_Url extends Nuvei_Request
 				
 				// check for correct amount
 				if (in_array($transaction_type, array('Auth', 'Sale'), true)) {
-//					$dmn_amount   = round(Nuvei_Http::get_param('totalAmount', 'float'), 2);
                     $set_amount_warning = false;
                     $set_curr_warning   = false;
+                    
+                    Nuvei_Logger::write(
+                        [
+                            '$order_amount'     => $order_amount, 
+                            '$dmn_amount'       => $dmn_amount,
+                            'customField1'      => Nuvei_Http::get_param('customField1'),
+                            'order currency'    => $this->sc_order->get_currency(), 
+                            'param currency'    => Nuvei_Http::get_param('currency'),
+                            'customField2'      => Nuvei_Http::get_param('customField2'),
+                        ],
+                        'Check for fraud order.'
+                    );
                     
                     // check for correct amount
                     if ($order_amount != $dmn_amount
                         && $order_amount != Nuvei_Http::get_param('customField1')
                     ) {
                         $set_amount_warning = true;
-                        
-//                        if (isset($dcc_data['converted_amount'])
-//                            && '' != $dcc_data['converted_amount']
-//                            && $dcc_data['converted_amount'] == $dmn_amount
-//                        ) {
-//                            $set_amount_warning = false;
-//                        }
-                        
-                        Nuvei_Logger::write(
-                            [
-                                '$set_amount_warning'   => $set_amount_warning, 
-                                '$order_amount'         => $order_amount, 
-                                '$dmn_amount'           => $dmn_amount, 
-                                'customField1'          => Nuvei_Http::get_param('customField1'), 
-                            ],
-                            'Fraund Transaction'
-                        );
+                        Nuvei_Logger::write('Amount warning!');
                     }
                     
                     Nuvei_Logger::write(
@@ -862,54 +857,20 @@ class Nuvei_Notify_Url extends Nuvei_Request
                         'Nuvei change_order_status()'
                     );
 					
-//					if ($order_amount != $dmn_amount) {
-//					if ($set_amount_warning) {
-//						$message .= '<br/><b>' . __('Payment ERROR!', 'nuvei_checkout_woocommerce') . '</b> ' 
-//							. $dmn_amount . ' ' . Nuvei_Http::get_param('currency')
-//							. ' ' . __('paid instead of', 'nuvei_checkout_woocommerce') . ' ' . $order_amount
-//							. ' ' . $this->sc_order->get_currency() . '!';
-//						
-//						$status = 'failed';
-//						
-//						Nuvei_Logger::write(
-//							array(
-//								'order_amount' => $order_amount,
-//								'dmn_amount'   => $dmn_amount,
-//							),
-//							'DMN amount and Order amount do not much.'
-//						);
-//					}
-                    
                     // check for correct currency
                     if ($this->sc_order->get_currency() !== Nuvei_Http::get_param('currency')
                         && $this->sc_order->get_currency() !== Nuvei_Http::get_param('customField2')
                     ) {
                         $set_curr_warning = true;
-                        
-                        Nuvei_Logger::write(
-                            [
-                                '$set_curr_warning' => $set_curr_warning, 
-                                'order currency'    => $this->sc_order->get_currency(), 
-                                'param currency'    => Nuvei_Http::get_param('currency'),
-                            ],
-                            'Fraund Transaction'
-                        );
+                        Nuvei_Logger::write('Currency warning!');
                     }
 
-                    // when currency is same, check the amount again
-                    if (!$set_curr_warning
+                    // when currency is same, check the amount again, in case of some kind partial transaction
+                    if ($this->sc_order->get_currency() === Nuvei_Http::get_param('currency')
                         && $order_amount != $dmn_amount
                     ) {
                         $set_amount_warning = true;
-                        
-                        Nuvei_Logger::write(
-                            [
-                                '$set_amount_warning'   => $set_amount_warning, 
-                                '$order_amount'         => $order_amount, 
-                                '$dmn_amount'           => $dmn_amount, 
-                            ],
-                            'Fraund Transaction'
-                        );
+                        Nuvei_Logger::write('Amount warning when currency is same!');
                     }
                     
                     $this->sc_order->update_meta_data(NUVEI_ORDER_CHANGES, [
@@ -918,47 +879,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
                     ]);
 				}
 				
-                // check for correct currency
-//                $set_curr_warning = false;
-                
-//                if ($this->sc_order->get_currency() !== Nuvei_Http::get_param('currency')) {
-//                    $set_curr_warning = true;
-//                    
-////                    if (!empty($dcc_data['currency'])
-////                        && $dcc_data['currency'] == Nuvei_Http::get_param('currency')
-////                    ) {
-////                        $set_curr_warning = false;
-////                    }
-//                }
-//                
-//                Nuvei_Logger::write(
-//                    [
-//                        $set_curr_warning, 
-//                        $this->sc_order->get_currency(), 
-//                        Nuvei_Http::get_param('currency')
-//                    ],
-//                    'Nuvei change_order_status()'
-//                );
-                
-//				if ($this->sc_order->get_currency() !== Nuvei_Http::get_param('currency')) {
-//				if ($set_curr_warning) {
-//					$message .= '<br/><b>' . __('Payment ERROR!', 'nuvei_checkout_woocommerce') . '</b> '
-//							. __('The Order currency is ', 'nuvei_checkout_woocommerce') 
-//							. $this->sc_order->get_currency()
-//							. __( ', but the DMN currency is ', 'nuvei_checkout_woocommerce' )
-//							. Nuvei_Http::get_param( 'currency' ) . '!';
-//
-//						$status = 'failed';
-//						
-//						Nuvei_Logger::write(
-//							array(
-//								'order currency' => $this->sc_order->get_currency(),
-//								'dmn currency'   => Nuvei_Http::get_param( 'currency' ),
-//							),
-//							'DMN currency and Order currency do not much.'
-//						);
-//				}
-                
 				$this->msg['class'] = 'woocommerce_message';
 				break;
 
