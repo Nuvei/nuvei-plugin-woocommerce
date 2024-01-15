@@ -8,11 +8,11 @@ PHP:
 
 Wordpress: 
   - minimum v4.7
-  - tested up to v6.2.2
+  - tested up to v6.4.2
 
 WooCommerce: 
   - minimum v 3.0
-  - tested up to v7.9.0
+  - tested up to v8.4.0
 
 Merchant configuration: 
   - enabled DMNs
