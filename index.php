@@ -634,8 +634,8 @@ function nuvei_add_buttons($order)
      * In above check we will hide the Refund button if last Transaction is
      * Refund/Credit, but without Status.
      */
-    if ('approved' != strtolower($last_tr_data['status'])) {
-        Nuvei_Logger::write($last_tr_data, 'Last Transaction is not yet approved.');
+    if (empty($last_tr_data['status']) || 'approved' != strtolower($last_tr_data['status'])) {
+        Nuvei_Logger::write($last_tr_data, 'Last Transaction is not yet approved or the DMN didn\'t come yet.');
         return false;
     }
     
