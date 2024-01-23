@@ -9,6 +9,11 @@
     * Added Gpay locale.
 ```
 
+# 2.0.1
+```
+    * Fix for the logic who check for Fraud Orders.
+```
+
 # 2.0.0
 ```
     * Trim the merchant credentials when get them.

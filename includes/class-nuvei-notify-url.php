@@ -24,14 +24,20 @@ class Nuvei_Notify_Url extends Nuvei_Request
 //        exit(wp_json_encode('DMN was stopped, please run it manually!'));
 		
         if ('CARD_TOKENIZATION' == Nuvei_Http::get_param('type')) {
-			exit('Tokenization DMN, waiting for the next one.');
+            $msg = 'Tokenization DMN, waiting for the next one.';
+            
+            Nuvei_Logger::write($msg);
+			exit($msg);
         }
         
         // just give few seconds to WC to finish its Order
         sleep(3);
         
         if (!$this->validate_checksum()) {
-			exit('DMN Error - Checksum validation problem!');
+            $msg = 'DMN Error - Checksum validation problem!';
+            
+            Nuvei_Logger::write($msg);
+			exit($msg);
 		}
         
 		// santitized get variables
@@ -181,7 +187,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
             }
             
             $this->check_for_repeating_dmn();
-//			$this->save_update_order_numbers();
 			$this->save_transaction_data();
 			
 			$order_status   = strtolower($this->sc_order->get_status());
@@ -198,8 +203,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			$this->subscription_start($transactionType, $order_id, $order_total);
 			
             $msg = 'DMN process end for Order #' . $order_id;
-            Nuvei_Logger::write($msg);
             
+            Nuvei_Logger::write($msg);
             http_response_code(200);
 			exit($msg);
 		}
@@ -216,43 +221,22 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			&& ( in_array($transactionType, array('Void', 'Settle'), true) )
 		) {
             $order_id   = 0 < $order_id ? $order_id : $clientUniqueId;
-//			$resp       = $this->is_order_valid($order_id, true);
-//            
-//            if (!$resp) {
-//                $msg = 'Error - Provided Order ID is not a WC Order';
-//                Nuvei_Logger::write(
-//                    [
-//                        '$order_id'         => $order_id,
-//                        '$clientUniqueId'   => $clientUniqueId,
-//                    ],
-//                    $msg
-//                );
-//                
-//                http_response_code(200);
-//                exit($msg);
-//            }
             
             $this->is_order_valid($order_id);
             $this->check_for_repeating_dmn();
-			
-//			if ('Settle' == $transactionType) {
-//				$this->save_update_order_numbers();
-//			}
-
 			$this->change_order_status($order_id, $req_status, $transactionType);
             $this->save_transaction_data();
 			$this->subscription_start($transactionType, $clientUniqueId);
             $this->subscription_cancel($transactionType, $order_id, $req_status);
 			
-			exit('DMN received.');
+            $msg = 'DMN received.';
+            
+            Nuvei_Logger::write($msg);
+			exit($msg);
 		}
 		
 		# Refund
 		if (in_array($transactionType, array('Credit', 'Refund'), true)) {
-//			if (0 == $order_id) {
-//				$order_id = $this->get_order_by_trans_id($relatedTransactionId, $transactionType);
-//			}
-            
             $order_id = $this->get_order_by_trans_id($relatedTransactionId, $transactionType);
             
             Nuvei_Logger::write($order_id);
@@ -261,9 +245,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
             
             if ('APPROVED' == $req_status) {
                 $this->check_for_repeating_dmn();
-    //			$this->create_refund_record($order_id);
-
-
 
                 # create Refund in WC
                 $refund = wc_create_refund(array(
@@ -284,7 +265,10 @@ class Nuvei_Notify_Url extends Nuvei_Request
                 $this->save_transaction_data([], $refund_id);
             }
             
-			exit('DMN process end for Order #' . $order_id);
+            $msg = 'DMN process end for Order #' . $order_id;
+            
+            Nuvei_Logger::write($msg);
+			exit($msg);
 		}
 		
 		Nuvei_Logger::write(
