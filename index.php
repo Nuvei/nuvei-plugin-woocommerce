@@ -572,8 +572,10 @@ function nuvei_add_buttons($order)
     $helper         = new Nuvei_Helper();
     $ord_tr_id      = $helper->helper_get_tr_id($order_id);
     $order_data     = $order->get_meta(NUVEI_TRANSACTIONS);
-    $last_tr_data   = [];
+    $last_tr_data   = []; // Sale, Settle, Auth
     $order_refunds  = [];
+    $refAmout       = 0;
+    $order_time     = 0;
     
     // error
     if (empty($ord_tr_id)) {
@@ -581,25 +583,32 @@ function nuvei_add_buttons($order)
         return false;
     }
     
-    if (!empty($order_data) && is_array($order_data)) {
-        // get Refund transactions
-        foreach ($order_data as $tr) {
-            if (isset($tr['transactionType'], $tr['status'])
-                && in_array($tr['transactionType'], ['Credit', 'Refund'])
-                && 'approved' == strtolower($tr['status'])
-            ) {
-                $order_refunds[] = $tr;
-            }
-        }
-        
-        // get last transaction
-        $last_tr_data = end($order_data);
+    if (empty($order_data) || !is_array($order_data)) {
+        Nuvei_Logger::write($order_data, 'Missing or wrong Nuvei transactions data for the order.');
+        return false;
     }
     
-	try {
-		$order_status           = strtolower($order->get_status());
-		$order_payment_method   = $helper->get_payment_method($order_id);
-        $order_time             = 0;
+    // get Refund transactions
+    foreach (array_reverse($order_data) as $tr) {
+        if (isset($tr['transactionType'], $tr['status'])
+            && in_array($tr['transactionType'], ['Credit', 'Refund'])
+            && 'approved' == strtolower($tr['status'])
+        ) {
+            $order_refunds[]    = $tr;
+            $refAmout           += $tr['totalAmount'];
+        }
+
+        if (in_array($tr['transactionType'], ['Sale', 'Settle', 'Auth'])) {
+            $last_tr_data = $tr;
+        }
+    }
+
+    // get last transaction
+//        $last_tr_data = end($order_data);
+    
+//	try {
+//		$order_status           = strtolower($order->get_status());
+		$order_payment_method = $helper->get_payment_method($order_id);
         
         if (!is_null($order->get_date_created())) {
             $order_time = $order->get_date_created()->getTimestamp();
@@ -607,12 +616,12 @@ function nuvei_add_buttons($order)
         if (!is_null($order->get_date_completed())) {
             $order_time = $order->get_date_completed()->getTimestamp();
         }
-	}
-    catch (Exception $ex) {
-		echo '<script type="text/javascript">console.error("'
-			. esc_js($ex->getMessage()) . '")</script>';
-		exit;
-	}
+//	}
+//    catch (Exception $ex) {
+//		echo '<script type="text/javascript">console.error("'
+//			. esc_js($ex->getMessage()) . '")</script>';
+//		exit;
+//	}
     
 	// hide Refund Button, it is visible by default
 	if (!in_array($order_payment_method, NUVEI_APMS_REFUND_VOID)
@@ -620,6 +629,7 @@ function nuvei_add_buttons($order)
         || !in_array($last_tr_data['transactionType'], ['Sale', 'Settle'])
         || 'approved' != strtolower($last_tr_data['status'])
         || 0 == $order->get_total()
+        || $refAmout >= $last_tr_data['totalAmount']
 	) {
 		echo '<script type="text/javascript">jQuery(\'.refund-items\').prop("disabled", true);</script>';
 	}
@@ -642,7 +652,8 @@ function nuvei_add_buttons($order)
     // Show VOID button
     if ('cc_card' == $order_payment_method
         && empty($order_refunds)
-        && in_array($last_tr_data['transactionType'], ['Sale', 'Settle', 'Auth'])
+//        && in_array($last_tr_data['transactionType'], ['Sale', 'Settle', 'Auth'])
+        && in_array(end($order_data)['transactionType'], ['Sale', 'Settle', 'Auth'])
         && (float) $order->get_total() > 0
         && time() < $order_time + 172800 // 48 hours
     ) {
@@ -677,9 +688,8 @@ function nuvei_add_buttons($order)
     }
     
     // show SETTLE button ONLY if transaction type IS Auth and the Total is not 0
-    if (//'pending' == $order_status 
-//        && 'Auth' == $helper->get_tr_type($order_id)
-        'Auth' == $last_tr_data['transactionType']
+    if ('Auth' == end($order_data)['transactionType']
+//        'Auth' == $last_tr_data['transactionType']
         && $order->get_total() > 0
     ) {
         $question = sprintf(
