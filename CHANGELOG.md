@@ -7,6 +7,7 @@
     * Fixes for plugin settings links to Nuvei documentation.
     * Fixed the example for SimplyConnect translations.
     * Added Gpay locale.
+    * Enabled Manual Refund button.
 ```
 
 # 2.0.1

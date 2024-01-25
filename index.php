@@ -555,9 +555,6 @@ function nuvei_add_buttons($order)
     }
     
     Nuvei_Logger::write('nuvei_add_buttons');
-//    echo '<pre style="text-align: left;">'.print_r(get_post_meta($order->get_id()), true) . '</pre>';
-//    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TR_ID), true) . '</pre>';
-//    echo '<pre style="text-align: left;">'.print_r($order->get_meta(NUVEI_TRANSACTIONS), true) . '</pre>';
     
     // error - in case this is not Nuvei order
 	if (empty($order->get_payment_method())
@@ -571,8 +568,9 @@ function nuvei_add_buttons($order)
     $order_id       = $order->get_id();
     $helper         = new Nuvei_Helper();
     $ord_tr_id      = $helper->helper_get_tr_id($order_id);
+    $order_total    = $order->get_total();
     $order_data     = $order->get_meta(NUVEI_TRANSACTIONS);
-    $last_tr_data   = []; // Sale, Settle, Auth
+    $last_tr_data   = [];
     $order_refunds  = [];
     $refAmout       = 0;
     $order_time     = 0;
@@ -583,8 +581,13 @@ function nuvei_add_buttons($order)
         return false;
     }
     
+    // error
     if (empty($order_data) || !is_array($order_data)) {
         Nuvei_Logger::write($order_data, 'Missing or wrong Nuvei transactions data for the order.');
+        
+        // disable refund button
+        echo '<script type="text/javascript">jQuery(\'.refund-items\').prop("disabled", true);</script>';
+        
         return false;
     }
     
@@ -597,39 +600,24 @@ function nuvei_add_buttons($order)
             $order_refunds[]    = $tr;
             $refAmout           += $tr['totalAmount'];
         }
-
-        if (in_array($tr['transactionType'], ['Sale', 'Settle', 'Auth'])) {
-            $last_tr_data = $tr;
-        }
     }
 
-    // get last transaction
-//        $last_tr_data = end($order_data);
-    
-//	try {
-//		$order_status           = strtolower($order->get_status());
-		$order_payment_method = $helper->get_payment_method($order_id);
-        
-        if (!is_null($order->get_date_created())) {
-            $order_time = $order->get_date_created()->getTimestamp();
-        }
-        if (!is_null($order->get_date_completed())) {
-            $order_time = $order->get_date_completed()->getTimestamp();
-        }
-//	}
-//    catch (Exception $ex) {
-//		echo '<script type="text/javascript">console.error("'
-//			. esc_js($ex->getMessage()) . '")</script>';
-//		exit;
-//	}
+    $order_payment_method   = $helper->get_payment_method($order_id);
+    $last_tr_data           = end($order_data);
+
+    if (!is_null($order->get_date_created())) {
+        $order_time = $order->get_date_created()->getTimestamp();
+    }
+    if (!is_null($order->get_date_completed())) {
+        $order_time = $order->get_date_completed()->getTimestamp();
+    }
     
 	// hide Refund Button, it is visible by default
 	if (!in_array($order_payment_method, NUVEI_APMS_REFUND_VOID)
-//		|| 'processing' == $order_status
-        || !in_array($last_tr_data['transactionType'], ['Sale', 'Settle'])
+        || !in_array($last_tr_data['transactionType'], ['Sale', 'Settle', 'Credit', 'Refund'])
         || 'approved' != strtolower($last_tr_data['status'])
-        || 0 == $order->get_total()
-        || $refAmout >= $last_tr_data['totalAmount']
+        || 0 == $order_total
+        || $refAmout >= $order_total
 	) {
 		echo '<script type="text/javascript">jQuery(\'.refund-items\').prop("disabled", true);</script>';
 	}
@@ -646,15 +634,18 @@ function nuvei_add_buttons($order)
      */
     if (empty($last_tr_data['status']) || 'approved' != strtolower($last_tr_data['status'])) {
         Nuvei_Logger::write($last_tr_data, 'Last Transaction is not yet approved or the DMN didn\'t come yet.');
+        
+        // disable refund button
+        echo '<script type="text/javascript">jQuery(\'.refund-items\').prop("disabled", true);</script>';
+        
         return false;
     }
     
     // Show VOID button
     if ('cc_card' == $order_payment_method
         && empty($order_refunds)
-//        && in_array($last_tr_data['transactionType'], ['Sale', 'Settle', 'Auth'])
-        && in_array(end($order_data)['transactionType'], ['Sale', 'Settle', 'Auth'])
-        && (float) $order->get_total() > 0
+        && in_array($last_tr_data['transactionType'], ['Sale', 'Settle', 'Auth'])
+        && (float) $order_total > 0
         && time() < $order_time + 172800 // 48 hours
     ) {
         $question = sprintf(
@@ -688,9 +679,8 @@ function nuvei_add_buttons($order)
     }
     
     // show SETTLE button ONLY if transaction type IS Auth and the Total is not 0
-    if ('Auth' == end($order_data)['transactionType']
-//        'Auth' == $last_tr_data['transactionType']
-        && $order->get_total() > 0
+    if ('Auth' == $last_tr_data['transactionType']
+        && $order_total > 0
     ) {
         $question = sprintf(
             /* translators: %d is replaced with "decimal" */

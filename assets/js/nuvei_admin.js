@@ -303,7 +303,7 @@ jQuery(function() {
 	}
 	
 	jQuery('#refund_amount').prop('readonly', false);
-	jQuery('.do-manual-refund').remove();
+//	jQuery('.do-manual-refund').remove();
 	jQuery('.refund-actions').prepend('<span id="sc_refund_spinner" class="spinner" style="display: none; visibility: visible"></span>');
 	
 	jQuery('.do-api-refund')
