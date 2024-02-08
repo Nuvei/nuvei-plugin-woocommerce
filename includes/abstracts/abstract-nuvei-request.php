@@ -922,10 +922,19 @@ abstract class Nuvei_Request
             return end($transactions);
         }
         
-        foreach (array_reverse($transactions) as $trId => $data) {
+        foreach (array_reverse($transactions, true) as $trId => $data) {
             if (!empty($data['transactionType']) 
                 && in_array($data['transactionType'], $types)
             ) {
+                Nuvei_Logger::write($data);
+                
+                // fix for the case when work on Order made with plugin before v2.0.0
+                if (!isset($data['transactionId'])) {
+                    $data['transactionId'] = $trId;
+                }
+                
+                Nuvei_Logger::write($data);
+                
                 return $data;
             }
         }

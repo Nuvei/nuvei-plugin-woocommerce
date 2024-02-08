@@ -1,5 +1,10 @@
 # WooCommerce Extension Changelog
 
+# 2.1.1
+```
+    * Fix for the case when try to do Settle, Void or Refund on Order made with plugin before v2.0.0.
+```
+
 # 2.1.0
 ```
     * Removed old commented parts of code.
