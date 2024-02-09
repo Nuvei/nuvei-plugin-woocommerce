@@ -3,6 +3,7 @@
 # 2.1.1
 ```
     * Fix for the case when try to do Settle, Void or Refund on Order made with plugin before v2.0.0.
+    * Auto-Void fix. Allow Auto-Void for approved transactions only.
 ```
 
 # 2.1.0

@@ -421,19 +421,18 @@ class Nuvei_Notify_Url extends Nuvei_Request
 
 		if (empty($res[0]->post_id)) {
             // for Auth and Sale implement Auto-Void if more than 30 minutes passed and still no Order
-            $this->create_auto_void($transactionType);
+            $resp_code = $this->create_auto_void($transactionType);
             
 			Nuvei_Logger::write(
 				array(
-					'trans_id' => $trans_id,
-					'order data' => $res
+					'trans_id'      => $trans_id,
+					'order data'    => $res,
+					'$resp_code'    => $resp_code,
 				),
 				'The searched Order does not exists.'
 			);
 			
-            // return 400 only for the parent transactions as Auth and Sale.
-            // In all other cases the Order must exists into the WC system.
-			http_response_code(in_array($transactionType, ['Auth', 'Sale']) ? 400 : 200);
+			http_response_code($resp_code);
 			exit('The searched Order does not exists.');
 		}
 
@@ -444,7 +443,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
      * A help function just to move some of the code.
      * 
      * @param string $transactionType
-     * @return void
+     * @return int Return response code.
      */
     private function create_auto_void($transactionType)
     {
@@ -453,33 +452,46 @@ class Nuvei_Notify_Url extends Nuvei_Request
         
         Nuvei_Logger::write(
             [
-                $order_request_time,
-                $transactionType,
-                $curr_time
+                'order_request_time'    => $order_request_time,
+                'transactionType'       => $transactionType,
+                'curr_time'             => $curr_time
             ],
             'create_auto_void'
         );
         
-        // not allowed Auto-Void
+        # break Auto-Void process
+        // order time error
         if (0 == $order_request_time || !$order_request_time) {
             Nuvei_Logger::write(
                 null,
                 'There is problem with $order_request_time. End process.',
                 'WARINING'
             );
-            return;
+            return 200; // is $order_request_time is missing we can't do anything
         }
         
-        if (!in_array($transactionType, array('Auth', 'Sale'), true)) {
-            Nuvei_Logger::write('The transacion is not in allowed range.');
-            return;
+        // not allowed transaction type error
+        $req_status = Nuvei_Http::get_request_status();
+        
+        if (!in_array($transactionType, array('Auth', 'Sale'), true)
+            || 'approved' != strtolower($req_status)
+        ) {
+            Nuvei_Logger::write(
+                [
+                    '$transactionType'  => $transactionType,
+                    'Status'            => $req_status,
+                ],
+                'The transacion is not Auth/Sale or Status is not approved.'
+            );
+            return 200; // not allowed type or wrong status
         }
         
+        // it is too early for Auto-Void
         if ($curr_time - $order_request_time <= 1800) {
             Nuvei_Logger::write("Let's wait one more DMN try.");
-            return;
+            return 400; // lets wait more
         }
-        // /not allowed Auto-Void
+        # /break Auto-Void process
         
         $notify_url     = Nuvei_String::get_notify_url();
         $void_params    = [
@@ -512,7 +524,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
         
         Nuvei_Logger::write($resp, "Problem with Auto-Void request.");
         
-        return;
+        return 200; // the next time the request will be same, we do not expect for approve
     }
 	
 	/**
