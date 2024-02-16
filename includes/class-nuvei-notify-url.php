@@ -493,7 +493,11 @@ class Nuvei_Notify_Url extends Nuvei_Request
         }
         # /break Auto-Void process
         
-        $notify_url     = Nuvei_String::get_notify_url();
+        $nuvei_gw   = WC()->payment_gateways->payment_gateways()[NUVEI_GATEWAY_NAME];
+        $notify_url = Nuvei_String::get_notify_url([
+            'notify_url' => $nuvei_gw->get_option('notify_url'),
+        ]);
+        
         $void_params    = [
             'clientUniqueId'        => gmdate('YmdHis') . '_' . uniqid(),
             'amount'                => (string) Nuvei_Http::get_param('totalAmount', 'float'),
