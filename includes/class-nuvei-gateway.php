@@ -793,7 +793,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'theme'                     => $this->get_setting('sdk_theme', 'accordion'),
             'apmConfig'                 => [
                 'googlePay' => [
-                    'locale' => $locale
+                    'locale' => $locale,
+                ],
+                'applePay' => [
+                    'locale' => $locale,
                 ]
             ],
 		);
