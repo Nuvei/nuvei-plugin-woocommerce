@@ -42,6 +42,7 @@ const NUVEI_REST_ENDPOINT_INT   = 'https://ppp-test.nuvei.com/ppp/api/v1/';
 const NUVEI_REST_ENDPOINT_PROD  = 'https://secure.safecharge.com/ppp/api/v1/';
 
 const NUVEI_SDK_URL_PROD        = 'https://cdn.safecharge.com/safecharge_resources/v1/checkout/checkout.js';
+const NUVEI_SDK_URL_TAG         = 'https://devmobile.sccdev-qa.com/checkoutNext/checkout.js';
 const NUVEI_SDK_AUTOCLOSE_URL   = 'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html';
 
 const NUVEI_SESSION_OO_DETAILS      = 'nuvei_last_open_order_details'; // a session key
