@@ -30,6 +30,15 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			exit($msg);
         }
         
+        $req_status = Nuvei_Http::get_request_status();
+        
+        if ('pending' == strtolower($req_status)) {
+            $msg = 'Pending DMN, waiting for the next.';
+            
+            Nuvei_Logger::write($msg);
+			exit(wp_json_encode($msg));
+        }
+        
         // just give few seconds to WC to finish its Order
         sleep(3);
         
@@ -49,7 +58,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		$relatedTransactionId   = Nuvei_Http::get_param('relatedTransactionId', 'int');
 		$dmnType                = Nuvei_Http::get_param('dmnType');
 		$client_request_id      = Nuvei_Http::get_param('clientRequestId');
-		$req_status             = Nuvei_Http::get_request_status();
         $total                  = Nuvei_Http::get_param('totalAmount', 'float');
 		
 		# Subscription State DMN
@@ -273,8 +281,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		
 		Nuvei_Logger::write(
 			array(
-				'TransactionID' => $TransactionID,
-				'relatedTransactionId' => $relatedTransactionId,
+				'TransactionID'         => $TransactionID,
+				'relatedTransactionId'  => $relatedTransactionId,
 			),
 			'DMN was not recognized.'
 		);
