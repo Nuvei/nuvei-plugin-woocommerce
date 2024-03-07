@@ -8,6 +8,12 @@
     * Added ApplePay locale.
 ```
 
+# 2.1.0-p1
+```
+    * For the QA site use Tag endpoints for the SDKs.
+    * Do not proccess Pending DMNs, just save their parameters in the log file.
+```
+
 # 2.1.0
 ```
     * Removed old commented parts of code.
