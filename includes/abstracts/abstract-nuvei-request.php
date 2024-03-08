@@ -488,7 +488,7 @@ abstract class Nuvei_Request
 			return $device_details;
 		}
 		
-		$user_agent = strtolower(filter_var($_SERVER['HTTP_USER_AGENT'], FILTER_SANITIZE_STRING));
+		$user_agent = strtolower(filter_var($_SERVER['HTTP_USER_AGENT']));
 		
 		if (empty($user_agent)) {
 			$device_details['Warning'] = 'Probably the merchant Server has problems with PHP filter_var function!';
