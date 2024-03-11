@@ -961,7 +961,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
                     '$_REQUEST' => $_REQUEST,
                     '$subscription' => $subscription, 
                     '$renewal_order_id' => $renewal_order_id, 
-                    'get_post_meta' => get_post_meta($renewal_order_id)
+//                    'get_post_meta' => get_post_meta($renewal_order_id)
+                    'get_post_meta' => $renewal_order->get_meta_data()
                 ],
                 'Error, the Subscription is not an object.'
             );

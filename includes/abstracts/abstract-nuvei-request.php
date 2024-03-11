@@ -115,46 +115,6 @@ abstract class Nuvei_Request
 		// can we override Order status (state) END
 	}
 	
-    /**
-     * @deprecated since version 2.0.0
-     * 
-     * @param int $trans_id
-     * @param float $ref_amount
-     * @param string $status
-     * @param int $wc_id
-     * 
-     * @return int
-     */
-	protected function save_refund_meta_data( $trans_id, $ref_amount, $status = '', $wc_id = 0)
-    {
-		Nuvei_Logger::write('save_refund_meta_data()');
-		
-		$refunds = json_decode($this->sc_order->get_meta(NUVEI_REFUNDS), true);
-		
-		if (empty($refunds)) {
-			$refunds = [];
-		}
-		
-		//      Nuvei_Logger::write($refunds, 'save_refund_meta_data(): Saved Refunds before the current one.');
-		
-		// add the new refund
-		$refunds[$trans_id] = array(
-			'refund_amount'	=> round((float) $ref_amount, 2),
-			'status'		=> empty($status) ? 'pending' : $status
-		);
-		
-		if (0 < $wc_id) {
-			$refunds[$trans_id]['wc_id'] = $wc_id;
-		}
-
-		$this->sc_order->update_meta_data(NUVEI_REFUNDS, json_encode($refunds));
-		$order_id = $this->sc_order->save();
-		
-		Nuvei_Logger::write('save_refund_meta_data() Saved Refund with Tr ID ' . $trans_id);
-		
-		return $order_id;
-	}
-	
 	/**
 	 * Help function to generate Billing and Shipping details.
 	 * 
@@ -726,7 +686,6 @@ abstract class Nuvei_Request
             $data['products_data'][] = array(
                 'product_id'    => $product_id,
                 'quantity'      => $item['quantity'],
-//                'price'         => get_post_meta($item['id'] , '_price', true),
                 'price'         => get_post_meta($product_id , '_price', true),
                 'name'          => $cart_product->get_title(),
                 'in_stock'      => $cart_product->is_in_stock(),
@@ -1094,7 +1053,7 @@ abstract class Nuvei_Request
             $this->sc_order->update_meta_data(NUVEI_WC_RENEWAL, true);
         }
 		
-        $this->sc_order->save();
+//        $this->sc_order->save();
     }
     
     /**

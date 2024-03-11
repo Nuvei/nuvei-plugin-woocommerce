@@ -51,170 +51,26 @@ class Nuvei_Notify_Url extends Nuvei_Request
         
 		// santitized get variables
 		$clientUniqueId         = $this->get_cuid();
-		$merchant_unique_id     = Nuvei_Http::get_param('merchant_unique_id', 'int', false);
 		$transactionType        = Nuvei_Http::get_param('transactionType');
 		$order_id               = Nuvei_Http::get_param('order_id', 'int');
 		$TransactionID          = Nuvei_Http::get_param('TransactionID', 'int', false);
 		$relatedTransactionId   = Nuvei_Http::get_param('relatedTransactionId', 'int');
 		$dmnType                = Nuvei_Http::get_param('dmnType');
 		$client_request_id      = Nuvei_Http::get_param('clientRequestId');
-        $total                  = Nuvei_Http::get_param('totalAmount', 'float');
 		
-		# Subscription State DMN
+		// Subscription State DMN. We save Order here and exit.
 		if ('subscription' == $dmnType) {
-			$subscriptionState = strtolower(Nuvei_Http::get_param('subscriptionState'));
-			$subscriptionId    = Nuvei_Http::get_param('subscriptionId', 'int');
-			$planId            = Nuvei_Http::get_param('planId', 'int');
-			$cri_parts         = explode('_', $client_request_id);
-			
-			if (empty($cri_parts) || empty($cri_parts[0]) || !is_numeric($cri_parts[0])) {
-				Nuvei_Logger::write($cri_parts, 'DMN Subscription Error with Client Request Id parts:');
-				exit('DMN Subscription Error with Client Request Id parts.');
-			}
-            
-            $subs_data_key = str_replace($cri_parts[0], '', $client_request_id);
-            
-			// this is just to give WC time to update its metadata, before we update it here
-            sleep(5);
-            
-			$this->is_order_valid((int) $cri_parts[0]);
-            
-            $subsc_data = $this->sc_order->get_meta($subs_data_key);
-            Nuvei_Logger::write([$subs_data_key, $subsc_data], '$subs_data_key $subsc_data');
-            
-            if (empty($subsc_data)) {
-                $subsc_data = [];
-            }
-			
-			if (!empty($subscriptionState)) {
-				if ('active' == $subscriptionState) {
-					$msg = __('<b>Subscription is Active</b>.', 'nuvei_checkout_woocommerce') . '<br/>'
-						. __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $subscriptionId . '<br/>'
-						. __('<b>Plan ID:</b> ', 'nuvei_checkout_woocommerce') . Nuvei_Http::get_param('planId', 'int');
-				}
-                elseif ('inactive' == $subscriptionState) {
-					$msg = __('<b>Subscription is Inactive</b>.', 'nuvei_checkout_woocommerce') . '<br/>' 
-						. __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $subscriptionId . '<br/>' 
-						. __('<b>Plan ID:</b> ', 'nuvei_checkout_woocommerce') . $planId;
-				}
-                elseif ('canceled' == $subscriptionState) {
-					$msg = __('<b>Subscription</b> was canceled.', 'nuvei_checkout_woocommerce') . '<br/>'
-						. __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $subscriptionId;
-				}
-                
-                // update subscr meta
-                $subsc_data['state']        = $subscriptionState;
-                $subsc_data['subscr_id']    = $subscriptionId;
-                
-                $this->sc_order->update_meta_data($subs_data_key, $subsc_data);
-				$this->sc_order->add_order_note($msg);
-				$this->sc_order->save();
-			}
-
-			exit('DMN received.');
+            $this->process_subscription_dmn($client_request_id);
 		}
-		# Subscription State DMN END
 		
-		# Subscription Payment DMN
+		// Subscription Payment DMN. We save Order here and exit.
 		if ('subscriptionPayment' == $dmnType && 0 != $TransactionID) {
-			$cri_parts      = explode('_', $client_request_id);
-            $subscriptionId = Nuvei_Http::get_param('subscriptionId', 'int');
-			$planId         = Nuvei_Http::get_param('planId', 'int');
-			
-			if (empty($cri_parts) || empty($cri_parts[0]) || !is_numeric($cri_parts[0])) {
-				Nuvei_Logger::write($cri_parts, 'DMN Subscription Payment Error with Client Request Id parts:');
-				exit('DMN Subscription Payment Error with Client Request Id parts.');
-			}
-			
-			$this->is_order_valid((int) $cri_parts[0]);
-            
-            $ord_curr       = $this->sc_order->get_currency();
-            $subs_data_key  = str_replace($cri_parts[0], '', $client_request_id);
-			
-			$msg = sprintf(
-				/* translators: %s: the status of the Payment */
-				__('<b>Subscription Payment</b> with Status %s was made.', 'nuvei_checkout_woocommerce'),
-				$req_status
-			)
-				. '<br/>' . __('<b>Plan ID:</b> ', 'nuvei_checkout_woocommerce') . $planId . '.'
-				. '<br/>' . __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $subscriptionId . '.'
-				. '<br/>' . __('<b>Amount:</b> ', 'nuvei_checkout_woocommerce') . $ord_curr . ' ' . $total . '.'
-				. '<br/>' . __('<b>TransactionId:</b> ', 'nuvei_checkout_woocommerce') . $TransactionID;
-
-			Nuvei_Logger::write($msg, 'Subscription DMN Payment');
-			
-            $subsc_data = $this->sc_order->get_meta($subs_data_key);
-            
-            $subsc_data['payments'][] = [
-                'amount'            => $total,
-                'order_currency'    => $ord_curr,
-                'transaction_id'    => $TransactionID,
-                'resp_time'         => Nuvei_Http::get_param('responseTimeStamp'),
-            ];
-            
-            $this->sc_order->update_meta_data($subs_data_key, $subsc_data);
-            $this->sc_order->add_order_note($msg);
-            $this->sc_order->save();
-            
-			exit('DMN received.');
+            $this->process_subscription_payment_dmn($client_request_id, $req_status, $TransactionID);
 		}
-		# Subscription Payment DMN END
 		
 		# Sale and Auth
 		if (in_array($transactionType, array('Sale', 'Auth'), true)) {
-            $is_sdk_order = false;
-            
-            // Cashier
-            if($merchant_unique_id) {
-                Nuvei_Logger::write('Cashier Order');
-                $order_id = $merchant_unique_id;
-            }
-            // WCS renewal order
-            elseif ('renewal_order' == Nuvei_Http::get_param('customField4')
-                && !empty($client_request_id)
-            ) {
-                Nuvei_Logger::write('Renewal Order');
-                $order_id = current(explode('_', $client_request_id));
-            }
-            // SDK
-            elseif($TransactionID) {
-                Nuvei_Logger::write('SDK Order');
-                $is_sdk_order   = true;
-                $order_id       = $this->get_order_by_trans_id($TransactionID, $transactionType);
-            }
-            
-			$this->is_order_valid($order_id);
-            
-            // error check for SDK orders only
-            if ($is_sdk_order
-                && $this->sc_order->get_meta(NUVEI_ORDER_ID) != Nuvei_Http::get_param('PPP_TransactionID')
-            ) {
-                $msg = 'Saved Nuvei Order ID is different than the ID in the DMN.';
-                Nuvei_Logger::write($msg);
-                exit($msg);
-            }
-            
-            $this->check_for_repeating_dmn();
-			$this->save_transaction_data();
-			
-			$order_status   = strtolower($this->sc_order->get_status());
-            $order_total    = round($this->sc_order->get_total(), 2);
-			
-			if ('completed' !== $order_status) {
-				$this->change_order_status(
-					$order_id,
-					$req_status,
-					$transactionType
-				);
-			}
-			
-			$this->subscription_start($transactionType, $order_id, $order_total);
-			
-            $msg = 'DMN process end for Order #' . $order_id;
-            
-            Nuvei_Logger::write($msg);
-            http_response_code(200);
-			exit($msg);
+            $this->process_auth_sale_dmn($transactionType, $client_request_id, $TransactionID, $req_status);
 		}
 		
 		// try to get the Order ID
@@ -228,55 +84,12 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		if ('' != $clientUniqueId
 			&& ( in_array($transactionType, array('Void', 'Settle'), true) )
 		) {
-            $order_id   = 0 < $order_id ? $order_id : $clientUniqueId;
-            
-            $this->is_order_valid($order_id);
-            $this->check_for_repeating_dmn();
-			$this->change_order_status($order_id, $req_status, $transactionType);
-            $this->save_transaction_data();
-			$this->subscription_start($transactionType, $clientUniqueId);
-            $this->subscription_cancel($transactionType, $order_id, $req_status);
-			
-            $msg = 'DMN received.';
-            
-            Nuvei_Logger::write($msg);
-			exit($msg);
+            $this->process_settle_void_dmn($order_id, $req_status, $transactionType, $clientUniqueId);
 		}
 		
 		# Refund
 		if (in_array($transactionType, array('Credit', 'Refund'), true)) {
-            $order_id = $this->get_order_by_trans_id($relatedTransactionId, $transactionType);
-            
-            Nuvei_Logger::write($order_id);
-            
-            $this->is_order_valid($order_id);
-            
-            if ('APPROVED' == $req_status) {
-                $this->check_for_repeating_dmn();
-
-                # create Refund in WC
-                $refund = wc_create_refund(array(
-                    'amount'	=> $total,
-                    'order_id'	=> $order_id,
-                ));
-
-                if (is_a($refund, 'WP_Error')) {
-                    http_response_code(400);
-                    Nuvei_Logger::write((array) $refund, 'The Refund process in WC returns error: ');
-                    exit('The Refund process in WC returns error.');
-                }
-                # /create Refund in WC
-
-                $refund_id = $refund->get_id();
-
-                $this->change_order_status($order_id, $req_status, $transactionType, $refund_id);
-                $this->save_transaction_data([], $refund_id);
-            }
-            
-            $msg = 'DMN process end for Order #' . $order_id;
-            
-            Nuvei_Logger::write($msg);
-			exit($msg);
+            $this->process_refund_dmn($relatedTransactionId, $transactionType, $req_status);
 		}
 		
 		Nuvei_Logger::write(
@@ -597,7 +410,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
         }
         
         // The meta key for the Subscription is dynamic.
-        $order_all_meta = get_post_meta($order_id);
+//        $order_all_meta = get_post_meta($order_id);
+        $order_all_meta = $this->sc_order->get_meta_data();
         
         if (!is_array($order_all_meta) || empty($order_all_meta)) {
             Nuvei_Logger::write('Order meta is not array or is empty.');
@@ -640,7 +454,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
             }
             
             $this->sc_order->add_order_note($msg);
-            $this->sc_order->save();
+//            $this->sc_order->save();
         }
         
 		return;
@@ -663,7 +477,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			return;
         }
         
-        $order_all_meta = get_post_meta($order_id);
+//        $order_all_meta = get_post_meta($order_id);
+        $order_all_meta = $this->sc_order->get_meta_data();
         
         foreach ($order_all_meta as $key => $data) {
             if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
@@ -869,7 +684,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
         Nuvei_Logger::write($status, 'order status', "DEBUG");
         
 		$this->sc_order->update_status($status);
-		$this->sc_order->save();
+//		$this->sc_order->save();
 		
 		Nuvei_Logger::write($status, 'Status of Order #' . $order_id . ' was set to');
 	}
@@ -916,4 +731,264 @@ class Nuvei_Notify_Url extends Nuvei_Request
         return;
     }
 	
+    /**
+     * Method to handle Subscription DMN logic.
+     * 
+     * @param mixed $client_request_id
+     * @return void
+     */
+    private function process_subscription_dmn($client_request_id)
+    {
+        $subscriptionState = strtolower(Nuvei_Http::get_param('subscriptionState'));
+        $subscriptionId    = Nuvei_Http::get_param('subscriptionId', 'int');
+        $planId            = Nuvei_Http::get_param('planId', 'int');
+        $cri_parts         = explode('_', $client_request_id);
+
+        if (empty($cri_parts) || empty($cri_parts[0]) || !is_numeric($cri_parts[0])) {
+            Nuvei_Logger::write($cri_parts, 'DMN Subscription Error with Client Request Id parts:');
+            exit('DMN Subscription Error with Client Request Id parts.');
+        }
+
+        $subs_data_key = str_replace($cri_parts[0], '', $client_request_id);
+
+        // this is just to give WC time to update its metadata, before we update it here
+        sleep(5);
+
+        $this->is_order_valid((int) $cri_parts[0]);
+
+        $subsc_data = $this->sc_order->get_meta($subs_data_key);
+        Nuvei_Logger::write([$subs_data_key, $subsc_data], '$subs_data_key $subsc_data');
+
+        if (empty($subsc_data)) {
+            $subsc_data = [];
+        }
+
+        if (!empty($subscriptionState)) {
+            if ('active' == $subscriptionState) {
+                $msg = __('<b>Subscription is Active</b>.', 'nuvei_checkout_woocommerce') . '<br/>'
+                    . __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $subscriptionId . '<br/>'
+                    . __('<b>Plan ID:</b> ', 'nuvei_checkout_woocommerce') . Nuvei_Http::get_param('planId', 'int');
+            }
+            elseif ('inactive' == $subscriptionState) {
+                $msg = __('<b>Subscription is Inactive</b>.', 'nuvei_checkout_woocommerce') . '<br/>' 
+                    . __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $subscriptionId . '<br/>' 
+                    . __('<b>Plan ID:</b> ', 'nuvei_checkout_woocommerce') . $planId;
+            }
+            elseif ('canceled' == $subscriptionState) {
+                $msg = __('<b>Subscription</b> was canceled.', 'nuvei_checkout_woocommerce') . '<br/>'
+                    . __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $subscriptionId;
+            }
+
+            // update subscr meta
+            $subsc_data['state']        = $subscriptionState;
+            $subsc_data['subscr_id']    = $subscriptionId;
+
+            $this->sc_order->update_meta_data($subs_data_key, $subsc_data);
+            $this->sc_order->add_order_note($msg);
+            $this->sc_order->save();
+        }
+
+        exit('DMN received.');
+    }
+    
+    /**
+     * Method to handle Subscription Payment DMN logic.
+     * 
+     * @param mixed $client_request_id
+     * @param string $req_status        The DMN status parameter.
+     * @param string $TransactionID     The Transaction ID.
+     * 
+     * @return void
+     */
+    private function process_subscription_payment_dmn($client_request_id, $req_status, $TransactionID)
+    {
+        $total          = Nuvei_Http::get_param('totalAmount', 'float');
+        $cri_parts      = explode('_', $client_request_id);
+        $subscriptionId = Nuvei_Http::get_param('subscriptionId', 'int');
+        $planId         = Nuvei_Http::get_param('planId', 'int');
+
+        if (empty($cri_parts) || empty($cri_parts[0]) || !is_numeric($cri_parts[0])) {
+            Nuvei_Logger::write($cri_parts, 'DMN Subscription Payment Error with Client Request Id parts:');
+            exit('DMN Subscription Payment Error with Client Request Id parts.');
+        }
+
+        $this->is_order_valid((int) $cri_parts[0]);
+
+        $ord_curr       = $this->sc_order->get_currency();
+        $subs_data_key  = str_replace($cri_parts[0], '', $client_request_id);
+
+        $msg = sprintf(
+            /* translators: %s: the status of the Payment */
+            __('<b>Subscription Payment</b> with Status %s was made.', 'nuvei_checkout_woocommerce'),
+            $req_status
+        )
+            . '<br/>' . __('<b>Plan ID:</b> ', 'nuvei_checkout_woocommerce') . $planId . '.'
+            . '<br/>' . __('<b>Subscription ID:</b> ', 'nuvei_checkout_woocommerce') . $subscriptionId . '.'
+            . '<br/>' . __('<b>Amount:</b> ', 'nuvei_checkout_woocommerce') . $ord_curr . ' ' . $total . '.'
+            . '<br/>' . __('<b>TransactionId:</b> ', 'nuvei_checkout_woocommerce') . $TransactionID;
+
+        Nuvei_Logger::write($msg, 'Subscription DMN Payment');
+
+        $subsc_data = $this->sc_order->get_meta($subs_data_key);
+
+        $subsc_data['payments'][] = [
+            'amount'            => $total,
+            'order_currency'    => $ord_curr,
+            'transaction_id'    => $TransactionID,
+            'resp_time'         => Nuvei_Http::get_param('responseTimeStamp'),
+        ];
+
+        $this->sc_order->update_meta_data($subs_data_key, $subsc_data);
+        $this->sc_order->add_order_note($msg);
+        $this->sc_order->save();
+
+        exit('DMN received.');
+    }
+    
+    /**
+     * Method to handle Auth and Sale DMN logic.
+     * 
+     * @param string $transactionType
+     * @param mixed $client_request_id
+     * @param string $TransactionID     The Transaction ID.
+     * @param string $req_status        The DMN status parameter.
+     * 
+     * @return void
+     */
+    private function process_auth_sale_dmn($transactionType, $client_request_id, $TransactionID, $req_status)
+    {
+        $is_sdk_order       = false;
+        $merchant_unique_id = Nuvei_Http::get_param('merchant_unique_id', 'int', false);
+
+        // Cashier
+        if($merchant_unique_id) {
+            Nuvei_Logger::write('Cashier Order');
+            $order_id = $merchant_unique_id;
+        }
+        // WCS renewal order
+        elseif ('renewal_order' == Nuvei_Http::get_param('customField4')
+            && !empty($client_request_id)
+        ) {
+            Nuvei_Logger::write('Renewal Order');
+            $order_id = current(explode('_', $client_request_id));
+        }
+        // SDK
+        elseif($TransactionID) {
+            Nuvei_Logger::write('SDK Order');
+            $is_sdk_order   = true;
+            $order_id       = $this->get_order_by_trans_id($TransactionID, $transactionType);
+        }
+
+        $this->is_order_valid($order_id);
+
+        // error check for SDK orders only
+        if ($is_sdk_order
+            && $this->sc_order->get_meta(NUVEI_ORDER_ID) != Nuvei_Http::get_param('PPP_TransactionID')
+        ) {
+            $msg = 'Saved Nuvei Order ID is different than the ID in the DMN.';
+            Nuvei_Logger::write($msg);
+            exit($msg);
+        }
+
+        $this->check_for_repeating_dmn();
+        $this->save_transaction_data();
+
+        $order_status   = strtolower($this->sc_order->get_status());
+        $order_total    = round($this->sc_order->get_total(), 2);
+
+        if ('completed' !== $order_status) {
+            $this->change_order_status(
+                $order_id,
+                $req_status,
+                $transactionType
+            );
+        }
+
+        $this->subscription_start($transactionType, $order_id, $order_total);
+
+        $this->sc_order->save();
+
+        $msg = 'DMN process end for Order #' . $order_id;
+
+        Nuvei_Logger::write($msg);
+        http_response_code(200);
+        exit($msg);
+    }
+    
+    /**
+     * Method to handle Settle and Void DMN logic.
+     * 
+     * @param int $order_id
+     * @param string $req_status    The DMN status parameter.
+     * @param string $TransactionID The Transaction ID.
+     * @param mixed $clientUniqueId The Transaction ID.
+     * 
+     * @return void
+     */
+    private function process_settle_void_dmn($order_id, $req_status, $transactionType, $clientUniqueId)
+    {
+        $order_id = 0 < $order_id ? $order_id : $clientUniqueId;
+        
+        $this->is_order_valid($order_id);
+        $this->check_for_repeating_dmn();
+        $this->change_order_status($order_id, $req_status, $transactionType);
+        $this->save_transaction_data();
+        $this->subscription_start($transactionType, $clientUniqueId);
+        $this->subscription_cancel($transactionType, $order_id, $req_status);
+
+        $this->sc_order->save();
+        
+        $msg = 'DMN received.';
+
+        Nuvei_Logger::write($msg);
+        exit($msg);
+    }
+    
+    /**
+     * Method to handle Refund DMN logic.
+     * 
+     * @param int $relatedTransactionId
+     * @param string $transactionType
+     * @param string $req_status    The DMN status parameter.
+     * 
+     * @return void
+     */
+    private function process_refund_dmn($relatedTransactionId, $transactionType, $req_status)
+    {
+        $order_id   = $this->get_order_by_trans_id($relatedTransactionId, $transactionType);
+        $total      = Nuvei_Http::get_param('totalAmount', 'float');
+            
+        Nuvei_Logger::write($order_id);
+
+        $this->is_order_valid($order_id);
+
+        if ('APPROVED' == $req_status) {
+            $this->check_for_repeating_dmn();
+
+            # create Refund in WC
+            $refund = wc_create_refund(array(
+                'amount'	=> $total,
+                'order_id'	=> $order_id,
+            ));
+
+            if (is_a($refund, 'WP_Error')) {
+                http_response_code(400);
+                Nuvei_Logger::write((array) $refund, 'The Refund process in WC returns error: ');
+                exit('The Refund process in WC returns error.');
+            }
+            # /create Refund in WC
+
+            $refund_id = $refund->get_id();
+
+            $this->change_order_status($order_id, $req_status, $transactionType, $refund_id);
+            $this->save_transaction_data([], $refund_id);
+        }
+        
+        $this->sc_order->save();
+
+        $msg = 'DMN process end for Order #' . $order_id;
+
+        Nuvei_Logger::write($msg);
+        exit($msg);
+    }
 }

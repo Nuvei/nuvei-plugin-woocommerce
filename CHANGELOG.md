@@ -2,6 +2,10 @@
 
 # 2.1.1
 ```
+    * Move different DMNs logic in separate methods.
+    * Removed an unused method.
+    * Declare plugin incompatability with 'cart_checkout_blocks';
+    * Declare plugin compatability with HPOS.
     * Fix for the case when try to do Settle, Void or Refund on Order made with plugin before v2.0.0.
     * Auto-Void fix. Allow Auto-Void for approved transactions only.
     * Fix for the missing notify URL in create_auto_void() method.

@@ -16,6 +16,7 @@ WooCommerce:
 
 Merchant configuration: 
   - enabled DMNs
+  - on SiteID level "DMN  timeout" setting is recommendet to be not less than 20 seconds, 30 seconds is better.
 
 Server configuration: 
   - public access to the plugin notify URL. Check plugin settings, Help Tools tab.

@@ -9,9 +9,9 @@
  * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.4.1
+ * Tested up to: 6.4.3
  * WC requires at least: 3.0
- * WC tested up to: 8.2.2
+ * WC tested up to: 8.6.1
 */
 
 defined('ABSPATH') || die('die');
@@ -31,6 +31,18 @@ register_activation_hook(__FILE__, 'nuvei_plugin_activate');
 add_action('admin_init', 'nuvei_admin_init');
 add_filter('woocommerce_payment_gateways', 'nuvei_add_gateway');
 add_action('plugins_loaded', 'nuvei_init', 0);
+
+add_action( 'before_woocommerce_init', function() {
+    // declaration for HPOS compatability
+	if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+	}
+    
+    // Declare compatibility for 'cart_checkout_blocks'
+    if (class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('cart_checkout_blocks', __FILE__, false);
+    }
+});
 
 // register the plugin REST endpoint
 add_action('rest_api_init', function() {
@@ -664,7 +676,8 @@ function nuvei_add_buttons($order)
         );
 
         // check for active subscriptions
-        $all_meta = get_post_meta($order->get_id());
+//        $all_meta = get_post_meta($order->get_id());
+        $all_meta = $order->get_meta_data();
 
         foreach ($all_meta as $meta_key => $meta_data) {
             if (false !== strpos($meta_key, NUVEI_ORDER_SUBSCR)) {
@@ -768,7 +781,8 @@ function nuvei_wpml_thank_you_page( $order_received_url, $order)
         return;
     }
     
-	$lang_code          = get_post_meta($order->id, 'wpml_language', true);
+//	$lang_code          = get_post_meta($order->id, 'wpml_language', true);
+	$lang_code          = $order->get_meta('wpml_language', true);
 	$order_received_url = apply_filters('wpml_permalink', $order_received_url, $lang_code);
 	
 	Nuvei_Logger::write($order_received_url, 'nuvei_wpml_thank_you_page: ');
@@ -994,7 +1008,8 @@ function nuvei_edit_order_list_columns($column, $col_id)
         return;
     }
     
-    $all_meta       = get_post_meta($post->ID);
+//    $all_meta       = get_post_meta($post->ID);
+    $all_meta       = $order->get_meta_data();
     $nuvei_subscr   = [];
     $order_changes  = $order->get_meta(NUVEI_ORDER_CHANGES);
     
@@ -1030,7 +1045,8 @@ function nuvei_edit_order_list_columns($column, $col_id)
 function nuvei_edit_my_account_orders_col( $order)
 {
     // get all meta fields
-    $post_meta  = get_post_meta($order->get_id());
+//    $post_meta  = get_post_meta($order->get_id());
+    $post_meta  = $order->get_meta_data();
     $is_subscr  = false;
     
     if (!empty($post_meta) && is_array($post_meta)) {
@@ -1124,7 +1140,8 @@ function nuvei_after_order_itemmeta($item_id, $item, $_product)
     $post_id        = Nuvei_Http::get_param('post', 'int');
     $order          = wc_get_order($post_id);
 //    $subs_id        = $order->get_meta(NUVEI_ORDER_SUBSCR_ID);
-    $post_meta      = get_post_meta($post_id);
+//    $post_meta      = get_post_meta($post_id);
+    $post_meta      = $order->get_meta_data();
     
     if (empty($post_meta) || !is_array($post_meta)) {
         return;
