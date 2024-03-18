@@ -52,9 +52,18 @@
 }
 
 .nuvei_plan_order {
-	background-image: url(/wp-content/plugins/nuvei_checkout_woocommerce/assets/icons/subscription.png);
+	background-image: url(../icons/subscription.png);
 	background-size: 17px;
 	background-repeat: no-repeat;
 	background-position: right center;
 	padding-right: 20px;
+}
+
+.payment_method_nuvei img {
+    max-width: 25px !important;
+}
+
+#nuvei_checkout_container .nuvei_loader {
+    max-width: 30px;
+    margin-left: calc(50% - 15px);
 }

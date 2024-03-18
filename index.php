@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Plugin for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 2.1.1
+ * Version: 3.0.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei_checkout_woocommerce
@@ -11,7 +11,7 @@
  * Require at least: 4.7
  * Tested up to: 6.4.3
  * WC requires at least: 3.0
- * WC tested up to: 8.6.1
+ * WC tested up to: 8.6.2
 */
 
 defined('ABSPATH') || die('die');
@@ -22,7 +22,7 @@ if ( ! defined( 'NUVEI_PLUGIN_FILE' ) ) {
 
 require_once 'config.php';
 require_once 'includes' . DIRECTORY_SEPARATOR . 'class-nuvei-autoloader.php';
-require_once ABSPATH . 'wp-admin/includes/plugin.php';
+require_once ABSPATH . 'wp-admin/includes/plugin.php'; // we use it to get the above commented data
 
 $wc_nuvei = null;
 
@@ -32,6 +32,7 @@ add_action('admin_init', 'nuvei_admin_init');
 add_filter('woocommerce_payment_gateways', 'nuvei_add_gateway');
 add_action('plugins_loaded', 'nuvei_init', 0);
 
+// declare compatabilities
 add_action( 'before_woocommerce_init', function() {
     // declaration for HPOS compatability
 	if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
@@ -40,8 +41,25 @@ add_action( 'before_woocommerce_init', function() {
     
     // Declare compatibility for 'cart_checkout_blocks'
     if (class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
-        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('cart_checkout_blocks', __FILE__, false);
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('cart_checkout_blocks', __FILE__, true);
     }
+});
+
+// Hook in Blocks integration.
+add_action( 'woocommerce_blocks_loaded', function() {
+    // Check if the required class exists
+    if (!class_exists('Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType')) {
+        return;
+    }
+
+    // Hook the registration function to the 'woocommerce_blocks_payment_method_type_registration' action
+    add_action(
+        'woocommerce_blocks_payment_method_type_registration',
+        function(Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry) {
+            // Register an instance of My_Custom_Gateway_Blocks
+            $payment_method_registry->register(new Nuvei_Gateway_Blocks_Support);
+        }
+    );
 });
 
 // register the plugin REST endpoint
@@ -61,7 +79,6 @@ add_action('rest_api_init', function() {
 function nuvei_plugin_activate()
 {
     $content_dir    = dirname(dirname(dirname(__FILE__)));
-//    $custom_logs_dir    = $content_dir . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'nuvei-logs';
     $htaccess_file  = NUVEI_LOGS_DIR . '.htaccess';
     $index_file     = NUVEI_LOGS_DIR . 'index.html';
     
@@ -78,15 +95,6 @@ function nuvei_plugin_activate()
             file_put_contents($index_file, '');
         }
     }
-    
-//    if (is_dir(NUVEI_LOGS_DIR) && file_exists($htaccess_file)) {
-//        return;
-//    }
-//    
-//    // try to create them if not exists
-//    if (mkdir(NUVEI_LOGS_DIR)) {
-//        file_put_contents($htaccess_file, 'deny from all');
-//    }
 }
 
 function nuvei_admin_init()
@@ -325,6 +333,13 @@ function nuvei_ajax_action()
 //        $wc_nuvei->call_checkout($is_ajax = true);
         $wc_nuvei->checkout_prepayment_check();
 	}
+    
+    // Need checkout params from Checkout Blocks
+//	if (Nuvei_Http::get_param('callCheckout', 'int') == 1) {
+//        Nuvei_Logger::write('callCheckout');
+//        
+//        $wc_nuvei->call_checkout();
+//	}
 	
 	// when Reorder
 	if (Nuvei_Http::get_param('sc_request') == 'scReorder') {
@@ -442,6 +457,7 @@ function nuvei_load_scripts()
             'useUpos'           => $wc_nuvei->can_use_upos(),
             'isUserLogged'      => is_user_logged_in() ? 1 : 0,
             'isPluginActive'    => $wc_nuvei->settings['enabled'],
+            'loaderUrl'         => plugin_dir_url(__FILE__) . 'assets/icons/loader.gif',
             'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION
                 . '; Plugin v' . nuvei_get_plugin_version(),
         ]

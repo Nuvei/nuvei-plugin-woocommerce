@@ -10,6 +10,7 @@ const NUVEI_GATEWAY_NAME    = 'nuvei'; // the name by WC recognize this Gateway
 // keys for order metadata, we make them hiden when starts with underscore
 const NUVEI_TR_ID               = '_nuveiTrId'; // we will keep this data for fast search in Orders
 const NUVEI_ORDER_ID            = '_nuveiOrderId';
+const NUVEI_CLIENT_UNIQUE_ID    = '_nuveiClientUniqueId';
 const NUVEI_ORDER_CHANGES       = '_nuveiOrderChanges'; // mark here total ana currency changes
 const NUVEI_WC_SUBSCR           = '_wcSubscription';
 const NUVEI_WC_RENEWAL          = '_wcsRenewal';
@@ -17,7 +18,7 @@ const NUVEI_TRANSACTIONS        = '_nuveiTransactions';
 const NUVEI_ORDER_SUBSCR        = '_nuveiSubscr';
 const NUVEI_DCC_DATA            = '_nuveiDccData';
 
-const NUVEI_CUID_POSTFIX        = '_sandbox_apm'; // postfix for Sandbox APM payments
+//const NUVEI_CUID_POSTFIX        = '_sandbox_apm'; // postfix for Sandbox APM payments
 const NUVEI_PREV_TRANS_STATUS   = '_nuveiPrevTransactionStatus';
 
 const NUVEI_SOURCE_APPLICATION  = 'wooCommerce Plugin';
@@ -60,6 +61,7 @@ define('NUVEI_JS_LOCALIZATIONS', [
     'TryAnotherPM'      => __('Please try another payment method!', 'nuvei_checkout_woocommerce'),
     'Pay'               => __('Pay', 'nuvei_checkout_woocommerce'),
     'PlaceOrder'        => __('Place order', 'nuvei_checkout_woocommerce'),
+    'Continue'          => __('Continue', 'nuvei_checkout_woocommerce'),
     'refundQuestion'    => __('Are you sure about this Refund?', 'nuvei_checkout_woocommerce'),
     'LastDownload'		=> __('Last Download', 'nuvei_checkout_woocommerce'),
     'ReadLog'           => __('Read Log', 'nuvei_checkout_woocommerce'),

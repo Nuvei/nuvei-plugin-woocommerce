@@ -15,21 +15,23 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	public function __construct()
     {
 		# settings to get/save options
-		$this->id                 = NUVEI_GATEWAY_NAME;
-		$this->method_title       = __('Nuvei Checkout', 'nuvei_checkout_woocommerce' );
-		$this->method_description = __('Pay with ', 'nuvei_checkout_woocommerce' ) . NUVEI_GATEWAY_TITLE . '.';
-		$this->method_name        = NUVEI_GATEWAY_TITLE;
-		$this->icon               = plugin_dir_url(NUVEI_PLUGIN_FILE) . 'assets/icons/nuvei.png';
-		$this->has_fields         = false;
+		$this->id                   = NUVEI_GATEWAY_NAME;
+        $this->icon                 = plugin_dir_url(NUVEI_PLUGIN_FILE) . 'assets/icons/nuvei.png';
+		$this->method_title         = __('Nuvei Checkout', 'nuvei_checkout_woocommerce' );
+		$this->method_description   = __('Pay with ', 'nuvei_checkout_woocommerce' ) . NUVEI_GATEWAY_TITLE . '.';
+		$this->method_name          = NUVEI_GATEWAY_TITLE;
+		$this->icon                 = plugin_dir_url(NUVEI_PLUGIN_FILE) . 'assets/icons/nuvei.png';
+		$this->has_fields           = false;
 
 		$this->init_settings();
+        // the three settings tabs
 		$this->init_form_base_fields();
 		$this->init_form_advanced_fields(true);
 		$this->init_form_tools_fields(true);
 		
 		// required for the Store
-		$this->title       = $this->get_setting('title', NUVEI_GATEWAY_TITLE);
-		$this->description = $this->get_setting('description', $this->method_description);
+		$this->title       = $this->get_option('title', NUVEI_GATEWAY_TITLE);
+		$this->description = $this->get_option('description', $this->method_description);
 		$this->plugin_data = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . DIRECTORY_SEPARATOR . 'index.php');
 		
 		$this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page']) 
@@ -57,6 +59,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		add_action('woocommerce_order_after_calculate_totals', array($this, 'return_settle_btn'), 10, 2);
 		add_action('woocommerce_order_status_refunded', array($this, 'restock_on_refunded_status'), 10, 1);
 	}
+    
+    public function is_available()
+    {
+        return parent::is_available();
+    }
 	
 	/**
 	 * Generate Button HTML.
@@ -115,7 +122,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$session_token = !empty($resp['sessionToken']) ? $resp['sessionToken'] : '';
 		
 		$nuvei_blocked_pms_visible = array();
-		$nuvei_blocked_pms         = explode(',', $this->get_setting('pm_black_list', ''));
+		$nuvei_blocked_pms         = explode(',', $this->get_option('pm_black_list', ''));
 		$pms                       = array(
 			'' => __('Select payment methods...', 'nuvei_checkout_woocommerce')
 		);
@@ -187,13 +194,15 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	public function process_payment($order_id)
     {
         $nuvei_order_details    = WC()->session->get(NUVEI_SESSION_PROD_DETAILS);
+        $nuvei_session_token    = key($nuvei_order_details);
         $nuvei_oo_details       = WC()->session->get(NUVEI_SESSION_OO_DETAILS);
         
 		Nuvei_Logger::write(
             [
                 '$order_id'                 => $order_id,
                 'request params'            => $_REQUEST,
-                NUVEI_SESSION_PROD_DETAILS => $nuvei_order_details,
+                NUVEI_SESSION_PROD_DETAILS  => $nuvei_order_details,
+                '$nuvei_oo_details'         => $nuvei_oo_details,
             ],
             'Process payment(), Order'
         );
@@ -259,8 +268,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
 		
 		// when we have Approved from the SDK we complete the order here
-		$nuvei_transaction_id   = Nuvei_Http::get_param('nuvei_transaction_id', 'int');
-		$nuvei_session_token    = Nuvei_Http::get_param('nuvei_session_token');
+//		$nuvei_transaction_id   = Nuvei_Http::get_param('nuvei_transaction_id', 'int');
+//		$nuvei_session_token    = Nuvei_Http::get_param('nuvei_session_token');
         
 		# in case we use Cashier
 		if (isset($this->settings['integration_type'])
@@ -308,34 +317,46 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         }
         
         // Success
-		if (!empty($nuvei_transaction_id)) {
-			Nuvei_Logger::write('Process webSDK Order, transaction ID #' . $nuvei_transaction_id);
+//		if (!empty($nuvei_transaction_id)) {
+//			Nuvei_Logger::write('Process webSDK Order, transaction ID #' . $nuvei_transaction_id);
 			
-            $transactions_data[$nuvei_transaction_id] = [];
-			$order->update_meta_data(NUVEI_TR_ID, $nuvei_transaction_id);
-			$order->update_meta_data(NUVEI_TRANSACTIONS, $transactions_data);
-			$order->update_meta_data(NUVEI_ORDER_ID, $nuvei_oo_details['orderId']);
+//            $transactions_data[$nuvei_transaction_id] = [];
+//			$order->update_meta_data(NUVEI_TR_ID, $nuvei_transaction_id);
+//			$order->update_meta_data(NUVEI_TRANSACTIONS, $transactions_data);
+        $order->update_meta_data(NUVEI_ORDER_ID, $nuvei_oo_details['orderId']);
+        $order->update_meta_data(NUVEI_CLIENT_UNIQUE_ID, $nuvei_oo_details['clientUniqueId']);
             
-            Nuvei_Logger::write($nuvei_oo_details);
+//            Nuvei_Logger::write($nuvei_oo_details);
             
-			$order->save();
-			
-			return array(
-				'result'    => 'success',
-				'redirect'  => $return_success_url
-			);
-		}
+//			$order->save();
+//			
+//			return array(
+//				'result'    => 'success',
+//				'redirect'  => $return_success_url
+//			);
+//		}
         
         // Error - missing Transaction ID
-        Nuvei_Logger::write($order_id, '$nuvei_transaction_id is empty for Order ID ');
+//        Nuvei_Logger::write($order_id, '$nuvei_transaction_id is empty for Order ID ');
         
-        return array(
-            'result'    => 'success',
-            'redirect'  => array(
-                'Status'    => 'error',
-            ),
-            wc_get_checkout_url() . 'order-received/' . $order_id . '/'
-        );
+//        return array(
+//            'result'    => 'success',
+//            'redirect'  => array(
+//                'Status'    => 'error',
+//            ),
+//            wc_get_checkout_url() . 'order-received/' . $order_id . '/'
+//        );
+            
+         // new code
+        $order->update_status('pending');
+        $order->save();
+        // Remove cart.
+		WC()->cart->empty_cart();
+        // Return thankyou redirect.
+		return array(
+			'result'   => 'success',
+			'redirect' => $this->get_return_url( $order ),
+		);
 	}
 	
 	/**
@@ -650,7 +671,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		
         // for guests disable adding products with Nuvei Payment plan or WCS to the Cart
         if (!is_user_logged_in()
-            && 0 == $this->get_setting('save_guest_upos')
+            && 0 == $this->get_option('save_guest_upos')
         ) {
             if (!empty($attributes['pa_' . Nuvei_String::get_slug(NUVEI_GLOB_ATTR_NAME)])) {
                 wc_add_notice(
@@ -690,11 +711,21 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 * Call the Nuvei Checkout SDK form here and pass all parameters.
 	 * 
 	 * @global $woocommerce
-     * @param bool $is_rest
+     * 
+     * @param bool $is_rest         Is the method called from the REST API?
+     * @param bool $is_wc_blocks    Is the method called from WC Blocks hook?
+     * @param bool $return_params   Return params instead of print them?
 	 */
-	public function call_checkout($is_rest = false)
+	public function call_checkout($is_rest = false, $is_wc_blocks = false, $return_params = false)
     {
-        Nuvei_Logger::write([$is_rest, $this->rest_params], 'call_checkout()');
+        Nuvei_Logger::write(
+            [
+                '$is_rest'      => $is_rest,
+                '$is_wc_blocks' => $is_wc_blocks,
+                'rest_params'   => $this->rest_params
+            ],
+            'call_checkout()'
+        );
         
 		global $woocommerce;
         
@@ -725,7 +756,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         $nuvei_helper           = new Nuvei_Helper();
 		$ord_details            = $nuvei_helper->get_addresses($this->rest_params);
 		$prod_details           = $oo_data['products_data'];
-		$pm_black_list          = trim($this->get_setting('pm_black_list', ''));
+		$pm_black_list          = trim($this->get_option('pm_black_list', ''));
         $is_there_subscription  = false;
         $locale                 = substr(get_locale(), 0, 2);
         $total                  = '0.00';
@@ -743,7 +774,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		
         // for UPO
         $use_upos   = $save_pm 
-                    = (bool) $this->get_setting('use_upos');
+                    = (bool) $this->get_option('use_upos');
         
         Nuvei_Logger::write($prod_details);
         
@@ -758,7 +789,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             $is_there_subscription  = true;
         }
         
-        $useDCC = $this->get_setting('use_dcc', 'enable');
+        $useDCC = $this->get_option('use_dcc', 'enable');
         
         if ($total == 0) {
             $useDCC = 'false';
@@ -766,13 +797,13 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         
 		$checkout_data = array( // use it in the template
 			'sessionToken'              => $oo_data['sessionToken'],
-			'env'                       => 'yes' == $this->get_setting('test') ? 'test' : 'prod',
-			'merchantId'                => $this->get_setting('merchantId'),
-			'merchantSiteId'            => $this->get_setting('merchantSiteId'),
+			'env'                       => 'yes' == $this->get_option('test') ? 'test' : 'prod',
+			'merchantId'                => $this->get_option('merchantId'),
+			'merchantSiteId'            => $this->get_option('merchantSiteId'),
 			'country'                   => $ord_details['billingAddress']['country'],
 			'currency'                  => get_woocommerce_currency(),
 			'amount'                    => $total,
-			'renderTo'                  => '#nuvei_checkout',
+			'renderTo'                  => '#nuvei_checkout_container',
 			'useDCC'                    =>  $useDCC,
 			'strict'                    => false,
 			'savePM'                    => $save_pm,
@@ -783,14 +814,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			'fullName'                  => $ord_details['billingAddress']['firstName'] . ' ' 
                 . $oo_data['billingAddress']['lastName'],
 			'email'                     => $ord_details['billingAddress']['email'],
-			'payButton'                 => $this->get_setting('pay_button', 'amountButton'),
+			'payButton'                 => $this->get_option('pay_button', 'amountButton'),
 			'showResponseMessage'       => false, // shows/hide the response popups
 			'locale'                    => $locale,
-			'autoOpenPM'                => (bool) $this->get_setting('auto_open_pm', 1),
-			'logLevel'                  => $this->get_setting('log_level'),
+			'autoOpenPM'                => (bool) $this->get_option('auto_open_pm', 1),
+			'logLevel'                  => $this->get_option('log_level'),
 			'maskCvv'                   => true,
-			'i18n'                      => json_decode($this->get_setting('translation', ''), true),
-			'theme'                     => $this->get_setting('sdk_theme', 'accordion'),
+			'i18n'                      => json_decode($this->get_option('translation', ''), true),
+			'theme'                     => $this->get_option('sdk_theme', 'accordion'),
             'apmConfig'                 => [
                 'googlePay' => [
                     'locale' => $locale,
@@ -806,7 +837,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             $checkout_data['pmWhitelist'] = ['cc_card'];
             
             // only for WCS
-            if (1 == $this->get_setting('allow_paypal_rebilling', 0)
+            if (1 == $this->get_option('allow_paypal_rebilling', 0)
                 && !empty($prod_details['wc_subscr'])
             ) {
                 $checkout_data['pmWhitelist'][]             = 'apmgw_expresscheckout';
@@ -816,14 +847,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             unset($checkout_data['pmBlacklist']);
         }
         // in case of Zero-Total and enabled allow_zero_checkout option
-        elseif (0 == $total && 1 == $this->get_setting('allow_zero_checkout')) {
+        elseif (0 == $total && 1 == $this->get_option('allow_zero_checkout')) {
             $checkout_data['pmWhitelist'] = ['cc_card'];
             unset($checkout_data['pmBlacklist']);
         }
 		
 		# blocked_cards
 		$blocked_cards     = [];
-		$blocked_cards_str = $this->get_setting('blocked_cards', '');
+		$blocked_cards_str = $this->get_option('blocked_cards', '');
 		// clean the string from brakets and quotes
 		$blocked_cards_str = str_replace('],[', ';', $blocked_cards_str);
 		$blocked_cards_str = str_replace('[', '', $blocked_cards_str);
@@ -863,6 +894,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         }
 
         Nuvei_Logger::write($checkout_data, '$checkout_data');
+        
+        // For blocks checkout, get the data when register Nuvei gateway.
+        if ($return_params) {
+            return $checkout_data;
+        }
         
 		wp_send_json(array(
 			'result'	=> 'failure', // this is just to stop WC send the form, and show APMs
@@ -933,7 +969,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         if (!empty($items_info['subscr_data'])) {
             return $filtred_gws;
         }
-        elseif (1 == $this->get_setting('allow_zero_checkout')
+        elseif (1 == $this->get_option('allow_zero_checkout')
             && 0 == $items_info['totals']['total']
         ) {
             return $filtred_gws;
@@ -1221,7 +1257,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		}
 		
 		// create one combined item
-		if (1 == $this->get_setting('combine_cashier_products')) {
+		if (1 == $this->get_option('combine_cashier_products')) {
 			$params['item_name_1']     = 'WC_Cashier_Order';
 			$params['item_quantity_1'] = 1;
 			$params['item_amount_1']   = $total_amount;

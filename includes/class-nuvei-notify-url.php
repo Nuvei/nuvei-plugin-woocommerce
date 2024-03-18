@@ -50,13 +50,15 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		}
         
 		// santitized get variables
-		$clientUniqueId         = $this->get_cuid();
+		$clientUniqueId         = Nuvei_Http::get_param('clientUniqueId');
+        $merchant_unique_id     = Nuvei_Http::get_param('merchant_unique_id', 'int', false);
 		$transactionType        = Nuvei_Http::get_param('transactionType');
 		$order_id               = Nuvei_Http::get_param('order_id', 'int');
 		$TransactionID          = Nuvei_Http::get_param('TransactionID', 'int', false);
 		$relatedTransactionId   = Nuvei_Http::get_param('relatedTransactionId', 'int');
 		$dmnType                = Nuvei_Http::get_param('dmnType');
 		$client_request_id      = Nuvei_Http::get_param('clientRequestId');
+        $total                  = Nuvei_Http::get_param('totalAmount', 'float');
 		
 		// Subscription State DMN. We save Order here and exit.
 		if ('subscription' == $dmnType) {
@@ -116,27 +118,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
         return [];
     }
 	
-	/**
-	 * Get client unique id.
-	 * We change it only for Sandbox (test) mode.
-	 * 
-	 * @return int|string
-	 */
-	private function get_cuid()
-    {
-		$clientUniqueId = Nuvei_Http::get_param('clientUniqueId');
-		
-		if ('yes' != $this->nuvei_gw->get_option('test')) {
-			return $clientUniqueId;
-		}
-		
-		if (strpos($clientUniqueId, NUVEI_CUID_POSTFIX) !== false) {
-			return current(explode('_', $clientUniqueId));
-		}
-		
-		return $clientUniqueId;
-	}
-
 	/**
 	 * Validate advanceResponseChecksum and/or responsechecksum parameters.
 	 *
@@ -214,16 +195,16 @@ class Nuvei_Notify_Url extends Nuvei_Request
 	}
 	
 	/**
-	 * Get the Order data by Transaction ID.
+	 * Get the Order data by DMN data.
 	 * 
-	 * @param int $trans_id
+	 * @param mixed $trans_id           Can be the transactionId or null.
 	 * @param string $transactionType
 	 * 
 	 * @return int
 	 */
-	private function get_order_by_trans_id($trans_id, $transactionType = '')
+	private function search_order_by_dmn_data($trans_id, $transactionType = '')
     {
-        Nuvei_Logger::write([$trans_id, $transactionType], 'get_order_by_trans_id');
+        Nuvei_Logger::write([$trans_id, $transactionType], 'search_order_by_dmn_data');
         
 		// try to get Order ID by its meta key
 		$tries		= 0;
@@ -320,7 +301,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
         ]);
         
         $void_params    = [
-            'clientUniqueId'        => gmdate('YmdHis') . '_' . uniqid(),
+            'clientUniqueId'        => $this->get_client_unique_id(Nuvei_Http::get_param('email')),
             'amount'                => (string) Nuvei_Http::get_param('totalAmount', 'float'),
             'currency'              => Nuvei_Http::get_param('currency'),
             'relatedTransactionId'  => Nuvei_Http::get_param('TransactionID', 'int'),
@@ -364,17 +345,28 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		global $wpdb;
 		
         /**
-         * TODO - after few versions stop search by _transactionId
+         * TODO - after few versions stop search by "_transactionId" and search only by NUVEI_TR_ID
          */
-		$res = $wpdb->get_results(
-			$wpdb->prepare(
+		if (is_null($TransactionID)) {
+            $query = $wpdb->prepare(
+				"SELECT post_id FROM {$wpdb->prefix}postmeta "
+                    . "WHERE meta_key = %s "
+                        . "AND meta_value = %s ;",
+				NUVEI_CLIENT_UNIQUE_ID,
+				Nuvei_Http::get_param('clientUniqueId')
+			);
+        }
+        else {
+            $query = $wpdb->prepare(
 				"SELECT post_id FROM {$wpdb->prefix}postmeta "
                     . "WHERE (meta_key = '_transactionId' OR meta_key = %s )"
                         . "AND meta_value = %s ;",
 				NUVEI_TR_ID,
 				$TransactionID
-			)
-		);
+			);
+        }
+        
+        $res = $wpdb->get_results($query);
                 
 		return $res;
 	}
@@ -876,7 +868,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
         elseif($TransactionID) {
             Nuvei_Logger::write('SDK Order');
             $is_sdk_order   = true;
-            $order_id       = $this->get_order_by_trans_id($TransactionID, $transactionType);
+            $order_id       = $this->search_order_by_dmn_data(null, $transactionType);
         }
 
         $this->is_order_valid($order_id);
@@ -892,7 +884,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 
         $this->check_for_repeating_dmn();
         $this->save_transaction_data();
-
+        
         $order_status   = strtolower($this->sc_order->get_status());
         $order_total    = round($this->sc_order->get_total(), 2);
 
@@ -955,7 +947,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
      */
     private function process_refund_dmn($relatedTransactionId, $transactionType, $req_status)
     {
-        $order_id   = $this->get_order_by_trans_id($relatedTransactionId, $transactionType);
+        $order_id   = $this->search_order_by_dmn_data($relatedTransactionId, $transactionType);
         $total      = Nuvei_Http::get_param('totalAmount', 'float');
             
         Nuvei_Logger::write($order_id);

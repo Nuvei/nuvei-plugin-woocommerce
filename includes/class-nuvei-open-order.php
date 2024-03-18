@@ -161,7 +161,8 @@ class Nuvei_Open_Order extends Nuvei_Request
         $currency   = get_woocommerce_currency();
         
 		$oo_params = array(
-			'clientUniqueId'    => gmdate('YmdHis') . '_' . uniqid(),
+//			'clientUniqueId'    => gmdate('YmdHis') . '_' . uniqid(),
+            'clientUniqueId'    => $this->get_client_unique_id($addresses['billingAddress']['email'], $products_data),
 			'currency'          => $currency,
 			'amount'            => $amount,
 			'shippingAddress'	=> $addresses['shippingAddress'],
@@ -210,6 +211,7 @@ class Nuvei_Open_Order extends Nuvei_Request
                 'orderId'			=> $resp['orderId'], // use it in updateOrder, this is PPP_TransactionID in the DMN
                 'transactionType'	=> $oo_params['transactionType'], // use it to decide call or not updateOrder
                 'userTokenId'       => $oo_params['userTokenId'], // use it to decide call or not updateOrder
+                'clientUniqueId'    => $oo_params['clientUniqueId'], // the new parameter to recognize the Order
             );
             
             $this->set_nuvei_session_data(

@@ -34,7 +34,7 @@
 			<input type="hidden" name="woocommerce_nuvei_pm_black_list" 
 				   id="woocommerce_nuvei_pm_black_list" 
 				   readonly="" 
-				   value="<?php echo esc_attr($this->get_setting('pm_black_list', '')); ?>" />
+				   value="<?php echo esc_attr($this->get_option('pm_black_list', '')); ?>" />
 			
 			<button type="button" id="nuvei_clean_blocked_pms" class="button-secondary" onclick="nuveiCleanBlockedPMs()">
 				<?php echo esc_html('Clean', 'nuvei_checkout_woocommerce'); ?>

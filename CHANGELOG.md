@@ -1,6 +1,6 @@
 # WooCommerce Extension Changelog
 
-# 2.1.1
+# 3.0.0
 ```
     * Move different DMNs logic in separate methods.
     * Removed an unused method.

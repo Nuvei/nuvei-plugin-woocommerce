@@ -38,7 +38,8 @@ abstract class Nuvei_Request
 		$this->request_base_params = array(
 			'merchantId'        => trim($this->nuvei_gw->get_option('merchantId')),
 			'merchantSiteId'    => trim($this->nuvei_gw->get_option('merchantSiteId')),
-			'clientRequestId'   => $time . '_' . uniqid(),
+//			'clientRequestId'   => $time . '_' . uniqid(),
+			'clientRequestId'   => uniqid('', true),
 			'timeStamp'         => $time,
 			'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION . '; Plugin v' . nuvei_get_plugin_version(),
 			'sourceApplication' => NUVEI_SOURCE_APPLICATION,
@@ -1054,6 +1055,22 @@ abstract class Nuvei_Request
         }
 		
 //        $this->sc_order->save();
+    }
+    
+    /**
+     * Single place to generate the client unique id parameter.
+     * 
+     * @param string $billing_email
+     * @param array $products_data  Optional for the Auto-Void.
+     * 
+     * @return string $clientUniqueId
+     */
+    protected function get_client_unique_id($billing_email, $products_data = [])
+    {
+        $orderString    = $billing_email . '_' . serialize($products_data);
+        $clientUniqueId = hash('crc32b', $orderString) . '_' .  uniqid('', true);
+        
+        return $clientUniqueId;
     }
     
     /**
