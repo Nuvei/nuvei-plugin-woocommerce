@@ -334,8 +334,6 @@ function nuveiWcShortcode() {
 }
 
 jQuery(function() {
-    console.log('nuvei public');
-    
 	if('no' === scTrans.isPluginActive) {
 		return;
 	}
@@ -393,10 +391,10 @@ jQuery(function() {
 // document ready function END
 
 window.onload = function() {
-    console.log('window onload');
-    
     if (jQuery('input[name=radio-control-wc-payment-method-options]').length == 1) {
-        nuveiCheckoutBlocks.changePaymentBtn(jQuery('input[name=radio-control-wc-payment-method-options]:checked').val());
+        nuveiCheckoutBlocks.changePaymentBtn(
+            jQuery('input[name=radio-control-wc-payment-method-options]:checked').val()
+        );
     }
     
     jQuery('input[name=radio-control-wc-payment-method-options]').on('change', function() {
