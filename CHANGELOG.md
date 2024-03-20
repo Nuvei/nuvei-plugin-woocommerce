@@ -2,15 +2,14 @@
 
 # 3.0.0
 ```
-    * Move different DMNs logic in separate methods.
-    * Removed an unused method.
-    * Declare plugin incompatability with 'cart_checkout_blocks';
-    * Declare plugin compatability with HPOS.
-    * Fix for the case when try to do Settle, Void or Refund on Order made with plugin before v2.0.0.
-    * Auto-Void fix. Allow Auto-Void for approved transactions only.
-    * Fix for the missing notify URL in create_auto_void() method.
+    * Fix for Settle, Void or Refund on Orders made with plugin before v2.0.0.
+	* Auto-Void fix. Allow Auto-Void for approved transactions only.
+	* Fix for the missing notify URL in create_auto_void() method.
     * Added ApplePay locale.
-```
+	* Move different DMN logic in separate methods.
+    * Declare plugin compatibility with 'cart_checkout_blocks';
+    * Declare plugin compatibility with HPOS.
+	* Removed deprecated methods - save_refund_meta_data(), get_cuid(), create_refund_record().
 
 # 2.1.0-p1
 ```
