@@ -49,6 +49,8 @@ final class Nuvei_Gateway_Blocks_Support extends AbstractPaymentMethodType
     
     public function get_payment_method_data()
     {
+        Nuvei_Logger::write(null, 'get_payment_method_data', "DEBUG");
+        
         $settings = [
             'title'         => $this->settings['title'],
             'description'   => $this->settings['description'],
@@ -60,7 +62,7 @@ final class Nuvei_Gateway_Blocks_Support extends AbstractPaymentMethodType
         if (!is_admin() && is_checkout()) {
             global $wc_nuvei;
             
-            $settings['checkoutParams'] = $wc_nuvei->call_checkout(false, false, true);
+            $settings['checkoutParams'] = $wc_nuvei->call_checkout(false, true);
         }
         
         return $settings;

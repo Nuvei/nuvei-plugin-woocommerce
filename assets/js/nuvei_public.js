@@ -192,6 +192,15 @@ function showNuveiCheckout(_params) {
 		nuveiCheckoutSdkParams = _params;
 	}
     
+    // on error
+    if (!nuveiCheckoutSdkParams.hasOwnProperty('sessionToken')
+        || ( nuveiCheckoutSdkParams.hasOwnProperty('status') 
+            && 'error' == nuveiCheckoutSdkParams.status)
+    ) {
+        nuveiShowErrorMsg();
+        return;
+    }
+    
     // in this case we have product with Nuvei payment plan.
     if('savePM' === nuveiCheckoutSdkParams.savePM) {
         nuveiCheckoutSdkParams.pmBlacklist  = null;

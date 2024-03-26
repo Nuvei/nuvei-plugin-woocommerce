@@ -714,9 +714,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
      * 
      * @param bool $is_rest         Is the method called from the REST API?
      * @param bool $is_wc_blocks    Is the method called from WC Blocks hook?
-     * @param bool $return_params   Return params instead of print them?
 	 */
-	public function call_checkout($is_rest = false, $is_wc_blocks = false, $return_params = false)
+	public function call_checkout($is_rest = false, $is_wc_blocks = false)
     {
         Nuvei_Logger::write(
             [
@@ -741,7 +740,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             if (!empty($oo_data['custom_msg'])) {
                 $msg = $oo_data['custom_msg'];
             }
-			
+            
+            if ($is_wc_blocks) {
+                return [
+                    'messages'  => $msg,
+                    'status'    => 'error',
+                ];
+            }
+            
             wp_send_json(array(
 				'result'	=> 'failure',
 				'refresh'	=> false,
@@ -896,7 +902,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         Nuvei_Logger::write($checkout_data, '$checkout_data');
         
         // For blocks checkout, get the data when register Nuvei gateway.
-        if ($return_params) {
+        if ($is_wc_blocks) {
             return $checkout_data;
         }
         
@@ -1085,6 +1091,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
      */
     public function rest_get_simply_connect_data($params)
     {
+        Nuvei_Logger::write(null, 'rest_get_simply_connect_data', "DEBUG");
+        
         $this->rest_params = $params;
         
         return $this->call_checkout(true);

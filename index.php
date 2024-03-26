@@ -204,6 +204,8 @@ function nuvei_init()
 			if (isset($wc_nuvei->settings['integration_type'])
 				&& 'cashier' != $wc_nuvei->settings['integration_type']
 			) {
+                Nuvei_Logger::write(null, 'action woocommerce_after_checkout_validation', "DEBUG");
+                
 				$wc_nuvei->call_checkout();
 			}
 		}
@@ -330,17 +332,9 @@ function nuvei_ajax_action()
 	
 	// Check Cart on SDK pre-payment event
 	if (Nuvei_Http::get_param('prePayment', 'int') == 1) {
-//        $wc_nuvei->call_checkout($is_ajax = true);
         $wc_nuvei->checkout_prepayment_check();
 	}
     
-    // Need checkout params from Checkout Blocks
-//	if (Nuvei_Http::get_param('callCheckout', 'int') == 1) {
-//        Nuvei_Logger::write('callCheckout');
-//        
-//        $wc_nuvei->call_checkout();
-//	}
-	
 	// when Reorder
 	if (Nuvei_Http::get_param('sc_request') == 'scReorder') {
 		$wc_nuvei->reorder();
