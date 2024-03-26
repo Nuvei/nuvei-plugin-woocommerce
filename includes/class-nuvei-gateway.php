@@ -1618,6 +1618,17 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 				'default'       => 1,
 				'class'         => 'nuvei_checkout_setting'
             ],
+            'mask_user_data' => array(
+                'title'         => __('Mask user data into the log.', 'nuvei_checkout_woocommerce'),
+				'type'          => 'select',
+				'options'       => array(
+					1   => __('Yes (Recommended)', 'nuvei_checkout_woocommerce'),
+					0   => __('No', 'nuvei_checkout_woocommerce'),
+				),
+				'default'       => 1,
+				'class'         => 'nuvei_checkout_setting',
+                'description'   => __('If you disable this option, the user data will be completly exposed in the log records.', 'nuvei_checkout_woocommerce'),
+            ),
 			'log_level' => array(
 				'title'         => __('Checkout Log level', 'nuvei_checkout_woocommerce'),
 				'type'          => 'select',

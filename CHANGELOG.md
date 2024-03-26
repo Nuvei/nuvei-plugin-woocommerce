@@ -10,6 +10,7 @@
     * Declare plugin compatibility with 'cart_checkout_blocks';
     * Declare plugin compatibility with HPOS.
 	* Removed deprecated methods - save_refund_meta_data(), get_cuid(), create_refund_record().
+    * In the log user details are masked by default. This can be changed from the plugin options.
 
 # 2.1.0-p1
 ```

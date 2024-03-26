@@ -382,7 +382,7 @@ abstract class Nuvei_Request
                 array(
                     'Request URL'       => $url,
                     'Request header'    => $header,
-                    'Request params'    => $all_params,
+                    LOG_REQUEST_PARAMS  => $all_params,
                 ),
                 'Nuvei Request data'
             );
@@ -543,7 +543,7 @@ abstract class Nuvei_Request
             Nuvei_Logger::write($items);
             
             foreach ($items as $item_id => $item) {
-                Nuvei_Logger::write([ $item['product_id'], $item_id]);
+//                Nuvei_Logger::write([ $item['product_id'], $item_id]);
 
                 $cart_product           = wc_get_product( $item['product_id'] );
                 $cart_prod_attr         = $cart_product->get_attributes();
@@ -558,10 +558,10 @@ abstract class Nuvei_Request
                     'item_id'       => $item_id,
                 );
 
-                Nuvei_Logger::write([
-                    'nuvei taxonomy name'   => $nuvei_taxonomy_name,
-                    'product attributes'    => $cart_prod_attr
-                ]);
+//                Nuvei_Logger::write([
+//                    'nuvei taxonomy name'   => $nuvei_taxonomy_name,
+//                    'product attributes'    => $cart_prod_attr
+//                ]);
 
                 // check for WCS
                 if (false !== strpos($cart_product->get_type(), 'subscription')) {

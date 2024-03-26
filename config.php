@@ -38,6 +38,8 @@ const NUVEI_SESSION_OO_DETAILS      = 'nuvei_last_open_order_details'; // a sess
 const NUVEI_SESSION_PROD_DETAILS    = 'nuvei_order_details'; // products details
 const NUVEI_SESSION_PLUGIN_GIT_V    = 'nuvei_plugin_git_version';
 
+const LOG_REQUEST_PARAMS    = 'Request params';
+
 define('NUVEI_LOGS_DIR', dirname(dirname(dirname(__FILE__))) . DIRECTORY_SEPARATOR 
     . 'uploads' . DIRECTORY_SEPARATOR . 'nuvei-logs' . DIRECTORY_SEPARATOR);
 
