@@ -211,6 +211,14 @@ class Nuvei_Logger
                 continue;
             }
             
+            // mask userAccountDetails, userPaymentOption and paymentOption
+            if (in_array($key, ['userAccountDetails', 'userPaymentOption', 'paymentOption'])
+                && is_array($value)
+            ) {
+                $array[$key] = '****';
+                continue;
+            }
+            
             // mask the others
             if ($is_user_data && !is_numeric($key) && !in_array($key, ['city', 'country'])) {
                 $array[$key] = '****';
