@@ -49,7 +49,7 @@ final class Nuvei_Gateway_Blocks_Support extends AbstractPaymentMethodType
     
     public function get_payment_method_data()
     {
-        Nuvei_Logger::write(null, 'get_payment_method_data', "DEBUG");
+//        Nuvei_Logger::write(null, 'get_payment_method_data', "DEBUG");
         
         $settings = [
             'title'         => $this->settings['title'],

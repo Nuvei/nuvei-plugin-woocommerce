@@ -7,6 +7,20 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Logger
 {
+    private static $fieldsToMask = [
+        'ips'       => ['ipAddress'],
+        'names'     => ['firstName', 'lastName', 'first_name', 'last_name', 'shippingFirstName', 'shippingLastName'],
+        'emails'    => [
+            'userTokenId',
+            'email',
+            'shippingMail', // from the DMN
+            'userid', // from the DMN
+            'user_token_id', // from the DMN
+        ],
+        'address'   => ['address', 'phone', 'zip'],
+        'others'    => ['userAccountDetails', 'userPaymentOption', 'paymentOption'],
+    ];
+    
     private static $trace_id;
 
     /**
@@ -78,7 +92,10 @@ class Nuvei_Logger
         
         if(is_array($data)) {
             if (1 == $maskUserData) {
-                $data = self::mask_data($data);
+                // clean possible objects inside array
+                $data = json_decode(json_encode($data), true);
+                
+                array_walk_recursive($data, 'self::mask_data', self::$fieldsToMask);
             }
 
             // paymentMethods can be very big array
@@ -90,6 +107,13 @@ class Nuvei_Logger
             }
         }
         elseif(is_object($data)) {
+            if (1 == $maskUserData) {
+                // clean possible objects inside array
+                $data = json_decode(json_encode($data), true);
+                
+                array_walk_recursive($data, 'self::mask_data', self::$fieldsToMask);
+            }
+            
             $data_tmp   = print_r((array) $data, true);
             $exception  = $beauty_log ? json_encode($data_tmp, JSON_PRETTY_PRINT) : json_encode($data_tmp);
         }
@@ -147,85 +171,28 @@ class Nuvei_Logger
 	}
     
     /**
-     * Mask data for the log.
+     * A callback function for arraw_walk_recursive.
      * 
-     * @param array $data
+     * @param mixed $value
+     * @param mixed $key
+     * @param array $fields
      */
-    private static function mask_data($data)
+    private static function mask_data(&$value, $key, $fields)
     {
-        // mask the IP address
-        if (!empty($data[LOG_REQUEST_PARAMS]['deviceDetails'])) {
-            $data[LOG_REQUEST_PARAMS]['deviceDetails']['ipAddress']
-                = rtrim(long2ip(ip2long($data[LOG_REQUEST_PARAMS]['deviceDetails']['ipAddress']) & (~255)),"0")."x";
+        if (in_array($key, $fields['ips'])) {
+            $value = rtrim(long2ip(ip2long($value) & (~255)),"0")."x";
         }
-        
-        // mask the shipping details
-        if (!empty($data[LOG_REQUEST_PARAMS]['shippingAddress'])) {
-            $data[LOG_REQUEST_PARAMS]['shippingAddress']
-                = self::mask_string($data[LOG_REQUEST_PARAMS]['shippingAddress']);
+        elseif (in_array($key, $fields['names'])) {
+            $value = substr($value, 0, 1) . '****';
         }
-        
-        // mask the billing details
-        if (!empty($data[LOG_REQUEST_PARAMS]['billingAddress'])) {
-            $data[LOG_REQUEST_PARAMS]['billingAddress']
-                = self::mask_string($data[LOG_REQUEST_PARAMS]['billingAddress']);
+        elseif (in_array($key, $fields['emails'])) {
+            $value = '****' . substr($value, 4);
         }
-        
-        if (!empty($data['billingAddress'])) {
-            $data['billingAddress'] = self::mask_string($data['billingAddress']);
+        elseif (in_array($key, $fields['address'])
+            || in_array($key, $fields['others'])
+        ) {
+            $value = '****';
         }
-        
-        // mask the user details
-        if (!empty($data[LOG_REQUEST_PARAMS]['userDetails'])) {
-            $data[LOG_REQUEST_PARAMS]['userDetails']
-                = self::mask_string($data[LOG_REQUEST_PARAMS]['userDetails']);
-        }
-        
-        // other, like responses
-        $data = self::mask_string($data, false);
-
-        return $data;
-    }
-    
-    /**
-     * A help function to mask user data.
-     * 
-     * @param type $array           Original array.
-     * @param bool $is_user_data    If this is no user data, do not mask all fields.
-     * 
-     * @return array $array         Array with masked strings.
-     */
-    private static function mask_string($array, $is_user_data = true)
-    {
-        foreach ($array as $key => $value) {
-            // mask the email
-            if (in_array($key, ['email', 'userTokenId']) && !empty($value)) {
-                $part = substr($value, 4);
-                $array[$key] = '****' . $part;
-                continue;
-            }
-            
-            // mask the names
-            if (strpos(strtolower($key), 'name')) {
-                $array[$key] = substr($value, 0, 1) . '****';
-                continue;
-            }
-            
-            // mask userAccountDetails, userPaymentOption and paymentOption
-            if (in_array($key, ['userAccountDetails', 'userPaymentOption', 'paymentOption'])
-                && is_array($value)
-            ) {
-                $array[$key] = '****';
-                continue;
-            }
-            
-            // mask the others
-            if ($is_user_data && !is_numeric($key) && !in_array($key, ['city', 'country'])) {
-                $array[$key] = '****';
-            } 
-        }
-        
-        return $array;
     }
     
 }
