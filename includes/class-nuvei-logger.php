@@ -179,19 +179,21 @@ class Nuvei_Logger
      */
     private static function mask_data(&$value, $key, $fields)
     {
-        if (in_array($key, $fields['ips'])) {
-            $value = rtrim(long2ip(ip2long($value) & (~255)),"0")."x";
-        }
-        elseif (in_array($key, $fields['names'])) {
-            $value = substr($value, 0, 1) . '****';
-        }
-        elseif (in_array($key, $fields['emails'])) {
-            $value = '****' . substr($value, 4);
-        }
-        elseif (in_array($key, $fields['address'])
-            || in_array($key, $fields['others'])
-        ) {
-            $value = '****';
+        if (!empty($value)) {
+            if (in_array($key, $fields['ips'])) {
+                $value = rtrim(long2ip(ip2long($value) & (~255)),"0")."x";
+            }
+            elseif (in_array($key, $fields['names'])) {
+                $value = substr($value, 0, 1) . '****';
+            }
+            elseif (in_array($key, $fields['emails'])) {
+                $value = '****' . substr($value, 4);
+            }
+            elseif (in_array($key, $fields['address'])
+                || in_array($key, $fields['others'])
+            ) {
+                $value = '****';
+            }
         }
     }
     
