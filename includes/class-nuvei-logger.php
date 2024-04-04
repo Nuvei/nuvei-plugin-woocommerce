@@ -107,7 +107,7 @@ class Nuvei_Logger
             }
         }
         elseif(is_object($data)) {
-            if (1 == $maskUserData) {
+            if (1 == $maskUserData && !empty($data)) {
                 // clean possible objects inside array
                 $data = json_decode(json_encode($data), true);
                 
