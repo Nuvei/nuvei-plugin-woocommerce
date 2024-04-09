@@ -1277,7 +1277,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway
             $params['numberofitems']    = 0;
 
 			foreach ($products_data['products_data'] as $item) {
-				$params['item_name_' . $cnt]     = ( $item['name'] );
+				$params['item_name_' . $cnt]     = str_replace(['"', "'"], ['', ''], stripslashes($item['name']));
 				$params['item_amount_' . $cnt]   = number_format((float) round($item['price'], 2), 2, '.', '');
 				$params['item_quantity_' . $cnt] = (int) $item['quantity'];
 
