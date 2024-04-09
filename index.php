@@ -445,14 +445,15 @@ function nuvei_load_scripts()
     $localizations = array_merge(
         NUVEI_JS_LOCALIZATIONS,
         [
-            'security'          => wp_create_nonce('sc-security-nonce'),
-            'wcThSep'           => $wcThSep,
-            'wcDecSep'          => $wcDecSep,
-            'useUpos'           => $wc_nuvei->can_use_upos(),
-            'isUserLogged'      => is_user_logged_in() ? 1 : 0,
-            'isPluginActive'    => $wc_nuvei->settings['enabled'],
-            'loaderUrl'         => plugin_dir_url(__FILE__) . 'assets/icons/loader.gif',
-            'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION
+            'security'              => wp_create_nonce('sc-security-nonce'),
+            'wcThSep'               => $wcThSep,
+            'wcDecSep'              => $wcDecSep,
+            'useUpos'               => $wc_nuvei->can_use_upos(),
+            'isUserLogged'          => is_user_logged_in() ? 1 : 0,
+            'isPluginActive'        => $wc_nuvei->settings['enabled'],
+            'loaderUrl'             => plugin_dir_url(__FILE__) . 'assets/icons/loader.gif',
+            'checkoutIntegration'   => $wc_nuvei->settings['integration_type'],
+            'webMasterId'           => 'WooCommerce ' . WOOCOMMERCE_VERSION
                 . '; Plugin v' . nuvei_get_plugin_version(),
         ]
     );

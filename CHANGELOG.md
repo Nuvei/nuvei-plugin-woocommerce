@@ -12,6 +12,7 @@
     * Removed deprecated methods - save_refund_meta_data(), get_cuid(), create_refund_record().
     * In the log user details are masked by default. This can be changed from the plugin options.
     * Clean Items names, when Cashier is used.
+    * Fix for the broken Cashier implementation.
 ```
 
 # 2.1.0-p1

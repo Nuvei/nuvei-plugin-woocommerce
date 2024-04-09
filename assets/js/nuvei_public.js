@@ -56,7 +56,11 @@ var nuveiCheckoutBlocks = {
         var self                = this;
         var blockPlaceOrderBtn  = jQuery('button.wc-block-components-checkout-place-order-button');
     
-        if (blockPlaceOrderBtn.length > 0) {
+        if (scTrans
+            && scTrans.hasOwnProperty('checkoutIntegration')
+            && 'sdk' == scTrans.checkoutIntegration
+            && blockPlaceOrderBtn.length > 0
+        ) {
             console.log('change submit button', nuveiSelectedBlockPm);
 
             blockPlaceOrderBtn.on('click', function(e) {
