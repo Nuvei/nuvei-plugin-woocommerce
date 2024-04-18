@@ -336,18 +336,16 @@ class Nuvei_Notify_Url extends Nuvei_Request
 	/**
 	 * Just a repeating code.
 	 * 
-	 * @global type $wpdb
+	 * @global $wpdb
 	 * @param int $TransactionID
-	 * @return type
+	 * @return array
 	 */
 	private function get_order_data( $TransactionID)
     {
 		global $wpdb;
 		
-        /**
-         * TODO - after few versions stop search by "_transactionId" and search only by NUVEI_TR_ID
-         */
 		if (is_null($TransactionID)) {
+            // old WC records
             $query = $wpdb->prepare(
 				"SELECT post_id FROM {$wpdb->prefix}postmeta "
                     . "WHERE meta_key = %s "
@@ -355,20 +353,63 @@ class Nuvei_Notify_Url extends Nuvei_Request
 				NUVEI_CLIENT_UNIQUE_ID,
 				Nuvei_Http::get_param('clientUniqueId')
 			);
-        }
-        else {
+            
+            $res = $wpdb->get_results($query);
+            
+            if (!empty($res)) {
+                return $res;
+            }
+            
+            // search for HPOS record
             $query = $wpdb->prepare(
-				"SELECT post_id FROM {$wpdb->prefix}postmeta "
-                    . "WHERE (meta_key = '_transactionId' OR meta_key = %s )"
+				"SELECT order_id AS post_id "
+                . "FROM {$wpdb->prefix}wc_orders_meta  "
+                    . "WHERE meta_key = %s "
                         . "AND meta_value = %s ;",
-				NUVEI_TR_ID,
-				$TransactionID
+				NUVEI_CLIENT_UNIQUE_ID,
+				Nuvei_Http::get_param('clientUniqueId')
 			);
+            
+            $res = $wpdb->get_results($query);
+            
+            if (!empty($res)) {
+                return $res;
+            }
+            
+            return [];
         }
         
+        // plugin legacy search, TODO - after few versions stop search by "_transactionId" and search only by NUVEI_TR_ID
+        // search in WC legacy table
+        $query = $wpdb->prepare(
+            "SELECT post_id FROM {$wpdb->prefix}postmeta "
+                . "WHERE (meta_key = '_transactionId' OR meta_key = %s )"
+                    . "AND meta_value = %s ;",
+            NUVEI_TR_ID,
+            $TransactionID
+        );
+        
         $res = $wpdb->get_results($query);
-                
-		return $res;
+            
+        if (!empty($res)) {
+            return $res;
+        }
+        
+        // search for HPOS record
+        $query = $wpdb->prepare(
+            "SELECT order_id AS post_id"
+            . " FROM {$wpdb->prefix}wc_orders_meta "
+                . "WHERE (meta_key = '_transactionId' OR meta_key = %s )"
+                    . "AND meta_value = %s ;",
+            NUVEI_TR_ID,
+            $TransactionID
+        );
+        
+        if (!empty($res)) {
+            return $res;
+        }
+        
+		return [];
 	}
 	
 	/**

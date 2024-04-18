@@ -269,10 +269,6 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 			);
 		}
 		
-		// when we have Approved from the SDK we complete the order here
-//		$nuvei_transaction_id   = Nuvei_Http::get_param('nuvei_transaction_id', 'int');
-//		$nuvei_session_token    = Nuvei_Http::get_param('nuvei_session_token');
-        
 		# in case we use Cashier
 		if (isset($this->settings['integration_type'])
             && 'cashier' == $this->settings['integration_type']
@@ -319,41 +315,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway
         }
         
         // Success
-//		if (!empty($nuvei_transaction_id)) {
-//			Nuvei_Logger::write('Process webSDK Order, transaction ID #' . $nuvei_transaction_id);
-			
-//            $transactions_data[$nuvei_transaction_id] = [];
-//			$order->update_meta_data(NUVEI_TR_ID, $nuvei_transaction_id);
-//			$order->update_meta_data(NUVEI_TRANSACTIONS, $transactions_data);
         $order->update_meta_data(NUVEI_ORDER_ID, $nuvei_oo_details['orderId']);
         $order->update_meta_data(NUVEI_CLIENT_UNIQUE_ID, $nuvei_oo_details['clientUniqueId']);
-            
-//            Nuvei_Logger::write($nuvei_oo_details);
-            
-//			$order->save();
-//			
-//			return array(
-//				'result'    => 'success',
-//				'redirect'  => $return_success_url
-//			);
-//		}
-        
-        // Error - missing Transaction ID
-//        Nuvei_Logger::write($order_id, '$nuvei_transaction_id is empty for Order ID ');
-        
-//        return array(
-//            'result'    => 'success',
-//            'redirect'  => array(
-//                'Status'    => 'error',
-//            ),
-//            wc_get_checkout_url() . 'order-received/' . $order_id . '/'
-//        );
-            
-         // new code
         $order->update_status('pending');
         $order->save();
+        
         // Remove cart.
 		WC()->cart->empty_cart();
+        
         // Return thankyou redirect.
 		return array(
 			'result'   => 'success',
