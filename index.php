@@ -9,9 +9,9 @@
  * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.4.3
+ * Tested up to: 6.5.2
  * WC requires at least: 3.0
- * WC tested up to: 8.6.2
+ * WC tested up to: 8.7.0
 */
 
 defined('ABSPATH') || die('die');
@@ -1148,7 +1148,8 @@ function nuvei_wc_cart_needs_payment($needs_payment, $cart)
 
 function nuvei_after_order_itemmeta($item_id, $item, $_product)
 {
-    $post_id        = Nuvei_Http::get_param('post', 'int');
+    // choose one of the get parameters
+    $post_id        = max([Nuvei_Http::get_param('post', 'int'), Nuvei_Http::get_param('id', 'int')]);
     $order          = wc_get_order($post_id);
 //    $subs_id        = $order->get_meta(NUVEI_ORDER_SUBSCR_ID);
 //    $post_meta      = get_post_meta($post_id);

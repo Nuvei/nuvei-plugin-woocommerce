@@ -193,6 +193,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 	 */
 	public function process_payment($order_id)
     {
+        Nuvei_Logger::write($order_id, 'process_payment');
+        
         $nuvei_order_details    = WC()->session->get(NUVEI_SESSION_PROD_DETAILS);
         $nuvei_session_token    = key($nuvei_order_details);
         $nuvei_oo_details       = WC()->session->get(NUVEI_SESSION_OO_DETAILS);
