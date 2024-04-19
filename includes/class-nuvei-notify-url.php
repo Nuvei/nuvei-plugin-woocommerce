@@ -340,7 +340,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 	 * @param int $TransactionID
 	 * @return array
 	 */
-	private function get_order_data( $TransactionID)
+	private function get_order_data($TransactionID)
     {
 		global $wpdb;
 		
@@ -404,6 +404,8 @@ class Nuvei_Notify_Url extends Nuvei_Request
             NUVEI_TR_ID,
             $TransactionID
         );
+            
+        $res = $wpdb->get_results($query);
         
         if (!empty($res)) {
             return $res;

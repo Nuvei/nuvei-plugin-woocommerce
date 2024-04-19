@@ -267,8 +267,8 @@ function nuveiWcShortcode() {
         if(jQuery('.woocommerce #nuvei_checkout_container').length == 0) {
             jQuery('form.woocommerce-checkout')	
                 .after(
-                    '<div id="nuvei_checkout_container" style="display: none;">'
-                        + '<div id="nuvei_checkout_errors"></div>'
+                    '<div id="nuvei_checkout_errors"></div>'
+                    + '<div id="nuvei_checkout_container" style="display: none;">'
                         + '<div id="nuvei_checkout">Loading...</div>'
                     + '</div>'
                 );
