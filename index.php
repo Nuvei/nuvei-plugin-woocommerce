@@ -691,19 +691,27 @@ function nuvei_add_buttons($order)
         );
 
         // check for active subscriptions
-//        $all_meta = get_post_meta($order->get_id());
-        $all_meta = $order->get_meta_data();
+        $all_meta       = $order->get_meta_data();
+        $subscr_list    = $helper->get_rebiling_details($all_meta);
 
-        foreach ($all_meta as $meta_key => $meta_data) {
-            if (false !== strpos($meta_key, NUVEI_ORDER_SUBSCR)) {
-                $subscr_data = $order->get_meta($meta_key);
-
-                if (!empty($subscr_data['state'])
-                    && 'active' == $subscr_data['state']
-                ) {
-                    $question = __('Are you sure, you want to Cancel this Order? This will also deactivate all Active Subscriptions.', 'nuvei_checkout_woocommerce');
-                    break;
-                }
+//        foreach ($all_meta as $meta_key => $meta_data) {
+//            if (false !== strpos($meta_key, NUVEI_ORDER_SUBSCR)) {
+//                $subscr_data = $order->get_meta($meta_key);
+//
+//                if (!empty($subscr_data['state'])
+//                    && 'active' == $subscr_data['state']
+//                ) {
+//                    $question = __('Are you sure, you want to Cancel this Order? This will also deactivate all Active Subscriptions.', 'nuvei_checkout_woocommerce');
+//                    break;
+//                }
+//            }
+//        }
+        foreach ($subscr_list as $meta_data) {
+            if (!empty($meta_data['subs_data']['state'])
+                && 'active' == $meta_data['subs_data']['state']
+            ) {
+                $question = __('Are you sure, you want to Cancel this Order? This will also deactivate all Active Subscriptions.', 'nuvei_checkout_woocommerce');
+                break;
             }
         }
         // /check for active subscriptions
@@ -1097,22 +1105,22 @@ function nuvei_hpos_edit_order_list_columns($column, $order)
 function nuvei_edit_my_account_orders_col( $order)
 {
     // get all meta fields
-//    $post_meta  = get_post_meta($order->get_id());
-    $post_meta  = $order->get_meta_data();
-    $is_subscr  = false;
+    $helper         = new Nuvei_Helper();
+    $post_meta      = $order->get_meta_data();
+    $subscr_list    = $helper->get_rebiling_details($post_meta);
+    $is_subscr      = !empty($subscr_list) ? true : false;
     
-    if (!empty($post_meta) && is_array($post_meta)) {
-        foreach ($post_meta as $key => $data) {
-            if (false !== strpos($key, NUVEI_ORDER_SUBSCR)) {
-                $is_subscr = true;
-                break;
-            }
-        }
-    }
+//    if (!empty($post_meta) && is_array($post_meta)) {
+//        foreach ($post_meta as $key => $data) {
+//            if (false !== strpos($key, NUVEI_ORDER_SUBSCR)) {
+//                $is_subscr = true;
+//                break;
+//            }
+//        }
+//    }
     
 	echo '<a href="' . esc_url( $order->get_view_order_url() ) . '"';
 	
-//	if (!empty($order->get_meta(NUVEI_ORDER_SUBSCR_ID))) {
 	if ($is_subscr) {
 		echo ' class="nuvei_plan_order" title="' . esc_attr__('Nuvei Payment Plan Order', 'nuvei_checkout_woocommerce') . '"';
 	}
@@ -1187,6 +1195,15 @@ function nuvei_wc_cart_needs_payment($needs_payment, $cart)
     return $needs_payment;
 }
 
+/**
+ * Show custom data into order details, product data.
+ * 
+ * @param type $item_id
+ * @param object $item
+ * @param type $_product
+ * 
+ * @return void
+ */
 function nuvei_after_order_itemmeta($item_id, $item, $_product)
 {
     /*
@@ -1210,16 +1227,22 @@ function nuvei_after_order_itemmeta($item_id, $item, $_product)
         return;
     }
     
-    $post_meta = $order->get_meta_data();
+    $helper         = new Nuvei_Helper();
+    $post_meta      = $order->get_meta_data();
+    $subscr_list    = $helper->get_rebiling_details($post_meta);
     
-    if (empty($post_meta) || !is_array($post_meta)) {
+//    if (empty($post_meta) || !is_array($post_meta)) {
+//        return;
+//    }
+    if (empty($post_meta) || empty($subscr_list)) {
         return;
     }
     
-    foreach ($post_meta as $mk => $md) {
-        if (false === strpos($mk, NUVEI_ORDER_SUBSCR)) {
-            continue;
-        }
+//    foreach ($post_meta as $mk => $md) {
+    foreach ($subscr_list as $data) {
+//        if (false === strpos($mk, NUVEI_ORDER_SUBSCR)) {
+//            continue;
+//        }
         
         if ('WC_Order_Item_Product' != get_class($item)) {
             continue;
@@ -1229,8 +1252,10 @@ function nuvei_after_order_itemmeta($item_id, $item, $_product)
         try {
             Nuvei_Logger::write('check nuvei_after_order_itemmeta');
             
-            $subscr_data    = $order->get_meta($mk);
-            $key_parts      = explode('_', $mk);
+//            $subscr_data    = $order->get_meta($mk);
+//            $key_parts      = explode('_', $mk);
+            $subscr_data    = $data['subs_data'];
+            $key_parts      = explode('_', $data['subs_id']);
             $item_variation = $item->get_variation_id();
             $product_id     = $item->get_product_id();
         }
@@ -1242,7 +1267,7 @@ function nuvei_after_order_itemmeta($item_id, $item, $_product)
             continue;
         }
         
-        if (empty($subscr_data['state']) || empty ($subscr_data['subscr_id'])) {
+        if (empty($subscr_data['state']) || empty($subscr_data['subscr_id'])) {
             // wait for meta data to be created
             continue;
         }

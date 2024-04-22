@@ -456,6 +456,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
         
         Nuvei_Logger::write($all_subscr, '$order_all_meta');
         
+        // create subscription request for each subscription record
         foreach ($all_subscr as $data) {
             // this key is not for subscription
             if (empty($data['subs_id'])) {
@@ -486,11 +487,11 @@ class Nuvei_Notify_Url extends Nuvei_Request
                 $msg = __('Subscription was created. ') . '<br/>'
                     . __('Subscription ID: ', 'nuvei_checkout_woocommerce') . $resp['subscriptionId'] . '.<br/>' 
                     . __('Recurring amount: ', 'nuvei_checkout_woocommerce') . $this->sc_order->get_currency() . ' '
-                    . $subs_data['recurringAmount'];
+                    . $data['subs_data']['recurringAmount'];
             }
             
             $this->sc_order->add_order_note($msg);
-            break;
+//            break;
         }
         
 		return;
@@ -513,24 +514,36 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			return;
         }
         
-//        $order_all_meta = get_post_meta($order_id);
         $order_all_meta = $this->sc_order->get_meta_data();
+        $subscr_list    = $this->get_order_rebiling_details($order_all_meta);
         
-        foreach ($order_all_meta as $key => $data) {
-            if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
-                continue;
-            }
+//        foreach ($order_all_meta as $key => $data) {
+//            if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
+//                continue;
+//            }
+//            
+//            $subs_data = $this->sc_order->get_meta($key);
+//            Nuvei_Logger::write([$key, $subs_data]);
+//            
+//            if (empty($subs_data['state']) || 'active' != $subs_data['state']) {
+//                Nuvei_Logger::write($subs_data, 'The subscription is not Active.');
+//                continue;
+//            }
+//            
+//            $ncs_obj = new Nuvei_Subscription_Cancel();
+//            $ncs_obj->process(['subscriptionId' => $subs_data['subscr_id']]);
+//        }
+        
+        foreach ($subscr_list as $data) {
+            Nuvei_Logger::write($data);
             
-            $subs_data = $this->sc_order->get_meta($key);
-            Nuvei_Logger::write([$key, $subs_data]);
-            
-            if (empty($subs_data['state']) || 'active' != $subs_data['state']) {
-                Nuvei_Logger::write($subs_data, 'The subscription is not Active.');
+            if (empty($data['subs_data']['state']) || 'active' != $data['subs_data']['state']) {
+                Nuvei_Logger::write('The subscription is not Active.');
                 continue;
             }
             
             $ncs_obj = new Nuvei_Subscription_Cancel();
-            $ncs_obj->process(['subscriptionId' => $subs_data['subscr_id']]);
+            $ncs_obj->process(['subscriptionId' => $data['subs_data']['subscr_id']]);
         }
     }
 	
