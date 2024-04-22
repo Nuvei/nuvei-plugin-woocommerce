@@ -15,6 +15,8 @@ class Nuvei_Subscription extends Nuvei_Request
 	 */
 	public function process()
     {
+        Nuvei_Logger::write('Subscription class');
+        
 		$prod_plan = current(func_get_args());
 		
 		$params = array_merge(

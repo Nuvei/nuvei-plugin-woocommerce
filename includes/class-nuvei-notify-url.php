@@ -445,7 +445,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
         }
         
         // The meta key for the Subscription is dynamic.
-//        $order_all_meta = get_post_meta($order_id);
         $order_all_meta = $this->sc_order->get_meta_data();
         
         if (!is_array($order_all_meta) || empty($order_all_meta)) {
@@ -453,24 +452,26 @@ class Nuvei_Notify_Url extends Nuvei_Request
             return;
         }
         
-        foreach ($order_all_meta as $key => $data) {
-            if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
+        $all_subscr = $this->get_order_rebiling_details($order_all_meta);
+        
+        Nuvei_Logger::write($all_subscr, '$order_all_meta');
+        
+        foreach ($all_subscr as $data) {
+            // this key is not for subscription
+            if (empty($data['subs_id'])) {
+                Nuvei_Logger::write($data, 'This is not a subscription key');
                 continue;
             }
             
-            if (empty($data) || !is_array($data)) {
+            if (empty($data['subs_data']) || !is_array($data['subs_data'])) {
                 Nuvei_Logger::write($data, 'There is a problem with the DMN Product Payment Plan data:');
                 continue;
             }
             
-            $subs_data = $this->sc_order->get_meta($key);
-            
-            Nuvei_Logger::write([$key, $subs_data]);
-            
-            $subs_data['clientRequestId']   = $order_id . $key;
+            $data['subs_data']['clientRequestId']   = $order_id . $data['subs_id'];
             
             $ns_obj = new Nuvei_Subscription();
-            $resp   = $ns_obj->process($subs_data);
+            $resp   = $ns_obj->process($data['subs_data']);
 
             // On Error
             if (!$resp || !is_array($resp) || empty($resp['status']) || 'SUCCESS' != $resp['status']) {
@@ -489,7 +490,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
             }
             
             $this->sc_order->add_order_note($msg);
-//            $this->sc_order->save();
+            break;
         }
         
 		return;
@@ -566,7 +567,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 		$message = '';
 		$status  = $this->sc_order->get_status();
         
-        Nuvei_Logger::write([$status, $req_status, $transaction_type], 'order status', "DEBUG");
+        Nuvei_Logger::write([$status, $req_status, $transaction_type], 'order status');
         
 		switch ($req_status) {
 			case 'CANCELED':
@@ -622,7 +623,7 @@ class Nuvei_Notify_Url extends Nuvei_Request
 					
 					$this->sc_order->payment_complete($order_id);
                     
-                    Nuvei_Logger::write([$status], 'Settle/Sale status', "DEBUG");
+                    Nuvei_Logger::write($status, 'Settle/Sale status');
 				}
 				
 				// check for correct amount
@@ -671,8 +672,6 @@ class Nuvei_Notify_Url extends Nuvei_Request
                         'total_change'  => $set_amount_warning,
                     ]);
 				}
-				
-                Nuvei_Logger::write($status, 'order status', "DEBUG");
                 
 				break;
 
@@ -716,12 +715,16 @@ class Nuvei_Notify_Url extends Nuvei_Request
 			$this->sc_order->add_order_note( $this->msg['message'] );
 		}
 
-        Nuvei_Logger::write($status, 'order status', "DEBUG");
-        
 		$this->sc_order->update_status($status);
-//		$this->sc_order->save();
 		
-		Nuvei_Logger::write($status, 'Status of Order #' . $order_id . ' was set to');
+		Nuvei_Logger::write(
+            [
+                '$order_id' => $order_id, 
+                '$status'   => $status, 
+//                '$message'  => $message,
+            ], 
+            'Order Status saved.'
+        );
 	}
 	
 	private function sum_order_refunds()

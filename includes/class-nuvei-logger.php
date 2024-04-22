@@ -9,15 +9,16 @@ class Nuvei_Logger
 {
     private static $fieldsToMask = [
         'ips'       => ['ipAddress'],
-        'names'     => ['firstName', 'lastName', 'first_name', 'last_name', 'shippingFirstName', 'shippingLastName'],
+        'names'     => ['firstName', 'lastName', 'first_name', 'last_name', 'shippingFirstName', 'shippingLastName', 'billing_first_name', 'billing_last_name', 'shipping_first_name', 'shipping_last_name', 'shipping_address_1', 'shipping_address_2'],
         'emails'    => [
             'userTokenId',
             'email',
             'shippingMail', // from the DMN
             'userid', // from the DMN
             'user_token_id', // from the DMN
+            'billing_email',
         ],
-        'address'   => ['address', 'phone', 'zip'],
+        'address'   => ['address', 'phone', 'zip', 'billing_address_1', 'billing_address_2', 'billing_postcode', 'billing_phone', 'shipping_postcode'],
         'others'    => ['userAccountDetails', 'userPaymentOption', 'paymentOption'],
     ];
     

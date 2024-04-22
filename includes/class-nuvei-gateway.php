@@ -202,9 +202,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		Nuvei_Logger::write(
             [
                 '$order_id'                 => $order_id,
-                'request params'            => $_REQUEST,
+//                'request params'            => $_REQUEST,
                 NUVEI_SESSION_PROD_DETAILS  => $nuvei_order_details,
-                '$nuvei_oo_details'         => $nuvei_oo_details,
+                NUVEI_SESSION_OO_DETAILS    => $nuvei_oo_details,
             ],
             'Process payment(), Order'
         );
@@ -291,6 +291,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		
          // search for subscr data
         if (!empty($nuvei_order_details)) {
+            Nuvei_Logger::write($nuvei_order_details, '$nuvei_order_details');
+            
             // save the Nuvei Subscr data to the order
             if (!empty($nuvei_order_details[$nuvei_session_token]['subscr_data'])) {
                 foreach ($nuvei_order_details[$nuvei_session_token]['subscr_data'] as $data) {
@@ -303,12 +305,16 @@ class Nuvei_Gateway extends WC_Payment_Gateway
                     }
                     
                     $order->update_meta_data($meta_key, $data);
+                    
+                    Nuvei_Logger::write([$meta_key, $data], 'subsc data');
                 }
             }
             
             // mark order if there is WC Subsc
             if (!empty($nuvei_order_details[$nuvei_session_token]['wc_subscr'])) {
                 $order->update_meta_data(NUVEI_WC_SUBSCR, true);
+                
+                Nuvei_Logger::write(true, 'wc_subscr');
             }
             
             WC()->session->set(NUVEI_SESSION_PROD_DETAILS, []);

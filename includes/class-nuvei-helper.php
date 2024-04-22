@@ -123,4 +123,9 @@ class Nuvei_Helper extends Nuvei_Request
         return $this->get_total_from_rest_params();
     }
     
+    public function get_rebiling_details($all_data)
+    {
+        return $this->get_order_rebiling_details($all_data);
+    }
+    
 }

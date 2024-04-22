@@ -590,7 +590,7 @@ abstract class Nuvei_Request
 
                     $term_meta = get_term_meta($term->term_id);
 
-                    Nuvei_Logger::write((array) $term_meta, '$term_meta');
+//                    Nuvei_Logger::write($term_meta, '$term_meta');
 
                     if (empty($term_meta['planId'][0])) {
                         continue;
@@ -886,10 +886,10 @@ abstract class Nuvei_Request
             if (!empty($data['transactionType']) 
                 && in_array($data['transactionType'], $types)
             ) {
-                Nuvei_Logger::write($data);
-                
                 // fix for the case when work on Order made with plugin before v2.0.0
                 if (!isset($data['transactionId'])) {
+                    Nuvei_Logger::write($data, 'modify Order made with plugin version before v2.0.0.');
+                    
                     $data['transactionId'] = $trId;
                 }
                 
@@ -1071,6 +1071,57 @@ abstract class Nuvei_Request
         $clientUniqueId = hash('crc32b', $orderString) . '_' .  uniqid('', true);
         
         return $clientUniqueId;
+    }
+    
+    /**
+     * A common method to get get rebilling details from the Order meta.
+     * 
+     * @param array $all_data All meta data for some Order.
+     * @return array $subscr_list
+     */
+    protected function get_order_rebiling_details($all_data)
+    {
+        $subscr_list = [];
+        
+        if (empty($all_data) || !is_array($all_data)) {
+            Nuvei_Logger::write($all_data, 'There is no meta data or it is in wrong format!', 'WARN');
+            return $subscr_list;
+        }
+        
+        foreach ($all_data as $key => $data) {
+            // legacy
+            if (!is_numeric($key)) {
+//                Nuvei_Logger::write($data);
+                
+                if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
+                    continue;
+                }
+                
+                $subscr_list[] = [
+                    'subs_id'   => $key,
+                    'subs_data' => $data,
+                ];
+            }
+            // for HPOS
+            else {
+                $meta_data = $data->get_data();
+
+//                Nuvei_Logger::write($meta_data);
+
+                if (empty($meta_data['key'])
+                    || false === strpos($meta_data['key'], NUVEI_ORDER_SUBSCR)
+                ) {
+                    continue;
+                }
+
+                $subscr_list[] = [
+                    'subs_id'   => $meta_data['key'],
+                    'subs_data' => $meta_data['value'],
+                ];
+            }
+        }
+        
+        return $subscr_list;
     }
     
     /**

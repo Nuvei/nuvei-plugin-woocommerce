@@ -11,7 +11,7 @@
  * Require at least: 4.7
  * Tested up to: 6.5.2
  * WC requires at least: 3.0
- * WC tested up to: 8.7.0
+ * WC tested up to: 8.8.2
 */
 
 defined('ABSPATH') || die('die');
@@ -251,8 +251,12 @@ function nuvei_init()
     // for the thank-you page
     add_action('woocommerce_thankyou', 'nuvei_mod_thank_you_page', 100, 1);
 
-    // For the custom column in the Order list
+    # For the custom column in the Order list
+    // legacy
     add_action( 'manage_shop_order_posts_custom_column', 'nuvei_edit_order_list_columns', 10, 2);
+    // HPOS
+    add_action( 'woocommerce_shop_order_list_table_custom_column', 'nuvei_hpos_edit_order_list_columns', 10, 2 );
+    
     // for the Store > My Account > Orders list
     add_action( 'woocommerce_my_account_my_orders_column_order-number', 'nuvei_edit_my_account_orders_col' );
     // show payment methods on checkout when total is 0
@@ -1003,7 +1007,9 @@ function nuvei_edit_term_meta( $term_id, $tt_id)
 }
 // Attributes, Terms and Meta functions END
 
-# For the custom baloon in Order column in the Order list
+/**
+ * For the custom baloon in Order column in the Order list.
+ */
 function nuvei_edit_order_list_columns($column, $col_id)
 {
     // the column we put/edit baloons
@@ -1019,20 +1025,22 @@ function nuvei_edit_order_list_columns($column, $col_id)
         return;
     }
     
-//    $all_meta       = get_post_meta($post->ID);
     $all_meta       = $order->get_meta_data();
-    $nuvei_subscr   = [];
-    $order_changes  = $order->get_meta(NUVEI_ORDER_CHANGES);
+//    $nuvei_subscr   = [];
+    $order_changes  = $order->get_meta(NUVEI_ORDER_CHANGES); // this is the flag for fraud
+//    
+//    foreach ($all_meta as $key => $data) {
+//        if (false !== strpos($key, NUVEI_ORDER_SUBSCR)) {
+//            $nuvei_subscr = $order->get_meta($key);
+//            break;
+//        }
+//    }
     
-    foreach ($all_meta as $key => $data) {
-        if (false !== strpos($key, NUVEI_ORDER_SUBSCR)) {
-            $nuvei_subscr = $order->get_meta($key);
-            break;
-        }
-    }
+    $helper = new Nuvei_Helper();
+    $subs_list  = $helper->get_rebiling_details($all_meta);
     
     // put subscription baloon
-    if ('order_number' == $column && !empty($nuvei_subscr)) {
+    if ('order_number' == $column && !empty($subs_list)) {
         echo '<mark class="order-status status-processing tips" style="float: right;"><span>'
             . esc_html__('Nuvei Subscription', 'nuvei_checkout_woocommerce') . '</span></mark>';
     }
@@ -1045,7 +1053,40 @@ function nuvei_edit_order_list_columns($column, $col_id)
             . esc_html__('Please check transaction Total and Currency!', 'nuvei_checkout_woocommerce') .'"><span>!</span></mark>';
     }
 }
-# For the custom column in the Order list END
+
+/**
+ * For the custom baloon in Order column in the Order list.
+ */
+function nuvei_hpos_edit_order_list_columns($column, $order)
+{
+    // the column we put/edit baloons
+    if (!in_array($column, ['order_number', 'order_status'])) {
+        return;
+    }
+    
+    if ($order->get_payment_method() != NUVEI_GATEWAY_NAME) {
+        return;
+    }
+    
+    $all_meta       = $order->get_meta_data();
+    $order_changes  = $order->get_meta(NUVEI_ORDER_CHANGES); // this is the flag for fraud
+    $helper         = new Nuvei_Helper();
+    $subs_list      = $helper->get_rebiling_details($all_meta);
+    
+    // put subscription baloon
+    if ('order_number' == $column && !empty($subs_list)) {
+        echo '<mark class="order-status status-processing tips" style="float: right;"><span>'
+            . esc_html__('Nuvei Subscription', 'nuvei_checkout_woocommerce') . '</span></mark>';
+    }
+    
+    // edit status baloon
+    if ('order_status' == $column
+        && ( !empty($order_changes['total_change']) || !empty($order_changes['curr_change']))
+    ) {
+        echo '<mark class="order-status status-on-hold tips" style="float: left; margin-right: 2px;" title="'
+            . esc_html__('Please check transaction Total and Currency!', 'nuvei_checkout_woocommerce') .'"><span>!</span></mark>';
+    }
+}
 
 /**
  * In Store > My Account > Orders table, Order column
@@ -1148,12 +1189,28 @@ function nuvei_wc_cart_needs_payment($needs_payment, $cart)
 
 function nuvei_after_order_itemmeta($item_id, $item, $_product)
 {
-    // choose one of the get parameters
-    $post_id        = max([Nuvei_Http::get_param('post', 'int'), Nuvei_Http::get_param('id', 'int')]);
-    $order          = wc_get_order($post_id);
-//    $subs_id        = $order->get_meta(NUVEI_ORDER_SUBSCR_ID);
-//    $post_meta      = get_post_meta($post_id);
-    $post_meta      = $order->get_meta_data();
+    /*
+     * Choose one of the get parameters.
+     * Here we use GET paramteters, but because after Settle or Void some strings
+     * can be added to the URL, type cast the parameters we need to clean them.
+     */
+    $post_id = 0;
+    
+    if (isset($_GET['post'])) {
+        $post_id = (int) $_GET['post'];
+    }
+    elseif (isset($_GET['id'])) {
+        $post_id = (int) $_GET['id'];
+    }
+    
+    $order = wc_get_order($post_id);
+    
+    if (!is_object($order)) {
+        Nuvei_Logger::write($post_id, 'There is a problem when try to get Order by ID', 'WARN');
+        return;
+    }
+    
+    $post_meta = $order->get_meta_data();
     
     if (empty($post_meta) || !is_array($post_meta)) {
         return;
