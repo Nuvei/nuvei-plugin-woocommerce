@@ -39,6 +39,10 @@ var nuveiCheckoutBlocks = {
                     .append('<input id="nuvei_session_token" type="hidden" name="nuvei_session_token" value="" />');
             }
             // place Checkout container out of the forms END
+            
+            jQuery('input[name=radio-control-wc-payment-method-options]').on('change', function() {
+                nuveiCheckoutBlocks.changePaymentBtn(jQuery(this).val());
+            });
         }
         catch(_e) {
             console.log('WC blocks logic fail.');
@@ -324,16 +328,12 @@ window.onload = function() {
     // loocks like this object is available only for checkout blocks
     if (typeof wc == 'object') {
         nuveiCheckoutBlocks.prepareNuveiComponents();
+        
+        nuveiCheckoutBlocks.changePaymentBtn(
+            jQuery('input[name=radio-control-wc-payment-method-options]:checked').val()
+        );
     }
     else {
         nuveiWcShortcode();
     }
-    
-    nuveiCheckoutBlocks.changePaymentBtn(
-        jQuery('input[name=radio-control-wc-payment-method-options]:checked').val()
-    );
-    
-    jQuery('input[name=radio-control-wc-payment-method-options]').on('change', function() {
-        nuveiCheckoutBlocks.changePaymentBtn(jQuery(this).val());
-    });
 }

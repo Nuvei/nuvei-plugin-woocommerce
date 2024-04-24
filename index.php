@@ -389,14 +389,15 @@ function nuvei_load_scripts()
 		}
 	}
     
-    $sdkUrl = NUVEI_SDK_URL_PROD;
-    
-    if (!empty($_SERVER['SERVER_NAME']) 
-        && 'woocommerceautomation.gw-4u.com' == $_SERVER['SERVER_NAME']
-        && defined('NUVEI_SDK_URL_TAG')
-    ) {
-        $sdkUrl = NUVEI_SDK_URL_TAG;
-    }
+//    $sdkUrl = NUVEI_SDK_URL_PROD;
+    $sdkUrl = $plugin_url . 'assets/js/nuveiSimplyConnect/nuveiSimplyConnect.js';
+//    
+//    if (!empty($_SERVER['SERVER_NAME']) 
+//        && 'woocommerceautomation.gw-4u.com' == $_SERVER['SERVER_NAME']
+//        && defined('NUVEI_SDK_URL_TAG')
+//    ) {
+//        $sdkUrl = NUVEI_SDK_URL_TAG;
+//    }
     
     // load the SDK
     wp_register_script(

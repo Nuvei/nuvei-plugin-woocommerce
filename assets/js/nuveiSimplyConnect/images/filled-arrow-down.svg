@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="10px" height="6px" viewBox="0 0 10 6" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>filled arrow down</title>
+    <defs>
+        <path d="M9.85659768,5.08911386 L5.34450693,0.156730409 C5.15450311,-0.0522434696 4.84549689,-0.0522434696 4.65549307,0.156730409 L0.143402315,5.08911386 C-0.16360386,5.42707162 0.055400545,6 0.487409234,6 L9.51259077,6 C9.94459946,6 10.1636039,5.42707162 9.85659768,5.08911386" id="path-1"></path>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <mask id="mask-2" fill="white">
+            <use xlink:href="#path-1"></use>
+        </mask>
+        <use id="filled-arrow-down" fill="#6B778C" transform="translate(5.000000, 3.000000) rotate(-180.000000) translate(-5.000000, -3.000000) " xlink:href="#path-1"></use>
+    </g>
+</svg>
