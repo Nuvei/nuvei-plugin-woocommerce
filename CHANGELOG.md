@@ -13,6 +13,7 @@
     * In the log user details are masked by default. This can be changed from the plugin options.
     * Clean Items names, when Cashier is used.
     * Fix for the broken Cashier implementation.
+    * Fixed typos in plugin settings.
 ```
 
 # 2.1.0-p1
