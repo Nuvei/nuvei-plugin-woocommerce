@@ -1,5 +1,12 @@
 # WooCommerce Extension Changelog
 
+# 3.0.1
+```
+    * Fixed sourceApplication paramter.
+    * Deprecated method nuvei_wpml_thank_you_page.
+    * Remove checks for plugin setting use_wpml_thanks_page, because it was removed few versions ago.
+```
+
 # 3.0.0
 ```
     * Fix for Settle, Void or Refund on Orders made with plugin before v2.0.0.

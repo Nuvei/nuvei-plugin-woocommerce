@@ -9,9 +9,9 @@
  * Text Domain: nuvei_checkout_woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.5.2
+ * Tested up to: 6.5.3
  * WC requires at least: 3.0
- * WC tested up to: 8.8.2
+ * WC tested up to: 8.8.3
 */
 
 defined('ABSPATH') || die('die');
@@ -242,11 +242,11 @@ function nuvei_init()
     }
     
     // for WPML plugin
-    if (is_plugin_active('sitepress-multilingual-cms' . DIRECTORY_SEPARATOR . 'sitepress.php')
-        && 'yes' == $wc_nuvei->settings['use_wpml_thanks_page']
-    ) {
-        add_filter('woocommerce_get_checkout_order_received_url', 'nuvei_wpml_thank_you_page', 10, 2);
-    }
+//    if (is_plugin_active('sitepress-multilingual-cms' . DIRECTORY_SEPARATOR . 'sitepress.php')
+//        && 'yes' == $wc_nuvei->settings['use_wpml_thanks_page']
+//    ) {
+//        add_filter('woocommerce_get_checkout_order_received_url', 'nuvei_wpml_thank_you_page', 10, 2);
+//    }
 
     // for the thank-you page
     add_action('woocommerce_thankyou', 'nuvei_mod_thank_you_page', 100, 1);
@@ -798,6 +798,8 @@ function nuvei_rewrite_return_url()
  * @param WC_Order $order
  * 
  * @return string $order_received_url
+ * 
+ * @deprecated since version 3.0.0-p1
  */
 function nuvei_wpml_thank_you_page( $order_received_url, $order)
 {
@@ -805,7 +807,6 @@ function nuvei_wpml_thank_you_page( $order_received_url, $order)
         return;
     }
     
-//	$lang_code          = get_post_meta($order->id, 'wpml_language', true);
 	$lang_code          = $order->get_meta('wpml_language', true);
 	$order_received_url = apply_filters('wpml_permalink', $order_received_url, $lang_code);
 	

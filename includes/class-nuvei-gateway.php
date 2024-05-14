@@ -34,8 +34,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway
 		$this->description = $this->get_option('description', $this->method_description);
 		$this->plugin_data = get_plugin_data(plugin_dir_path(NUVEI_PLUGIN_FILE) . DIRECTORY_SEPARATOR . 'index.php');
 		
-		$this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page']) 
-			? $this->settings['use_wpml_thanks_page'] : 'no';
+//		$this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page']) 
+//			? $this->settings['use_wpml_thanks_page'] : 'no';
 		
         // products are supported by default
 		$this->supports[] = 'refunds'; // to enable auto refund support

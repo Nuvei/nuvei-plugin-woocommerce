@@ -21,7 +21,7 @@ const NUVEI_DCC_DATA            = '_nuveiDccData';
 //const NUVEI_CUID_POSTFIX        = '_sandbox_apm'; // postfix for Sandbox APM payments
 const NUVEI_PREV_TRANS_STATUS   = '_nuveiPrevTransactionStatus';
 
-const NUVEI_SOURCE_APPLICATION  = 'wooCommerce Plugin';
+const NUVEI_SOURCE_APPLICATION  = 'WOOCOMMERCE_PLUGIN';
 const NUVEI_GLOB_ATTR_NAME      = 'Nuvei Payment Plan'; // the name of the Nuvei Global Product Attribute name
 const NUVEI_LOG_EXT             = 'log';
 const NUVEI_PLANS_FILE          = 'sc_plans.json';
