@@ -1,6 +1,6 @@
 # WooCommerce Extension Changelog
 
-# 3.0.1
+# 3.0.0-p1
 ```
     * Fixed sourceApplication paramter.
     * Deprecated method nuvei_wpml_thank_you_page.
