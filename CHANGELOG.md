@@ -5,6 +5,7 @@
     * Fixed sourceApplication paramter.
     * Deprecated method nuvei_wpml_thank_you_page.
     * Remove checks for plugin setting use_wpml_thanks_page, because it was removed few versions ago.
+    * Removed few icons - ApplePay-Button.png, applepay.svg, safecharge.png, visa_mc_maestro.svg.
 ```
 
 # 3.0.0
