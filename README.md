@@ -4,22 +4,22 @@
 
 ## Requirements
 PHP: 
-  - Enabled cURL support
+  - Enabled cURL support.
 
 Wordpress: 
-  - minimum v4.7
-  - tested up to v6.2.2
+  - Minimum v4.7.
+  - Tested up to v6.5.3.
 
 WooCommerce: 
-  - minimum v 3.0
-  - tested up to v7.9.0
+  - Minimum v 3.0.
+  - Tested up to v8.8.3.
 
 Merchant configuration: 
-  - enabled DMNs
-  - on SiteID level "DMN  timeout" setting is recommendet to be not less than 20 seconds, 30 seconds is better.
+  - Enabled DMNs.
+  - On SiteID level "DMN  timeout" setting is recommendet to be not less than 20 seconds, 30 seconds is better.
 
 Server configuration: 
-  - public access to the plugin notify URL. Check plugin settings, Help Tools tab.
+  - Public access to the plugin notify URL. Check plugin settings, Help Tools tab.
 
 Stable tag: main
 

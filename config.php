@@ -30,15 +30,24 @@ const NUVEI_APMS_REFUND_VOID    = ['cc_card', 'apmgw_expresscheckout'];
 const NUVEI_REST_ENDPOINT_INT   = 'https://ppp-test.nuvei.com/ppp/api/v1/';
 const NUVEI_REST_ENDPOINT_PROD  = 'https://secure.safecharge.com/ppp/api/v1/';
 
-const NUVEI_SDK_URL_PROD        = 'https://cdn.safecharge.com/safecharge_resources/v1/checkout/checkout.js';
-const NUVEI_SDK_URL_TAG         = 'https://devmobile.sccdev-qa.com/checkoutNext/checkout.js';
-const NUVEI_SDK_AUTOCLOSE_URL   = 'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html';
+/**
+ * @var string The SDK Prod URL.
+ * @deprecated since version 3.0.0
+ */
+const NUVEI_SDK_URL_PROD = 'https://cdn.safecharge.com/safecharge_resources/v1/checkout/simplyConnect.js';
+/**
+ * @var string The SDK Tag URL.
+ * @deprecated since version 3.0.0
+ */
+const NUVEI_SDK_URL_TAG = 'https://srv-bsf-devpppjs.gw-4u.com/checkoutNext_tag/simplyConnect.js';
+
+const NUVEI_SDK_AUTOCLOSE_URL       = 'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html';
 
 const NUVEI_SESSION_OO_DETAILS      = 'nuvei_last_open_order_details'; // a session key
 const NUVEI_SESSION_PROD_DETAILS    = 'nuvei_order_details'; // products details
 const NUVEI_SESSION_PLUGIN_GIT_V    = 'nuvei_plugin_git_version';
 
-const LOG_REQUEST_PARAMS    = 'Request params';
+const LOG_REQUEST_PARAMS            = 'Request params';
 
 define('NUVEI_LOGS_DIR', dirname(dirname(dirname(__FILE__))) . DIRECTORY_SEPARATOR 
     . 'uploads' . DIRECTORY_SEPARATOR . 'nuvei-logs' . DIRECTORY_SEPARATOR);

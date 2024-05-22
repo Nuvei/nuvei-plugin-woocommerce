@@ -10,6 +10,7 @@
  * Domain Path: /languages
  * Require at least: 4.7
  * Tested up to: 6.5.3
+ * Requires Plugins: woocommerce
  * WC requires at least: 3.0
  * WC tested up to: 8.8.3
 */
@@ -390,7 +391,7 @@ function nuvei_load_scripts()
 	}
     
 //    $sdkUrl = NUVEI_SDK_URL_PROD;
-    $sdkUrl = $plugin_url . 'assets/js/nuveiSimplyConnect/nuveiSimplyConnect.js';
+    $sdkUrl = $plugin_url . 'assets/js/nuveiSimplyConnect/simplyConnect.js';
 //    
 //    if (!empty($_SERVER['SERVER_NAME']) 
 //        && 'woocommerceautomation.gw-4u.com' == $_SERVER['SERVER_NAME']
