@@ -57,6 +57,7 @@ define('NUVEI_JS_LOCALIZATIONS', [
     'sourceApplication'     => NUVEI_SOURCE_APPLICATION,
     'plugin_dir_url'        => plugin_dir_url(__FILE__),
     'paymentGatewayName'    => NUVEI_GATEWAY_NAME,
+    'simplyConnectUrl'      => plugin_dir_url(__FILE__) . 'assets/js/nuveiSimplyConnect/simplyConnect.js',
     
     // translations
     'insuffFunds'       => __('You have Insufficient funds, please go back and remove some of the items in your shopping cart, or use another card.', 'nuvei_checkout_woocommerce'),

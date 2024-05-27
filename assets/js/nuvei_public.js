@@ -172,7 +172,7 @@ function showNuveiCheckout(_params) {
 	nuveiCheckoutSdkParams.prePayment	= nuveiPrePayment;
 	nuveiCheckoutSdkParams.onResult		= nuveiAfterSdkResponse;
 	
-	checkout(nuveiCheckoutSdkParams);
+	simplyConnect(nuveiCheckoutSdkParams);
 	
     // TODO - teste it!
 	if(jQuery('.wpmc-step-payment').length > 0) { // multi-step checkout
@@ -303,6 +303,16 @@ jQuery(function() {
 	if('no' === scTrans.isPluginActive) {
 		return;
 	}
+    
+    // add Simply Connect to the page
+    let nuveiSdkScript = '<script src="'+ scTrans.simplyConnectUrl +'" id="nuvei-simply-connect-js"></script>';
+    
+    if (jQuery('#wc-checkout-js').length > 0) {
+        jQuery('#wc-checkout-js').before(nuveiSdkScript);
+    }
+    else if (jQuery('#wc-blocks-checkout-js').length > 0) {
+        jQuery('#wc-blocks-checkout-js').before(nuveiSdkScript);
+    }
 	
     // Multistep checkout does not support WC Blocks
 	// when on multistep checkout -> Checkout SDK view, someone click on previous/next button

@@ -61,9 +61,9 @@ class Nuvei_Refund extends Nuvei_Request
 			Nuvei_Logger::write($order_id, 'create_refund_request() Error - Post parameter is less than 1.');
 			
 			wp_send_json(array(
-				'status' => 0,
-				'msg' => __('Post parameter is less than 1.', 'nuvei_checkout_woocommerce'),
-				'data' => array($order_id)
+				'status'    => 0,
+				'msg'       => __('Post parameter is less than 1.', 'nuvei_checkout_woocommerce'),
+				'data'      => array($order_id)
 			));
 			exit;
 		}

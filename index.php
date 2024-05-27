@@ -177,7 +177,7 @@ function nuvei_init()
 	add_action('init', 'nuvei_enqueue');
 	
     // load front-end scripts
-    add_filter('wp_enqueue_scripts', 'nuvei_load_scripts', 1);
+    add_filter('wp_enqueue_scripts', 'nuvei_load_scripts');
     // load front-end styles
     add_filter('woocommerce_enqueue_styles', 'nuvei_load_styles');
 	
@@ -381,17 +381,17 @@ function nuvei_load_scripts()
 	global $wpdb;
     
     $plugin_url = plugin_dir_url(__FILE__);
-	
-	if ( (isset($_SERVER['HTTPS']) && 'on' == $_SERVER['HTTPS'])
-		&& (isset($_SERVER['REQUEST_SCHEME']) && 'https' == $_SERVER['REQUEST_SCHEME'])
-	) {
-		if (strpos($plugin_url, 'https') === false) {
-			$plugin_url = str_replace('http:', 'https:', $plugin_url);
-		}
-	}
-    
-//    $sdkUrl = NUVEI_SDK_URL_PROD;
-    $sdkUrl = $plugin_url . 'assets/js/nuveiSimplyConnect/simplyConnect.js';
+//	
+//	if ( (isset($_SERVER['HTTPS']) && 'on' == $_SERVER['HTTPS'])
+//		&& (isset($_SERVER['REQUEST_SCHEME']) && 'https' == $_SERVER['REQUEST_SCHEME'])
+//	) {
+//		if (strpos($plugin_url, 'https') === false) {
+//			$plugin_url = str_replace('http:', 'https:', $plugin_url);
+//		}
+//	}
+//    
+////    $sdkUrl = NUVEI_SDK_URL_PROD;
+//    $sdkUrl = $plugin_url . 'assets/js/nuveiSimplyConnect/simplyConnect.js';
 //    
 //    if (!empty($_SERVER['SERVER_NAME']) 
 //        && 'woocommerceautomation.gw-4u.com' == $_SERVER['SERVER_NAME']
@@ -401,12 +401,11 @@ function nuvei_load_scripts()
 //    }
     
     // load the SDK
-    wp_register_script(
-		'nuvei_checkout_sdk',
-		$sdkUrl,
-		array('jquery'),
-		'1'
-	);
+//    wp_register_script(
+//		'nuvei_checkout_sdk',
+//		$sdkUrl,
+//		array('jquery')
+//	);
     
     // reorder.js
 	wp_register_script(

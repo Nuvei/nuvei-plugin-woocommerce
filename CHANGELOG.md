@@ -3,9 +3,9 @@
 # 3.0.1
 ```
     * In plugin description was added WooCommerce dependancy.
-    * Added the new URLs to the Simply Connect.
     * Marked NUVEI_SDK_URL_PROD and NUVEI_SDK_URL_TAG constants as deprecated.
     * Use Simply Connect v1.138.0.
+    * Add Simply Connect in nuvei_public.js before the WC checkout script.
 ```
 
 # 3.0.0-p1
