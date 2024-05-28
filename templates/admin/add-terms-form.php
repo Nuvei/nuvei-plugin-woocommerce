@@ -20,14 +20,14 @@
 </style>
 
 <div id="nuvei_plan_attr_terms">
-	<h2><?php esc_html__( 'Nuvei Payment Plan settings', 'nuvei_checkout_woocommerce' ); ?></h2>
+	<h2><?php esc_html__( 'Nuvei Payment Plan settings', 'nuvei_checkout_for_woocomm' ); ?></h2>
 	
 	<div class="form-field term-group">
-		<label for=""><?php echo esc_html__( 'Plan ID', 'nuvei_checkout_woocommerce' ); ?></label>
+		<label for=""><?php echo esc_html__( 'Plan ID', 'nuvei_checkout_for_woocomm' ); ?></label>
 		
 		<select name="planId" id="planId" required="" onchange="nuveiFillPlanData(this.value)">
 			<option value="">
-				<?php echo esc_html__( 'Without Plan', 'nuvei_checkout_woocommerce' ); ?>
+				<?php echo esc_html__( 'Without Plan', 'nuvei_checkout_for_woocomm' ); ?>
 			</option>
 			
 			<?php
@@ -45,41 +45,41 @@
 	</div>
 	
 	<div class="form-field term-group">
-		<label for=""><?php echo esc_html__( 'Recurring Amount', 'nuvei_checkout_woocommerce' ); ?></label>
+		<label for=""><?php echo esc_html__( 'Recurring Amount', 'nuvei_checkout_for_woocomm' ); ?></label>
 		<input type="number" step=".01" min="0" name="recurringAmount" id="recurringAmount" min="0" required="" />
 	</div>
 	
 	<div class="form-field term-group">
-		<label for=""><?php echo esc_html__( 'Recurring Period', 'nuvei_checkout_woocommerce' ); ?></label>
+		<label for=""><?php echo esc_html__( 'Recurring Period', 'nuvei_checkout_for_woocomm' ); ?></label>
 		
 		<select name="recurringPeriodUnit" id="recurringPeriodUnit" class="nuvei_units">
-			<option value="day"><?php echo esc_html__( 'Days', 'nuvei_checkout_woocommerce' ); ?></option>
-			<option value="month"><?php echo esc_html__( 'Month', 'nuvei_checkout_woocommerce' ); ?></option>
-			<option value="year"><?php echo esc_html__( 'Years', 'nuvei_checkout_woocommerce' ); ?></option>
+			<option value="day"><?php echo esc_html__( 'Days', 'nuvei_checkout_for_woocomm' ); ?></option>
+			<option value="month"><?php echo esc_html__( 'Month', 'nuvei_checkout_for_woocomm' ); ?></option>
+			<option value="year"><?php echo esc_html__( 'Years', 'nuvei_checkout_for_woocomm' ); ?></option>
 		</select>
 		
 		<input type="number" min="1" step="1" name="recurringPeriodPeriod" id="recurringPeriodPeriod" class="nuvei_periods" required="" />
 	</div>
 	
 	<div class="form-field term-group">
-		<label for=""><?php echo esc_html__( 'Recurring End After', 'nuvei_checkout_woocommerce' ); ?></label>
+		<label for=""><?php echo esc_html__( 'Recurring End After', 'nuvei_checkout_for_woocomm' ); ?></label>
 		
 		<select name="endAfterUnit" id="endAfterUnit" class="nuvei_units">
-			<option value="day"><?php echo esc_html__( 'Days', 'nuvei_checkout_woocommerce' ); ?></option>
-			<option value="month"><?php echo esc_html__( 'Month', 'nuvei_checkout_woocommerce' ); ?></option>
-			<option value="year"><?php echo esc_html__( 'Years', 'nuvei_checkout_woocommerce' ); ?></option>
+			<option value="day"><?php echo esc_html__( 'Days', 'nuvei_checkout_for_woocomm' ); ?></option>
+			<option value="month"><?php echo esc_html__( 'Month', 'nuvei_checkout_for_woocomm' ); ?></option>
+			<option value="year"><?php echo esc_html__( 'Years', 'nuvei_checkout_for_woocomm' ); ?></option>
 		</select>
 		
 		<input type="number" min="1" step="1" name="endAfterPeriod" id="endAfterPeriod" class="nuvei_periods" required="" />
 	</div>
 	
 	<div class="form-field term-group">
-		<label for=""><?php echo esc_html__( 'Trial Period', 'nuvei_checkout_woocommerce' ); ?></label>
+		<label for=""><?php echo esc_html__( 'Trial Period', 'nuvei_checkout_for_woocomm' ); ?></label>
 		
 		<select name="startAfterUnit" id="startAfterUnit" class="nuvei_units">
-			<option value="day"><?php echo esc_html__( 'Days', 'nuvei_checkout_woocommerce' ); ?></option>
-			<option value="month"><?php echo esc_html__( 'Month', 'nuvei_checkout_woocommerce' ); ?></option>
-			<option value="year"><?php echo esc_html__( 'Years', 'nuvei_checkout_woocommerce' ); ?></option>
+			<option value="day"><?php echo esc_html__( 'Days', 'nuvei_checkout_for_woocomm' ); ?></option>
+			<option value="month"><?php echo esc_html__( 'Month', 'nuvei_checkout_for_woocomm' ); ?></option>
+			<option value="year"><?php echo esc_html__( 'Years', 'nuvei_checkout_for_woocomm' ); ?></option>
 		</select>
 		
 		<input type="number" min="0" step="1" name="startAfterPeriod" id="startAfterPeriod" class="nuvei_periods" required="" />

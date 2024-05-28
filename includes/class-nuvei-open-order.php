@@ -67,7 +67,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 
 			return array(
 				'status'        => 0,
-				'custom_msg'    => __( 'You cannot combine those products in same Order.', 'nuvei_checkout_woocommerce' ),
+				'custom_msg'    => __( 'You cannot combine those products in same Order.', 'nuvei_checkout_for_woocomm' ),
 			);
 		}
 

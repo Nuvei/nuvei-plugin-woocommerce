@@ -3,7 +3,7 @@ function nuveiBlockIntegration() {
     
     var nuveiSettings   = window.wc.wcSettings.getSetting( 'nuvei_data', {} );
     var nuveiLabel      = window.wp.htmlEntities.decodeEntities( nuveiSettings.title )
-        || window.wp.i18n.__('Nuvei', 'nuvei_checkout_woocommerce');
+        || window.wp.i18n.__('Nuvei', 'nuvei_checkout_for_woocomm');
     var label           = nuveiLabel;
     
     // eventualy add an icon
@@ -42,7 +42,7 @@ function nuveiBlockIntegration() {
         edit: Object( window.wp.element.createElement )( Content, null ),
         canMakePayment: () => true,
         ariaLabel: nuveiLabel,
-        placeOrderButtonLabel: window.wp.i18n.__('Continue', 'nuvei_checkout_woocommerce'),
+        placeOrderButtonLabel: window.wp.i18n.__('Continue', 'nuvei_checkout_for_woocomm'),
         supports: {
             features: nuveiSettings.supports
         }

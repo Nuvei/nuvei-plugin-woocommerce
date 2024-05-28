@@ -1,14 +1,14 @@
 <h2>
 	<?php
-		echo esc_html__( 'Nuvei Checkout', 'nuvei_checkout_woocommerce' );
+		echo esc_html__( 'Nuvei Checkout', 'nuvei_checkout_for_woocomm' );
 		wc_back_link(
-			__( 'Return to payments', 'nuvei_checkout_woocommerce' ),
+			__( 'Return to payments', 'nuvei_checkout_for_woocomm' ),
 			admin_url( 'admin.php?page=wc-settings&tab=checkout' )
 		);
 		?>
 </h2>
 
-<p><?php echo esc_html__( 'Please check and fill the settings of the plugin.', 'nuvei_checkout_woocommerce' ); ?></p>
+<p><?php echo esc_html__( 'Please check and fill the settings of the plugin.', 'nuvei_checkout_for_woocomm' ); ?></p>
 
 <?php
 if ( is_plugin_active( 'woocommerce-subscriptions' . DIRECTORY_SEPARATOR . 'woocommerce-subscriptions.php' )
@@ -16,19 +16,19 @@ if ( is_plugin_active( 'woocommerce-subscriptions' . DIRECTORY_SEPARATOR . 'wooc
 ) :
 	?>
 	<div class="error notice">
-		<p><?php echo esc_html__( 'Looks like WCS plugin is activated. Please, do NOT USE products with WC Subscription and products with Nuvei Subscription in same site!!!', 'nuvei_checkout_woocommerce' ); ?></p>
+		<p><?php echo esc_html__( 'Looks like WCS plugin is activated. Please, do NOT USE products with WC Subscription and products with Nuvei Subscription in same site!!!', 'nuvei_checkout_for_woocomm' ); ?></p>
 	</div>
 <?php endif; ?>
 
 <nav class="nav-tab-wrapper woo-nav-tab-wrapper">
 	<a href="#nuvei_base_settings" class="nuvei_settings_tabs nav-tab" id="nuvei_base_settings_tab">
-		<?php echo esc_html__( 'General Settings', 'nuvei_checkout_woocommerce' ); ?>
+		<?php echo esc_html__( 'General Settings', 'nuvei_checkout_for_woocomm' ); ?>
 	</a>
 	<a href="#nuvei_advanced_settings" class="nuvei_settings_tabs nav-tab "id="nuvei_advanced_settings_tab">
-		<?php echo esc_html__( 'Advanced Settings', 'nuvei_checkout_woocommerce' ); ?>
+		<?php echo esc_html__( 'Advanced Settings', 'nuvei_checkout_for_woocomm' ); ?>
 	</a>
 	<a href="#nuvei_tools" class="nuvei_settings_tabs nav-tab "id="nuvei_tools_tab">
-		<?php echo esc_html__( 'Help Tools', 'nuvei_checkout_woocommerce' ); ?>
+		<?php echo esc_html__( 'Help Tools', 'nuvei_checkout_for_woocomm' ); ?>
 	</a>
 </nav>
 
