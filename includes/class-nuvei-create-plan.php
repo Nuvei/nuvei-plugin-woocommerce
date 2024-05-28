@@ -9,13 +9,12 @@ class Nuvei_Create_Plan extends Nuvei_Request {
 
 	/**
 	 * The main method.
-	 * 
+	 *
 	 * @return array|false
 	 */
-	public function process()
-    {
+	public function process() {
 		$create_params = array(
-			'name'              => 'Default_plan_for_site_' . trim($this->plugin_settings['merchantSiteId']),
+			'name'              => 'Default_plan_for_site_' . trim( $this->plugin_settings['merchantSiteId'] ),
 			'initialAmount'     => 0,
 			'recurringAmount'   => 1,
 			'currency'          => get_woocommerce_currency(),
@@ -37,10 +36,10 @@ class Nuvei_Create_Plan extends Nuvei_Request {
 			),
 		);
 
-		return $this->call_rest_api('createPlan', $create_params);
+		return $this->call_rest_api( 'createPlan', $create_params );
 	}
 
 	protected function get_checksum_params() {
-		return array('merchantId', 'merchantSiteId', 'name', 'initialAmount', 'recurringAmount', 'currency', 'timeStamp');
+		return array( 'merchantId', 'merchantSiteId', 'name', 'initialAmount', 'recurringAmount', 'currency', 'timeStamp' );
 	}
 }

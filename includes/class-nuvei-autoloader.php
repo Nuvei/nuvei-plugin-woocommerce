@@ -5,8 +5,8 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Autoloader class.
  */
-class Nuvei_Autoloader
-{
+class Nuvei_Autoloader {
+
 	/**
 	 * Path to the includes directory.
 	 *
@@ -17,8 +17,7 @@ class Nuvei_Autoloader
 	/**
 	 * The Constructor.
 	 */
-	public function __construct()
-    {
+	public function __construct() {
 		if ( function_exists( '__autoload' ) ) {
 			spl_autoload_register( '__autoload' );
 		}
@@ -26,9 +25,9 @@ class Nuvei_Autoloader
 		spl_autoload_register( array( $this, 'autoload' ) );
 
 		if ( ! class_exists( 'Nuvei_Request', false ) ) {
-			include_once dirname( __FILE__ ) . '/abstracts/abstract-nuvei-request.php';
+			include_once __DIR__ . '/abstracts/class-nuvei-request.php';
 		}
-		
+
 		$this->include_path = untrailingslashit( plugin_dir_path( NUVEI_PLUGIN_FILE ) ) . '/includes/';
 	}
 
@@ -38,8 +37,7 @@ class Nuvei_Autoloader
 	 * @param  string $class Class name.
 	 * @return string
 	 */
-	private function get_file_name_from_class( $class )
-    {
+	private function get_file_name_from_class( $class ) {
 		return 'class-' . str_replace( '_', '-', $class ) . '.php';
 	}
 
@@ -49,8 +47,7 @@ class Nuvei_Autoloader
 	 * @param  string $path File path.
 	 * @return bool Successful or not.
 	 */
-	private function load_file( $path )
-    {
+	private function load_file( $path ) {
 		if ( $path && is_readable( $path ) ) {
 			include_once $path;
 			return true;
@@ -63,8 +60,7 @@ class Nuvei_Autoloader
 	 *
 	 * @param string $class Class name.
 	 */
-	public function autoload( $class )
-    {
+	public function autoload( $class ) {
 		$class = strtolower( $class );
 
 		if ( 0 !== strpos( $class, 'nuvei_' ) ) {

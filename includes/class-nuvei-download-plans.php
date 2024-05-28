@@ -5,24 +5,23 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A class for getPlansList request.
  */
-class Nuvei_Download_Plans extends Nuvei_Request
-{
+class Nuvei_Download_Plans extends Nuvei_Request {
+
 	/**
 	 * The main method.
-	 * 
+	 *
 	 * @return array|false
 	 */
-	public function process()
-    {
+	public function process() {
 		$params = array(
-			'planStatus'		=> 'ACTIVE',
-			'currency'			=> '',
+			'planStatus'        => 'ACTIVE',
+			'currency'          => '',
 		);
-		
-		return $this->call_rest_api('getPlansList', $params);
+
+		return $this->call_rest_api( 'getPlansList', $params );
 	}
 
 	protected function get_checksum_params() {
-		return array('merchantId', 'merchantSiteId', 'currency', 'planStatus', 'timeStamp');
+		return array( 'merchantId', 'merchantSiteId', 'currency', 'planStatus', 'timeStamp' );
 	}
 }
