@@ -12,18 +12,18 @@ class Nuvei_Autoloader {
 	 *
 	 * @var array
 	 */
-	private $include_paths = [];
+	private $include_paths = array();
 
 	/**
 	 * The Constructor.
 	 */
 	public function __construct() {
-        $this->include_paths = [
-            untrailingslashit( plugin_dir_path( NUVEI_PLUGIN_FILE ) ) . '/includes/',
-            untrailingslashit( plugin_dir_path( NUVEI_PLUGIN_FILE ) ) . '/includes/abstracts/',
-//            untrailingslashit( ABSPATH ) . '/wp-admin/includes/',
-        ];
-        
+		$this->include_paths = array(
+			untrailingslashit( plugin_dir_path( NUVEI_PLUGIN_FILE ) ) . '/includes/',
+			untrailingslashit( plugin_dir_path( NUVEI_PLUGIN_FILE ) ) . '/includes/abstracts/',
+		//            untrailingslashit( ABSPATH ) . '/wp-admin/includes/',
+		);
+
 		if ( function_exists( '__autoload' ) ) {
 			spl_autoload_register( '__autoload' );
 		}
@@ -54,15 +54,14 @@ class Nuvei_Autoloader {
 		}
 
 		$file = $this->get_file_name_from_class( $class );
-        
-        foreach ($this->include_paths as $path) {
-            if (file_exists($path . $file)
-                && is_readable($path . $file)
-            ) {
-                include_once $path . $file;
-            }
-            
-        }
+
+		foreach ( $this->include_paths as $path ) {
+			if ( file_exists( $path . $file )
+				&& is_readable( $path . $file )
+			) {
+				include_once $path . $file;
+			}
+		}
 	}
 }
 

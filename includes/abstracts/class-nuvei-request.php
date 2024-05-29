@@ -68,7 +68,7 @@ abstract class Nuvei_Request {
 		if ( ! is_a( $this->sc_order, 'WC_Order' ) ) {
 			$msg = 'Error - Provided Order ID is not a WC Order';
 			Nuvei_Logger::write( $order_id, $msg );
-			exit( esc_html($msg) );
+			exit( esc_html( $msg ) );
 		}
 
 		Nuvei_Logger::write( 'The Order is valid.' );
@@ -89,7 +89,7 @@ abstract class Nuvei_Request {
 				$msg
 			);
 
-			exit( esc_html($msg) );
+			exit( esc_html( $msg ) );
 		}
 
 		// can we override Order status (state)
@@ -99,7 +99,7 @@ abstract class Nuvei_Request {
 			$msg = 'Error - can not override status of Voided/Refunded Order.';
 			Nuvei_Logger::write( $this->sc_order->get_payment_method(), $msg );
 
-			exit( esc_html($msg) );
+			exit( esc_html( $msg ) );
 		}
 
 		// do not replace "completed" with "auth" status
@@ -109,7 +109,7 @@ abstract class Nuvei_Request {
 			$msg = 'Error - can not override status Completed with Auth.';
 			Nuvei_Logger::write( $this->sc_order->get_payment_method(), $msg );
 
-			exit( esc_html($msg) );
+			exit( esc_html( $msg ) );
 		}
 		// can we override Order status (state) END
 	}
@@ -362,7 +362,7 @@ abstract class Nuvei_Request {
 		);
 		// add the checksum END
 
-//		$json_post = json_encode( $all_params );
+		//      $json_post = json_encode( $all_params );
 
 		try {
 			$header = array(
@@ -370,12 +370,12 @@ abstract class Nuvei_Request {
 			//              'Content-Length: ' . strlen($json_post),
 			);
 
-//			if ( ! function_exists( 'curl_init' ) ) {
-//				return array(
-//					'status' => 'ERROR',
-//					'message' => 'To use Nuvei Payment gateway you must install CURL module!',
-//				);
-//			}
+			//          if ( ! function_exists( 'curl_init' ) ) {
+			//              return array(
+			//                  'status' => 'ERROR',
+			//                  'message' => 'To use Nuvei Payment gateway you must install CURL module!',
+			//              );
+			//          }
 
 			Nuvei_Logger::write(
 				array(
@@ -387,30 +387,33 @@ abstract class Nuvei_Request {
 			);
 
 			// create cURL post
-//			$ch = curl_init();
-//
-//			curl_setopt( $ch, CURLOPT_URL, $url );
-//			curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, 'POST' );
-//			curl_setopt( $ch, CURLOPT_POSTFIELDS, $json_post );
-//			curl_setopt( $ch, CURLOPT_HTTPHEADER, $header );
-//			curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-//			curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-//			curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, false );
-//
-//			$resp       = curl_exec( $ch );
-//			$resp_array = json_decode( $resp, true );
-//			$resp_info  = curl_getinfo( $ch );
-//
-//			Nuvei_Logger::write( is_array( $resp_array ) ? $resp_array : $resp, 'Response' );
-//
-//			curl_close( $ch );
+			//          $ch = curl_init();
+			//
+			//          curl_setopt( $ch, CURLOPT_URL, $url );
+			//          curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, 'POST' );
+			//          curl_setopt( $ch, CURLOPT_POSTFIELDS, $json_post );
+			//          curl_setopt( $ch, CURLOPT_HTTPHEADER, $header );
+			//          curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+			//          curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+			//          curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, false );
+			//
+			//          $resp       = curl_exec( $ch );
+			//          $resp_array = json_decode( $resp, true );
+			//          $resp_info  = curl_getinfo( $ch );
+			//
+			//          Nuvei_Logger::write( is_array( $resp_array ) ? $resp_array : $resp, 'Response' );
+			//
+			//          curl_close( $ch );
 
-            $resp = wp_remote_post($url, [
-                'headers'   => $header,
-                'body'      => $all_params,
-                'sslverify' => false,
-            ]);
-            
+			$resp = wp_remote_post(
+				$url,
+				array(
+					'headers'   => $header,
+					'body'      => $all_params,
+					'sslverify' => false,
+				)
+			);
+
 			if ( false === $resp ) {
 				Nuvei_Logger::write( $resp, 'Response info' );
 

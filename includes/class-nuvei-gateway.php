@@ -462,7 +462,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			exit;
 		}
 
-        $wp_fs_direct   = new WP_Filesystem_Direct(null);
+		$wp_fs_direct   = new WP_Filesystem_Direct( null );
 		$ndp_obj        = new Nuvei_Download_Plans( $this->settings );
 		$resp           = $ndp_obj->process();
 
@@ -487,9 +487,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		// in case there are  no active plans - create default one END
 
 		if ( $wp_fs_direct->put_contents(
-                NUVEI_LOGS_DIR . NUVEI_PLANS_FILE, 
-                wp_json_encode( $resp['plans'] ) )
-        ) {
+			NUVEI_LOGS_DIR . NUVEI_PLANS_FILE,
+			wp_json_encode( $resp['plans'] )
+		)
+		) {
 			$this->create_nuvei_global_attribute();
 
 			wp_send_json(
@@ -512,7 +513,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 	public function get_today_log() {
 		$log_file       = NUVEI_LOGS_DIR . gmdate( 'Y-m-d' ) . '.' . NUVEI_LOG_EXT;
-        $wp_fs_direct   = new WP_Filesystem_Direct(null);
+		$wp_fs_direct   = new WP_Filesystem_Direct( null );
 
 		if ( ! file_exists( $log_file ) ) {
 			wp_send_json(
@@ -565,7 +566,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$nuvei_plans_path           = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
 		$nuvei_glob_attr_name_slug  = Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME );
 		$taxonomy_name              = wc_attribute_taxonomy_name( $nuvei_glob_attr_name_slug );
-        $wp_fs_direct               = new WP_Filesystem_Direct(null);
+		$wp_fs_direct               = new WP_Filesystem_Direct( null );
 
 		// a check
 		if ( ! is_readable( $nuvei_plans_path ) ) {
@@ -581,9 +582,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		}
 
 		$plans = wp_json_file_decode(
-            $wp_fs_direct->get_contents( $nuvei_plans_path ), 
-            ['associative' => true]
-        );
+			$wp_fs_direct->get_contents( $nuvei_plans_path ),
+			array( 'associative' => true )
+		);
 
 		// a check
 		if ( empty( $plans ) || ! is_array( $plans ) ) {
@@ -999,7 +1000,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					'$_REQUEST' => $_REQUEST,
 					'$subscription' => $subscription,
 					'$renewal_order_id' => $renewal_order_id,
-                    'get_post_meta' => $renewal_order->get_meta_data(),
+					'get_post_meta' => $renewal_order->get_meta_data(),
 				),
 				'Error, the Subscription is not an object.'
 			);

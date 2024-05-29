@@ -93,7 +93,7 @@ class Nuvei_Logger {
 		if ( is_array( $data ) ) {
 			if ( 1 == $mask_user_data ) {
 				// clean possible objects inside array
-				$data = wp_json_file_decode( wp_json_encode( $data ), ['associative' => true] );
+				$data = wp_json_file_decode( wp_json_encode( $data ), array( 'associative' => true ) );
 
 				array_walk_recursive( $data, 'self::mask_data', self::$fields_to_mask );
 			}
@@ -108,7 +108,7 @@ class Nuvei_Logger {
 		} elseif ( is_object( $data ) ) {
 			if ( 1 == $mask_user_data && ! empty( $data ) ) {
 				// clean possible objects inside array
-				$data = wp_json_file_decode( wp_json_encode( $data ), ['associative' => true] );
+				$data = wp_json_file_decode( wp_json_encode( $data ), array( 'associative' => true ) );
 
 				array_walk_recursive( $data, 'self::mask_data', self::$fields_to_mask );
 			}

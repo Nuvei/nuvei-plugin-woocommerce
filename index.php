@@ -95,19 +95,19 @@ add_action(
 function nuvei_plugin_activate() {
 	$htaccess_file  = NUVEI_LOGS_DIR . '.htaccess';
 	$index_file     = NUVEI_LOGS_DIR . 'index.html';
-    $wp_fs_direct   = new WP_Filesystem_Direct(null);
+	$wp_fs_direct   = new WP_Filesystem_Direct( null );
 
 	if ( ! is_dir( NUVEI_LOGS_DIR ) ) {
-        $wp_fs_direct->mkdir( NUVEI_LOGS_DIR );
+		$wp_fs_direct->mkdir( NUVEI_LOGS_DIR );
 	}
 
 	if ( is_dir( NUVEI_LOGS_DIR ) ) {
 		if ( ! file_exists( $htaccess_file ) ) {
-            $wp_fs_direct->put_contents($htaccess_file, 'deny from all');
+			$wp_fs_direct->put_contents( $htaccess_file, 'deny from all' );
 		}
 
 		if ( ! file_exists( $index_file ) ) {
-            $wp_fs_direct->put_contents($htaccess_file, '');
+			$wp_fs_direct->put_contents( $htaccess_file, '' );
 		}
 	}
 }
@@ -115,15 +115,15 @@ function nuvei_plugin_activate() {
 /**
  * Check for SafeCharge version of the plugin.
  * Check for new version in the current Git repo.
- * 
+ *
  * @deprecated since version 3.0.1
  */
 function nuvei_admin_init() {
 	try {
-		// check if there is the version with "nuvei" in the name of directory, 
-        // in this case deactivate the current plugin
+		// check if there is the version with "nuvei" in the name of directory,
+		// in this case deactivate the current plugin
 		$path_to_nuvei_plugin = plugin_dir_path( __FILE__ ) . 'index.php';
-        
+
 		if ( strpos( basename( __DIR__ ), 'safecharge' ) !== false
 			&& file_exists( $path_to_nuvei_plugin )
 		) {
@@ -440,7 +440,7 @@ function nuvei_load_scripts() {
 		$plugin_url . 'assets/js/nuvei_reorder.js',
 		array( 'jquery' ),
 		'1',
-        true
+		true
 	);
 
 	// main JS
@@ -449,7 +449,7 @@ function nuvei_load_scripts() {
 		$plugin_url . 'assets/js/nuvei_public.js',
 		array( 'jquery' ),
 		'1',
-        false
+		false
 	);
 
 	// get selected WC price separators
@@ -566,16 +566,16 @@ function nuvei_load_admin_styles_scripts( $hook ) {
 		$plugin_url . 'assets/js/nuvei_admin.js',
 		array( 'jquery' ),
 		'1',
-        true
+		true
 	);
 
 	// get the list of the plans
 	$nuvei_plans_path   = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
 	$plans_list         = array();
-    $wp_fs_direct       = new WP_Filesystem_Direct(null);
+	$wp_fs_direct       = new WP_Filesystem_Direct( null );
 
 	if ( is_readable( $nuvei_plans_path ) ) {
-		$plans_list = stripslashes($wp_fs_direct->get_contents( $nuvei_plans_path ) );
+		$plans_list = stripslashes( $wp_fs_direct->get_contents( $nuvei_plans_path ) );
 	}
 	// get the list of the plans end
 
@@ -880,7 +880,7 @@ function nuvei_mod_thank_you_page( $order_id ) {
 
 	$output .= '</script>';
 
-	echo esc_js($output);
+	echo esc_js( $output );
 }
 
 function nuvei_edit_order_buttons() {
@@ -943,7 +943,7 @@ function nuvei_user_orders() {
 	}
 
 	echo '<script>'
-		. 'var scProductsIdsToReorder = ' . wp_kses_post(wp_json_encode( $prods_ids ) ) . ';'
+		. 'var scProductsIdsToReorder = ' . wp_kses_post( wp_json_encode( $prods_ids ) ) . ';'
 		. 'scOnPayOrderPage();'
 	. '</script>';
 }
@@ -957,16 +957,16 @@ function nuvei_show_message_on_cart( $data ) {
 // Attributes, Terms and Meta functions
 function nuvei_add_term_fields_form( $taxonomy ) {
 	$nuvei_plans_path   = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
-    $wp_fs_direct       = new WP_Filesystem_Direct(null);
+	$wp_fs_direct       = new WP_Filesystem_Direct( null );
 
 	ob_start();
 
 	$plans_list = array();
 	if ( is_readable( $nuvei_plans_path ) ) {
 		$plans_list = wp_json_file_decode(
-            $wp_fs_direct->get_contents( $nuvei_plans_path ), 
-            ['associative' => true]
-        );
+			$wp_fs_direct->get_contents( $nuvei_plans_path ),
+			array( 'associative' => true )
+		);
 	}
 
 	require_once __DIR__ . DIRECTORY_SEPARATOR . 'templates/admin/add-terms-form.php';
@@ -976,7 +976,7 @@ function nuvei_add_term_fields_form( $taxonomy ) {
 
 function nuvei_edit_term_meta_form( $term, $taxonomy ) {
 	$nuvei_plans_path   = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
-    $wp_fs_direct       = new WP_Filesystem_Direct(null);
+	$wp_fs_direct       = new WP_Filesystem_Direct( null );
 
 	ob_start();
 	$term_meta  = get_term_meta( $term->term_id );
@@ -985,7 +985,7 @@ function nuvei_edit_term_meta_form( $term, $taxonomy ) {
 
 	if ( is_readable( $nuvei_plans_path ) ) {
 		$plans_json = $wp_fs_direct->get_contents( $nuvei_plans_path );
-		$plans_list = wp_json_file_decode( $plans_json, ['associative' => true] );
+		$plans_list = wp_json_file_decode( $plans_json, array( 'associative' => true ) );
 	}
 
 	// clean unused elements
@@ -1161,26 +1161,26 @@ function nuvei_edit_my_account_orders_col( $order ) {
  */
 function nuvei_get_file_form_git() {
 	$matches = array();
-//	$ch      = curl_init();
-//
-//	curl_setopt(
-//		$ch,
-//		CURLOPT_URL,
-//		'https://raw.githubusercontent.com/Nuvei/nuvei-plugin-woocommerce/main/index.php'
-//	);
-//
-//	curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-//	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
-//
-//	$file_text = curl_exec( $ch );
-//	curl_close( $ch );
-    
-    $file_text = wp_remote_get(
-        'https://raw.githubusercontent.com/Nuvei/nuvei-plugin-woocommerce/main/index.php', 
-        [
-            'sslverify' => false,
-        ]
-    );
+	//  $ch      = curl_init();
+	//
+	//  curl_setopt(
+	//      $ch,
+	//      CURLOPT_URL,
+	//      'https://raw.githubusercontent.com/Nuvei/nuvei-plugin-woocommerce/main/index.php'
+	//  );
+	//
+	//  curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+	//  curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+	//
+	//  $file_text = curl_exec( $ch );
+	//  curl_close( $ch );
+
+	$file_text = wp_remote_get(
+		'https://raw.githubusercontent.com/Nuvei/nuvei-plugin-woocommerce/main/index.php',
+		array(
+			'sslverify' => false,
+		)
+	);
 
 	preg_match( '/(\s?\*\s?Version\s?:\s?)(.*\s?)(\n)/', $file_text, $matches );
 
