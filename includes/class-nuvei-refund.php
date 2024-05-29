@@ -33,7 +33,7 @@ class Nuvei_Refund extends Nuvei_Request {
 					'status' => 0,
 					'msg' => __(
 						'The Order missing Transaction ID.',
-						'nuvei_checkout_for_woocomm'
+						'nuvei-checkout-for-woocommerce'
 					),
 				)
 			);
@@ -67,7 +67,7 @@ class Nuvei_Refund extends Nuvei_Request {
 			wp_send_json(
 				array(
 					'status'    => 0,
-					'msg'       => __( 'Post parameter is less than 1.', 'nuvei_checkout_for_woocomm' ),
+					'msg'       => __( 'Post parameter is less than 1.', 'nuvei-checkout-for-woocommerce' ),
 					'data'      => array( $order_id ),
 				)
 			);
@@ -83,7 +83,7 @@ class Nuvei_Refund extends Nuvei_Request {
 					'status' => 0,
 					'msg' => __(
 						'Invalid Refund amount.',
-						'nuvei_checkout_for_woocomm'
+						'nuvei-checkout-for-woocommerce'
 					),
 				)
 			);
@@ -97,7 +97,7 @@ class Nuvei_Refund extends Nuvei_Request {
 			wp_send_json(
 				array(
 					'status' => 0,
-					'msg' => __( 'Error when try to get the Order.', 'nuvei_checkout_for_woocomm' ),
+					'msg' => __( 'Error when try to get the Order.', 'nuvei-checkout-for-woocommerce' ),
 				)
 			);
 			exit;
@@ -113,7 +113,7 @@ class Nuvei_Refund extends Nuvei_Request {
 
 		// error
 		if ( false === $resp ) {
-			$msg = __( 'The REST API retun false.', 'nuvei_checkout_for_woocomm' );
+			$msg = __( 'The REST API retun false.', 'nuvei-checkout-for-woocommerce' );
 
 			$this->sc_order->add_order_note( $msg );
 			$this->sc_order->save();
@@ -135,7 +135,7 @@ class Nuvei_Refund extends Nuvei_Request {
 
 		// error
 		if ( ! is_array( $json_arr ) ) {
-			$msg = __( 'Invalid API response.', 'nuvei_checkout_for_woocomm' );
+			$msg = __( 'Invalid API response.', 'nuvei-checkout-for-woocommerce' );
 
 			$this->sc_order->add_order_note( $msg );
 			$this->sc_order->save();
@@ -166,7 +166,7 @@ class Nuvei_Refund extends Nuvei_Request {
 
 		// in case we have message but without status
 		if ( ! isset( $json_arr['status'] ) && isset( $json_arr['msg'] ) ) {
-			$msg = __( 'Refund request problem: ', 'nuvei_checkout_for_woocomm' ) . $json_arr['msg'];
+			$msg = __( 'Refund request problem: ', 'nuvei-checkout-for-woocommerce' ) . $json_arr['msg'];
 
 			$this->sc_order->add_order_note( $msg );
 			$this->sc_order->save();
@@ -184,7 +184,7 @@ class Nuvei_Refund extends Nuvei_Request {
 
 		// the status of the request is ERROR
 		if ( isset( $json_arr['status'] ) && 'ERROR' === $json_arr['status'] ) {
-			$msg = __( 'Request ERROR: ', 'nuvei_checkout_for_woocomm' ) . $json_arr['reason'];
+			$msg = __( 'Request ERROR: ', 'nuvei-checkout-for-woocommerce' ) . $json_arr['reason'];
 
 			Nuvei_Logger::write( $msg );
 
@@ -204,7 +204,7 @@ class Nuvei_Refund extends Nuvei_Request {
 			} elseif ( isset( $json_arr['paymentMethodErrorReason'] ) && ! empty( $json_arr['paymentMethodErrorReason'] ) ) {
 				$msg = $json_arr['paymentMethodErrorReason'];
 			} else {
-				$msg = __( 'Transaction error.', 'nuvei_checkout_for_woocomm' );
+				$msg = __( 'Transaction error.', 'nuvei-checkout-for-woocommerce' );
 			}
 
 			$this->sc_order->add_order_note( $msg );
@@ -222,7 +222,7 @@ class Nuvei_Refund extends Nuvei_Request {
 		}
 
 		if ( isset( $json_arr['transactionStatus'] ) && 'DECLINED' === $json_arr['transactionStatus'] ) {
-			$msg = __( 'The refund was declined.', 'nuvei_checkout_for_woocomm' );
+			$msg = __( 'The refund was declined.', 'nuvei-checkout-for-woocommerce' );
 
 			$this->sc_order->add_order_note( $msg );
 			$this->sc_order->save();
@@ -238,7 +238,7 @@ class Nuvei_Refund extends Nuvei_Request {
 			exit;
 		}
 
-		$msg = __( 'The status of Refund request is UNKONOWN.', 'nuvei_checkout_for_woocomm' );
+		$msg = __( 'The status of Refund request is UNKONOWN.', 'nuvei-checkout-for-woocommerce' );
 
 		$this->sc_order->add_order_note( $msg );
 		$this->sc_order->save();

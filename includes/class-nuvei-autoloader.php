@@ -8,27 +8,27 @@ defined( 'ABSPATH' ) || exit;
 class Nuvei_Autoloader {
 
 	/**
-	 * Path to the includes directory.
+	 * Path to the includes directories.
 	 *
-	 * @var string
+	 * @var array
 	 */
-	private $include_path = '';
+	private $include_paths = [];
 
 	/**
 	 * The Constructor.
 	 */
 	public function __construct() {
+        $this->include_paths = [
+            untrailingslashit( plugin_dir_path( NUVEI_PLUGIN_FILE ) ) . '/includes/',
+            untrailingslashit( plugin_dir_path( NUVEI_PLUGIN_FILE ) ) . '/includes/abstracts/',
+//            untrailingslashit( ABSPATH ) . '/wp-admin/includes/',
+        ];
+        
 		if ( function_exists( '__autoload' ) ) {
 			spl_autoload_register( '__autoload' );
 		}
 
 		spl_autoload_register( array( $this, 'autoload' ) );
-
-		if ( ! class_exists( 'Nuvei_Request', false ) ) {
-			include_once __DIR__ . '/abstracts/class-nuvei-request.php';
-		}
-
-		$this->include_path = untrailingslashit( plugin_dir_path( NUVEI_PLUGIN_FILE ) ) . '/includes/';
 	}
 
 	/**
@@ -39,20 +39,6 @@ class Nuvei_Autoloader {
 	 */
 	private function get_file_name_from_class( $class ) {
 		return 'class-' . str_replace( '_', '-', $class ) . '.php';
-	}
-
-	/**
-	 * Include a class file.
-	 *
-	 * @param  string $path File path.
-	 * @return bool Successful or not.
-	 */
-	private function load_file( $path ) {
-		if ( $path && is_readable( $path ) ) {
-			include_once $path;
-			return true;
-		}
-		return false;
 	}
 
 	/**
@@ -68,11 +54,15 @@ class Nuvei_Autoloader {
 		}
 
 		$file = $this->get_file_name_from_class( $class );
-		$path = '';
-
-		if ( empty( $path ) || ! $this->load_file( $path . $file ) ) {
-			$this->load_file( $this->include_path . $file );
-		}
+        
+        foreach ($this->include_paths as $path) {
+            if (file_exists($path . $file)
+                && is_readable($path . $file)
+            ) {
+                include_once $path . $file;
+            }
+            
+        }
 	}
 }
 

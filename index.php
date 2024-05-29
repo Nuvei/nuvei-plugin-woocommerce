@@ -1,12 +1,12 @@
 <?php
 /**
- * Plugin Name: Nuvei Plugin for Woocommerce
+ * Plugin Name: Nuvei Gateway for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
  * Version: 3.0.1
  * Author: Nuvei
  * Author URI: https://nuvei.com
- * Text Domain: nuvei_checkout_for_woocomm
+ * Text Domain: nuvei-checkout-for-woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
  * Tested up to: 6.5.3
@@ -23,13 +23,15 @@ if ( ! defined( 'NUVEI_PLUGIN_FILE' ) ) {
 
 require_once 'config.php';
 require_once 'includes' . DIRECTORY_SEPARATOR . 'class-nuvei-autoloader.php';
-require_once ABSPATH . 'wp-admin/includes/plugin.php'; // we use it to get the above commented data
+require_once ABSPATH . 'wp-admin/includes/plugin.php'; // we use it to get the data from the comment at the top
+require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-base.php';
+require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-direct.php';
 
 $wc_nuvei = null;
 
 register_activation_hook( __FILE__, 'nuvei_plugin_activate' );
 
-add_action( 'admin_init', 'nuvei_admin_init' );
+//add_action( 'admin_init', 'nuvei_admin_init' );
 add_filter( 'woocommerce_payment_gateways', 'nuvei_add_gateway' );
 add_action( 'plugins_loaded', 'nuvei_init', 0 );
 
@@ -91,25 +93,31 @@ add_action(
  * On activate try to create custom logs directory and few files.
  */
 function nuvei_plugin_activate() {
-	$content_dir    = dirname( __DIR__, 2 );
 	$htaccess_file  = NUVEI_LOGS_DIR . '.htaccess';
 	$index_file     = NUVEI_LOGS_DIR . 'index.html';
+    $wp_fs_direct   = new WP_Filesystem_Direct(null);
 
 	if ( ! is_dir( NUVEI_LOGS_DIR ) ) {
-		mkdir( NUVEI_LOGS_DIR );
+        $wp_fs_direct->mkdir( NUVEI_LOGS_DIR );
 	}
 
 	if ( is_dir( NUVEI_LOGS_DIR ) ) {
 		if ( ! file_exists( $htaccess_file ) ) {
-			file_put_contents( $htaccess_file, 'deny from all' );
+            $wp_fs_direct->put_contents($htaccess_file, 'deny from all');
 		}
 
 		if ( ! file_exists( $index_file ) ) {
-			file_put_contents( $index_file, '' );
+            $wp_fs_direct->put_contents($htaccess_file, '');
 		}
 	}
 }
 
+/**
+ * Check for SafeCharge version of the plugin.
+ * Check for new version in the current Git repo.
+ * 
+ * @deprecated since version 3.0.1
+ */
 function nuvei_admin_init() {
 	try {
 		// check if there is the version with "nuvei" in the name of directory, 
@@ -154,8 +162,8 @@ function nuvei_admin_init() {
 				function () {
 					$class     = 'notice notice-info is-dismissible';
 					$url       = 'https://github.com/Nuvei/nuvei-plugin-woocommerce/blob/main/CHANGELOG.md';
-					$message_1 = __( 'There is a new version of Nuvei Plugin available.', 'nuvei_checkout_for_woocomm' );
-					$message_2 = __( 'View version details.', 'nuvei_checkout_for_woocomm' );
+					$message_1 = __( 'There is a new version of Nuvei Plugin available.', 'nuvei-checkout-for-woocommerce' );
+					$message_2 = __( 'View version details.', 'nuvei-checkout-for-woocommerce' );
 
 					printf(
 						'<div class="%1$s"><p>%2$s <a href="%3$s" target="_blank">%4$s</a></p></div>',
@@ -179,7 +187,7 @@ function nuvei_init() {
 	}
 
 	load_plugin_textdomain(
-		'nuvei_checkout_for_woocomm',
+		'nuvei-checkout-for-woocommerce',
 		false,
 		dirname( plugin_basename( __FILE__ ) ) . '/languages/'
 	);
@@ -235,6 +243,7 @@ function nuvei_init() {
 
 	add_filter( 'woocommerce_pay_order_after_submit', 'nuvei_user_orders', 10, 2 );
 
+    //phpcs:ignore
 	if ( ! empty( $_GET['sc_msg'] ) ) {
 		add_filter( 'woocommerce_before_cart', 'nuvei_show_message_on_cart', 10, 2 );
 	}
@@ -370,7 +379,7 @@ function nuvei_ajax_action() {
 		$wc_nuvei->download_subscr_pans();
 	}
 
-	wp_send_json_error( __( 'Not recognized Ajax call.', 'nuvei_checkout_for_woocomm' ) );
+	wp_send_json_error( __( 'Not recognized Ajax call.', 'nuvei-checkout-for-woocommerce' ) );
 	wp_die();
 }
 
@@ -430,7 +439,8 @@ function nuvei_load_scripts() {
 		'nuvei_js_reorder',
 		$plugin_url . 'assets/js/nuvei_reorder.js',
 		array( 'jquery' ),
-		'1'
+		'1',
+        true
 	);
 
 	// main JS
@@ -438,7 +448,8 @@ function nuvei_load_scripts() {
 		'nuvei_js_public',
 		$plugin_url . 'assets/js/nuvei_public.js',
 		array( 'jquery' ),
-		'1'
+		'1',
+        false
 	);
 
 	// get selected WC price separators
@@ -554,15 +565,17 @@ function nuvei_load_admin_styles_scripts( $hook ) {
 		'nuvei_js_admin',
 		$plugin_url . 'assets/js/nuvei_admin.js',
 		array( 'jquery' ),
-		'1'
+		'1',
+        true
 	);
 
 	// get the list of the plans
-	$nuvei_plans_path = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
-	$plans_list       = array();
+	$nuvei_plans_path   = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
+	$plans_list         = array();
+    $wp_fs_direct       = new WP_Filesystem_Direct(null);
 
 	if ( is_readable( $nuvei_plans_path ) ) {
-		$plans_list = stripslashes( file_get_contents( $nuvei_plans_path ) );
+		$plans_list = stripslashes($wp_fs_direct->get_contents( $nuvei_plans_path ) );
 	}
 	// get the list of the plans end
 
@@ -705,7 +718,7 @@ function nuvei_add_buttons( $order ) {
 	) {
 		$question = sprintf(
 			/* translators: %d is replaced with "decimal" */
-			__( 'Are you sure, you want to Cancel Order #%d?', 'nuvei_checkout_for_woocomm' ),
+			__( 'Are you sure, you want to Cancel Order #%d?', 'nuvei-checkout-for-woocommerce' ),
 			$order_id
 		);
 
@@ -720,7 +733,7 @@ function nuvei_add_buttons( $order ) {
 		//                if (!empty($subscr_data['state'])
 		//                    && 'active' == $subscr_data['state']
 		//                ) {
-		//                    $question = __('Are you sure, you want to Cancel this Order? This will also deactivate all Active Subscriptions.', 'nuvei_checkout_for_woocomm');
+		//                    $question = __('Are you sure, you want to Cancel this Order? This will also deactivate all Active Subscriptions.', 'nuvei-checkout-for-woocommerce');
 		//                    break;
 		//                }
 		//            }
@@ -729,7 +742,7 @@ function nuvei_add_buttons( $order ) {
 			if ( ! empty( $meta_data['subs_data']['state'] )
 				&& 'active' == $meta_data['subs_data']['state']
 			) {
-				$question = __( 'Are you sure, you want to Cancel this Order? This will also deactivate all Active Subscriptions.', 'nuvei_checkout_for_woocomm' );
+				$question = __( 'Are you sure, you want to Cancel this Order? This will also deactivate all Active Subscriptions.', 'nuvei-checkout-for-woocommerce' );
 				break;
 			}
 		}
@@ -738,7 +751,7 @@ function nuvei_add_buttons( $order ) {
 		echo '<button id="sc_void_btn" type="button" onclick="nuveiAction(\''
 				. esc_html( $question ) . '\', \'void\', ' . esc_html( $order_id )
 				. ')" class="button generate-items">'
-				. esc_html__( 'Void', 'nuvei_checkout_for_woocomm' ) . '</button>';
+				. esc_html__( 'Void', 'nuvei-checkout-for-woocommerce' ) . '</button>';
 	}
 
 	// show SETTLE button ONLY if transaction type IS Auth and the Total is not 0
@@ -747,14 +760,14 @@ function nuvei_add_buttons( $order ) {
 	) {
 		$question = sprintf(
 			/* translators: %d is replaced with "decimal" */
-			__( 'Are you sure, you want to Settle Order #%d?', 'nuvei_checkout_for_woocomm' ),
+			__( 'Are you sure, you want to Settle Order #%d?', 'nuvei-checkout-for-woocommerce' ),
 			$order_id
 		);
 
 		echo '<button id="sc_settle_btn" type="button" onclick="nuveiAction(\''
 				. esc_html( $question )
 				. '\', \'settle\', \'' . esc_html( $order_id ) . '\')" class="button generate-items">'
-				. esc_html__( 'Settle', 'nuvei_checkout_for_woocomm' ) . '</button>';
+				. esc_html__( 'Settle', 'nuvei-checkout-for-woocommerce' ) . '</button>';
 	}
 
 	// add loading screen
@@ -766,9 +779,12 @@ function nuvei_add_buttons( $order ) {
  * rewrite the return URL and redirect to new one.
  *
  * @global WC_SC $wc_nuvei
+ * @deprecated since version 3.0.1
  */
 function nuvei_rewrite_return_url() {
+    //phpcs:ignore
 	if ( isset( $_REQUEST['ppp_status'] ) && '' != $_REQUEST['ppp_status']
+        //phpcs:ignore
 		&& ( ! isset( $_REQUEST['wc_sc_redirected'] ) || 0 == $_REQUEST['wc_sc_redirected'] )
 	) {
 		$query_string = '';
@@ -840,15 +856,15 @@ function nuvei_mod_thank_you_page( $order_id ) {
 
 	# Modify title and the text on errors
 	$request_status = Nuvei_Http::get_request_status();
-	$new_msg        = esc_html__( 'Please check your Order status for more information.', 'nuvei_checkout_for_woocomm' );
+	$new_msg        = esc_html__( 'Please check your Order status for more information.', 'nuvei-checkout-for-woocommerce' );
 	$new_title      = '';
 
 	if ( 'error' == $request_status
 		|| 'fail' == strtolower( Nuvei_Http::get_param( 'ppp_status' ) )
 	) {
-		$new_title  = esc_html__( 'Order error', 'nuvei_checkout_for_woocomm' );
+		$new_title  = esc_html__( 'Order error', 'nuvei-checkout-for-woocommerce' );
 	} elseif ( 'canceled' == $request_status ) {
-		$new_title  = esc_html__( 'Order canceled', 'nuvei_checkout_for_woocomm' );
+		$new_title  = esc_html__( 'Order canceled', 'nuvei-checkout-for-woocommerce' );
 	}
 
 	if ( ! empty( $new_title ) ) {
@@ -864,7 +880,7 @@ function nuvei_mod_thank_you_page( $order_id ) {
 
 	$output .= '</script>';
 
-	echo $output;
+	echo esc_js($output);
 }
 
 function nuvei_edit_order_buttons() {
@@ -894,7 +910,7 @@ function nuvei_change_title_order_received( $title, $id ) {
 		&& is_order_received_page()
 		&& get_the_ID() === $id
 	) {
-		$title = esc_html__( 'Order error', 'nuvei_checkout_for_woocomm' );
+		$title = esc_html__( 'Order error', 'nuvei-checkout-for-woocommerce' );
 	}
 
 	return $title;
@@ -927,7 +943,7 @@ function nuvei_user_orders() {
 	}
 
 	echo '<script>'
-		. 'var scProductsIdsToReorder = ' . wp_kses_post( json_encode( $prods_ids ) ) . ';'
+		. 'var scProductsIdsToReorder = ' . wp_kses_post(wp_json_encode( $prods_ids ) ) . ';'
 		. 'scOnPayOrderPage();'
 	. '</script>';
 }
@@ -940,13 +956,17 @@ function nuvei_show_message_on_cart( $data ) {
 
 // Attributes, Terms and Meta functions
 function nuvei_add_term_fields_form( $taxonomy ) {
-	$nuvei_plans_path = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
+	$nuvei_plans_path   = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
+    $wp_fs_direct       = new WP_Filesystem_Direct(null);
 
 	ob_start();
 
 	$plans_list = array();
 	if ( is_readable( $nuvei_plans_path ) ) {
-		$plans_list = json_decode( file_get_contents( $nuvei_plans_path ), true );
+		$plans_list = wp_json_file_decode(
+            $wp_fs_direct->get_contents( $nuvei_plans_path ), 
+            ['associative' => true]
+        );
 	}
 
 	require_once __DIR__ . DIRECTORY_SEPARATOR . 'templates/admin/add-terms-form.php';
@@ -955,7 +975,8 @@ function nuvei_add_term_fields_form( $taxonomy ) {
 }
 
 function nuvei_edit_term_meta_form( $term, $taxonomy ) {
-	$nuvei_plans_path = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
+	$nuvei_plans_path   = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
+    $wp_fs_direct       = new WP_Filesystem_Direct(null);
 
 	ob_start();
 	$term_meta  = get_term_meta( $term->term_id );
@@ -963,8 +984,8 @@ function nuvei_edit_term_meta_form( $term, $taxonomy ) {
 	$plans_json = '';
 
 	if ( is_readable( $nuvei_plans_path ) ) {
-		$plans_json = file_get_contents( $nuvei_plans_path );
-		$plans_list = json_decode( $plans_json, true );
+		$plans_json = $wp_fs_direct->get_contents( $nuvei_plans_path );
+		$plans_list = wp_json_file_decode( $plans_json, ['associative' => true] );
 	}
 
 	// clean unused elements
@@ -1056,7 +1077,7 @@ function nuvei_edit_order_list_columns( $column, $col_id ) {
 	// put subscription baloon
 	if ( 'order_number' == $column && ! empty( $subs_list ) ) {
 		echo '<mark class="order-status status-processing tips" style="float: right;"><span>'
-			. esc_html__( 'Nuvei Subscription', 'nuvei_checkout_for_woocomm' ) . '</span></mark>';
+			. esc_html__( 'Nuvei Subscription', 'nuvei-checkout-for-woocommerce' ) . '</span></mark>';
 	}
 
 	// edit status baloon
@@ -1064,7 +1085,7 @@ function nuvei_edit_order_list_columns( $column, $col_id ) {
 		&& ( ! empty( $order_changes['total_change'] ) || ! empty( $order_changes['curr_change'] ) )
 	) {
 		echo '<mark class="order-status status-on-hold tips" style="float: left; margin-right: 2px;" title="'
-			. esc_html__( 'Please check transaction Total and Currency!', 'nuvei_checkout_for_woocomm' ) . '"><span>!</span></mark>';
+			. esc_html__( 'Please check transaction Total and Currency!', 'nuvei-checkout-for-woocommerce' ) . '"><span>!</span></mark>';
 	}
 }
 
@@ -1089,7 +1110,7 @@ function nuvei_hpos_edit_order_list_columns( $column, $order ) {
 	// put subscription baloon
 	if ( 'order_number' == $column && ! empty( $subs_list ) ) {
 		echo '<mark class="order-status status-processing tips" style="float: right;"><span>'
-			. esc_html__( 'Nuvei Subscription', 'nuvei_checkout_for_woocomm' ) . '</span></mark>';
+			. esc_html__( 'Nuvei Subscription', 'nuvei-checkout-for-woocommerce' ) . '</span></mark>';
 	}
 
 	// edit status baloon
@@ -1097,7 +1118,7 @@ function nuvei_hpos_edit_order_list_columns( $column, $order ) {
 		&& ( ! empty( $order_changes['total_change'] ) || ! empty( $order_changes['curr_change'] ) )
 	) {
 		echo '<mark class="order-status status-on-hold tips" style="float: left; margin-right: 2px;" title="'
-			. esc_html__( 'Please check transaction Total and Currency!', 'nuvei_checkout_for_woocomm' ) . '"><span>!</span></mark>';
+			. esc_html__( 'Please check transaction Total and Currency!', 'nuvei-checkout-for-woocommerce' ) . '"><span>!</span></mark>';
 	}
 }
 
@@ -1126,7 +1147,7 @@ function nuvei_edit_my_account_orders_col( $order ) {
 	echo '<a href="' . esc_url( $order->get_view_order_url() ) . '"';
 
 	if ( $is_subscr ) {
-		echo ' class="nuvei_plan_order" title="' . esc_attr__( 'Nuvei Payment Plan Order', 'nuvei_checkout_for_woocomm' ) . '"';
+		echo ' class="nuvei_plan_order" title="' . esc_attr__( 'Nuvei Payment Plan Order', 'nuvei-checkout-for-woocommerce' ) . '"';
 	}
 
 	echo '>#' . esc_html( $order->get_order_number() ) . '</a>';
@@ -1136,22 +1157,30 @@ function nuvei_edit_my_account_orders_col( $order ) {
  * Repeating code from Version Checker logic.
  *
  * @return array
+ * @deprecated since version 3.0.1
  */
 function nuvei_get_file_form_git() {
 	$matches = array();
-	$ch      = curl_init();
-
-	curl_setopt(
-		$ch,
-		CURLOPT_URL,
-		'https://raw.githubusercontent.com/Nuvei/nuvei-plugin-woocommerce/main/index.php'
-	);
-
-	curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
-
-	$file_text = curl_exec( $ch );
-	curl_close( $ch );
+//	$ch      = curl_init();
+//
+//	curl_setopt(
+//		$ch,
+//		CURLOPT_URL,
+//		'https://raw.githubusercontent.com/Nuvei/nuvei-plugin-woocommerce/main/index.php'
+//	);
+//
+//	curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+//	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+//
+//	$file_text = curl_exec( $ch );
+//	curl_close( $ch );
+    
+    $file_text = wp_remote_get(
+        'https://raw.githubusercontent.com/Nuvei/nuvei-plugin-woocommerce/main/index.php', 
+        [
+            'sslverify' => false,
+        ]
+    );
 
 	preg_match( '/(\s?\*\s?Version\s?:\s?)(.*\s?)(\n)/', $file_text, $matches );
 
@@ -1214,9 +1243,13 @@ function nuvei_after_order_itemmeta( $item_id, $item, $_product ) {
 	 */
 	$post_id = 0;
 
+    //phpcs:ignore
 	if ( isset( $_GET['post'] ) ) {
+        //phpcs:ignore
 		$post_id = (int) $_GET['post'];
+    //phpcs:ignore
 	} elseif ( isset( $_GET['id'] ) ) {
+        //phpcs:ignore
 		$post_id = (int) $_GET['id'];
 	}
 
@@ -1280,16 +1313,16 @@ function nuvei_after_order_itemmeta( $item_id, $item, $_product ) {
 		) {
 			// show Subscr ID and Cancel Subsc button
 			echo '<div class="wc-order-item-variation" style="margin-top: 0px;"><strong>'
-				. __( 'Nuvei Subscription ID:', 'nuvei_checkout_for_woocomm' ) . '</strong> '
+				. esc_html__( 'Nuvei Subscription ID:', 'nuvei-checkout-for-woocommerce' ) . '</strong> '
 				. esc_html( $subscr_data['subscr_id'] ) . '</div>';
 
 			if ( ! empty( $subscr_data['state'] ) && 'active' == $subscr_data['state'] ) {
 				echo '<button id="nuvei_cancel_subs_' . esc_html( $subscr_data['subscr_id'] )
 						. '" class="nuvei_cancel_subscr button generate-items" type="button" '
 						. 'style="margin-top: .5em;" onclick="nuveiAction(\''
-						. esc_html__( 'Are you sure, you want to cancel this subscription?', 'nuvei_checkout_for_woocomm' )
+						. esc_html__( 'Are you sure, you want to cancel this subscription?', 'nuvei-checkout-for-woocommerce' )
 						. '\', \'cancelSubscr\', ' . esc_html( 0 ) . ', ' . esc_html( $subscr_data['subscr_id'] )
-						. ')">' . esc_html__( 'Cancel Subscription', 'nuvei_checkout_for_woocomm' )
+						. ')">' . esc_html__( 'Cancel Subscription', 'nuvei-checkout-for-woocommerce' )
 					. '</button>';
 			}
 
@@ -1321,7 +1354,7 @@ function nuvei_rest_method( $request_data ) {
 		$res = new WP_REST_Response(
 			array(
 				'code'      => 'unknown_action',
-				'message'   => __( 'The action you require is unknown.', 'nuvei_checkout_for_woocomm' ),
+				'message'   => __( 'The action you require is unknown.', 'nuvei-checkout-for-woocommerce' ),
 				'data'      => array( 'status' => 405 ),
 			)
 		);
@@ -1349,7 +1382,7 @@ function nuvei_rest_method( $request_data ) {
 	$res = new WP_REST_Response(
 		array(
 			'code'      => 'unknown_action',
-			'message'   => __( 'The action you require is unknown.', 'nuvei_checkout_for_woocomm' ),
+			'message'   => __( 'The action you require is unknown.', 'nuvei-checkout-for-woocommerce' ),
 			'data'      => array( 'status' => 405 ),
 		)
 	);

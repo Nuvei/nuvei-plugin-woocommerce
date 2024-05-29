@@ -93,27 +93,29 @@ class Nuvei_Logger {
 		if ( is_array( $data ) ) {
 			if ( 1 == $mask_user_data ) {
 				// clean possible objects inside array
-				$data = json_decode( json_encode( $data ), true );
+				$data = wp_json_file_decode( wp_json_encode( $data ), ['associative' => true] );
 
 				array_walk_recursive( $data, 'self::mask_data', self::$fields_to_mask );
 			}
 
 			// paymentMethods can be very big array
 			if ( ! empty( $data['paymentMethods'] ) ) {
-				$exception = json_encode( $data );
+				$exception = wp_json_encode( $data );
 			} else {
-				$exception = $beauty_log ? json_encode( $data, JSON_PRETTY_PRINT ) : json_encode( $data );
+                // phpcs:ignore
+				$exception = $beauty_log ? json_encode( $data, JSON_PRETTY_PRINT ) : wp_json_encode( $data );
 			}
 		} elseif ( is_object( $data ) ) {
 			if ( 1 == $mask_user_data && ! empty( $data ) ) {
 				// clean possible objects inside array
-				$data = json_decode( json_encode( $data ), true );
+				$data = wp_json_file_decode( wp_json_encode( $data ), ['associative' => true] );
 
 				array_walk_recursive( $data, 'self::mask_data', self::$fields_to_mask );
 			}
 
 			$data_tmp   = print_r( (array) $data, true );
-			$exception  = $beauty_log ? json_encode( $data_tmp, JSON_PRETTY_PRINT ) : json_encode( $data_tmp );
+            // phpcs:ignore
+			$exception  = $beauty_log ? json_encode( $data_tmp, JSON_PRETTY_PRINT ) : wp_json_encode( $data_tmp );
 		} elseif ( is_bool( $data ) ) {
 			$exception = $data ? 'true' : 'false';
 		} elseif ( is_string( $data ) ) {
@@ -148,6 +150,7 @@ class Nuvei_Logger {
 		$single_file_name   = NUVEI_GATEWAY_NAME . '-' . md5( $nuvei_gw->get_option( 'secret' ) );
 
 		if ( 'yes' == $save_logs ) {
+            // phpcs:ignore
 			$res = file_put_contents(
 				NUVEI_LOGS_DIR . $file_name . '.' . NUVEI_LOG_EXT,
 				$string,
@@ -156,6 +159,7 @@ class Nuvei_Logger {
 		}
 
 		if ( 'yes' == $save_single_log ) {
+            // phpcs:ignore
 			$res = file_put_contents(
 				NUVEI_LOGS_DIR . $single_file_name . '.' . NUVEI_LOG_EXT,
 				$string,

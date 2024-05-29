@@ -37,7 +37,7 @@ final class Nuvei_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 				'wp-html-entities',
 				'wp-i18n',
 			),
-			null,
+			1,
 			true
 		);
 

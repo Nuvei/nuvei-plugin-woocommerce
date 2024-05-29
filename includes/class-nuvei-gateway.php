@@ -16,8 +16,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		# settings to get/save options
 		$this->id                   = NUVEI_GATEWAY_NAME;
 		$this->icon                 = plugin_dir_url( NUVEI_PLUGIN_FILE ) . 'assets/icons/nuvei.png';
-		$this->method_title         = __( 'Nuvei Checkout', 'nuvei_checkout_for_woocomm' );
-		$this->method_description   = __( 'Pay with ', 'nuvei_checkout_for_woocomm' ) . NUVEI_GATEWAY_TITLE . '.';
+		$this->method_title         = __( 'Nuvei Checkout', 'nuvei-checkout-for-woocommerce' );
+		$this->method_description   = __( 'Pay with ', 'nuvei-checkout-for-woocommerce' ) . NUVEI_GATEWAY_TITLE . '.';
 		$this->method_name          = NUVEI_GATEWAY_TITLE;
 		$this->icon                 = plugin_dir_url( NUVEI_PLUGIN_FILE ) . 'assets/icons/nuvei.png';
 		$this->has_fields           = false;
@@ -91,7 +91,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$nuvei_plans_path = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
 
 		if ( is_readable( $nuvei_plans_path ) ) {
-			$defaults['description'] = __( 'Last download: ', 'nuvei_checkout_for_woocomm' )
+			$defaults['description'] = __( 'Last download: ', 'nuvei-checkout-for-woocommerce' )
 				. gmdate( 'Y-m-d H:i:s', filemtime( $nuvei_plans_path ) );
 		}
 
@@ -120,7 +120,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$nuvei_blocked_pms_visible = array();
 		$nuvei_blocked_pms         = explode( ',', $this->get_option( 'pm_black_list', '' ) );
 		$pms                       = array(
-			'' => __( 'Select payment methods...', 'nuvei_checkout_for_woocomm' ),
+			'' => __( 'Select payment methods...', 'nuvei-checkout-for-woocommerce' ),
 		);
 
 		$get_apms_obj = new Nuvei_Get_Apms( $this->settings );
@@ -144,7 +144,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		# prepare the list with Payment methods END
 
 		$defaults = array(
-			'title'                     => __( 'Block Payment Methods', 'nuvei_checkout_for_woocomm' ),
+			'title'                     => __( 'Block Payment Methods', 'nuvei-checkout-for-woocommerce' ),
 			'class'                     => 'nuvei_checkout_setting',
 			'css'                       => '',
 			'custom_attributes'         => array(),
@@ -398,7 +398,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			wp_send_json(
 				array(
 					'status' => 0,
-					'msg' => __( 'Problem with the Products IDs.', 'nuvei_checkout_for_woocomm' ),
+					'msg' => __( 'Problem with the Products IDs.', 'nuvei-checkout-for-woocommerce' ),
 				)
 			);
 			exit;
@@ -412,7 +412,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			$product = $prod_factory->get_product( $id );
 
 			if ( 'in-stock' != $product->get_availability()['class'] ) {
-				$msg = __( 'Some of the Products are not availavle, and are not added in the new Order.', 'nuvei_checkout_for_woocomm' );
+				$msg = __( 'Some of the Products are not availavle, and are not added in the new Order.', 'nuvei-checkout-for-woocommerce' );
 				continue;
 			}
 
@@ -462,8 +462,9 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			exit;
 		}
 
-		$ndp_obj = new Nuvei_Download_Plans( $this->settings );
-		$resp    = $ndp_obj->process();
+        $wp_fs_direct   = new WP_Filesystem_Direct(null);
+		$ndp_obj        = new Nuvei_Download_Plans( $this->settings );
+		$resp           = $ndp_obj->process();
 
 		if ( empty( $resp ) || ! is_array( $resp ) || 'SUCCESS' != $resp['status'] ) {
 			Nuvei_Logger::write( 'Get Plans response error.' );
@@ -485,7 +486,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		}
 		// in case there are  no active plans - create default one END
 
-		if ( file_put_contents( NUVEI_LOGS_DIR . NUVEI_PLANS_FILE, json_encode( $resp['plans'] ) ) ) {
+		if ( $wp_fs_direct->put_contents(
+                NUVEI_LOGS_DIR . NUVEI_PLANS_FILE, 
+                wp_json_encode( $resp['plans'] ) )
+        ) {
 			$this->create_nuvei_global_attribute();
 
 			wp_send_json(
@@ -507,13 +511,14 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	}
 
 	public function get_today_log() {
-		$log_file = NUVEI_LOGS_DIR . gmdate( 'Y-m-d' ) . '.' . NUVEI_LOG_EXT;
+		$log_file       = NUVEI_LOGS_DIR . gmdate( 'Y-m-d' ) . '.' . NUVEI_LOG_EXT;
+        $wp_fs_direct   = new WP_Filesystem_Direct(null);
 
 		if ( ! file_exists( $log_file ) ) {
 			wp_send_json(
 				array(
 					'status'    => 0,
-					'msg'       => __( 'The Log file not exists.', 'nuvei_checkout_for_woocomm' ),
+					'msg'       => __( 'The Log file not exists.', 'nuvei-checkout-for-woocommerce' ),
 				)
 			);
 			exit;
@@ -523,7 +528,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			wp_send_json(
 				array(
 					'status'    => 0,
-					'msg'       => __( 'The Log file is not readable.', 'nuvei_checkout_for_woocomm' ),
+					'msg'       => __( 'The Log file is not readable.', 'nuvei-checkout-for-woocommerce' ),
 				)
 			);
 			exit;
@@ -532,7 +537,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		wp_send_json(
 			array(
 				'status'    => 1,
-				'data'      => file_get_contents( $log_file ),
+				'data'      => $wp_fs_direct->get_contents( $log_file ),
 			)
 		);
 		exit;
@@ -557,9 +562,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	public function create_nuvei_global_attribute() {
 		Nuvei_Logger::write( 'create_nuvei_global_attribute()' );
 
-		$nuvei_plans_path          = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
-		$nuvei_glob_attr_name_slug = Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME );
-		$taxonomy_name             = wc_attribute_taxonomy_name( $nuvei_glob_attr_name_slug );
+		$nuvei_plans_path           = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
+		$nuvei_glob_attr_name_slug  = Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME );
+		$taxonomy_name              = wc_attribute_taxonomy_name( $nuvei_glob_attr_name_slug );
+        $wp_fs_direct               = new WP_Filesystem_Direct(null);
 
 		// a check
 		if ( ! is_readable( $nuvei_plans_path ) ) {
@@ -574,7 +580,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			exit;
 		}
 
-		$plans = json_decode( file_get_contents( $nuvei_plans_path ), true );
+		$plans = wp_json_file_decode(
+            $wp_fs_direct->get_contents( $nuvei_plans_path ), 
+            ['associative' => true]
+        );
 
 		// a check
 		if ( empty( $plans ) || ! is_array( $plans ) ) {
@@ -658,7 +667,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		) {
 			if ( ! empty( $attributes[ 'pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ) ] ) ) {
 				wc_add_notice(
-					__( 'Please create an account or login to subscribe.', 'nuvei_checkout_for_woocomm' ),
+					__( 'Please create an account or login to subscribe.', 'nuvei-checkout-for-woocommerce' ),
 					'error'
 				);
 
@@ -667,7 +676,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 			if ( false !== strpos( $product->get_type(), 'subscription' ) ) {
 				wc_add_notice(
-					__( 'Please create an account or login to subscribe.', 'nuvei_checkout_for_woocomm' ),
+					__( 'Please create an account or login to subscribe.', 'nuvei-checkout-for-woocommerce' ),
 					'error'
 				);
 
@@ -680,7 +689,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		//            && !is_user_logged_in()
 		//        ) {
 		//            wc_add_notice(
-		//                __('You must login to add a product with a Payment Plan.', 'nuvei_checkout_for_woocomm'),
+		//                __('You must login to add a product with a Payment Plan.', 'nuvei-checkout-for-woocommerce'),
 		//                'error'
 		//            );
 		//
@@ -715,7 +724,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$oo_data    = $oo_obj->process();
 
 		if ( ! $oo_data || empty( $oo_data['sessionToken'] ) ) {
-			$msg = __( 'Unexpected error, please try again later!', 'nuvei_checkout_for_woocomm' );
+			$msg = __( 'Unexpected error, please try again later!', 'nuvei-checkout-for-woocommerce' );
 
 			Nuvei_Logger::write( $msg );
 
@@ -893,7 +902,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				'result'    => 'failure', // this is just to stop WC send the form, and show APMs
 				'refresh'   => false,
 				'reload'    => false,
-				'messages'  => '<script>showNuveiCheckout(' . json_encode( $checkout_data ) . ');</script>',
+				'messages'  => '<script>showNuveiCheckout(' . wp_json_encode( $checkout_data ) . ');</script>',
 			)
 		);
 
@@ -986,11 +995,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				array(
 					'$amount_to_charge' => $amount_to_charge,
 					'$renewal_order' => (array) $renewal_order,
+                    //phpcs:ignore
 					'$_REQUEST' => $_REQUEST,
 					'$subscription' => $subscription,
 					'$renewal_order_id' => $renewal_order_id,
-					//                    'get_post_meta' => get_post_meta($renewal_order_id)
-									'get_post_meta' => $renewal_order->get_meta_data(),
+                    'get_post_meta' => $renewal_order->get_meta_data(),
 				),
 				'Error, the Subscription is not an object.'
 			);
@@ -1086,7 +1095,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	public function rest_get_cashier_link( $params ) {
 		// error
 		if ( empty( $params['id'] ) || empty( $params['successUrl'] ) || empty( array( 'returnUrl' ) ) ) {
-			$msg = __( 'Missing incoming parameters.', 'nuvei_checkout_for_woocomm' );
+			$msg = __( 'Missing incoming parameters.', 'nuvei-checkout-for-woocommerce' );
 			Nuvei_Logger::write( $params, $msg );
 
 			return array(
@@ -1101,7 +1110,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 		// error
 		if ( ! $order ) {
-			$msg = __( 'Order is false for order id ', 'nuvei_checkout_for_woocomm' ) . $order_id;
+			$msg = __( 'Order is false for order id ', 'nuvei-checkout-for-woocommerce' ) . $order_id;
 			Nuvei_Logger::write( $msg );
 
 			return array(
@@ -1113,7 +1122,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 		// error
 		if ( $order->get_payment_method() != NUVEI_GATEWAY_NAME ) {
-			$msg = __( 'Process payment Error - Order payment does not belongs to ', 'nuvei_checkout_for_woocomm' )
+			$msg = __( 'Process payment Error - Order payment does not belongs to ', 'nuvei-checkout-for-woocommerce' )
 				. NUVEI_GATEWAY_NAME;
 			Nuvei_Logger::write( $msg );
 
@@ -1134,7 +1143,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 		// error
 		if ( empty( $url ) ) {
-			$msg = __( 'Error empty Cashier URL.', 'nuvei_checkout_for_woocomm' );
+			$msg = __( 'Error empty Cashier URL.', 'nuvei-checkout-for-woocommerce' );
 			Nuvei_Logger::write( $msg );
 
 			return array(
@@ -1319,25 +1328,25 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	private function init_form_base_fields() {
 		$this->form_fields = array(
 			'enabled' => array(
-				'title' => __( 'Enable/Disable', 'nuvei_checkout_for_woocomm' ),
+				'title' => __( 'Enable/Disable', 'nuvei-checkout-for-woocommerce' ),
 				'type' => 'checkbox',
-				'label' => __( 'Enable Nuvei Checkout Plugin.', 'nuvei_checkout_for_woocomm' ),
+				'label' => __( 'Enable Nuvei Checkout Plugin.', 'nuvei-checkout-for-woocommerce' ),
 				'default' => 'no',
 			),
 			'title' => array(
-				'title'         => __( 'Default Title', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Default Title', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'text',
-				'description'   => __( 'This is the payment method which the user sees during checkout.', 'nuvei_checkout_for_woocomm' ),
-				'default'       => __( 'Secure Payments with Nuvei', 'nuvei_checkout_for_woocomm' ),
+				'description'   => __( 'This is the payment method which the user sees during checkout.', 'nuvei-checkout-for-woocommerce' ),
+				'default'       => __( 'Secure Payments with Nuvei', 'nuvei-checkout-for-woocommerce' ),
 			),
 			'description' => array(
-				'title' => __( 'Description', 'nuvei_checkout_for_woocomm' ),
+				'title' => __( 'Description', 'nuvei-checkout-for-woocommerce' ),
 				'type' => 'textarea',
-				'description' => __( 'This controls the description which the user sees during checkout.', 'nuvei_checkout_for_woocomm' ),
+				'description' => __( 'This controls the description which the user sees during checkout.', 'nuvei-checkout-for-woocommerce' ),
 				'default' => 'Place order to get to our secured payment page to select your payment option',
 			),
 			'test' => array(
-				'title' => __( 'Site Mode', 'nuvei_checkout_for_woocomm' ) . ' *',
+				'title' => __( 'Site Mode', 'nuvei-checkout-for-woocommerce' ) . ' *',
 				'type' => 'select',
 				'required' => 'required',
 				'options' => array(
@@ -1347,32 +1356,32 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				),
 			),
 			'merchantId' => array(
-				'title' => __( 'Merchant ID', 'nuvei_checkout_for_woocomm' ) . ' *',
+				'title' => __( 'Merchant ID', 'nuvei-checkout-for-woocommerce' ) . ' *',
 				'type' => 'text',
 				'required' => true,
                 // phpcs:ignore
 				'description' => __( 'Merchant ID is provided by ' . NUVEI_GATEWAY_TITLE . '.' ),
 			),
 			'merchantSiteId' => array(
-				'title' => __( 'Merchant Site ID', 'nuvei_checkout_for_woocomm' ) . ' *',
+				'title' => __( 'Merchant Site ID', 'nuvei-checkout-for-woocommerce' ) . ' *',
 				'type' => 'text',
 				'required' => true,
                 // phpcs:ignore
 				'description' => __( 'Merchant Site ID is provided by ' . NUVEI_GATEWAY_TITLE . '.' ),
 			),
 			'secret' => array(
-				'title' => __( 'Secret Key', 'nuvei_checkout_for_woocomm' ) . ' *',
+				'title' => __( 'Secret Key', 'nuvei-checkout-for-woocommerce' ) . ' *',
 				'type' => 'text',
 				'required' => true,
                 // phpcs:ignore
-				'description' => __( 'Secret key is provided by ' . NUVEI_GATEWAY_TITLE, 'nuvei_checkout_for_woocomm' ),
+				'description' => __( 'Secret key is provided by ' . NUVEI_GATEWAY_TITLE, 'nuvei-checkout-for-woocommerce' ),
 			),
 			'hash_type' => array(
-				'title'         => __( 'Hash Type', 'nuvei_checkout_for_woocomm' ) . ' *',
+				'title'         => __( 'Hash Type', 'nuvei-checkout-for-woocommerce' ) . ' *',
 				'type'          => 'select',
 				'required'      => true,
                 // phpcs:ignore
-				'description'   => __( 'Choose Hash type provided by ' . NUVEI_GATEWAY_TITLE, 'nuvei_checkout_for_woocomm' ),
+				'description'   => __( 'Choose Hash type provided by ' . NUVEI_GATEWAY_TITLE, 'nuvei-checkout-for-woocommerce' ),
 				'options'       => array(
 					'' => __( 'Select an option...' ),
 					'sha256' => 'sha256',
@@ -1380,7 +1389,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				),
 			),
 			'payment_action' => array(
-				'title'     => __( 'Payment Action', 'nuvei_checkout_for_woocomm' ) . ' *',
+				'title'     => __( 'Payment Action', 'nuvei-checkout-for-woocommerce' ) . ' *',
 				'type'      => 'select',
 				'required'  => true,
 				'options'   => array(
@@ -1389,24 +1398,24 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					'Auth' => 'Authorize',
 				),
 				'class'     => 'nuvei_checkout_setting',
-				'description'   => __( 'This option is for Nuvei Checkout SDK.', 'nuvei_checkout_for_woocomm' ),
+				'description'   => __( 'This option is for Nuvei Checkout SDK.', 'nuvei-checkout-for-woocommerce' ),
 			),
 			'save_logs' => array(
-				'title' => __( 'Save Daily Logs', 'nuvei_checkout_for_woocomm' ),
+				'title' => __( 'Save Daily Logs', 'nuvei-checkout-for-woocommerce' ),
 				'type' => 'checkbox',
-				'label' => __( 'Create and save daily log files. This can help for debugging and catching bugs.', 'nuvei_checkout_for_woocomm' ),
+				'label' => __( 'Create and save daily log files. This can help for debugging and catching bugs.', 'nuvei-checkout-for-woocommerce' ),
 				'default' => 'yes',
 			),
 			'save_single_log' => array(
-				'title' => __( 'Save Single Log file', 'nuvei_checkout_for_woocomm' ),
+				'title' => __( 'Save Single Log file', 'nuvei-checkout-for-woocommerce' ),
 				'type' => 'checkbox',
-				'label' => __( 'Create and save the logs into single file.', 'nuvei_checkout_for_woocomm' ),
+				'label' => __( 'Create and save the logs into single file.', 'nuvei-checkout-for-woocommerce' ),
 				'default' => 'no',
 			),
 			'disable_wcs_alert' => array(
-				'title' => __( 'Hide WCS Warning', 'nuvei_checkout_for_woocomm' ),
+				'title' => __( 'Hide WCS Warning', 'nuvei-checkout-for-woocommerce' ),
 				'type' => 'checkbox',
-				'label' => __( 'Check it to hide WCS waringn permanent.', 'nuvei_checkout_for_woocomm' ),
+				'label' => __( 'Check it to hide WCS waringn permanent.', 'nuvei-checkout-for-woocommerce' ),
 				'default' => 'no',
 			),
 		);
@@ -1432,70 +1441,70 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 		$fields = array(
 			'integration_type' => array(
-				'title'         => __( 'Integration Type', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Integration Type', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => array(
-					'sdk'       => __( 'Checkout SDK', 'nuvei_checkout_for_woocomm' ),
-					'cashier'   => __( 'Payment page - Cashier', 'nuvei_checkout_for_woocomm' ),
+					'sdk'       => __( 'Checkout SDK', 'nuvei-checkout-for-woocommerce' ),
+					'cashier'   => __( 'Payment page - Cashier', 'nuvei-checkout-for-woocommerce' ),
 				),
 				'default'       => 0,
 			),
 			// pending dmn -> proccessing
 			'status_pending' => array(
-				'title'     => __( 'Status Pending DMN', 'nuvei_checkout_for_woocomm' ),
+				'title'     => __( 'Status Pending DMN', 'nuvei-checkout-for-woocommerce' ),
 				'type'      => 'select',
 				'options'   => $statuses,
 				'default'   => 'processing',
 			),
 			// auth -> pending payment
 			'status_auth' => array(
-				'title'     => __( 'Status Authorized', 'nuvei_checkout_for_woocomm' ),
+				'title'     => __( 'Status Authorized', 'nuvei-checkout-for-woocommerce' ),
 				'type'      => 'select',
 				'options'   => $statuses,
 				'default'   => 'pending',
 			),
 			// settle & sale -> completed
 			'status_paid' => array(
-				'title'         => __( 'Status Paid', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Status Paid', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => $statuses,
 				'default'       => 'completed',
-				'description'   => __( 'The status for Settle and Sale flow is same. It shows the Order is Paid.', 'nuvei_checkout_for_woocomm' ),
+				'description'   => __( 'The status for Settle and Sale flow is same. It shows the Order is Paid.', 'nuvei-checkout-for-woocommerce' ),
 			),
 			// refund -> refunded
 			'status_refund' => array(
-				'title'         => __( 'Status Refunded', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Status Refunded', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => $statuses,
 				'default'       => 'refunded',
 			),
 			// void -> cancelled
 			'status_void' => array(
-				'title'         => __( 'Status Voided', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Status Voided', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => $statuses,
 				'default'       => 'cancelled',
 			),
 			// failed -> failed
 			'status_fail' => array(
-				'title'         => __( 'Status Failed', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Status Failed', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => $statuses,
 				'default'       => 'failed',
 			),
 			'combine_cashier_products' => array(
-				'title'         => __( 'Combine Cashier Products into One', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Combine Cashier Products into One', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
-				'description'   => __( 'Cobine the products into one, to avoid eventual problems with, taxes, discounts, coupons, etc.', 'nuvei_checkout_for_woocomm' ),
+				'description'   => __( 'Cobine the products into one, to avoid eventual problems with, taxes, discounts, coupons, etc.', 'nuvei-checkout-for-woocommerce' ),
 				'default'       => 1,
 				'options'       => array(
-					1 => __( 'Yes', 'nuvei_checkout_for_woocomm' ),
-					0 => __( 'No', 'nuvei_checkout_for_woocomm' ),
+					1 => __( 'Yes', 'nuvei-checkout-for-woocommerce' ),
+					0 => __( 'No', 'nuvei-checkout-for-woocommerce' ),
 				),
 				'class'         => 'nuvei_cashier_setting',
 			),
 			'allow_zero_checkout' => array(
-				'title'         => __( 'Enable Nuvei GW for Zero-total products', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Enable Nuvei GW for Zero-total products', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => array(
 					0 => 'No',
@@ -1503,10 +1512,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				),
 				'default'       => 0,
 				'class'         => 'nuvei_checkout_setting',
-				'description'   => __( 'If enalbe this option, only Nuvei GW will be listed as payment option. This option can be used for Card authentication.<br/>Zero-total checkout for rebilling products is enable by default.', 'nuvei_checkout_for_woocomm' ),
+				'description'   => __( 'If enalbe this option, only Nuvei GW will be listed as payment option. This option can be used for Card authentication.<br/>Zero-total checkout for rebilling products is enable by default.', 'nuvei-checkout-for-woocommerce' ),
 			),
 			'use_upos' => array(
-				'title'         => __( 'Allow Client to Use UPOs', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Allow Client to Use UPOs', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => array(
 					0 => 'No',
@@ -1514,10 +1523,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				),
 				'default'       => 0,
 				'class'         => 'nuvei_checkout_setting',
-				'description'   => __( 'Logged users will see their UPOs, and will have option to save UPOs.', 'nuvei_checkout_for_woocomm' ),
+				'description'   => __( 'Logged users will see their UPOs, and will have option to save UPOs.', 'nuvei-checkout-for-woocommerce' ),
 			),
 			'save_guest_upos' => array(
-				'title'         => __( 'Save UPOs for Guest Users', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Save UPOs for Guest Users', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => array(
 					0 => 'No',
@@ -1525,10 +1534,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				),
 				'default'       => 0,
 				'class'         => 'nuvei_checkout_setting',
-				'description'   => __( 'The UPO will be save only when the Guest user buy Subscription product.', 'nuvei_checkout_for_woocomm' ),
+				'description'   => __( 'The UPO will be save only when the Guest user buy Subscription product.', 'nuvei-checkout-for-woocommerce' ),
 			),
 			'allow_paypal_rebilling' => array(
-				'title'         => __( 'Allow Rebilling with PayPal', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Allow Rebilling with PayPal', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => array(
 					0 => 'No',
@@ -1536,43 +1545,43 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				),
 				'default'       => 0,
 				'class'         => 'nuvei_checkout_setting',
-				'description'   => __( 'PayPal is available only for WCS. Using PayPal for rebilling will disable the UPOs.', 'nuvei_checkout_for_woocomm' ),
+				'description'   => __( 'PayPal is available only for WCS. Using PayPal for rebilling will disable the UPOs.', 'nuvei-checkout-for-woocommerce' ),
 			),
 			'sdk_theme' => array(
-				'title'     => __( 'Simply Connect Theme', 'nuvei_checkout_for_woocomm' ),
+				'title'     => __( 'Simply Connect Theme', 'nuvei-checkout-for-woocommerce' ),
 				'type'      => 'select',
 				'options'   => array(
-					'accordion'     => __( 'Accordion', 'nuvei_checkout_for_woocomm' ),
-					'tiles'         => __( 'Tiles', 'nuvei_checkout_for_woocomm' ),
-					'horizontal'    => __( 'Horizontal', 'nuvei_checkout_for_woocomm' ),
+					'accordion'     => __( 'Accordion', 'nuvei-checkout-for-woocommerce' ),
+					'tiles'         => __( 'Tiles', 'nuvei-checkout-for-woocommerce' ),
+					'horizontal'    => __( 'Horizontal', 'nuvei-checkout-for-woocommerce' ),
 				),
 				'default'   => 'accordion',
 				'class'     => 'nuvei_checkout_setting',
 			),
 			'use_dcc' => array(
-				'title'         => __( 'Use Currency Conversion', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Use Currency Conversion', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => array(
-					'enable'        => __( 'Enabled', 'nuvei_checkout_for_woocomm' ),
-					'force'         => __( 'Enabled and expanded', 'nuvei_checkout_for_woocomm' ),
-					'false'         => __( 'Disabled', 'nuvei_checkout_for_woocomm' ),
+					'enable'        => __( 'Enabled', 'nuvei-checkout-for-woocommerce' ),
+					'force'         => __( 'Enabled and expanded', 'nuvei-checkout-for-woocommerce' ),
+					'false'         => __( 'Disabled', 'nuvei-checkout-for-woocommerce' ),
 				),
-				'description'   => __( 'To work DCC, it must be enabled on merchant level also.', 'nuvei_checkout_for_woocomm' ) . ' '
+				'description'   => __( 'To work DCC, it must be enabled on merchant level also.', 'nuvei-checkout-for-woocommerce' ) . ' '
 					. sprintf(
 						'<a href="%s" class="class" target="_blank">%s</a>',
 						esc_html( 'https://docs.nuvei.com/documentation/accept-payment/simply-connect/payment-customization/#dynamic-currency-conversion' ),
-						__( 'Check the Documentation.', 'nuvei_checkout_for_woocomm' )
+						__( 'Check the Documentation.', 'nuvei-checkout-for-woocommerce' )
 					),
 				'default'       => 'enabled',
 				'class'         => 'nuvei_checkout_setting',
 			),
 			'blocked_cards' => array(
-				'title'         => __( 'Block Cards', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Block Cards', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'text',
 				'description'   => sprintf(
 					' <a href="%s" class="class" target="_blank">%s</a>',
 					esc_html( 'https://docs.nuvei.com/documentation/accept-payment/checkout-2/payment-customization/#card-processing' ),
-					__( 'Check the Documentation.', 'nuvei_checkout_for_woocomm' )
+					__( 'Check the Documentation.', 'nuvei-checkout-for-woocommerce' )
 				),
 				'class'         => 'nuvei_checkout_setting',
 			),
@@ -1580,48 +1589,48 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				'type' => 'nuvei_multiselect',
 			),
 			'pay_button' => array(
-				'title'         => __( 'Choose the Text on the Pay Button', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Choose the Text on the Pay Button', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => array(
-					'amountButton'  => __( 'Shows the amount', 'nuvei_checkout_for_woocomm' ),
-					'textButton'    => __( 'Shows the payment method', 'nuvei_checkout_for_woocomm' ),
+					'amountButton'  => __( 'Shows the amount', 'nuvei-checkout-for-woocommerce' ),
+					'textButton'    => __( 'Shows the payment method', 'nuvei-checkout-for-woocommerce' ),
 				),
 				'default'       => 'amountButton',
 				'class'         => 'nuvei_checkout_setting',
 			),
 			'auto_open_pm' => array(
-				'title'         => __( 'Auto-expand PMs', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Auto-expand PMs', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => array(
-					1   => __( 'Yes', 'nuvei_checkout_for_woocomm' ),
-					0   => __( 'No', 'nuvei_checkout_for_woocomm' ),
+					1   => __( 'Yes', 'nuvei-checkout-for-woocommerce' ),
+					0   => __( 'No', 'nuvei-checkout-for-woocommerce' ),
 				),
 				'default'       => 1,
 				'class'         => 'nuvei_checkout_setting',
 			),
 			'close_popup' => array(
-				'title'         => __( 'Auto-close APM Pop-Up', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Auto-close APM Pop-Up', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => array(
-					1   => __( 'Yes (Recommended)', 'nuvei_checkout_for_woocomm' ),
-					0   => __( 'No', 'nuvei_checkout_for_woocomm' ),
+					1   => __( 'Yes (Recommended)', 'nuvei-checkout-for-woocommerce' ),
+					0   => __( 'No', 'nuvei-checkout-for-woocommerce' ),
 				),
 				'default'       => 1,
 				'class'         => 'nuvei_checkout_setting',
 			),
 			'mask_user_data' => array(
-				'title'         => __( 'Mask User Data into the Log', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Mask User Data into the Log', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => array(
-					1   => __( 'Yes (Recommended)', 'nuvei_checkout_for_woocomm' ),
-					0   => __( 'No', 'nuvei_checkout_for_woocomm' ),
+					1   => __( 'Yes (Recommended)', 'nuvei-checkout-for-woocommerce' ),
+					0   => __( 'No', 'nuvei-checkout-for-woocommerce' ),
 				),
 				'default'       => 1,
 				'class'         => 'nuvei_checkout_setting',
-				'description'   => __( 'If you disable this option, the user data will be completly exposed in the log records.', 'nuvei_checkout_for_woocomm' ),
+				'description'   => __( 'If you disable this option, the user data will be completly exposed in the log records.', 'nuvei-checkout-for-woocommerce' ),
 			),
 			'log_level' => array(
-				'title'         => __( 'Checkout Log level', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Checkout Log level', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => array(
 					0 => 0,
@@ -1633,16 +1642,16 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					6 => 6,
 				),
 				'default'       => 0,
-				'description'   => '0 ' . __( 'for "No logging".', 'nuvei_checkout_for_woocomm' ),
+				'description'   => '0 ' . __( 'for "No logging".', 'nuvei-checkout-for-woocommerce' ),
 				'class'         => 'nuvei_checkout_setting',
 			),
 			'translation' => array(
-				'title'         => __( 'Translations', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Translations', 'nuvei-checkout-for-woocommerce' ),
 				'description'   => sprintf(
-					__( 'This filed is the only way to translate Checkout SDK strings. Put the translations for all desired languages as shown in the placeholder. For examples', 'nuvei_checkout_for_woocomm' )
+					__( 'This filed is the only way to translate Checkout SDK strings. Put the translations for all desired languages as shown in the placeholder. For examples', 'nuvei-checkout-for-woocommerce' )
 						. ' <a href="%s" class="class" target="_blank">%s</a>',
 					esc_html( 'https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation' ),
-					__( 'check the Documentation.', 'nuvei_checkout_for_woocomm' )
+					__( 'check the Documentation.', 'nuvei-checkout-for-woocommerce' )
 				),
 				'type'          => 'textarea',
 				'class'         => 'nuvei_checkout_setting',
@@ -1669,11 +1678,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	private function init_form_tools_fields( $fields_append = false ) {
 		$fields = array(
 			'get_plans_btn' => array(
-				'title' => __( 'Sync Payment Plans', 'nuvei_checkout_for_woocomm' ),
+				'title' => __( 'Sync Payment Plans', 'nuvei-checkout-for-woocommerce' ),
 				'type'  => 'payment_plans_btn',
 			),
 			'notify_url' => array(
-				'title'         => __( 'Notify URL', 'nuvei_checkout_for_woocomm' ),
+				'title'         => __( 'Notify URL', 'nuvei-checkout-for-woocommerce' ),
 				'type'          => 'hidden',
 				'description'   => Nuvei_String::get_notify_url( $this->settings, true ),
 			),

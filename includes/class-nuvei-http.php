@@ -21,6 +21,7 @@ class Nuvei_Http {
 		if ( ! empty( $parent ) && is_array( $parent ) ) {
 			$arr = $parent;
 		} else {
+            //phpcs:ignore
 			$arr = $_REQUEST;
 		}
 

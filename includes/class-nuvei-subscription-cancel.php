@@ -29,11 +29,11 @@ class Nuvei_Subscription_Cancel extends Nuvei_Request {
 		$resp = $this->call_rest_api( 'cancelSubscription', $params );
 
 		if ( ! $resp || ! is_array( $resp ) || 'SUCCESS' != $resp['status'] ) {
-			$msg = __( '<b>Error</b> when try to cancel Subscription #', 'nuvei_checkout_for_woocomm' )
+			$msg = __( '<b>Error</b> when try to cancel Subscription #', 'nuvei-checkout-for-woocommerce' )
 				. $params['subscriptionId'] . ' ';
 
 			if ( ! empty( $resp['reason'] ) ) {
-				$msg .= '<br/>' . __( '<b>Reason</b> ', 'nuvei_checkout_for_woocomm' ) . $resp['reason'];
+				$msg .= '<br/><b>' . __( 'Reason', 'nuvei-checkout-for-woocommerce' ) . '</b> ' . $resp['reason'];
 			}
 
 			$this->sc_order->add_order_note( $msg );
