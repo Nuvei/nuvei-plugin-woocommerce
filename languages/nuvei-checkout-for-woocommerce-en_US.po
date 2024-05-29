@@ -1,0 +1,763 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Nuvei Gateway for Woocommerce\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-05-29 10:03+0000\n"
+"PO-Revision-Date: 2024-05-29 10:04+0000\n"
+"Last-Translator: \n"
+"Language-Team: English (United States)\n"
+"Language: en_US\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.9; wp-6.5.3\n"
+"X-Domain: nuvei-checkout-for-woocommerce"
+
+#. %3$s: the status of the Payment
+#: includes/class-nuvei-notify-url.php:883
+#, php-format
+msgid "%1$sSubscription Payment%2$s with Status %3$s was made."
+msgstr ""
+
+#: includes/class-nuvei-subscription-cancel.php:32
+msgid "<b>Error</b> when try to cancel Subscription #"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1555
+msgid "Accordion"
+msgstr ""
+
+#: templates/admin/settings.php:28
+msgid "Advanced Settings"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1519
+msgid "Allow Client to Use UPOs"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1541
+msgid "Allow Rebilling with PayPal"
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:890
+msgid "Amount:"
+msgstr ""
+
+#: config.php:82
+msgid "Are you sure about this Refund?"
+msgstr ""
+
+#. %d is replaced with "decimal"
+#: index.php:721
+msgid "Are you sure, you want to Cancel Order #%d?"
+msgstr ""
+
+#: index.php:745
+msgid ""
+"Are you sure, you want to Cancel this Order? This will also deactivate all "
+"Active Subscriptions."
+msgstr ""
+
+#: index.php:1323
+msgid "Are you sure, you want to cancel this subscription?"
+msgstr ""
+
+#. %d is replaced with "decimal"
+#: index.php:763
+msgid "Are you sure, you want to Settle Order #%d?"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1613
+msgid "Auto-close APM Pop-Up"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1603
+msgid "Auto-expand PMs"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1580
+msgid "Block Cards"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:147
+msgid "Block Payment Methods"
+msgstr ""
+
+#: index.php:1325
+msgid "Cancel Subscription"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1419
+msgid "Check it to hide WCS waringn permanent."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1574 includes/class-nuvei-gateway.php:1585
+msgid "Check the Documentation."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1655
+msgid "check the Documentation."
+msgstr ""
+
+#: config.php:86
+msgid "Checkout form class error, please contact the site administrator!"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1634
+msgid "Checkout Log level"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1448
+msgid "Checkout SDK"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1593
+msgid "Choose the Text on the Pay Button"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1499
+msgid ""
+"Cobine the products into one, to avoid eventual problems with, taxes, "
+"discounts, coupons, etc."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1497
+msgid "Combine Cashier Products into One"
+msgstr ""
+
+#: config.php:81
+msgid "Continue"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1407
+msgid ""
+"Create and save daily log files. This can help for debugging and catching "
+"bugs."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1413
+msgid "Create and save the logs into single file."
+msgstr ""
+
+#: templates/admin/add-terms-form.php:56 templates/admin/add-terms-form.php:68
+#: templates/admin/add-terms-form.php:80 templates/admin/edit-term-form.php:62
+#: templates/admin/edit-term-form.php:90 templates/admin/edit-term-form.php:117
+msgid "Days"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1338
+msgid "Default Title"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1344
+msgid "Description"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1568
+msgid "Disabled"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1334
+msgid "Enable Nuvei Checkout Plugin."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1508
+msgid "Enable Nuvei GW for Zero-total products"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1332
+msgid "Enable/Disable"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1566
+msgid "Enabled"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1567
+msgid "Enabled and expanded"
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:709
+msgid "Error code: "
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1147
+msgid "Error empty Cashier URL."
+msgstr ""
+
+#: includes/class-nuvei-refund.php:100
+msgid "Error when try to get the Order."
+msgstr ""
+
+#: config.php:73
+msgid "Error when try to get the Session Token."
+msgstr ""
+
+#: config.php:70
+msgid "Error with your Payment."
+msgstr ""
+
+#. %s: close bold html tag
+#: includes/class-nuvei-notify-url.php:483
+#, php-format
+msgid "Error%s when try to start a Subscription by the Order."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1646
+msgid "for \"No logging\"."
+msgstr ""
+
+#: templates/admin/settings.php:25
+msgid "General Settings"
+msgstr ""
+
+#: config.php:85
+msgid "Getting log faild, please check the console for more information!"
+msgstr ""
+
+#: config.php:74
+msgid "Go back"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1381
+msgid "Hash Type"
+msgstr ""
+
+#: templates/admin/settings.php:31
+msgid "Help Tools"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1417
+msgid "Hide WCS Warning"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1557
+msgid "Horizontal"
+msgstr ""
+
+#. URI of the plugin
+msgid "https://github.com/Nuvei/nuvei-plugin-woocommerce"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "https://nuvei.com"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1516
+msgid ""
+"If enalbe this option, only Nuvei GW will be listed as payment option. This "
+"option can be used for Card authentication.<br/>Zero-total checkout for "
+"rebilling products is enable by default."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1631
+msgid ""
+"If you disable this option, the user data will be completly exposed in the "
+"log records."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1445
+msgid "Integration Type"
+msgstr ""
+
+#: includes/class-nuvei-refund.php:138
+msgid "Invalid API response."
+msgstr ""
+
+#: includes/class-nuvei-refund.php:84
+msgid "Invalid Refund amount."
+msgstr ""
+
+#: config.php:83
+msgid "Last Download"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:94
+msgid "Last download: "
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1527
+msgid "Logged users will see their UPOs, and will have option to save UPOs."
+msgstr ""
+
+#: templates/admin/settings.php:19
+msgid ""
+"Looks like WCS plugin is activated. Please, do NOT USE products with WC "
+"Subscription and products with Nuvei Subscription in same site!!!"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1623
+msgid "Mask User Data into the Log"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1360
+msgid "Merchant ID"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1367
+msgid "Merchant Site ID"
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:711
+msgid "Message: "
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1099
+msgid "Missing incoming parameters."
+msgstr ""
+
+#: templates/admin/add-terms-form.php:57 templates/admin/add-terms-form.php:69
+#: templates/admin/add-terms-form.php:81 templates/admin/edit-term-form.php:66
+#: templates/admin/edit-term-form.php:94 templates/admin/edit-term-form.php:121
+msgid "Month"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1503 includes/class-nuvei-gateway.php:1607
+#: includes/class-nuvei-gateway.php:1617 includes/class-nuvei-gateway.php:1627
+msgid "No"
+msgstr ""
+
+#: index.php:382
+msgid "Not recognized Ajax call."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1686
+msgid "Notify URL"
+msgstr ""
+
+#. Author of the plugin
+msgid "Nuvei"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:19 templates/admin/settings.php:3
+msgid "Nuvei Checkout"
+msgstr ""
+
+#. Description of the plugin
+msgid "Nuvei Gateway for WooCommerce"
+msgstr ""
+
+#. Name of the plugin
+msgid "Nuvei Gateway for Woocommerce"
+msgstr ""
+
+#: index.php:1150
+msgid "Nuvei Payment Plan Order"
+msgstr ""
+
+#: templates/admin/add-terms-form.php:23
+msgid "Nuvei Payment Plan settings"
+msgstr ""
+
+#: index.php:1080 index.php:1113
+msgid "Nuvei Subscription"
+msgstr ""
+
+#: index.php:1316
+msgid "Nuvei Subscription ID:"
+msgstr ""
+
+#: index.php:867
+msgid "Order canceled"
+msgstr ""
+
+#: index.php:865 index.php:913
+msgid "Order error"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1114
+msgid "Order is false for order id "
+msgstr ""
+
+#: config.php:79
+msgid "Pay"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:20
+msgid "Pay with "
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1393
+msgid "Payment Action"
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:575
+msgid "Payment Method: "
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1449
+msgid "Payment page - Cashier"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1549
+msgid ""
+"PayPal is available only for WCS. Using PayPal for rebilling will disable "
+"the UPOs."
+msgstr ""
+
+#: config.php:80
+msgid "Place order"
+msgstr ""
+
+#: templates/admin/add-terms-form.php:26 templates/admin/edit-term-form.php:23
+msgid "Plan ID"
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:825
+#: includes/class-nuvei-notify-url.php:831
+#: includes/class-nuvei-notify-url.php:888
+msgid "Plan ID:"
+msgstr ""
+
+#: templates/admin/settings.php:11
+msgid "Please check and fill the settings of the plugin."
+msgstr ""
+
+#: index.php:1088 index.php:1121
+msgid "Please check transaction Total and Currency!"
+msgstr ""
+
+#: index.php:859
+msgid "Please check your Order status for more information."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:671 includes/class-nuvei-gateway.php:680
+msgid "Please create an account or login to subscribe."
+msgstr ""
+
+#: config.php:72
+msgid "Please fill all fields marked with * !"
+msgstr ""
+
+#: config.php:77
+msgid "Please try again later!"
+msgstr ""
+
+#: config.php:78
+msgid "Please try another payment method!"
+msgstr ""
+
+#: includes/class-nuvei-refund.php:70
+msgid "Post parameter is less than 1."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:401
+msgid "Problem with the Products IDs."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1126
+msgid "Process payment Error - Order payment does not belongs to "
+msgstr ""
+
+#: config.php:84
+msgid "Read Log"
+msgstr ""
+
+#: includes/class-nuvei-subscription-cancel.php:36
+msgid "Reason"
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:488
+#: includes/class-nuvei-notify-url.php:710
+msgid "Reason: "
+msgstr ""
+
+#: templates/admin/add-terms-form.php:48 templates/admin/edit-term-form.php:46
+msgid "Recurring Amount"
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:493
+msgid "Recurring amount: "
+msgstr ""
+
+#: templates/admin/add-terms-form.php:65 templates/admin/edit-term-form.php:86
+msgid "Recurring End After"
+msgstr ""
+
+#: templates/admin/add-terms-form.php:53 templates/admin/edit-term-form.php:58
+msgid "Recurring Period"
+msgstr ""
+
+#: includes/class-nuvei-refund.php:169
+msgid "Refund request problem: "
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:577
+msgid "Related Transaction ID: "
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:571
+msgid "request"
+msgstr ""
+
+#: includes/class-nuvei-refund.php:187
+msgid "Request ERROR: "
+msgstr ""
+
+#: config.php:75
+msgid "Request fail."
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:574
+msgid "Response status: "
+msgstr ""
+
+#: templates/admin/settings.php:5
+msgid "Return to payments"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1405
+msgid "Save Daily Logs"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1411
+msgid "Save Single Log file"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1530
+msgid "Save UPOs for Guest Users"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1374
+msgid "Secret Key"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1341
+msgid "Secure Payments with Nuvei"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:123
+msgid "Select payment methods..."
+msgstr ""
+
+#: index.php:770
+msgid "Settle"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1596
+msgid "Shows the amount"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1597
+msgid "Shows the payment method"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1552
+msgid "Simply Connect Theme"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1350
+msgid "Site Mode"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:415
+msgid ""
+"Some of the Products are not availavle, and are not added in the new Order."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1462
+msgid "Status Authorized"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1491
+msgid "Status Failed"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1469
+msgid "Status Paid"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1455
+msgid "Status Pending DMN"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1477
+msgid "Status Refunded"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1484
+msgid "Status Voided"
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:823
+#: includes/class-nuvei-notify-url.php:829
+#: includes/class-nuvei-notify-url.php:838
+#: includes/class-nuvei-notify-url.php:889
+msgid "Subscription ID:"
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:492
+msgid "Subscription ID: "
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:822
+msgid "Subscription is Active"
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:828
+msgid "Subscription is Inactive</b>."
+msgstr ""
+
+#. %s: close bold html tag
+#: includes/class-nuvei-notify-url.php:835
+#, php-format
+msgid "Subscription%s was canceled."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1682
+msgid "Sync Payment Plans"
+msgstr ""
+
+#: index.php:1357 index.php:1385
+msgid "The action you require is unknown."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:532
+msgid "The Log file is not readable."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:522
+msgid "The Log file not exists."
+msgstr ""
+
+#: includes/class-nuvei-refund.php:34
+msgid "The Order missing Transaction ID."
+msgstr ""
+
+#: includes/class-nuvei-refund.php:225
+msgid "The refund was declined."
+msgstr ""
+
+#: includes/class-nuvei-refund.php:116
+msgid "The REST API retun false."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1473
+msgid ""
+"The status for Settle and Sale flow is same. It shows the Order is Paid."
+msgstr ""
+
+#: includes/class-nuvei-refund.php:241
+msgid "The status of Refund request is UNKONOWN."
+msgstr ""
+
+#: config.php:87
+msgid "The transaction was approved."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1538
+msgid "The UPO will be save only when the Guest user buy Subscription product."
+msgstr ""
+
+#: index.php:165
+msgid "There is a new version of Nuvei Plugin available."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1346
+msgid "This controls the description which the user sees during checkout."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1652
+msgid ""
+"This filed is the only way to translate Checkout SDK strings. Put the "
+"translations for all desired languages as shown in the placeholder. For "
+"examples"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1340
+msgid "This is the payment method which the user sees during checkout."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1402
+msgid "This option is for Nuvei Checkout SDK."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1556
+msgid "Tiles"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1570
+msgid "To work DCC, it must be enabled on merchant level also."
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:579
+msgid "Transaction Amount: "
+msgstr ""
+
+#: includes/class-nuvei-refund.php:207
+msgid "Transaction error."
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:576
+msgid "Transaction ID: "
+msgstr ""
+
+#: includes/class-nuvei-notify-url.php:891
+msgid "TransactionId:"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1650
+msgid "Translations"
+msgstr ""
+
+#: templates/admin/add-terms-form.php:77 templates/admin/edit-term-form.php:113
+msgid "Trial Period"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:728
+msgid "Unexpected error, please try again later!"
+msgstr ""
+
+#: config.php:71
+msgid "Unexpected error. Please, try another payment option!"
+msgstr ""
+
+#: config.php:76
+msgid "Unexpected session error."
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1563
+msgid "Use Currency Conversion"
+msgstr ""
+
+#: index.php:166
+msgid "View version details."
+msgstr ""
+
+#: index.php:754
+msgid "Void"
+msgstr ""
+
+#: templates/admin/add-terms-form.php:30 templates/admin/edit-term-form.php:27
+msgid "Without Plan"
+msgstr ""
+
+#: templates/admin/add-terms-form.php:58 templates/admin/add-terms-form.php:70
+#: templates/admin/add-terms-form.php:82 templates/admin/edit-term-form.php:70
+#: templates/admin/edit-term-form.php:98 templates/admin/edit-term-form.php:125
+msgid "Years"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1502 includes/class-nuvei-gateway.php:1606
+msgid "Yes"
+msgstr ""
+
+#: includes/class-nuvei-gateway.php:1616 includes/class-nuvei-gateway.php:1626
+msgid "Yes (Recommended)"
+msgstr ""
+
+#: includes/class-nuvei-open-order.php:70
+msgid "You cannot combine those products in same Order."
+msgstr ""
+
+#: config.php:68
+msgid ""
+"You have Insufficient funds, please go back and remove some of the items in "
+"your shopping cart, or use another card."
+msgstr ""
+
+#: config.php:69
+msgid "Your Payment was DECLINED. Please, try another payment option!"
+msgstr ""
