@@ -375,15 +375,15 @@ abstract class Nuvei_Request {
 				$url,
 				array(
 					'headers'   => array(
-                        'Content-Type' => 'application/json',
-                    ),
+						'Content-Type' => 'application/json',
+					),
 					'sslverify' => false,
-                    'timeout'   => 45,
-                    'body'      => wp_json_encode( $all_params ),
+					'timeout'   => 45,
+					'body'      => wp_json_encode( $all_params ),
 				)
 			);
-            
-			if ( false === $resp || !is_array($resp) || empty($resp['body']) ) {
+
+			if ( false === $resp || ! is_array( $resp ) || empty( $resp['body'] ) ) {
 				Nuvei_Logger::write( $resp, 'Response info' );
 
 				return array(
@@ -391,8 +391,8 @@ abstract class Nuvei_Request {
 					'message'   => 'REST API ERROR: response is false',
 				);
 			}
-            
-			return json_decode($resp['body'], true);
+
+			return json_decode( $resp['body'], true );
 		} catch ( Exception $e ) {
 			return array(
 				'status'    => 'ERROR',
