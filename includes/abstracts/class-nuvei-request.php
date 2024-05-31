@@ -362,59 +362,28 @@ abstract class Nuvei_Request {
 		);
 		// add the checksum END
 
-		//      $json_post = json_encode( $all_params );
-
 		try {
-			$header = array(
-				'Content-Type: application/json',
-			//              'Content-Length: ' . strlen($json_post),
-			);
-
-			//          if ( ! function_exists( 'curl_init' ) ) {
-			//              return array(
-			//                  'status' => 'ERROR',
-			//                  'message' => 'To use Nuvei Payment gateway you must install CURL module!',
-			//              );
-			//          }
-
 			Nuvei_Logger::write(
 				array(
 					'Request URL'       => $url,
-					'Request header'    => $header,
 					LOG_REQUEST_PARAMS  => $all_params,
 				),
 				'Nuvei Request data'
 			);
 
-			// create cURL post
-			//          $ch = curl_init();
-			//
-			//          curl_setopt( $ch, CURLOPT_URL, $url );
-			//          curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, 'POST' );
-			//          curl_setopt( $ch, CURLOPT_POSTFIELDS, $json_post );
-			//          curl_setopt( $ch, CURLOPT_HTTPHEADER, $header );
-			//          curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-			//          curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-			//          curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, false );
-			//
-			//          $resp       = curl_exec( $ch );
-			//          $resp_array = json_decode( $resp, true );
-			//          $resp_info  = curl_getinfo( $ch );
-			//
-			//          Nuvei_Logger::write( is_array( $resp_array ) ? $resp_array : $resp, 'Response' );
-			//
-			//          curl_close( $ch );
-
 			$resp = wp_remote_post(
 				$url,
 				array(
-					'headers'   => $header,
-					'body'      => $all_params,
+					'headers'   => array(
+                        'Content-Type' => 'application/json',
+                    ),
 					'sslverify' => false,
+                    'timeout'   => 45,
+                    'body'      => wp_json_encode( $all_params ),
 				)
 			);
-
-			if ( false === $resp ) {
+            
+			if ( false === $resp || !is_array($resp) || empty($resp['body']) ) {
 				Nuvei_Logger::write( $resp, 'Response info' );
 
 				return array(
@@ -422,8 +391,8 @@ abstract class Nuvei_Request {
 					'message'   => 'REST API ERROR: response is false',
 				);
 			}
-
-			return $resp;
+            
+			return json_decode($resp['body'], true);
 		} catch ( Exception $e ) {
 			return array(
 				'status'    => 'ERROR',

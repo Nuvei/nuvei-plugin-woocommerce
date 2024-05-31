@@ -964,7 +964,7 @@ function nuvei_add_term_fields_form( $taxonomy ) {
 	$plans_list = array();
 	if ( is_readable( $nuvei_plans_path ) ) {
 		$plans_list = wp_json_file_decode(
-			$wp_fs_direct->get_contents( $nuvei_plans_path ),
+			$nuvei_plans_path,
 			array( 'associative' => true )
 		);
 	}
@@ -981,11 +981,9 @@ function nuvei_edit_term_meta_form( $term, $taxonomy ) {
 	ob_start();
 	$term_meta  = get_term_meta( $term->term_id );
 	$plans_list = array();
-	$plans_json = '';
 
 	if ( is_readable( $nuvei_plans_path ) ) {
-		$plans_json = $wp_fs_direct->get_contents( $nuvei_plans_path );
-		$plans_list = wp_json_file_decode( $plans_json, array( 'associative' => true ) );
+		$plans_list = wp_json_file_decode( $nuvei_plans_path, array( 'associative' => true ) );
 	}
 
 	// clean unused elements

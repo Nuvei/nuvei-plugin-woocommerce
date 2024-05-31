@@ -582,7 +582,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		}
 
 		$plans = wp_json_file_decode(
-			$wp_fs_direct->get_contents( $nuvei_plans_path ),
+			$nuvei_plans_path,
 			array( 'associative' => true )
 		);
 
