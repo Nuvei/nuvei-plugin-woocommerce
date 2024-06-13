@@ -1,5 +1,10 @@
 # WooCommerce Extension Changelog
 
+# 3.0.2
+```
+    * The plugin name and text domain were changed from "nuvei-checkout-for-woocommerce" to "nuvei-payments-for-woocommerce".
+```
+
 # 3.0.1
 ```
     * In plugin description was added WooCommerce dependancy.

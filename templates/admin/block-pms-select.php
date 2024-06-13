@@ -40,7 +40,7 @@
 				   value="<?php echo esc_attr( $this->get_option( 'pm_black_list', '' ) ); ?>" />
 			
 			<button type="button" id="nuvei_clean_blocked_pms" class="button-secondary" onclick="nuveiCleanBlockedPMs()">
-				<?php echo esc_html( 'Clean', 'nuvei-checkout-for-woocommerce' ); ?>
+				<?php echo esc_html( 'Clean', 'nuvei-payments-for-woocommerce' ); ?>
 			</button>
 		</fieldset>
 	</td>

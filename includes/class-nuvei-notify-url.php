@@ -480,17 +480,17 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 				$msg = '<b>'
 					. sprintf(
 						/* translators: %s: close bold html tag */
-						__( 'Error%s when try to start a Subscription by the Order.', 'nuvei-checkout-for-woocommerce' ),
+						__( 'Error%s when try to start a Subscription by the Order.', 'nuvei-payments-for-woocommerce' ),
 						'</b>'
 					);
 
 				if ( ! empty( $resp['reason'] ) ) {
-					$msg .= '<br/>' . __( 'Reason: ', 'nuvei-checkout-for-woocommerce' ) . $resp['reason'];
+					$msg .= '<br/>' . __( 'Reason: ', 'nuvei-payments-for-woocommerce' ) . $resp['reason'];
 				}
 			} else { // On Success
 				$msg = __( 'Subscription was created. ' ) . '<br/>'
-					. __( 'Subscription ID: ', 'nuvei-checkout-for-woocommerce' ) . $resp['subscriptionId'] . '.<br/>'
-					. __( 'Recurring amount: ', 'nuvei-checkout-for-woocommerce' ) . $this->sc_order->get_currency() . ' '
+					. __( 'Subscription ID: ', 'nuvei-payments-for-woocommerce' ) . $resp['subscriptionId'] . '.<br/>'
+					. __( 'Recurring amount: ', 'nuvei-payments-for-woocommerce' ) . $this->sc_order->get_currency() . ' '
 					. $data['subs_data']['recurringAmount'];
 			}
 
@@ -567,16 +567,16 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		$dmn_amount = Nuvei_Http::get_param( 'totalAmount', 'float' );
 
         // phpcs:ignore
-		$msg_transaction = '<b>' . __( $transaction_type, 'nuvei-checkout-for-woocommerce' )
-			. ' </b> ' . __( 'request', 'nuvei-checkout-for-woocommerce' ) . '.<br/>';
+		$msg_transaction = '<b>' . __( $transaction_type, 'nuvei-payments-for-woocommerce' )
+			. ' </b> ' . __( 'request', 'nuvei-payments-for-woocommerce' ) . '.<br/>';
 
 		$gw_data = $msg_transaction
-			. __( 'Response status: ', 'nuvei-checkout-for-woocommerce' ) . '<b>' . $req_status . '</b>.<br/>'
-			. __( 'Payment Method: ', 'nuvei-checkout-for-woocommerce' ) . Nuvei_Http::get_param( 'payment_method' ) . '.<br/>'
-			. __( 'Transaction ID: ', 'nuvei-checkout-for-woocommerce' ) . Nuvei_Http::get_param( 'TransactionID', 'int' ) . '.<br/>'
-			. __( 'Related Transaction ID: ', 'nuvei-checkout-for-woocommerce' )
+			. __( 'Response status: ', 'nuvei-payments-for-woocommerce' ) . '<b>' . $req_status . '</b>.<br/>'
+			. __( 'Payment Method: ', 'nuvei-payments-for-woocommerce' ) . Nuvei_Http::get_param( 'payment_method' ) . '.<br/>'
+			. __( 'Transaction ID: ', 'nuvei-payments-for-woocommerce' ) . Nuvei_Http::get_param( 'TransactionID', 'int' ) . '.<br/>'
+			. __( 'Related Transaction ID: ', 'nuvei-payments-for-woocommerce' )
 				. Nuvei_Http::get_param( 'relatedTransactionId', 'int' ) . '.<br/>'
-			. __( 'Transaction Amount: ', 'nuvei-checkout-for-woocommerce' )
+			. __( 'Transaction Amount: ', 'nuvei-payments-for-woocommerce' )
 				. number_format( $dmn_amount, 2, '.', '' )
 				. ' ' . Nuvei_Http::get_param( 'currency' ) . '.';
 
@@ -706,9 +706,9 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 				}
 
 				$message = $gw_data . '<br/>'
-					. ( ! empty( $err_code ) ? __( 'Error code: ', 'nuvei-checkout-for-woocommerce' ) . $err_code . '<br/>' : '' )
-					. ( ! empty( $reason ) ? __( 'Reason: ', 'nuvei-checkout-for-woocommerce' ) . $reason . '<br/>' : '' )
-					. ( ! empty( $message ) ? __( 'Message: ', 'nuvei-checkout-for-woocommerce' ) . $message : '' );
+					. ( ! empty( $err_code ) ? __( 'Error code: ', 'nuvei-payments-for-woocommerce' ) . $err_code . '<br/>' : '' )
+					. ( ! empty( $reason ) ? __( 'Reason: ', 'nuvei-payments-for-woocommerce' ) . $reason . '<br/>' : '' )
+					. ( ! empty( $message ) ? __( 'Message: ', 'nuvei-payments-for-woocommerce' ) . $message : '' );
 
 				if ( in_array( $transaction_type, array( 'Auth', 'Settle', 'Sale' ) ) ) {
 					$status = $this->nuvei_gw->get_option( 'status_fail' );
@@ -819,23 +819,23 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 		if ( ! empty( $subscription_state ) ) {
 			if ( 'active' == $subscription_state ) {
-				$msg = '<b>' . __( 'Subscription is Active', 'nuvei-checkout-for-woocommerce' )
-					. '</b>.<br/><b>' . __( 'Subscription ID:', 'nuvei-checkout-for-woocommerce' )
+				$msg = '<b>' . __( 'Subscription is Active', 'nuvei-payments-for-woocommerce' )
+					. '</b>.<br/><b>' . __( 'Subscription ID:', 'nuvei-payments-for-woocommerce' )
 					. '</b> ' . $subscription_id . '<br/><b>'
-					. __( 'Plan ID:', 'nuvei-checkout-for-woocommerce' ) . '</b> '
+					. __( 'Plan ID:', 'nuvei-payments-for-woocommerce' ) . '</b> '
 					. Nuvei_Http::get_param( 'planId', 'int' );
 			} elseif ( 'inactive' == $subscription_state ) {
-				$msg = '<b>' . __( 'Subscription is Inactive</b>.', 'nuvei-checkout-for-woocommerce' )
-					. '<br/><b>' . __( 'Subscription ID:', 'nuvei-checkout-for-woocommerce' ) . '</b> '
+				$msg = '<b>' . __( 'Subscription is Inactive</b>.', 'nuvei-payments-for-woocommerce' )
+					. '<br/><b>' . __( 'Subscription ID:', 'nuvei-payments-for-woocommerce' ) . '</b> '
 					. $subscription_id . '<br/><b>'
-					. __( 'Plan ID:', 'nuvei-checkout-for-woocommerce' ) . '</b> ' . $plan_id;
+					. __( 'Plan ID:', 'nuvei-payments-for-woocommerce' ) . '</b> ' . $plan_id;
 			} elseif ( 'canceled' == $subscription_state ) {
 				$msg = '<b>' . sprintf(
 						/* translators: %s: close bold html tag */
-					__( 'Subscription%s was canceled.', 'nuvei-checkout-for-woocommerce' ),
+					__( 'Subscription%s was canceled.', 'nuvei-payments-for-woocommerce' ),
 					'</b>'
 				)
-					. '<br/><b>' . __( 'Subscription ID:', 'nuvei-checkout-for-woocommerce' ) . '</b> '
+					. '<br/><b>' . __( 'Subscription ID:', 'nuvei-payments-for-woocommerce' ) . '</b> '
 					. $subscription_id;
 			}
 
@@ -880,15 +880,15 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			/* translators: %1$s: open bold html tag */
 			/* translators: %2$s: close bold html tag */
 			/* translators: %3$s: the status of the Payment */
-			__( '%1$sSubscription Payment%2$s with Status %3$s was made.', 'nuvei-checkout-for-woocommerce' ),
+			__( '%1$sSubscription Payment%2$s with Status %3$s was made.', 'nuvei-payments-for-woocommerce' ),
 			'<b>',
 			'</b>',
 			$req_status
 		)
-			. '<br/><b>' . __( 'Plan ID:', 'nuvei-checkout-for-woocommerce' ) . '</b> ' . $plan_id . '.'
-			. '<br/><b>' . __( 'Subscription ID:', 'nuvei-checkout-for-woocommerce' ) . '</b> ' . $subscription_id . '.'
-			. '<br/><b>' . __( 'Amount:', 'nuvei-checkout-for-woocommerce' ) . '</b> ' . $ord_curr . ' ' . $total . '.'
-			. '<br/><b>' . __( 'TransactionId:', 'nuvei-checkout-for-woocommerce' ) . '</b> ' . $transaction_id;
+			. '<br/><b>' . __( 'Plan ID:', 'nuvei-payments-for-woocommerce' ) . '</b> ' . $plan_id . '.'
+			. '<br/><b>' . __( 'Subscription ID:', 'nuvei-payments-for-woocommerce' ) . '</b> ' . $subscription_id . '.'
+			. '<br/><b>' . __( 'Amount:', 'nuvei-payments-for-woocommerce' ) . '</b> ' . $ord_curr . ' ' . $total . '.'
+			. '<br/><b>' . __( 'TransactionId:', 'nuvei-payments-for-woocommerce' ) . '</b> ' . $transaction_id;
 
 		Nuvei_Logger::write( $msg, 'Subscription DMN Payment' );
 

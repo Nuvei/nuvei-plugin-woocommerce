@@ -1,9 +1,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Nuvei Gateway for Woocommerce\n"
+"Project-Id-Version: Nuvei Payments for Woocommerce\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-29 10:03+0000\n"
+"POT-Creation-Date: 2024-06-13 09:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -13,8 +13,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Loco https://localise.biz/\n"
-"X-Loco-Version: 2.6.9; wp-6.5.3\n"
-"X-Domain: nuvei-checkout-for-woocommerce"
+"X-Loco-Version: 2.6.9; wp-6.5.4\n"
+"X-Domain: nuvei-payments-for-woocommerce"
 
 #. %3$s: the status of the Payment
 #: includes/class-nuvei-notify-url.php:883
@@ -61,7 +61,7 @@ msgid ""
 "Active Subscriptions."
 msgstr ""
 
-#: index.php:1323
+#: index.php:1321
 msgid "Are you sure, you want to cancel this subscription?"
 msgstr ""
 
@@ -86,7 +86,7 @@ msgstr ""
 msgid "Block Payment Methods"
 msgstr ""
 
-#: index.php:1325
+#: index.php:1323
 msgid "Cancel Subscription"
 msgstr ""
 
@@ -340,11 +340,7 @@ msgstr ""
 msgid "Nuvei Gateway for WooCommerce"
 msgstr ""
 
-#. Name of the plugin
-msgid "Nuvei Gateway for Woocommerce"
-msgstr ""
-
-#: index.php:1150
+#: index.php:1148
 msgid "Nuvei Payment Plan Order"
 msgstr ""
 
@@ -352,11 +348,15 @@ msgstr ""
 msgid "Nuvei Payment Plan settings"
 msgstr ""
 
-#: index.php:1080 index.php:1113
+#. Name of the plugin
+msgid "Nuvei Payments for Woocommerce"
+msgstr ""
+
+#: index.php:1078 index.php:1111
 msgid "Nuvei Subscription"
 msgstr ""
 
-#: index.php:1316
+#: index.php:1314
 msgid "Nuvei Subscription ID:"
 msgstr ""
 
@@ -416,7 +416,7 @@ msgstr ""
 msgid "Please check and fill the settings of the plugin."
 msgstr ""
 
-#: index.php:1088 index.php:1121
+#: index.php:1086 index.php:1119
 msgid "Please check transaction Total and Currency!"
 msgstr ""
 
@@ -611,7 +611,7 @@ msgstr ""
 msgid "Sync Payment Plans"
 msgstr ""
 
-#: index.php:1357 index.php:1385
+#: index.php:1355 index.php:1383
 msgid "The action you require is unknown."
 msgstr ""
 

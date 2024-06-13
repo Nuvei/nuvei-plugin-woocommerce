@@ -2,8 +2,8 @@
 
 Contributors: miroslavnuvei
 Requires at least: 4.7
-Tested up to: 6.5.3
-Stable tag: 3.0.1
+Tested up to: 6.5.4
+Stable tag: 3.0.2
 Requires PHP: 7.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -26,6 +26,9 @@ Right payment methods at the checkout page can bring you global reach, help you 
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.0.2 =
+* The plugin name and text domain were changed from "nuvei-checkout-for-woocommerce" to "nuvei-payments-for-woocommerce".
 
 = 3.0.1 =
 * In plugin description was added WooCommerce dependancy.
