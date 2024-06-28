@@ -725,7 +725,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$oo_data    = $oo_obj->process();
 
 		if ( ! $oo_data || empty( $oo_data['sessionToken'] ) ) {
-			$msg = __( 'Unexpected error, please try again later!', 'nuvei-payments-for-woocommerce' );
+            $msg = __( 'Unexpected error, please try again later!', 'nuvei-payments-for-woocommerce' );
+            
+            if (!empty($oo_data['message'])) {
+                $msg = __($oo_data['message'], 'nuvei-payments-for-woocommerce');
+            }
 
 			Nuvei_Logger::write( $msg );
 

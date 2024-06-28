@@ -1,5 +1,19 @@
+//import React from 'react';
+//import { useSelect } from "rooks";
+
 function nuveiBlockIntegration() {
-    console.log('nuvei checkout block');
+//    const { VALIDATION_STORE_KEY } = window.wc.wcBlocksData;
+//    const store = select( VALIDATION_STORE_KEY );
+//    const hasValidationErrors = store.hasValidationErrors();
+//
+//const { validationError, validationErrorId } = useSelect( ( select ) => {
+//		const store = select( VALIDATION_STORE_KEY );
+//		return {
+//			validationError: store.getValidationError( propertyName ),
+//			validationErrorId: store.getValidationErrorId( elementId ),
+//		};
+//	} );
+//    
     
     var nuveiSettings   = window.wc.wcSettings.getSetting( 'nuvei_data', {} );
     var nuveiLabel      = window.wp.htmlEntities.decodeEntities( nuveiSettings.title )

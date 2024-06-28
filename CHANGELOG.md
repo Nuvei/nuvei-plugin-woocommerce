@@ -1,5 +1,14 @@
 # WooCommerce Extension Changelog
 
+# 3.0.3
+```
+    * Fixed the problem when a Guest user come for the first time on Blocks Checkout and get "Unexpected error" message.
+    * When validate emails before Nuvei REST API request and there is an error, return the message to the client side.
+    * Changed a message text.
+    * On Blocks Checkout get the need data via Ajax before load Simply Connect.
+    * nuvei-checkout-blocks.js is declared as module via hook.
+```
+
 # 3.0.2
 ```
     * The plugin name and text domain were changed from "nuvei-checkout-for-woocommerce" to "nuvei-payments-for-woocommerce".

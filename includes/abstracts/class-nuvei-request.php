@@ -1,4 +1,4 @@
-<?php
+    <?php
 
 defined( 'ABSPATH' ) || exit;
 
@@ -339,6 +339,12 @@ abstract class Nuvei_Request {
 		$all_params = array_merge_recursive( $this->request_base_params, $params );
 		// validate all params
 		$all_params = $this->validate_parameters( $all_params );
+        
+        // Error. if there is validation error and Satus was set to Error return the response.
+        if (isset($all_params['status']) && 'error' == strtolower($all_params['status'])) {
+            Nuvei_Logger::write($all_params, 'Error before call the REST API during the validation');
+            return $all_params;
+        }
 
 		// use incoming clientRequestId instead of auto generated one
 		if ( ! empty( $params['clientRequestId'] ) ) {
@@ -1112,18 +1118,16 @@ abstract class Nuvei_Request {
 		// directly check the mails
 		if ( isset( $params['billingAddress']['email'] ) ) {
 			if ( ! filter_var( $params['billingAddress']['email'], NUVEI_PARAMS_VALIDATION_EMAIL['flag'] ) ) {
-
 				return array(
-					'status' => 'ERROR',
-					'message' => 'REST API ERROR: The parameter Billing Address Email is not valid.',
+					'status'    => 'ERROR',
+					'message'   => 'The parameter Billing Address Email is not valid.',
 				);
 			}
 
 			if ( strlen( $params['billingAddress']['email'] ) > NUVEI_PARAMS_VALIDATION_EMAIL['length'] ) {
 				return array(
-					'status' => 'ERROR',
-					'message' => 'REST API ERROR: The parameter Billing Address Email must be maximum '
-						. NUVEI_PARAMS_VALIDATION_EMAIL['length'] . ' symbols.',
+					'status'    => 'ERROR',
+					'message'   => 'The parameter Billing Address Email is too long.',
 				);
 			}
 		}
@@ -1131,16 +1135,15 @@ abstract class Nuvei_Request {
 		if ( isset( $params['shippingAddress']['email'] ) ) {
 			if ( ! filter_var( $params['shippingAddress']['email'], NUVEI_PARAMS_VALIDATION_EMAIL['flag'] ) ) {
 				return array(
-					'status' => 'ERROR',
-					'message' => 'REST API ERROR: The parameter Shipping Address Email is not valid.',
+					'status'    => 'ERROR',
+					'message'   => 'The parameter Shipping Address Email is not valid.',
 				);
 			}
 
 			if ( strlen( $params['shippingAddress']['email'] ) > NUVEI_PARAMS_VALIDATION_EMAIL['length'] ) {
 				return array(
-					'status' => 'ERROR',
-					'message' => 'REST API ERROR: The parameter Shipping Address Email must be maximum '
-						. NUVEI_PARAMS_VALIDATION_EMAIL['length'] . ' symbols.',
+					'status'    => 'ERROR',
+					'message'   => 'The parameter Shipping Address Email is too long.',
 				);
 			}
 		}

@@ -28,7 +28,7 @@ var nuveiCheckoutBlocks = {
                     );
             }
 
-            // id nuvei inputs doee not exists - creat them
+            // if nuvei inputs does not exists - creat them
             if(jQuery('form.wc-block-components-form #nuvei_transaction_id').length == 0) {
                 jQuery('form.wc-block-components-form')
                     .append('<input id="nuvei_transaction_id" type="hidden" name="nuvei_transaction_id" value="" />');
@@ -40,9 +40,10 @@ var nuveiCheckoutBlocks = {
             }
             // place Checkout container out of the forms END
             
-            jQuery('input[name=radio-control-wc-payment-method-options]').on('change', function() {
-                nuveiCheckoutBlocks.changePaymentBtn(jQuery(this).val());
-            });
+//            jQuery('input[name=radio-control-wc-payment-method-options]').on('change', function() {
+////                nuveiCheckoutBlocks.changePaymentBtn(jQuery(this).val());
+//                console.log(jQuery(this).val());
+//            });
         }
         catch(_e) {
             console.log('WC blocks logic fail.');
@@ -54,30 +55,78 @@ var nuveiCheckoutBlocks = {
      * 
      * @returns void
      */
-    changePaymentBtn: function(nuveiSelectedBlockPm) {
-        console.log('changePaymentBtn for blocks', nuveiSelectedBlockPm);
-        
-        var self                = this;
-        var blockPlaceOrderBtn  = jQuery('button.wc-block-components-checkout-place-order-button');
+    changePaymentBtn: function() {
+        var blockPlaceOrderBtn = jQuery('button.wc-block-components-checkout-place-order-button');
     
         if (scTrans
             && scTrans.hasOwnProperty('checkoutIntegration')
             && 'sdk' == scTrans.checkoutIntegration
             && blockPlaceOrderBtn.length > 0
+            && blockPlaceOrderBtn.attr('data-nuvei') != 'marked'
         ) {
-            console.log('change submit button', nuveiSelectedBlockPm);
-
+            blockPlaceOrderBtn.attr('data-nuvei', 'marked');
             blockPlaceOrderBtn.on('click', function(e) {
-                if (scTrans.paymentGatewayName == nuveiSelectedBlockPm
-                    && '' == jQuery('#nuvei_transaction_id').val()
+                var nuveiSelectedBlockPm    = jQuery('input[name=radio-control-wc-payment-method-options]:checked').val();
+                var continueDefaultFlow     = false;
+                
+                if (scTrans.paymentGatewayName != nuveiSelectedBlockPm) {
+                    return;
+                }
+                
+                // check form inputs
+                jQuery('form.wc-block-components-form').find('input').each(function() {
+                    var self = jQuery(this);
+                    
+                    if (typeof self.attr('required') != 'undefined'
+                        && '' == self.val()
+                    ) {
+                        continueDefaultFlow = true;
+                        return false;
+                    }
+                });
+                // this will trigger default form check and will mark if some fields are missing
+                if (continueDefaultFlow) {
+                    return;
+                }
+                
+                // here we stop default click event and run Nuvei methods.
+                if ('' == jQuery('#nuvei_transaction_id').val()
                     && jQuery('.has-error').length == 0
                 ) {
                     e.stopImmediatePropagation();
-                    showNuveiCheckout(nuveiCheckoutSdkParams);
+                    nuveiCheckoutBlocks.getCheckoutData();
                     return;
                 }
+                
+                // continue with default flow
             });
         }
+    },
+    
+    getCheckoutData: function() {
+        console.log('getCheckoutData');
+        
+        jQuery.ajax({
+            type: "POST",
+            url: scTrans.ajaxurl,
+            data: {
+                action: 'sc-ajax-action',
+                security: scTrans.security,
+                getBlocksCheckoutData: 1
+            },
+            dataType: 'json'
+        })
+            .fail(function() {
+                console.log('Nuvei request failed.');
+                nuveiShowErrorMsg();
+                return;
+            })
+            .done(function(resp) {
+                console.log(resp);
+
+                showNuveiCheckout(resp);
+                return;
+            });
     }
 }
 
@@ -136,7 +185,7 @@ function nuveiAfterSdkResponse(resp) {
             && 'insufficient funds' == resp.errorDescription.toLowerCase()
         ) {
             nuveiShowErrorMsg(scTrans.insuffFunds);
-            return
+            return;
         }
         
 		nuveiShowErrorMsg(scTrans.paymentDeclined);
@@ -147,6 +196,10 @@ function nuveiAfterSdkResponse(resp) {
 	return;
 }
 
+/**
+ * @param object _params
+ * @returns void
+ */
 function showNuveiCheckout(_params) {
 	console.log('showNuveiCheckout()', _params);
 	
@@ -159,7 +212,13 @@ function showNuveiCheckout(_params) {
         || ( nuveiCheckoutSdkParams.hasOwnProperty('status') 
             && 'error' == nuveiCheckoutSdkParams.status)
     ) {
-        nuveiShowErrorMsg();
+        var error = '';
+        
+        if (nuveiCheckoutSdkParams.hasOwnProperty('messages')) {
+            error = nuveiCheckoutSdkParams.messages;
+        }
+
+        nuveiShowErrorMsg(error);
         return;
     }
     
@@ -202,7 +261,7 @@ function nuveiCheckoutGoBack() {
 }
 
 function nuveiShowErrorMsg(text) {
-	if (typeof text == 'undefined') {
+	if (typeof text == 'undefined' || '' == text) {
 		text = scTrans.unexpectedError;
 	}
 	
@@ -337,13 +396,12 @@ jQuery(function() {
 window.onload = function() {
     // loocks like this object is available only for checkout blocks
     if (typeof wc == 'object') {
-        nuveiCheckoutBlocks.prepareNuveiComponents();
+        console.log('blocks checkout');
         
-        nuveiCheckoutBlocks.changePaymentBtn(
-            jQuery('input[name=radio-control-wc-payment-method-options]:checked').val()
-        );
+        nuveiCheckoutBlocks.prepareNuveiComponents();
+        nuveiCheckoutBlocks.changePaymentBtn();
     }
-    else {
+    else { // Classic Checkout
         nuveiWcShortcode();
     }
 }

@@ -40,7 +40,7 @@ final class Nuvei_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 			1,
 			true
 		);
-
+        
 		return array( 'nuvei-checkout-blocks' );
 	}
 
@@ -55,11 +55,13 @@ final class Nuvei_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 
 		// put this check or call_checkout will be called in the Theme Editor in the admin and plugin will
 		// crash beacause of the missing WooCommerce Session object :)
-		if ( ! is_admin() && is_checkout() ) {
-			global $wc_nuvei;
-
-			$settings['checkoutParams'] = $wc_nuvei->call_checkout( false, true );
-		}
+//		if ( ! is_admin() && is_checkout() ) {
+//			global $wc_nuvei;
+//
+//			$settings['checkoutParams'] = $wc_nuvei->call_checkout( false, true );
+//		}
+        
+        Nuvei_Logger::write($settings, 'The settings we pass to the Blocks Checkout');
 
 		return $settings;
 	}

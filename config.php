@@ -69,7 +69,7 @@ define(
 		'paymentDeclined'   => __( 'Your Payment was DECLINED. Please, try another payment option!', 'nuvei-payments-for-woocommerce' ),
 		'paymentError'      => __( 'Error with your Payment.', 'nuvei-payments-for-woocommerce' ),
 		'unexpectedError'   => __( 'Unexpected error. Please, try another payment option!', 'nuvei-payments-for-woocommerce' ),
-		'fillFields'        => __( 'Please fill all fields marked with * !', 'nuvei-payments-for-woocommerce' ),
+		'fillFields'        => __( 'Please fill all mandatory fileds!', 'nuvei-payments-for-woocommerce' ),
 		'errorWithSToken'   => __( 'Error when try to get the Session Token.', 'nuvei-payments-for-woocommerce' ),
 		'goBack'            => __( 'Go back', 'nuvei-payments-for-woocommerce' ),
 		'RequestFail'       => __( 'Request fail.', 'nuvei-payments-for-woocommerce' ),

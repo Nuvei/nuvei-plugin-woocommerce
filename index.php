@@ -3,16 +3,16 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.0.2
+ * Version: 3.0.3
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei-payments-for-woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.5.4
+ * Tested up to: 6.5.5
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 8.9.3
+ * WC tested up to: 9.0.2
 */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -298,6 +298,15 @@ function nuvei_init() {
 		10,
 		2
 	);
+    
+    // mark the nuvei-checkout-blocks.js as module
+    add_filter('script_loader_tag', function($tag, $handle, $src) {
+        if ( 'nuvei-checkout-blocks' !== $handle ) {
+            return $tag;
+        }
+        
+        return '<script type="module" src="' . esc_url( $src ) . '"></script>';
+    } , 10, 3);
 }
 
 /**
@@ -319,6 +328,12 @@ function nuvei_ajax_action() {
 	$order_id = Nuvei_Http::get_param( 'orderId', 'int' );
 
 	# recognize the action:
+    // Get Blocks Checkout data
+    if (Nuvei_Http::get_param( 'getBlocksCheckoutData', 'int' ) == 1 ) {
+        wp_send_json($wc_nuvei->call_checkout(false, true));
+        exit;
+    }
+    
 	// Void (Cancel)
 	if ( Nuvei_Http::get_param( 'cancelOrder', 'int' ) == 1 && $order_id > 0 ) {
 		$nuvei_settle_void = new Nuvei_Settle_Void( $wc_nuvei->settings );
@@ -408,31 +423,6 @@ function nuvei_load_scripts() {
 	global $wpdb;
 
 	$plugin_url = plugin_dir_url( __FILE__ );
-	//
-	//  if ( (isset($_SERVER['HTTPS']) && 'on' == $_SERVER['HTTPS'])
-	//      && (isset($_SERVER['REQUEST_SCHEME']) && 'https' == $_SERVER['REQUEST_SCHEME'])
-	//  ) {
-	//      if (strpos($plugin_url, 'https') === false) {
-	//          $plugin_url = str_replace('http:', 'https:', $plugin_url);
-	//      }
-	//  }
-	//
-	////    $sdkUrl = NUVEI_SDK_URL_PROD;
-	//    $sdkUrl = $plugin_url . 'assets/js/nuveiSimplyConnect/simplyConnect.js';
-	//
-	//    if (!empty($_SERVER['SERVER_NAME'])
-	//        && 'woocommerceautomation.gw-4u.com' == $_SERVER['SERVER_NAME']
-	//        && defined('NUVEI_SDK_URL_TAG')
-	//    ) {
-	//        $sdkUrl = NUVEI_SDK_URL_TAG;
-	//    }
-
-	// load the SDK
-	//    wp_register_script(
-	//      'nuvei_checkout_sdk',
-	//      $sdkUrl,
-	//      array('jquery')
-	//  );
 
 	// reorder.js
 	wp_register_script(
@@ -448,7 +438,7 @@ function nuvei_load_scripts() {
 		'nuvei_js_public',
 		$plugin_url . 'assets/js/nuvei_public.js',
 		array( 'jquery' ),
-		'1',
+		'2024-06-28',
 		false
 	);
 

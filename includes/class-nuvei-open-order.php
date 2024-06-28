@@ -100,7 +100,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 			Nuvei_Logger::write(
 				array(
 					'$open_order_details'   => $open_order_details,
-					'$transaction_type'      => $transaction_type,
+					'$transaction_type'     => $transaction_type,
 					'$addresses'            => $addresses,
 				),
 				'$try_update_order = false',
@@ -111,7 +111,6 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		}
 
 		if ( $try_update_order ) {
-			//            $uo_obj = new Nuvei_Update_Order($this->plugin_settings);
 			$uo_obj = new Nuvei_Update_Order( $this->rest_params );
 			$resp   = $uo_obj->process(
 				array(
@@ -159,8 +158,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		$currency   = get_woocommerce_currency();
 
 		$oo_params = array(
-			//          'clientUniqueId'    => gmdate('YmdHis') . '_' . uniqid(),
-				'clientUniqueId'    => $this->get_client_unique_id( $addresses['billingAddress']['email'], $products_data ),
+            'clientUniqueId'    => $this->get_client_unique_id( $addresses['billingAddress']['email'], $products_data ),
 			'currency'          => $currency,
 			'amount'            => $amount,
 			'shippingAddress'   => $addresses['shippingAddress'],
@@ -186,19 +184,12 @@ class Nuvei_Open_Order extends Nuvei_Request {
 
 		$resp = $this->call_rest_api( 'openOrder', $oo_params );
 
-		if ( empty( $resp['status'] )
-			|| empty( $resp['sessionToken'] )
-			|| 'SUCCESS' != $resp['status']
-		) {
-			//          if ($this->is_ajax) {
-			//              wp_send_json(array(
-			//                  'status'    => 0,
-			//                  'msg'       => $resp
-			//              ));
-			//              exit;
-			//          }
-
-			return false;
+        if (empty( $resp['status'])) {
+            return false;
+        }
+        
+		if ( 'SUCCESS' != $resp['status'] || empty( $resp['sessionToken'] )) {
+            return $resp;
 		}
 
 		// in default flow
