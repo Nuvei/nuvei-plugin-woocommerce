@@ -112,8 +112,6 @@ class Nuvei_Update_Order extends Nuvei_Request {
 			$oo_params['card']          = null;
 		}
 
-		//        Nuvei_Logger::write(strlen($params['merchantDetails']['customField1']), 'customField1 len');
-
 		$resp = $this->call_rest_api( 'updateOrder', $params );
 
 		# Success
@@ -134,9 +132,6 @@ class Nuvei_Update_Order extends Nuvei_Request {
 					$products_data
 				);
 			}
-			//            else {
-			//                $params['transactionType']  = $this->rest_params['transactionType'];
-			//            }
 
 			$params['products_data'] = $products_data;
 

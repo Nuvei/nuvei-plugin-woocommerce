@@ -122,6 +122,8 @@ abstract class Nuvei_Request {
 	 * @return array
 	 */
 	protected function get_order_addresses() {
+        Nuvei_Logger::write(Nuvei_Http::get_param( 'scFormData', 'array' ), 'get_order_addresses');
+        
 		// REST API flow
 		if ( ! empty( $this->rest_params ) ) {
 			$addresses = array();
@@ -169,33 +171,53 @@ abstract class Nuvei_Request {
 		// default plugin flow
 		global $woocommerce;
 
-		$form_params        = array();
+		$form_params        = Nuvei_Http::get_param( 'scFormData', 'array' );
 		$billing_address    = array();
 		$cart               = $woocommerce->cart;
 
-		if ( ! empty( Nuvei_Http::get_param( 'scFormData' ) ) ) {
-			parse_str( Nuvei_Http::get_param( 'scFormData' ), $form_params );
-		}
+//		if ( ! empty( Nuvei_Http::get_param( 'scFormData' ) ) ) {
+////			parse_str( Nuvei_Http::get_param( 'scFormData' ), $form_params );
+//			$form_params = Nuvei_Http::get_param( 'scFormData' );
+//            
+//            Nuvei_Logger::write($form_params, '$form_params');
+//		}
 
-		# set billing params
+		# Set billing params.
+        # Params names are based on WC Checkout Shortcode!
 		// billing_first_name
-		$bfn = trim( Nuvei_Http::get_param( 'billing_first_name', 'string', '', $form_params ) );
+		$bfn = max(
+            trim(Nuvei_Http::get_param( 'billing_first_name', 'string', '', $form_params )), // shortcode
+            trim(Nuvei_Http::get_param( 'billing-first_name', 'string', '', $form_params )) // blocks
+        );
+        
 		if ( empty( $bfn ) ) {
-			$bfn = $cart->get_customer()->get_billing_first_name();
+			$bfn = trim($cart->get_customer()->get_billing_first_name());
 		}
-		$billing_address['firstName'] = ! empty( $bfn ) ? trim( $bfn ) : 'Missing parameter';
+        
+		$billing_address['firstName'] = ! empty( $bfn ) ? $bfn : 'Missing parameter';
 
 		// billing_last_name
-		$bln = trim( Nuvei_Http::get_param( 'billing_last_name', 'string', '', $form_params ) );
+		$bln = max(
+            trim(Nuvei_Http::get_param( 'billing_last_name', 'string', '', $form_params )),
+            trim(Nuvei_Http::get_param( 'billing-last_name', 'string', '', $form_params ))
+        );
+        
 		if ( empty( $bln ) ) {
-			$bln = $cart->get_customer()->get_billing_last_name();
+			$bln = trim($cart->get_customer()->get_billing_last_name());
 		}
-		$billing_address['lastName'] = ! empty( $bln ) ? trim( $bln ) : 'Missing parameter';
+        
+		$billing_address['lastName'] = ! empty( $bln ) ? $bln : 'Missing parameter';
 
 		// address
 		$ba     = '';
-		$ba_ln1 = trim( Nuvei_Http::get_param( 'billing_address_1', 'string', '', $form_params ) );
-		$ba_ln2 = trim( Nuvei_Http::get_param( 'billing_address_2', 'string', '', $form_params ) );
+		$ba_ln1 = max(
+            trim(Nuvei_Http::get_param( 'billing_address_1', 'string', '', $form_params )),
+            trim(Nuvei_Http::get_param( 'billing-address_1', 'string', '', $form_params ))
+        );
+		$ba_ln2 = max(
+            trim(Nuvei_Http::get_param( 'billing_address_2', 'string', '', $form_params )),
+            trim(Nuvei_Http::get_param( 'billing-address_2', 'string', '', $form_params ))
+        );
 
 		if ( ! empty( $ba_ln1 ) ) {
 			$ba = $ba_ln1;
@@ -205,7 +227,7 @@ abstract class Nuvei_Request {
 			}
 		}
 
-		if ( empty( trim( $ba ) ) ) {
+		if ( empty($ba) ) {
 			$ba_ln1 = trim( $cart->get_customer()->get_billing_address() );
 			$ba_ln2 = trim( $cart->get_customer()->get_billing_address_2() );
 
@@ -217,93 +239,144 @@ abstract class Nuvei_Request {
 				}
 			}
 		}
-		$billing_address['address'] = ! empty( $ba ) ? trim( $ba ) : 'Missing parameter';
+        
+		$billing_address['address'] = ! empty( $ba ) ? $ba : 'Missing parameter';
 
 		// billing_phone
-		$bp = trim( Nuvei_Http::get_param( 'billing_phone', 'string', '', $form_params ) );
-		if ( empty( $bp ) ) {
-			$bp = $cart->get_customer()->get_billing_phone();
+		$bp = max(
+            trim(Nuvei_Http::get_param( 'billing_phone', 'string', '', $form_params )),
+            trim(Nuvei_Http::get_param( 'billing-phone', 'string', '', $form_params ))
+        );
+		
+        if ( empty( $bp ) ) {
+			$bp = trim($cart->get_customer()->get_billing_phone());
 		}
-		$billing_address['phone'] = ! empty( $bp ) ? trim( $bp ) : 'Missing parameter';
+        
+		$billing_address['phone'] = ! empty( $bp ) ? $bp : 'Missing parameter';
 
 		// billing_postcode
-		$bz = trim( Nuvei_Http::get_param( 'billing_postcode', 'int', 0, $form_params ) );
+		$bz = max(
+            trim( Nuvei_Http::get_param( 'billing_postcode', 'string', 0, $form_params ) ),
+            trim( Nuvei_Http::get_param( 'billing-postcode', 'string', 0, $form_params ) )
+        );
+        
 		if ( empty( $bz ) ) {
-			$bz = $cart->get_customer()->get_billing_postcode();
+			$bz = trim($cart->get_customer()->get_billing_postcode());
 		}
-		$billing_address['zip'] = ! empty( $bz ) ? trim( $bz ) : 'Missing parameter';
+        
+		$billing_address['zip'] = ! empty( $bz ) ? $bz : 'Missing parameter';
 
 		// billing_city
-		$bc = trim( Nuvei_Http::get_param( 'billing_city', 'string', '', $form_params ) );
-		if ( empty( $bc ) ) {
-			$bc = $cart->get_customer()->get_billing_city();
+		$bc = max(
+            trim( Nuvei_Http::get_param( 'billing_city', 'string', '', $form_params ) ),
+            trim( Nuvei_Http::get_param( 'billing-city', 'string', '', $form_params ) )
+        );
+		
+        if ( empty( $bc ) ) {
+			$bc = trim($cart->get_customer()->get_billing_city());
 		}
-		$billing_address['city'] = ! empty( $bc ) ? trim( $bc ) : 'Missing parameter';
+        
+		$billing_address['city'] = ! empty( $bc ) ? $bc : 'Missing parameter';
 
 		// billing_country
-		$bcn = trim( Nuvei_Http::get_param( 'billing_country', 'string', '', $form_params ) );
-		if ( empty( $bcn ) ) {
-			$bcn = $cart->get_customer()->get_billing_country();
+		$bcn = max(
+            trim( Nuvei_Http::get_param( 'billing_country', 'string', '', $form_params ) ),
+            trim( Nuvei_Http::get_param( 'billing-country', 'string', '', $form_params ) )
+        );
+		
+        if ( empty( $bcn ) ) {
+			$bcn = trim($cart->get_customer()->get_billing_country());
 		}
-		$billing_address['country'] = trim( $bcn );
+        
+		$billing_address['country'] = $bcn;
 
 		//billing state
-		$bst = trim( Nuvei_Http::get_param( 'billing_state', 'string', '', $form_params ) );
-		if ( empty( $bst ) ) {
-			$bst = $cart->get_customer()->get_billing_state();
+		$bst = max(
+            trim( Nuvei_Http::get_param( 'billing_state', 'string', '', $form_params ) ),
+            trim( Nuvei_Http::get_param( 'billing-state', 'string', '', $form_params ) )
+        );
+		
+        if ( empty( $bst ) ) {
+			$bst = trim($cart->get_customer()->get_billing_state());
 		}
-		$billing_address['state'] = trim( $bst );
+        
+		$billing_address['state'] = $bst;
 
 		// billing_email
-		$be = Nuvei_Http::get_param( 'billing_email', 'mail', '', $form_params );
-		if ( empty( $be ) ) {
-			$be = $cart->get_customer()->get_billing_email();
+		$be = max(
+            trim(Nuvei_Http::get_param( 'billing_email', 'mail', '', $form_params )),
+            trim(Nuvei_Http::get_param( 'billing-email', 'mail', '', $form_params )),
+            trim(Nuvei_Http::get_param( 'email', 'mail', '', $form_params ))
+        );
+		
+        if ( empty( $be ) ) {
+			$be = trim($cart->get_customer()->get_billing_email());
 		}
-		$billing_address['email'] = trim( $be );
+        
+		$billing_address['email'] = $be;
 		# set billing params END
 
-		// shipping
-		$sfn = Nuvei_Http::get_param( 'shipping_first_name', 'string', '', $form_params );
+        # set shipping params
+		$sfn = max(
+            trim(Nuvei_Http::get_param( 'shipping_first_name', 'string', '', $form_params )),
+            trim(Nuvei_Http::get_param( 'shipping-first_name', 'string', '', $form_params ))
+        );
 		if ( empty( $sfn ) ) {
-			$sfn = $cart->get_customer()->get_shipping_first_name();
+			$sfn = trim($cart->get_customer()->get_shipping_first_name());
 		}
 
-		$sln = Nuvei_Http::get_param( 'shipping_last_name', 'string', '', $form_params );
+		$sln = max(
+            trim(Nuvei_Http::get_param( 'shipping_last_name', 'string', '', $form_params )),
+            trim(Nuvei_Http::get_param( 'shipping-last_name', 'string', '', $form_params ))
+        );
 		if ( empty( $sln ) ) {
-			$sln = $cart->get_customer()->get_shipping_last_name();
+			$sln = trim($cart->get_customer()->get_shipping_last_name());
 		}
 
-		$sa = Nuvei_Http::get_param( 'shipping_address_1', 'string', '', $form_params )
-			. ' ' . Nuvei_Http::get_param( 'shipping_address_2', 'string', '', $form_params );
+		$sa = max(
+            trim(Nuvei_Http::get_param( 'shipping_address_1', 'string', '', $form_params )
+                . ' ' . Nuvei_Http::get_param( 'shipping_address_2', 'string', '', $form_params )),
+            trim(Nuvei_Http::get_param( 'shipping-address_1', 'string', '', $form_params )
+                . ' ' . Nuvei_Http::get_param( 'shipping-address_2', 'string', '', $form_params ))
+        );
 		if ( empty( $sa ) ) {
-			$sa = $cart->get_customer()->get_shipping_address() . ' '
-				. $cart->get_customer()->get_shipping_address_2();
+			$sa = trim($cart->get_customer()->get_shipping_address() . ' '
+				. $cart->get_customer()->get_shipping_address_2());
 		}
 
-		$sz = Nuvei_Http::get_param( 'shipping_postcode', 'string', '', $form_params );
+		$sz = max(
+            trim(Nuvei_Http::get_param( 'shipping_postcode', 'string', '', $form_params )),
+            trim(Nuvei_Http::get_param( 'shipping-postcode', 'string', '', $form_params ))
+        );
 		if ( empty( $sz ) ) {
-			$sz = $cart->get_customer()->get_shipping_postcode();
+			$sz = trim($cart->get_customer()->get_shipping_postcode());
 		}
 
-		$sc = Nuvei_Http::get_param( 'shipping_city', 'string', '', $form_params );
+		$sc = max(
+            trim(Nuvei_Http::get_param( 'shipping_city', 'string', '', $form_params )),
+            trim(Nuvei_Http::get_param( 'shipping-city', 'string', '', $form_params ))
+        );
 		if ( empty( $sc ) ) {
-			$sc = $cart->get_customer()->get_shipping_city();
+			$sc = trim($cart->get_customer()->get_shipping_city());
 		}
 
-		$scn = Nuvei_Http::get_param( 'shipping_country', 'string', '', $form_params );
+		$scn = max(
+            trim(Nuvei_Http::get_param( 'shipping_country', 'string', '', $form_params )),
+            trim(Nuvei_Http::get_param( 'shipping-country', 'string', '', $form_params ))
+        );
 		if ( empty( $scn ) ) {
-			$scn = $cart->get_customer()->get_shipping_country();
+			$scn = trim($cart->get_customer()->get_shipping_country());
 		}
 
 		return array(
 			'billingAddress'    => $billing_address,
 			'shippingAddress'   => array(
-				'firstName' => trim( $sfn ),
-				'lastName'  => trim( $sln ),
-				'address'   => trim( $sa ),
-				'zip'       => trim( $sz ),
-				'city'      => trim( $sc ),
-				'country'   => trim( $scn ),
+				'firstName' => $sfn,
+				'lastName'  => $sln,
+				'address'   => $sa,
+				'zip'       => $sz,
+				'city'      => $sc,
+				'country'   => $scn,
 			),
 		);
 	}
@@ -502,6 +575,11 @@ abstract class Nuvei_Request {
 	 * @return array $data
 	 */
 	protected function get_products_data() {
+        // we expect this method to be used on the Store only
+//        if (is_admin()) {
+//            return [];
+//        }
+        
 		// main variable to fill
 		$data  = array(
 			'wc_subscr'     => false,
@@ -825,10 +903,19 @@ abstract class Nuvei_Request {
 	 * A common function to set some data into the session.
 	 *
 	 * @param string $session_token
-	 * @param array $last_req_details Some details from last opne/update order request.
-	 * @param array $product_data Short product and subscription data.
+	 * @param array $last_req_details   Some details from last open/update order request.
+	 * @param array $product_data       Short product and subscription data.
 	 */
 	protected function set_nuvei_session_data( $session_token, $last_req_details, $product_data ) {
+        Nuvei_Logger::write(
+            [
+                '$session_token'    => $session_token,
+                '$last_req_details' => $last_req_details,
+                '$product_data'     => $product_data,
+            ],
+            'set_nuvei_session_data'
+        );
+        
 		WC()->session->set( NUVEI_SESSION_OO_DETAILS, $last_req_details );
 		WC()->session->set(
 			NUVEI_SESSION_PROD_DETAILS,
@@ -836,8 +923,7 @@ abstract class Nuvei_Request {
 				$session_token => array(
 					'wc_subscr'             => $product_data['wc_subscr'],
 					'subscr_data'           => $product_data['subscr_data'],
-					//                    'products_data' => $product_data['products_data'],
-												'products_data_hash'    => md5( serialize( $product_data ) ),
+                    'products_data_hash'    => md5( serialize( $product_data ) ),
 				),
 			)
 		);
@@ -1121,6 +1207,7 @@ abstract class Nuvei_Request {
 				return array(
 					'status'    => 'ERROR',
 					'message'   => 'The parameter Billing Address Email is not valid.',
+					'email'     => $params['billingAddress']['email'],
 				);
 			}
 
@@ -1128,6 +1215,7 @@ abstract class Nuvei_Request {
 				return array(
 					'status'    => 'ERROR',
 					'message'   => 'The parameter Billing Address Email is too long.',
+                    'email'     => $params['billingAddress']['email'],
 				);
 			}
 		}
@@ -1137,6 +1225,7 @@ abstract class Nuvei_Request {
 				return array(
 					'status'    => 'ERROR',
 					'message'   => 'The parameter Shipping Address Email is not valid.',
+                    'email'     => $params['shippingAddress']['email'],
 				);
 			}
 
@@ -1144,6 +1233,7 @@ abstract class Nuvei_Request {
 				return array(
 					'status'    => 'ERROR',
 					'message'   => 'The parameter Shipping Address Email is too long.',
+                    'email'     => $params['shippingAddress']['email'],
 				);
 			}
 		}

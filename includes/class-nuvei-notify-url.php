@@ -341,7 +341,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	 */
 	private function get_order_data( $transaction_id ) {
 		global $wpdb;
-
+        
 		if ( is_null( $transaction_id ) ) {
 			// old WC records
 			$query = $wpdb->prepare(
@@ -354,7 +354,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
             // phpcs:ignore
 			$res = $wpdb->get_results( $query );
-
+            
 			if ( ! empty( $res ) ) {
 				return $res;
 			}
@@ -371,7 +371,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
             // phpcs:ignore
 			$res = $wpdb->get_results( $query );
-
+            
 			if ( ! empty( $res ) ) {
 				return $res;
 			}

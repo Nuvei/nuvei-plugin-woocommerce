@@ -106,13 +106,28 @@ var nuveiCheckoutBlocks = {
     getCheckoutData: function() {
         console.log('getCheckoutData');
         
+        var scFormData = {};
+        
+        console.log(jQuery('.wc-block-components-form input').length);
+        
+        jQuery('.wc-block-components-form input').each(function(){
+            var _self = jQuery(this);
+            
+            if (_self.attr('id') && '' !=  _self.val()) {
+                scFormData[_self.attr('id')] = _self.val();
+            }
+        }); 
+        
+        console.log(scFormData);
+        
         jQuery.ajax({
             type: "POST",
             url: scTrans.ajaxurl,
             data: {
                 action: 'sc-ajax-action',
                 security: scTrans.security,
-                getBlocksCheckoutData: 1
+                getBlocksCheckoutData: 1,
+                scFormData: scFormData
             },
             dataType: 'json'
         })
@@ -364,14 +379,14 @@ jQuery(function() {
 	}
     
     // add Simply Connect to the page
-    let nuveiSdkScript = '<script src="'+ scTrans.simplyConnectUrl +'" id="nuvei-simply-connect-js"></script>';
-    
-    if (jQuery('#wc-checkout-js').length > 0) {
-        jQuery('#wc-checkout-js').before(nuveiSdkScript);
-    }
-    else if (jQuery('#wc-blocks-checkout-js').length > 0) {
-        jQuery('#wc-blocks-checkout-js').before(nuveiSdkScript);
-    }
+//    let nuveiSdkScript = '<script src="'+ scTrans.simplyConnectUrl +'" id="nuvei-simply-connect-js"></script>';
+//    
+//    if (jQuery('#wc-checkout-js').length > 0) {
+//        jQuery('#wc-checkout-js').before(nuveiSdkScript);
+//    }
+//    else if (jQuery('#wc-blocks-checkout-js').length > 0) {
+//        jQuery('#wc-blocks-checkout-js').before(nuveiSdkScript);
+//    }
 	
     // Multistep checkout does not support WC Blocks
 	// when on multistep checkout -> Checkout SDK view, someone click on previous/next button

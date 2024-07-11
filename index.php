@@ -12,7 +12,7 @@
  * Tested up to: 6.5.5
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 9.0.2
+ * WC tested up to: 9.1.0
 */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -31,7 +31,6 @@ $wc_nuvei = null;
 
 register_activation_hook( __FILE__, 'nuvei_plugin_activate' );
 
-//add_action( 'admin_init', 'nuvei_admin_init' );
 add_filter( 'woocommerce_payment_gateways', 'nuvei_add_gateway' );
 add_action( 'plugins_loaded', 'nuvei_init', 0 );
 
@@ -109,75 +108,6 @@ function nuvei_plugin_activate() {
 		if ( ! file_exists( $index_file ) ) {
 			$wp_fs_direct->put_contents( $htaccess_file, '' );
 		}
-	}
-}
-
-/**
- * Check for SafeCharge version of the plugin.
- * Check for new version in the current Git repo.
- *
- * @deprecated since version 3.0.1
- */
-function nuvei_admin_init() {
-	try {
-		// check if there is the version with "nuvei" in the name of directory,
-		// in this case deactivate the current plugin
-		$path_to_nuvei_plugin = plugin_dir_path( __FILE__ ) . 'index.php';
-
-		if ( strpos( basename( __DIR__ ), 'safecharge' ) !== false
-			&& file_exists( $path_to_nuvei_plugin )
-		) {
-			deactivate_plugins( plugin_basename( __FILE__ ) );
-		}
-
-		// check in GIT for new version
-		if ( ! session_id() ) {
-			session_start(
-				array(
-					'cookie_lifetime'   => 86400, // a day
-					'cookie_httponly'   => true,
-				)
-			);
-		}
-
-		$plugin_data  = get_plugin_data( __FILE__ );
-		$curr_version = (int) str_replace( '.', '', $plugin_data['Version'] );
-		$git_version  = 0;
-
-		if ( ! empty( $_SESSION[ NUVEI_SESSION_PLUGIN_GIT_V ] ) ) {
-			$git_version = $_SESSION[ NUVEI_SESSION_PLUGIN_GIT_V ];
-		} else {
-			$data = nuvei_get_file_form_git();
-
-			if ( ! empty( $data['git_v'] ) ) {
-				$_SESSION[ NUVEI_SESSION_PLUGIN_GIT_V ] = $data['git_v'];
-				$git_version                            = $data['git_v'];
-			}
-		}
-
-		// compare versions and show message if need to
-		if ( $git_version > $curr_version ) {
-			add_action(
-				'admin_notices',
-				function () {
-					$class     = 'notice notice-info is-dismissible';
-					$url       = 'https://github.com/Nuvei/nuvei-plugin-woocommerce/blob/main/CHANGELOG.md';
-					$message_1 = __( 'There is a new version of Nuvei Plugin available.', 'nuvei-payments-for-woocommerce' );
-					$message_2 = __( 'View version details.', 'nuvei-payments-for-woocommerce' );
-
-					printf(
-						'<div class="%1$s"><p>%2$s <a href="%3$s" target="_blank">%4$s</a></p></div>',
-						esc_attr( $class ),
-						esc_html( $message_1 ),
-						esc_url( $url ),
-						esc_html( $message_2 )
-					);
-				}
-			);
-		}
-		// check in GIT for new version END
-	} catch ( Exception $e ) {
-		Nuvei_Logger::write( $e->getMessage(), 'Exception in admin init' );
 	}
 }
 
@@ -259,7 +189,7 @@ function nuvei_init() {
 	add_action( 'edited_pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ), 'nuvei_edit_term_meta', 10, 2 );
 	// before add a product to the cart
 	add_filter( 'woocommerce_add_to_cart_validation', array( $wc_nuvei, 'add_to_cart_validation' ), 10, 3 );
-	// Show/hide payment gateways in case of product with Nuvei Payment plan in the Cart
+	// Hide payment gateways in case of product with Nuvei Payment plan in the Cart
 	add_filter( 'woocommerce_available_payment_gateways', array( $wc_nuvei, 'hide_payment_gateways' ), 100, 1 );
 
 	// those actions are valid only when the plugin is enabled
@@ -268,13 +198,6 @@ function nuvei_init() {
 	if ( 'no' == $plugin_enabled ) {
 		return;
 	}
-
-	// for WPML plugin
-	//    if (is_plugin_active('sitepress-multilingual-cms' . DIRECTORY_SEPARATOR . 'sitepress.php')
-	//        && 'yes' == $wc_nuvei->settings['use_wpml_thanks_page']
-	//    ) {
-	//        add_filter('woocommerce_get_checkout_order_received_url', 'nuvei_wpml_thank_you_page', 10, 2);
-	//    }
 
 	// for the thank-you page
 	add_action( 'woocommerce_thankyou', 'nuvei_mod_thank_you_page', 100, 1 );
@@ -307,6 +230,25 @@ function nuvei_init() {
         
         return '<script type="module" src="' . esc_url( $src ) . '"></script>';
     } , 10, 3);
+    
+    // it is called too early - before out openOrder
+//    add_action( 'woocommerce_new_order', function($order_id, $order) {}, 10, 2 );
+    
+    // does not works in WC Blocks
+//    add_action( 'woocommerce_checkout_order_processed', function($order_id) {}, 10, 1 );
+    
+    // Add this hook to catch Zero Total Orders in WC Blocks. The others still go through process_payment().
+    add_action( 'woocommerce_blocks_checkout_order_processed', function($order ) {
+        global $wc_nuvei;
+        $total = (float) $order->get_total();
+        
+        if (0 == $total) {
+            Nuvei_Logger::write('hook woocommerce_blocks_checkout_order_processed - Zero Total Order.');
+            
+            $wc_nuvei->process_payment($order->get_id());
+        }
+    }, 10 );
+    
 }
 
 /**
@@ -423,6 +365,14 @@ function nuvei_load_scripts() {
 	global $wpdb;
 
 	$plugin_url = plugin_dir_url( __FILE__ );
+    
+    // load the SDK
+    wp_register_script(
+		'nuvei_checkout_sdk',
+		NUVEI_SIMPLY_CONNECT_PATH . 'simplyConnect.js',
+		array('jquery'),
+		'1.140.0'
+	);
 
 	// reorder.js
 	wp_register_script(
@@ -764,77 +714,6 @@ function nuvei_add_buttons( $order ) {
 	echo '<div id="custom_loader" class="blockUI blockOverlay" style="height: 100%; position: absolute; top: 0px; width: 100%; z-index: 10; background-color: rgba(255,255,255,0.5); display: none;"></div>';
 }
 
-/**
- * When user have problem with white spaces in the URL, it have option to
- * rewrite the return URL and redirect to new one.
- *
- * @global WC_SC $wc_nuvei
- * @deprecated since version 3.0.1
- */
-function nuvei_rewrite_return_url() {
-    //phpcs:ignore
-	if ( isset( $_REQUEST['ppp_status'] ) && '' != $_REQUEST['ppp_status']
-        //phpcs:ignore
-		&& ( ! isset( $_REQUEST['wc_sc_redirected'] ) || 0 == $_REQUEST['wc_sc_redirected'] )
-	) {
-		$query_string = '';
-		if ( isset( $_SERVER['QUERY_STRING'] ) ) {
-			$query_string = sanitize_text_field( $_SERVER['QUERY_STRING'] );
-		}
-
-		$server_protocol = '';
-		if ( isset( $_SERVER['SERVER_PROTOCOL'] ) ) {
-			$server_protocol = sanitize_text_field( $_SERVER['SERVER_PROTOCOL'] );
-		}
-
-		$http_host = '';
-		if ( isset( $_SERVER['HTTP_HOST'] ) ) {
-			$http_host = sanitize_text_field( $_SERVER['HTTP_HOST'] );
-		}
-
-		$request_uri = '';
-		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
-			$request_uri = sanitize_text_field( $_SERVER['REQUEST_URI'] );
-		}
-
-		$new_url = '';
-		$host    = ( strpos( $server_protocol, 'HTTP/' ) !== false ? 'http' : 'https' )
-			. '://' . $http_host . current( explode( '?', $request_uri ) );
-
-		if ( '' != $query_string ) {
-			$new_url = preg_replace( '/\+|\s|\%20/', '_', $query_string );
-			// put flag the URL was rewrited
-			$new_url .= '&wc_sc_redirected=1';
-
-			wp_redirect( $host . '?' . $new_url );
-			exit;
-		}
-	}
-}
-
-/**
- * Fix for WPML plugin "Thank you" page
- *
- * @param string $order_received_url
- * @param WC_Order $order
- *
- * @return string $order_received_url
- *
- * @deprecated since version 3.0.0-p1
- */
-function nuvei_wpml_thank_you_page( $order_received_url, $order ) {
-	if ( $order->get_payment_method() != NUVEI_GATEWAY_NAME ) {
-		return;
-	}
-
-	$lang_code          = $order->get_meta( 'wpml_language', true );
-	$order_received_url = apply_filters( 'wpml_permalink', $order_received_url, $lang_code );
-
-	Nuvei_Logger::write( $order_received_url, 'nuvei_wpml_thank_you_page: ' );
-
-	return $order_received_url;
-}
-
 function nuvei_mod_thank_you_page( $order_id ) {
 	$order = wc_get_order( $order_id );
 
@@ -865,12 +744,15 @@ function nuvei_mod_thank_you_page( $order_id ) {
 
 	# when WCS is turn on, remove Pay button
 	if ( is_plugin_active( 'woocommerce-subscriptions' . DIRECTORY_SEPARATOR . 'woocommerce-subscriptions.php' ) ) {
-		$output .= 'jQuery("a.pay").hide();';
+		$output .= 'if (0 == jQuery("a.pay").length) { jQuery("a.pay").hide(); }';
 	}
 
 	$output .= '</script>';
 
-	echo esc_js( $output );
+	echo wp_kses(
+        $output,
+        array('script' => array())
+    );
 }
 
 function nuvei_edit_order_buttons() {
@@ -1139,49 +1021,6 @@ function nuvei_edit_my_account_orders_col( $order ) {
 	}
 
 	echo '>#' . esc_html( $order->get_order_number() ) . '</a>';
-}
-
-/**
- * Repeating code from Version Checker logic.
- *
- * @return array
- * @deprecated since version 3.0.1
- */
-function nuvei_get_file_form_git() {
-	$matches = array();
-	//  $ch      = curl_init();
-	//
-	//  curl_setopt(
-	//      $ch,
-	//      CURLOPT_URL,
-	//      'https://raw.githubusercontent.com/Nuvei/nuvei-plugin-woocommerce/main/index.php'
-	//  );
-	//
-	//  curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-	//  curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
-	//
-	//  $file_text = curl_exec( $ch );
-	//  curl_close( $ch );
-
-	$file_text = wp_remote_get(
-		'https://raw.githubusercontent.com/Nuvei/nuvei-plugin-woocommerce/main/index.php',
-		array(
-			'sslverify' => false,
-		)
-	);
-
-	preg_match( '/(\s?\*\s?Version\s?:\s?)(.*\s?)(\n)/', $file_text, $matches );
-
-	if ( ! isset( $matches[2] ) ) {
-		return array();
-	}
-
-	$array = array(
-		'date'  => gmdate( 'Y-m-d H:i:s', time() ),
-		'git_v' => (int) str_replace( '.', '', trim( $matches[2] ) ),
-	);
-
-	return $array;
 }
 
 /**

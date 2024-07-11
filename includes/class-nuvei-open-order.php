@@ -49,7 +49,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 			$transaction_type   = $this->get_total_from_rest_params() == 0
 				? 'Auth' : $this->plugin_settings['payment_action'];
 		} else { // default flow
-			$ajax_params        = array();
+//			$ajax_params        = array();
 			$open_order_details = $woocommerce->session->get( NUVEI_SESSION_OO_DETAILS );
 			$products_data      = $this->get_products_data();
 			$cart_total         = (float) $products_data['totals']['total'];
@@ -121,14 +121,6 @@ class Nuvei_Open_Order extends Nuvei_Request {
 			);
 
 			if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
-				//                if ($this->is_ajax) {
-				//                    wp_send_json(array(
-				//                        'status'        => 1,
-				//                        'sessionToken'    => $resp['sessionToken']
-				//                    ));
-				//                    exit;
-				//                }
-
 				return $resp;
 			} elseif ( ! empty( $resp['status'] ) && ! empty( $resp['reload_checkout'] ) ) {
 				wp_send_json( array( 'reload_checkout' => 1 ) );
@@ -139,10 +131,11 @@ class Nuvei_Open_Order extends Nuvei_Request {
 
 		$form_data = Nuvei_Http::get_param( 'scFormData' );
 
-		if ( ! empty( $form_data ) ) {
-			parse_str( $form_data, $ajax_params );
-		}
-
+//		if ( ! empty( $form_data ) ) {
+////			parse_str( $form_data, $ajax_params );
+//            $ajax_params = Nuvei_Http::get_param( 'scFormData', 'array' );
+//		}
+        
 		$url_details = array(
 			'notificationUrl'   => Nuvei_String::get_notify_url( $this->plugin_settings ),
 			'backUrl'           => wc_get_checkout_url(),
@@ -211,15 +204,6 @@ class Nuvei_Open_Order extends Nuvei_Request {
 
 			Nuvei_Logger::write( $open_order_details, 'session open_order_details' );
 		}
-
-		//      if ($this->is_ajax) {
-		//          wp_send_json(array(
-		//              'status'        => 1,
-		//              'sessionToken'  => $resp['sessionToken'],
-		//              'amount'        => $oo_params['amount']
-		//          ));
-		//          exit;
-		//      }
 
 		$resp['products_data'] = $products_data;
 

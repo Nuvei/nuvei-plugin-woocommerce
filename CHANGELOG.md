@@ -7,6 +7,14 @@
     * Changed a message text.
     * On Blocks Checkout get the need data via Ajax before load Simply Connect.
     * nuvei-checkout-blocks.js is declared as module via hook.
+    * Fix for a wrong JS escape.
+    * Pass sourceApplication to the Simply Connect.
+    * In hide_payment_gateways() method do not call is_checkout(), because WC Blocks returns false in some cases.
+    * Fixed the problem with WC Blocks and Zero Total orders.
+    * Fixed the problem when a Guest user come for the first time on Blocks Checkout and get "The parameter Billing Address Email is not valid." message.
+    * Removed constants NUVEI_SDK_URL_PROD, NUVEI_SDK_URL_TAG, NUVEI_SESSION_PLUGIN_GIT_V.
+    * Removed methods/functions nuvei_admin_init(), nuvei_get_file_form_git(), nuvei_rewrite_return_url(), nuvei_wpml_thank_you_page().
+    * Use Simply Connect v1.140.0.
 ```
 
 # 3.0.2

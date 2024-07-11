@@ -3,7 +3,7 @@
 Contributors: miroslavnuvei
 Requires at least: 4.7
 Tested up to: 6.5.5
-Stable tag: 3.0.2
+Stable tag: 3.0.3
 Requires PHP: 7.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -33,6 +33,14 @@ Right payment methods at the checkout page can bring you global reach, help you 
 * Changed a message text.
 * On Blocks Checkout get the need data via Ajax before load Simply Connect.
 * nuvei-checkout-blocks.js is declared as module via hook.
+* Fix for a wrong JS escape.
+* Pass sourceApplication to the Simply Connect.
+* In hide_payment_gateways() method do not call is_checkout(), because WC Blocks returns false in some cases.
+* Fixed the problem with WC Blocks and Zero Total orders.
+* Fixed the problem when a Guest user come for the first time on Blocks Checkout and get "The parameter Billing Address Email is not valid." message.
+* Removed constants NUVEI_SDK_URL_PROD, NUVEI_SDK_URL_TAG, NUVEI_SESSION_PLUGIN_GIT_V.
+* Removed methods/functions nuvei_admin_init(), nuvei_get_file_form_git(), nuvei_rewrite_return_url(), nuvei_wpml_thank_you_page().
+* Use Simply Connect v1.140.0.
 
 = 3.0.2 =
 * The plugin name and text domain were changed from "nuvei-checkout-for-woocommerce" to "nuvei-payments-for-woocommerce".

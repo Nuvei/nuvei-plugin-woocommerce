@@ -49,7 +49,8 @@ class Nuvei_Http {
 					$default = array();
 				}
 
-				return ! empty( $arr[ $key ] ) ? filter_var( $arr[ $key ], FILTER_REQUIRE_ARRAY ) : $default;
+//				return ! empty( $arr[ $key ] ) ? filter_var( $arr[ $key ], FILTER_REQUIRE_ARRAY ) : $default;
+				return is_array($arr[ $key ]) ? $arr[ $key ] : $default;
 
 			case 'string':
 				return ! empty( $arr[ $key ] ) ? filter_var( $arr[ $key ] ) : $default;

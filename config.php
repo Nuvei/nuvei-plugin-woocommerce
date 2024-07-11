@@ -29,25 +29,13 @@ const NUVEI_APMS_REFUND_VOID    = array( 'cc_card', 'apmgw_expresscheckout' );
 
 const NUVEI_REST_ENDPOINT_INT   = 'https://ppp-test.nuvei.com/ppp/api/v1/';
 const NUVEI_REST_ENDPOINT_PROD  = 'https://secure.safecharge.com/ppp/api/v1/';
-
-/**
- * @var string The SDK Prod URL.
- * @deprecated since version 3.0.0
- */
-const NUVEI_SDK_URL_PROD = 'https://cdn.safecharge.com/safecharge_resources/v1/checkout/simplyConnect.js';
-/**
- * @var string The SDK Tag URL.
- * @deprecated since version 3.0.0
- */
-const NUVEI_SDK_URL_TAG = 'https://srv-bsf-devpppjs.gw-4u.com/checkoutNext_tag/simplyConnect.js';
-
-const NUVEI_SDK_AUTOCLOSE_URL       = 'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html';
+const NUVEI_SDK_AUTOCLOSE_URL   = 'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html';
 
 const NUVEI_SESSION_OO_DETAILS      = 'nuvei_last_open_order_details'; // a session key
 const NUVEI_SESSION_PROD_DETAILS    = 'nuvei_order_details'; // products details
-const NUVEI_SESSION_PLUGIN_GIT_V    = 'nuvei_plugin_git_version';
-
 const LOG_REQUEST_PARAMS            = 'Request params';
+
+define('NUVEI_SIMPLY_CONNECT_PATH', plugin_dir_url( __FILE__ ) . 'assets/js/nuveiSimplyConnect/');
 
 define(
 	'NUVEI_LOGS_DIR',
@@ -62,7 +50,7 @@ define(
 		'sourceApplication'     => NUVEI_SOURCE_APPLICATION,
 		'plugin_dir_url'        => plugin_dir_url( __FILE__ ),
 		'paymentGatewayName'    => NUVEI_GATEWAY_NAME,
-		'simplyConnectUrl'      => plugin_dir_url( __FILE__ ) . 'assets/js/nuveiSimplyConnect/simplyConnect.js',
+//		'simplyConnectUrl'      => NUVEI_SIMPLY_CONNECT_PATH . 'simplyConnect.js',
 
 		// translations
 		'insuffFunds'       => __( 'You have Insufficient funds, please go back and remove some of the items in your shopping cart, or use another card.', 'nuvei-payments-for-woocommerce' ),

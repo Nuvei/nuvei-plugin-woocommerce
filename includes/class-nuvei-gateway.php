@@ -196,8 +196,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		Nuvei_Logger::write(
 			array(
 				'$order_id'                 => $order_id,
-				//                'request params'            => $_REQUEST,
-								NUVEI_SESSION_PROD_DETAILS  => $nuvei_order_details,
+                NUVEI_SESSION_PROD_DETAILS  => $nuvei_order_details,
 				NUVEI_SESSION_OO_DETAILS    => $nuvei_oo_details,
 			),
 			'Process payment(), Order'
@@ -728,7 +727,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
             $msg = __( 'Unexpected error, please try again later!', 'nuvei-payments-for-woocommerce' );
             
             if (!empty($oo_data['message'])) {
-                $msg = __($oo_data['message'], 'nuvei-payments-for-woocommerce');
+//                $msg = __($oo_data['message'], 'nuvei-payments-for-woocommerce');
+                $msg = $oo_data['message'];
             }
 
 			Nuvei_Logger::write( $msg );
@@ -834,6 +834,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 					'locale' => $locale,
 				),
 			),
+            'sourceApplication'         => NUVEI_SOURCE_APPLICATION,
+            'urlPrefix'                 => NUVEI_SIMPLY_CONNECT_PATH,
 		);
 
 		// check for product with a plan
@@ -957,22 +959,32 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 	/**
 	 * Filter available gateways in some cases.
+     * When WC Blocks is used sometimes is_checkout() returns false.
 	 *
 	 * @param array $available_gateways
 	 * @return array
 	 */
 	public function hide_payment_gateways( $available_gateways ) {
-		if ( ! is_checkout() || is_wc_endpoint_url() ) {
-			return $available_gateways;
-		}
+        // we expect this method to be used on the Store only
+        if (is_admin()) {
+            return [];
+        }
+        
+        Nuvei_Logger::write(array_keys($available_gateways), 'hide_payment_gateways');
+        
+//		if ( ! is_checkout() || is_wc_endpoint_url() ) {
+//            Nuvei_Logger::write([is_checkout(), is_wc_endpoint_url()]);
+//			return $available_gateways;
+//		}
 
 		if ( ! isset( $available_gateways[ NUVEI_GATEWAY_NAME ] ) ) {
+            Nuvei_Logger::write('missing Nuvei GW');
 			return $available_gateways;
 		}
 
 		$nuvei_helper                       = new Nuvei_Helper();
 		$items_info                         = $nuvei_helper->get_products();
-		$filtred_gws[ NUVEI_GATEWAY_NAME ]    = $available_gateways[ NUVEI_GATEWAY_NAME ];
+		$filtred_gws[ NUVEI_GATEWAY_NAME ]  = $available_gateways[ NUVEI_GATEWAY_NAME ];
 
 		if ( ! empty( $items_info['subscr_data'] ) ) {
 			return $filtred_gws;
