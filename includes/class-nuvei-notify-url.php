@@ -904,6 +904,12 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		$this->sc_order->update_meta_data( $subs_data_key, $subsc_data );
 		$this->sc_order->add_order_note( $msg );
 		$this->sc_order->save();
+        
+        /* 
+         * Add custom hook after Rebilling payment so other developers can use it.
+         * The whole name is nuvei_payments_for_woocommerce_after_rebilling_payment.
+         */
+        do_action('nuvei_pfwc_after_rebilling_payment');
 
 		exit( 'DMN received.' );
 	}

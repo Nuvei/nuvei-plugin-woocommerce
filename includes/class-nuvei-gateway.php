@@ -967,10 +967,19 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	public function hide_payment_gateways( $available_gateways ) {
         // we expect this method to be used on the Store only
         if (is_admin()) {
-            return [];
+            return;
         }
         
-        Nuvei_Logger::write(array_keys($available_gateways), 'hide_payment_gateways');
+        Nuvei_Logger::write(
+            [
+                '$available_gateways' => array_keys($available_gateways),
+                'is_admin' => is_admin(),
+                'is_checkout' => is_checkout(),
+                'is_wc_endpoint_url' => is_wc_endpoint_url(),
+                'is_shop()' => is_shop(),
+            ], 
+            'hide_payment_gateways'
+        );
         
 //		if ( ! is_checkout() || is_wc_endpoint_url() ) {
 //            Nuvei_Logger::write([is_checkout(), is_wc_endpoint_url()]);

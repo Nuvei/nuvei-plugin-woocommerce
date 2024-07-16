@@ -461,10 +461,10 @@ abstract class Nuvei_Request {
 					'body'      => wp_json_encode( $all_params ),
 				)
 			);
+            
+            Nuvei_Logger::write( $resp, 'Response info' );
 
 			if ( false === $resp || ! is_array( $resp ) || empty( $resp['body'] ) ) {
-				Nuvei_Logger::write( $resp, 'Response info' );
-
 				return array(
 					'status'    => 'ERROR',
 					'message'   => 'REST API ERROR: response is false',
@@ -960,7 +960,7 @@ abstract class Nuvei_Request {
 					$data['transactionId'] = $tr_id;
 				}
 
-				Nuvei_Logger::write( $data );
+				Nuvei_Logger::write( $data, 'get_last_transaction()' );
 
 				return $data;
 			}

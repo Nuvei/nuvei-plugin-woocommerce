@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.0.3
+ * Version: 3.1.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * Text Domain: nuvei-payments-for-woocommerce
@@ -12,7 +12,7 @@
  * Tested up to: 6.5.5
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 9.1.0
+ * WC tested up to: 9.1.2
 */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -248,6 +248,10 @@ function nuvei_init() {
             $wc_nuvei->process_payment($order->get_id());
         }
     }, 10 );
+    
+    add_action( 'nuvei_pfwc_after_rebilling_payment', function() {
+        Nuvei_Logger::write('nuvei_pfwc_after_rebilling_payment do some action here');
+    } );
     
 }
 

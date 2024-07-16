@@ -11,8 +11,8 @@ Wordpress:
   - Tested up to v6.5.3.
 
 WooCommerce: 
-  - Minimum v 3.0.
-  - Tested up to v8.8.3.
+  - Minimum v3.0.
+  - Tested up to v9.1.2.
 
 Merchant configuration: 
   - Enabled DMNs.
