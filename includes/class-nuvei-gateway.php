@@ -1003,13 +1003,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		$filtred_gws[ NUVEI_GATEWAY_NAME ]  = $available_gateways[ NUVEI_GATEWAY_NAME ];
 
 		if ( ! empty( $items_info['subscr_data'] ) ) {
-            var_dump('1');
 			return $filtred_gws;
 		} elseif ( isset($items_info['totals']['total']) 
             && ( 1 == $this->get_option( 'allow_zero_checkout' )
                 && 0 == $items_info['totals']['total'] )
 		) {
-            var_dump($items_info);
 			return $filtred_gws;
 		}
 
