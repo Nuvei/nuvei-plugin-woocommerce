@@ -7,8 +7,6 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Open_Order extends Nuvei_Request {
 
-	protected $plugin_settings;
-
 	/**
 	 * Set is_ajax parameter to the Process metohd.
 	 *
@@ -33,8 +31,14 @@ class Nuvei_Open_Order extends Nuvei_Request {
 
 		global $woocommerce;
 
-		$try_update_order = true;
-
+		$try_update_order   = true;
+        $method_params      = func_get_args(); // optionaly we will pass here Order ID.
+        
+        // if we pass Order ID get the order.
+        if (!empty($method_params[0]['order_id'])) {
+            $this->sc_order = wc_get_order($method_params[0]['order_id']);
+        }
+        
 		// REST call
 		if ( ! empty( $this->rest_params ) ) {
 			$open_order_details = array(
@@ -49,7 +53,6 @@ class Nuvei_Open_Order extends Nuvei_Request {
 			$transaction_type   = $this->get_total_from_rest_params() == 0
 				? 'Auth' : $this->plugin_settings['payment_action'];
 		} else { // default flow
-//			$ajax_params        = array();
 			$open_order_details = $woocommerce->session->get( NUVEI_SESSION_OO_DETAILS );
 			$products_data      = $this->get_products_data();
 			$cart_total         = (float) $products_data['totals']['total'];
@@ -96,6 +99,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 			|| empty( $addresses['billingAddress']['email'] )
 			|| $open_order_details['transactionType'] != $transaction_type
 			|| $open_order_details['userTokenId'] != $addresses['billingAddress']['email']
+            || !empty($this->sc_order)
 		) {
 			Nuvei_Logger::write(
 				array(
@@ -129,7 +133,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		}
 		# /try to update Order or not
 
-		$form_data = Nuvei_Http::get_param( 'scFormData' );
+//		$form_data = Nuvei_Http::get_param( 'scFormData' );
 
 //		if ( ! empty( $form_data ) ) {
 ////			parse_str( $form_data, $ajax_params );
@@ -149,9 +153,14 @@ class Nuvei_Open_Order extends Nuvei_Request {
 
 		$amount     = (string) number_format( $cart_total, 2, '.', '' );
 		$currency   = get_woocommerce_currency();
+        $cl_un_id   = $this->get_client_unique_id( $addresses['billingAddress']['email'], $products_data );
+        
+        if (!empty($this->sc_order)) {
+            $cl_un_id = $this->sc_order->get_id();
+        }
 
 		$oo_params = array(
-            'clientUniqueId'    => $this->get_client_unique_id( $addresses['billingAddress']['email'], $products_data ),
+            'clientUniqueId'    => $cl_un_id,
 			'currency'          => $currency,
 			'amount'            => $amount,
 			'shippingAddress'   => $addresses['shippingAddress'],
@@ -209,7 +218,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 
 		return array_merge( $resp, $oo_params );
 	}
-
+    
 	/**
 	 * Return keys required to calculate checksum. Keys order is relevant.
 	 *

@@ -8,7 +8,7 @@ PHP:
 
 Wordpress: 
   - Minimum v4.7.
-  - Tested up to v6.5.3.
+  - Tested up to v6.6.1.
 
 WooCommerce: 
   - Minimum v3.0.

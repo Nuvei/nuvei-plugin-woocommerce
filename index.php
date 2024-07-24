@@ -5,11 +5,12 @@
  * Description: Nuvei Gateway for WooCommerce
  * Version: 3.1.0
  * Author: Nuvei
- * Author URI: https://nuvei.com
+ * Author: URI: https://nuvei.com
+ * License: GPLv2
  * Text Domain: nuvei-payments-for-woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.5.5
+ * Tested up to: 6.6.1
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
  * WC tested up to: 9.1.2
@@ -170,7 +171,7 @@ function nuvei_init() {
 
 	// use this to change button text, because of the cache the jQuery not always works
 	add_filter( 'woocommerce_order_button_text', 'nuvei_edit_order_buttons' );
-
+    // when the client click Pay button on the Order from My Account -> Orders menu.
 	add_filter( 'woocommerce_pay_order_after_submit', 'nuvei_user_orders', 10, 2 );
 
     //phpcs:ignore
@@ -223,13 +224,13 @@ function nuvei_init() {
 	);
     
     // mark the nuvei-checkout-blocks.js as module
-    add_filter('script_loader_tag', function($tag, $handle, $src) {
-        if ( 'nuvei-checkout-blocks' !== $handle ) {
-            return $tag;
-        }
-        
-        return '<script type="module" src="' . esc_url( $src ) . '"></script>';
-    } , 10, 3);
+//    add_filter('script_loader_tag', function($tag, $handle, $src) {
+//        if ( 'nuvei-checkout-blocks' !== $handle ) {
+//            return $tag;
+//        }
+//        
+//        return '<script type="module" src="' . esc_url( $src ) . '"></script>';
+//    } , 10, 3);
     
     // it is called too early - before out openOrder
 //    add_action( 'woocommerce_new_order', function($order_id, $order) {}, 10, 2 );
@@ -248,6 +249,17 @@ function nuvei_init() {
             $wc_nuvei->process_payment($order->get_id());
         }
     }, 10 );
+    
+    // Save the url variable in a WC Session variable
+//    add_action( 'template_redirect', function() {
+//        Nuvei_Logger::write([$_REQUEST, func_get_args()], 'template_redirect');
+//        
+//        if( is_checkout() && isset($_GET[ 'checkoutid']) && $_GET['checkoutid' ] == '50' ){
+////            WC()->session->set('checkout_id', esc_attr($_GET['checkoutid']));
+//            
+//            
+//        }
+//    });
     
     add_action( 'nuvei_pfwc_after_rebilling_payment', function() {
         Nuvei_Logger::write('nuvei_pfwc_after_rebilling_payment do some action here');
@@ -375,17 +387,18 @@ function nuvei_load_scripts() {
 		'nuvei_checkout_sdk',
 		NUVEI_SIMPLY_CONNECT_PATH . 'simplyConnect.js',
 		array('jquery'),
-		'1.140.0'
+		'1.140.0',
+        false
 	);
 
 	// reorder.js
-	wp_register_script(
-		'nuvei_js_reorder',
-		$plugin_url . 'assets/js/nuvei_reorder.js',
-		array( 'jquery' ),
-		'1',
-		true
-	);
+//	wp_register_script(
+//		'nuvei_js_reorder',
+//		$plugin_url . 'assets/js/nuvei_reorder.js',
+//		array( 'jquery' ),
+//		'1',
+//		false
+//	);
 
 	// main JS
 	wp_register_script(
@@ -436,11 +449,14 @@ function nuvei_load_scripts() {
 		)
 	);
 
-	wp_enqueue_script( 'nuvei_checkout_sdk' );
-	wp_enqueue_script( 'nuvei_js_reorder' );
+//    if (is_checkout_pay_page()) {
+//        wp_enqueue_script( 'nuvei_js_reorder' );
+//    }
 
-	wp_localize_script( 'nuvei_js_public', 'scTrans', $localizations );
-	wp_enqueue_script( 'nuvei_js_public' );
+    wp_enqueue_script( 'nuvei_checkout_sdk' );
+
+    wp_localize_script( 'nuvei_js_public', 'scTrans', $localizations );
+    wp_enqueue_script( 'nuvei_js_public' );
 }
 
 /**
@@ -793,34 +809,49 @@ function nuvei_change_title_order_received( $title, $id ) {
 }
 
 /**
- * Call this on Store when the logged user is in My Account section
+ * W.hen the client click Pay button on the Order from My Account -> Orders menu.
+ * This Order was created in the store admin, from some of the admins (merchants).
  *
  * @global type $wp
  */
 function nuvei_user_orders() {
+    Nuvei_Logger::write('nuvei_user_orders()');
+    
 	global $wp;
+    global $wc_nuvei;
 
 	$order     = wc_get_order( $wp->query_vars['order-pay'] );
 	$order_key = $order->get_order_key();
-
-	// check for 'sc' also, because of the older Orders
-	if ( ! in_array( $order->get_payment_method(), array( NUVEI_GATEWAY_NAME, 'sc' ) ) ) {
-		return;
-	}
+    
+	// check if the Order belongs to Nuvei
+//	if ( ! in_array( $order->get_payment_method(), array( NUVEI_GATEWAY_NAME, 'sc' ) ) ) {
+//        Nuvei_Logger::write($order->get_payment_method(), 'This is not Nuvei order.');
+//		return;
+//	}
 
 	if ( Nuvei_Http::get_param( 'key' ) != $order_key ) {
+        Nuvei_Logger::write(
+            [
+                'param key' => Nuvei_Http::get_param( 'key' ),
+                '$order_key' => $order_key
+            ],
+            'Order key problem.'
+        );
 		return;
 	}
 
-	$prods_ids = array();
-
-	foreach ( $order->get_items() as $data ) {
-		$prods_ids[] = $data->get_product_id();
-	}
+//	$prods_ids = array();
+//
+//	foreach ( $order->get_items() as $data ) {
+//		$prods_ids[] = $data->get_product_id();
+//	}
+    
+    $checkout_data = $wc_nuvei->call_checkout(false, true, $wp->query_vars['order-pay']);
 
 	echo '<script>'
-		. 'var scProductsIdsToReorder = ' . wp_kses_post( wp_json_encode( $prods_ids ) ) . ';'
-		. 'scOnPayOrderPage();'
+//		. 'var scProductsIdsToReorder = ' . wp_kses_post( wp_json_encode( $prods_ids ) ) . ';'
+        . 'var nuveiCheckoutSdkParams = ' . wp_kses_post( wp_json_encode( $checkout_data ) ) . ';'
+//		. 'scOnPayOrderPage();'
 	. '</script>';
 }
 
