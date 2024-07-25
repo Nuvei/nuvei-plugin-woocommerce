@@ -1,5 +1,11 @@
 # WooCommerce Extension Changelog
 
+# 3.1.0
+```
+    * Added custom hook 'nuvei_pfwc_after_rebilling_payment' at the end of DMN Rebilling payment logic.
+    * Fixed the problem when the merchant create an order from the admin, and the client try to pay for it from the Store.
+```
+
 # 3.0.3
 ```
     * Fixed the problem when a Guest user come for the first time on Blocks Checkout and get "Unexpected error" message.

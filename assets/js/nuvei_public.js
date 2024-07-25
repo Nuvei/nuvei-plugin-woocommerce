@@ -1,4 +1,5 @@
-var nuveiCheckoutSdkParams = {};
+var nuveiCheckoutSdkParams      = {};
+var nuveiCheckoutImplementation = {}; // shortcode, blocks or order-pay
 
 /**
  * An object to holds in it checkout-blocks methods.
@@ -17,7 +18,6 @@ var nuveiCheckoutBlocks = {
         try {
             console.log(jQuery('body #nuvei_checkout_container').length);
             
-            // place Checkout container out of the forms START
             // if #nuvei_checkout_container does not exists - create it.
             if(jQuery('body #nuvei_checkout_container').length == 0) {
                 jQuery('div.wp-block-woocommerce-checkout')
@@ -38,12 +38,6 @@ var nuveiCheckoutBlocks = {
                 jQuery('form.wc-block-components-form')
                     .append('<input id="nuvei_session_token" type="hidden" name="nuvei_session_token" value="" />');
             }
-            // place Checkout container out of the forms END
-            
-//            jQuery('input[name=radio-control-wc-payment-method-options]').on('change', function() {
-////                nuveiCheckoutBlocks.changePaymentBtn(jQuery(this).val());
-//                console.log(jQuery(this).val());
-//            });
         }
         catch(_e) {
             console.log('WC blocks logic fail.');
@@ -183,16 +177,19 @@ function nuveiAfterSdkResponse(resp) {
 		jQuery('#nuvei_transaction_id').val(resp.transactionId);
         jQuery('#nuvei_checkout_container').html('<img class="nuvei_loader" src="' + scTrans.loaderUrl + '" />');
         
-        // short-code checkout
-        if (typeof wc == 'undefined') {
-            jQuery('form.checkout').trigger('submit');
+        switch(nuveiCheckoutImplementation.name) {
+            case 'shortcode':
+                jQuery('form.checkout').trigger('submit');
+                return;
+                
+            case 'blocks':
+                jQuery('.wc-block-components-checkout-place-order-button').trigger('click');
+                return;
+                
+            case 'order-pay':
+                jQuery('#place_order').trigger('click');
+                return;
         }
-        // blocks checkout
-        else {
-            jQuery('.wc-block-components-checkout-place-order-button').trigger('click');
-        }
-
-		return;
 	}
 	
 	if (resp.result == 'DECLINED') {
@@ -243,8 +240,13 @@ function showNuveiCheckout(_params) {
         nuveiCheckoutSdkParams.pmWhitelist  = ['cc_card'];
     }
 	
-	nuveiCheckoutSdkParams.prePayment	= nuveiPrePayment;
-	nuveiCheckoutSdkParams.onResult		= nuveiAfterSdkResponse;
+    if (nuveiCheckoutImplementation 
+        && nuveiCheckoutImplementation.hasOwnProperty('name')
+        && 'order-pay' !== nuveiCheckoutImplementation.name) {
+        nuveiCheckoutSdkParams.prePayment = nuveiPrePayment;
+    }
+	
+    nuveiCheckoutSdkParams.onResult = nuveiAfterSdkResponse;
 	
 	simplyConnect(nuveiCheckoutSdkParams);
 	
@@ -352,7 +354,7 @@ function nuveiWcShortcode() {
                 );
         }
 
-        // id nuvei inputs doee not exists - creat them
+        // if nuvei inputs doesnot exists - creat them
         if(jQuery('.woocommerce #nuvei_transaction_id').length == 0) {
             jQuery('form.woocommerce-checkout')
                 .append('<input id="nuvei_transaction_id" type="hidden" name="nuvei_transaction_id" value="" />');
@@ -373,21 +375,53 @@ function nuveiWcShortcode() {
     }
 }
 
+function nuveiPayForExistingOrder() {
+    console.log('nuveiPayForExistingOrder');
+    
+    // place Checkout container
+    // if #nuvei_checkout_container does not exists - create it.
+    if(jQuery('form#order_review #nuvei_checkout_container').length == 0) {
+        jQuery('form#order_review')	
+            .before('<div id="nuvei_checkout_errors"></div>');
+
+        jQuery('form#order_review .payment_box.payment_method_nuvei').append(
+            '<div id="nuvei_checkout_container" style="display: none;">'
+                + '<div id="nuvei_checkout">Loading...</div>'
+            + '</div>'
+        );
+    }
+
+    // if nuvei inputs does not exists - creat them
+    if(jQuery('form#order_review #nuvei_transaction_id').length == 0) {
+        jQuery('form#order_review')
+            .append('<input id="nuvei_transaction_id" type="hidden" name="nuvei_transaction_id" value="" />');
+    }
+
+    showNuveiCheckout();
+
+    // set event on Place order button
+    jQuery('input[name=payment_method]').on('change', function() {
+        var _self = jQuery(this);
+
+        if(_self.val() == scTrans.paymentGatewayName) {
+            jQuery('#place_order').hide();
+        }
+        else {
+            jQuery('#place_order').show();
+        }
+    });
+    
+    // hide Place order button if need to
+    if (jQuery('input[name=payment_method]').val() == scTrans.paymentGatewayName) {
+        jQuery('#place_order').hide();
+    }
+}
+
 jQuery(function() {
 	if('no' === scTrans.isPluginActive) {
 		return;
 	}
     
-    // add Simply Connect to the page
-//    let nuveiSdkScript = '<script src="'+ scTrans.simplyConnectUrl +'" id="nuvei-simply-connect-js"></script>';
-//    
-//    if (jQuery('#wc-checkout-js').length > 0) {
-//        jQuery('#wc-checkout-js').before(nuveiSdkScript);
-//    }
-//    else if (jQuery('#wc-blocks-checkout-js').length > 0) {
-//        jQuery('#wc-blocks-checkout-js').before(nuveiSdkScript);
-//    }
-	
     // Multistep checkout does not support WC Blocks
 	// when on multistep checkout -> Checkout SDK view, someone click on previous/next button
 	jQuery('body').on('click', '#wpmc-prev', function(e) {
@@ -409,14 +443,32 @@ jQuery(function() {
 // document ready function END
 
 window.onload = function() {
-    // loocks like this object is available only for checkout blocks
-    if (typeof wc == 'object') {
-        console.log('blocks checkout');
+    // search for WC Shortcode form
+    if (jQuery('form.woocommerce-checkout').length > 0) {
+        nuveiCheckoutImplementation.name = 'shortcode';
         
+        Object.freeze(nuveiCheckoutImplementation);
+        nuveiWcShortcode();
+    }
+    // search for WC Blocks
+    else if (jQuery('div.wp-block-woocommerce-checkout').length > 0) {
+        nuveiCheckoutImplementation.name = 'blocks';
+        
+        Object.freeze(nuveiCheckoutImplementation);
         nuveiCheckoutBlocks.prepareNuveiComponents();
         nuveiCheckoutBlocks.changePaymentBtn();
     }
-    else { // Classic Checkout
-        nuveiWcShortcode();
+    // pay for an order created from the admin
+    else if (jQuery('form#order_review').length > 0
+        && jQuery('button#place_order').length > 0
+    ) {
+        nuveiCheckoutImplementation.name = 'order-pay';
+        
+        Object.freeze(nuveiCheckoutImplementation);
+        nuveiPayForExistingOrder();
     }
+    else {
+       console.log('No Checkout container found.');
+    }
+    
 }

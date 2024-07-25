@@ -53,16 +53,6 @@ final class Nuvei_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 			'icon'          => $this->plugin_dir_url . 'assets/icons/nuvei.png',
 		);
 
-		// put this check or call_checkout will be called in the Theme Editor in the admin and plugin will
-		// crash beacause of the missing WooCommerce Session object :)
-//		if ( ! is_admin() && is_checkout() ) {
-//			global $wc_nuvei;
-//
-//			$settings['checkoutParams'] = $wc_nuvei->call_checkout( false, true );
-//		}
-        
-        Nuvei_Logger::write($settings, 'The settings we pass to the Blocks Checkout');
-
 		return $settings;
 	}
 }

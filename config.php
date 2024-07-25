@@ -17,8 +17,6 @@ const NUVEI_WC_RENEWAL          = '_wcsRenewal';
 const NUVEI_TRANSACTIONS        = '_nuveiTransactions';
 const NUVEI_ORDER_SUBSCR        = '_nuveiSubscr';
 const NUVEI_DCC_DATA            = '_nuveiDccData';
-
-//const NUVEI_CUID_POSTFIX        = '_sandbox_apm'; // postfix for Sandbox APM payments
 const NUVEI_PREV_TRANS_STATUS   = '_nuveiPrevTransactionStatus';
 
 const NUVEI_SOURCE_APPLICATION  = 'WOOCOMMERCE_PLUGIN';

@@ -8,10 +8,10 @@ PHP:
 
 Wordpress: 
   - Minimum v4.7.
-  - Tested up to v6.5.5.
+  - Tested up to v6.6.1.
 
 WooCommerce: 
-  - Minimum v 3.0.
+  - Minimum v3.0.
   - Tested up to v9.1.2.
 
 Merchant configuration: 
