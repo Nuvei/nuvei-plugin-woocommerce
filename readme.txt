@@ -3,7 +3,7 @@
 Contributors: miroslavnuvei
 Requires at least: 4.7
 Tested up to: 6.6.1
-Stable tag: 3.1.0
+Stable tag: 3.1.1
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -26,6 +26,9 @@ Right payment methods at the checkout page can bring you global reach, help you 
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.1.1 =
+* Fix for Admin generated Orders, when the store use WC Blocks.
 
 = 3.1.0 =
 * Added custom hook 'nuvei_pfwc_after_rebilling_payment' at the end of DMN Rebilling payment logic.

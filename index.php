@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.1.0
+ * Version: 3.1.1
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
@@ -816,19 +816,14 @@ function nuvei_change_title_order_received( $title, $id ) {
  */
 function nuvei_user_orders() {
     Nuvei_Logger::write('nuvei_user_orders()');
-    
-	global $wp;
+	
+    global $wp;
     global $wc_nuvei;
 
 	$order     = wc_get_order( $wp->query_vars['order-pay'] );
 	$order_key = $order->get_order_key();
     
-	// check if the Order belongs to Nuvei
-//	if ( ! in_array( $order->get_payment_method(), array( NUVEI_GATEWAY_NAME, 'sc' ) ) ) {
-//        Nuvei_Logger::write($order->get_payment_method(), 'This is not Nuvei order.');
-//		return;
-//	}
-
+    // error
 	if ( Nuvei_Http::get_param( 'key' ) != $order_key ) {
         Nuvei_Logger::write(
             [
@@ -840,18 +835,12 @@ function nuvei_user_orders() {
 		return;
 	}
 
-//	$prods_ids = array();
-//
-//	foreach ( $order->get_items() as $data ) {
-//		$prods_ids[] = $data->get_product_id();
-//	}
-    
     $checkout_data = $wc_nuvei->call_checkout(false, true, $wp->query_vars['order-pay']);
 
 	echo '<script>'
-//		. 'var scProductsIdsToReorder = ' . wp_kses_post( wp_json_encode( $prods_ids ) ) . ';'
-        . 'var nuveiCheckoutSdkParams = ' . wp_kses_post( wp_json_encode( $checkout_data ) ) . ';'
-//		. 'scOnPayOrderPage();'
+        . 'nuveiCheckoutImplementation.name = "order-pay";'
+        . 'Object.freeze(nuveiCheckoutImplementation);'
+        . 'jQuery(function() { nuveiPayForExistingOrder('. wp_kses_post( wp_json_encode( $checkout_data ) ) .'); });'
 	. '</script>';
 }
 

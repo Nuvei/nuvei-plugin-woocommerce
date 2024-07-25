@@ -1,5 +1,6 @@
 var nuveiCheckoutSdkParams      = {};
 var nuveiCheckoutImplementation = {}; // shortcode, blocks or order-pay
+var nuveiIsCheckoutLoaded       = false;
 
 /**
  * An object to holds in it checkout-blocks methods.
@@ -220,13 +221,16 @@ function showNuveiCheckout(_params) {
 	}
     
     // on error
-    if (!nuveiCheckoutSdkParams.hasOwnProperty('sessionToken')
+    if (!nuveiCheckoutSdkParams
+        || !nuveiCheckoutSdkParams.hasOwnProperty('sessionToken')
         || ( nuveiCheckoutSdkParams.hasOwnProperty('status') 
             && 'error' == nuveiCheckoutSdkParams.status)
     ) {
         var error = '';
         
-        if (nuveiCheckoutSdkParams.hasOwnProperty('messages')) {
+        if (nuveiCheckoutSdkParams
+            && nuveiCheckoutSdkParams.hasOwnProperty('messages')
+        ) {
             error = nuveiCheckoutSdkParams.messages;
         }
 
@@ -375,7 +379,7 @@ function nuveiWcShortcode() {
     }
 }
 
-function nuveiPayForExistingOrder() {
+function nuveiPayForExistingOrder(_params) {
     console.log('nuveiPayForExistingOrder');
     
     // place Checkout container
@@ -397,8 +401,6 @@ function nuveiPayForExistingOrder() {
             .append('<input id="nuvei_transaction_id" type="hidden" name="nuvei_transaction_id" value="" />');
     }
 
-    showNuveiCheckout();
-
     // set event on Place order button
     jQuery('input[name=payment_method]').on('change', function() {
         var _self = jQuery(this);
@@ -409,11 +411,21 @@ function nuveiPayForExistingOrder() {
         else {
             jQuery('#place_order').show();
         }
+        
+        if (!nuveiIsCheckoutLoaded) {
+            nuveiIsCheckoutLoaded = true;
+            showNuveiCheckout(_params);
+        }
     });
     
     // hide Place order button if need to
     if (jQuery('input[name=payment_method]').val() == scTrans.paymentGatewayName) {
         jQuery('#place_order').hide();
+        
+        if (!nuveiIsCheckoutLoaded) {
+            nuveiIsCheckoutLoaded = true;
+            showNuveiCheckout(_params);
+        }
     }
 }
 
@@ -458,17 +470,8 @@ window.onload = function() {
         nuveiCheckoutBlocks.prepareNuveiComponents();
         nuveiCheckoutBlocks.changePaymentBtn();
     }
-    // pay for an order created from the admin
-    else if (jQuery('form#order_review').length > 0
-        && jQuery('button#place_order').length > 0
-    ) {
-        nuveiCheckoutImplementation.name = 'order-pay';
-        
-        Object.freeze(nuveiCheckoutImplementation);
-        nuveiPayForExistingOrder();
-    }
     else {
-       console.log('No Checkout container found.');
+       console.log('No Checkout container found or page still loading.');
     }
     
 }

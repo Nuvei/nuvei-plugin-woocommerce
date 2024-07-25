@@ -1,5 +1,10 @@
 # WooCommerce Extension Changelog
 
+# 3.1.1
+```
+    * Fix for Admin generated Orders, when the store use WC Blocks.
+```
+
 # 3.1.0
 ```
     * Added custom hook 'nuvei_pfwc_after_rebilling_payment' at the end of DMN Rebilling payment logic.
