@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A helper class to provide filtered $_REQUEST or array parameters by its key.
  */
-class Nuvei_Http {
+class Nuvei_Pfw_Http {
 
 	/**
 	 * Get request parameter by key
@@ -21,7 +21,7 @@ class Nuvei_Http {
 		if ( ! empty( $parent ) && is_array( $parent ) ) {
 			$arr = $parent;
 		} else {
-            $helper = new Nuvei_Helper();
+            $helper = new Nuvei_Pfw_Helper();
 			$arr    = $helper->helper_sanitize_assoc_array();
 		}
 

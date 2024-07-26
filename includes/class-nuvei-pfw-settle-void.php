@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A class for Settle and Void requests.
  */
-class Nuvei_Settle_Void extends Nuvei_Request {
+class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 
 	/**
 	 * Main method of the class.
@@ -21,7 +21,7 @@ class Nuvei_Settle_Void extends Nuvei_Request {
 			|| empty( $data['action'] )
 			|| empty( $data['method'] )
 		) {
-			Nuvei_Logger::write( $data, 'Nuvei_Settle_Void error missing mandatoriy parameters.' );
+			Nuvei_Pfw_Logger::write( $data, 'Nuvei_Pfw_Settle_Void error missing mandatoriy parameters.' );
 			return false;
 		}
 
@@ -31,7 +31,7 @@ class Nuvei_Settle_Void extends Nuvei_Request {
 
 		$curr       = get_woocommerce_currency();
 		$amount     = (string) $this->sc_order->get_total();
-		$notify_url = Nuvei_String::get_notify_url( $this->plugin_settings );
+		$notify_url = Nuvei_Pfw_String::get_notify_url( $this->plugin_settings );
 
 		if ( 'voidTransaction' == $data['method'] ) {
 			$last_tr_id = $this->get_tr_id( $data['order_id'], array( 'Settle', 'Sale', 'Auth' ) );

@@ -5,10 +5,10 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A class to work the DMNs.
  */
-class Nuvei_Notify_Url extends Nuvei_Request {
+class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 
 	public function process() {
-		Nuvei_Logger::write(
+		Nuvei_Pfw_Logger::write(
 			array(
                 //phpcs:ignore
 				'Request params'    => $this->sanitize_assoc_array(),
@@ -26,19 +26,19 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		# stop DMNs only on test mode
 		        exit(wp_json_encode('DMN was stopped, please run it manually!'));
 
-		if ( 'CARD_TOKENIZATION' == Nuvei_Http::get_param( 'type' ) ) {
+		if ( 'CARD_TOKENIZATION' == Nuvei_Pfw_Http::get_param( 'type' ) ) {
 			$msg = 'Tokenization DMN, waiting for the next one.';
 
-			Nuvei_Logger::write( $msg );
+			Nuvei_Pfw_Logger::write( $msg );
 			exit( esc_html( $msg ) );
 		}
 
-		$req_status = Nuvei_Http::get_request_status();
+		$req_status = Nuvei_Pfw_Http::get_request_status();
 
 		if ( 'pending' == strtolower( $req_status ) ) {
 			$msg = 'Pending DMN, waiting for the next.';
 
-			Nuvei_Logger::write( $msg );
+			Nuvei_Pfw_Logger::write( $msg );
 			exit( wp_json_encode( $msg ) );
 		}
 
@@ -48,20 +48,20 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		if ( ! $this->validate_checksum() ) {
 			$msg = 'DMN Error - Checksum validation problem!';
 
-			Nuvei_Logger::write( $msg );
+			Nuvei_Pfw_Logger::write( $msg );
 			exit( esc_html( $msg ) );
 		}
 
 		// santitized get variables
-		$client_unique_id       = Nuvei_Http::get_param( 'clientUniqueId' );
-		$merchant_unique_id     = Nuvei_Http::get_param( 'merchant_unique_id', 'int', false );
-		$transaction_type       = Nuvei_Http::get_param( 'transactionType' );
-		$order_id               = Nuvei_Http::get_param( 'order_id', 'int' );
-		$transaction_id         = Nuvei_Http::get_param( 'TransactionID', 'int', false );
-		$related_tr_id          = Nuvei_Http::get_param( 'relatedTransactionId', 'int' );
-		$dmn_type               = Nuvei_Http::get_param( 'dmnType' );
-		$client_request_id      = Nuvei_Http::get_param( 'clientRequestId' );
-		$total                  = Nuvei_Http::get_param( 'totalAmount', 'float' );
+		$client_unique_id       = Nuvei_Pfw_Http::get_param( 'clientUniqueId' );
+		$merchant_unique_id     = Nuvei_Pfw_Http::get_param( 'merchant_unique_id', 'int', false );
+		$transaction_type       = Nuvei_Pfw_Http::get_param( 'transactionType' );
+		$order_id               = Nuvei_Pfw_Http::get_param( 'order_id', 'int' );
+		$transaction_id         = Nuvei_Pfw_Http::get_param( 'TransactionID', 'int', false );
+		$related_tr_id          = Nuvei_Pfw_Http::get_param( 'relatedTransactionId', 'int' );
+		$dmn_type               = Nuvei_Pfw_Http::get_param( 'dmnType' );
+		$client_request_id      = Nuvei_Pfw_Http::get_param( 'clientRequestId' );
+		$total                  = Nuvei_Pfw_Http::get_param( 'totalAmount', 'float' );
 
 		// Subscription State DMN. We save Order here and exit.
 		if ( 'subscription' == $dmn_type ) {
@@ -97,7 +97,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			$this->process_refund_dmn( $related_tr_id, $transaction_type, $req_status );
 		}
 
-		Nuvei_Logger::write(
+		Nuvei_Pfw_Logger::write(
 			array(
 				'TransactionID'         => $transaction_id,
 				'relatedTransactionId'  => $related_tr_id,
@@ -126,11 +126,11 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	 * @return boolean
 	 */
 	private function validate_checksum() {
-		$adv_resp_checksum  = Nuvei_Http::get_param( 'advanceResponseChecksum' );
-		$responsechecksum   = Nuvei_Http::get_param( 'responsechecksum' );
+		$adv_resp_checksum  = Nuvei_Pfw_Http::get_param( 'advanceResponseChecksum' );
+		$responsechecksum   = Nuvei_Pfw_Http::get_param( 'responsechecksum' );
 
 		if ( empty( $adv_resp_checksum ) && empty( $responsechecksum ) ) {
-			Nuvei_Logger::write(
+			Nuvei_Pfw_Logger::write(
                 null, 
                 'advanceResponseChecksum and responsechecksum parameters are empty.', 
                 'CRITICAL'
@@ -143,12 +143,12 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		// advanceResponseChecksum case
 		if ( ! empty( $adv_resp_checksum ) ) {
 			$concat = $merchant_secret
-				. Nuvei_Http::get_param( 'totalAmount' )
-				. Nuvei_Http::get_param( 'currency' )
-				. Nuvei_Http::get_param( 'responseTimeStamp' )
-				. Nuvei_Http::get_param( 'PPP_TransactionID' )
-				. Nuvei_Http::get_request_status()
-				. Nuvei_Http::get_param( 'productId' );
+				. Nuvei_Pfw_Http::get_param( 'totalAmount' )
+				. Nuvei_Pfw_Http::get_param( 'currency' )
+				. Nuvei_Pfw_Http::get_param( 'responseTimeStamp' )
+				. Nuvei_Pfw_Http::get_param( 'PPP_TransactionID' )
+				. Nuvei_Pfw_Http::get_request_status()
+				. Nuvei_Pfw_Http::get_param( 'productId' );
 
 			$str = hash( $this->nuvei_gw->get_option( 'hash_type' ), $concat );
 
@@ -156,7 +156,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 				return true;
 			}
 
-			Nuvei_Logger::write( null, 'advanceResponseChecksum validation fail.', 'WARN' );
+			Nuvei_Pfw_Logger::write( null, 'advanceResponseChecksum validation fail.', 'WARN' );
 			return false;
 		}
 
@@ -192,7 +192,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 				$log_data['checksum']       = $checksum;
 			}
 
-			Nuvei_Logger::write( $log_data, 'responsechecksum validation fail.', 'WARN' );
+			Nuvei_Pfw_Logger::write( $log_data, 'responsechecksum validation fail.', 'WARN' );
 			return false;
 		}
 
@@ -208,7 +208,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	 * @return int
 	 */
 	private function search_order_by_dmn_data( $trans_id, $transaction_type = '' ) {
-		Nuvei_Logger::write( array( $trans_id, $transaction_type ), 'search_order_by_dmn_data' );
+		Nuvei_Pfw_Logger::write( array( $trans_id, $transaction_type ), 'search_order_by_dmn_data' );
 
 		// try to get Order ID by its meta key
 		$tries      = 0;
@@ -229,7 +229,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			// for Auth and Sale implement Auto-Void if more than 30 minutes passed and still no Order
 			$resp_code = $this->create_auto_void( $transaction_type );
 
-			Nuvei_Logger::write(
+			Nuvei_Pfw_Logger::write(
 				array(
 					'trans_id'      => $trans_id,
 					'order data'    => $res,
@@ -252,10 +252,10 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	 * @return int Return response code.
 	 */
 	private function create_auto_void( $transaction_type ) {
-		$order_request_time = Nuvei_Http::get_param( 'customField3', 'int' ); // time of create/update order
+		$order_request_time = Nuvei_Pfw_Http::get_param( 'customField3', 'int' ); // time of create/update order
 		$curr_time          = time();
 
-		Nuvei_Logger::write(
+		Nuvei_Pfw_Logger::write(
 			array(
 				'order_request_time'    => $order_request_time,
 				'transactionType'       => $transaction_type,
@@ -267,7 +267,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		# break Auto-Void process
 		// order time error
 		if ( 0 == $order_request_time || ! $order_request_time ) {
-			Nuvei_Logger::write(
+			Nuvei_Pfw_Logger::write(
 				null,
 				'There is problem with $order_request_time. End process.',
 				'WARINING'
@@ -276,12 +276,12 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		}
 
 		// not allowed transaction type error
-		$req_status = Nuvei_Http::get_request_status();
+		$req_status = Nuvei_Pfw_Http::get_request_status();
 
 		if ( ! in_array( $transaction_type, array( 'Auth', 'Sale' ), true )
 			|| 'approved' != strtolower( $req_status )
 		) {
-			Nuvei_Logger::write(
+			Nuvei_Pfw_Logger::write(
 				array(
 					'$transaction_type'  => $transaction_type,
 					'Status'            => $req_status,
@@ -293,29 +293,29 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 		// it is too early for Auto-Void
 		if ( $curr_time - $order_request_time <= 1800 ) {
-			Nuvei_Logger::write( "Let's wait one more DMN try." );
+			Nuvei_Pfw_Logger::write( "Let's wait one more DMN try." );
 			return 400; // lets wait more
 		}
 		# /break Auto-Void process
 
 		$nuvei_gw   = WC()->payment_gateways->payment_gateways()[ NUVEI_PFW_GATEWAY_NAME ];
-		$notify_url = Nuvei_String::get_notify_url(
+		$notify_url = Nuvei_Pfw_String::get_notify_url(
 			array(
 				'notify_url' => $nuvei_gw->get_option( 'notify_url' ),
 			)
 		);
 
 		$void_params    = array(
-			'clientUniqueId'        => $this->get_client_unique_id( Nuvei_Http::get_param( 'email' ) ),
-			'amount'                => (string) Nuvei_Http::get_param( 'totalAmount', 'float' ),
-			'currency'              => Nuvei_Http::get_param( 'currency' ),
-			'relatedTransactionId'  => Nuvei_Http::get_param( 'TransactionID', 'int' ),
+			'clientUniqueId'        => $this->get_client_unique_id( Nuvei_Pfw_Http::get_param( 'email' ) ),
+			'amount'                => (string) Nuvei_Pfw_Http::get_param( 'totalAmount', 'float' ),
+			'currency'              => Nuvei_Pfw_Http::get_param( 'currency' ),
+			'relatedTransactionId'  => Nuvei_Pfw_Http::get_param( 'TransactionID', 'int' ),
 			'url'                   => $notify_url,
 			'urlDetails'            => array( 'notificationUrl' => $notify_url ),
 			'customData'            => 'This is Auto-Void transaction',
 		);
 
-		//        Nuvei_Logger::write(
+		//        Nuvei_Pfw_Logger::write(
 		//            [$this->request_base_params, $void_params],
 		//            'Try to Void a transaction by not existing WC Order.'
 		//        );
@@ -327,13 +327,13 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			&& 'APPROVED' == $resp['transactionStatus']
 			&& ! empty( $resp['transactionId'] )
 		) {
-			Nuvei_Logger::write( 'Auto-Void request approved.' );
+			Nuvei_Pfw_Logger::write( 'Auto-Void request approved.' );
 
 			http_response_code( 200 );
 			exit( 'The searched Order does not exists, a Void request was made for this Transacrion.' );
 		}
 
-		Nuvei_Logger::write( $resp, 'Problem with Auto-Void request.' );
+		Nuvei_Pfw_Logger::write( $resp, 'Problem with Auto-Void request.' );
 
 		return 200; // the next time the request will be same, we do not expect for approve
 	}
@@ -355,7 +355,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 					. 'WHERE meta_key = %s '
 						. 'AND meta_value = %s ;',
 				NUVEI_PFW_CLIENT_UNIQUE_ID,
-				Nuvei_Http::get_param( 'clientUniqueId' )
+				Nuvei_Pfw_Http::get_param( 'clientUniqueId' )
 			);
 
             // phpcs:ignore
@@ -372,7 +372,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 					. 'WHERE meta_key = %s '
 						. 'AND meta_value = %s ;',
 				NUVEI_PFW_CLIENT_UNIQUE_ID,
-				Nuvei_Http::get_param( 'clientUniqueId' )
+				Nuvei_Pfw_Http::get_param( 'clientUniqueId' )
 			);
 
             // phpcs:ignore
@@ -431,15 +431,15 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	 * @param float     $order_total Pass the Order Total only for Auth.
 	 */
 	private function subscription_start( $transaction_type, $order_id, $order_total = null ) {
-		Nuvei_Logger::write( 'Try to start subscription.' );
+		Nuvei_Pfw_Logger::write( 'Try to start subscription.' );
 
 		if ( $this->sc_order->get_meta( NUVEI_PFW_WC_SUBSCR ) ) {
-			Nuvei_Logger::write( 'WC Subscription.' );
+			Nuvei_Pfw_Logger::write( 'WC Subscription.' );
 			return;
 		}
 
 		if ( ! in_array( $transaction_type, array( 'Settle', 'Sale', 'Auth' ) ) ) {
-			Nuvei_Logger::write(
+			Nuvei_Pfw_Logger::write(
 				array( '$transaction_type'  => $transaction_type ),
 				'Can not start Subscription.'
 			);
@@ -447,7 +447,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		}
 
 		if ( 'Auth' == $transaction_type && 0 != (float) $order_total ) {
-			Nuvei_Logger::write( $order_total, 'We allow Rebilling for Auth only when the Order total is 0.' );
+			Nuvei_Pfw_Logger::write( $order_total, 'We allow Rebilling for Auth only when the Order total is 0.' );
 			return;
 		}
 
@@ -455,30 +455,30 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		$order_all_meta = $this->sc_order->get_meta_data();
 
 		if ( ! is_array( $order_all_meta ) || empty( $order_all_meta ) ) {
-			Nuvei_Logger::write( 'Order meta is not array or is empty.' );
+			Nuvei_Pfw_Logger::write( 'Order meta is not array or is empty.' );
 			return;
 		}
 
 		$all_subscr = $this->get_order_rebiling_details( $order_all_meta );
 
-		Nuvei_Logger::write( $all_subscr, '$order_all_meta' );
+		Nuvei_Pfw_Logger::write( $all_subscr, '$order_all_meta' );
 
 		// create subscription request for each subscription record
 		foreach ( $all_subscr as $data ) {
 			// this key is not for subscription
 			if ( empty( $data['subs_id'] ) ) {
-				Nuvei_Logger::write( $data, 'This is not a subscription key' );
+				Nuvei_Pfw_Logger::write( $data, 'This is not a subscription key' );
 				continue;
 			}
 
 			if ( empty( $data['subs_data'] ) || ! is_array( $data['subs_data'] ) ) {
-				Nuvei_Logger::write( $data, 'There is a problem with the DMN Product Payment Plan data:' );
+				Nuvei_Pfw_Logger::write( $data, 'There is a problem with the DMN Product Payment Plan data:' );
 				continue;
 			}
 
 			$data['subs_data']['clientRequestId']   = $order_id . $data['subs_id'];
 
-			$ns_obj = new Nuvei_Subscription();
+			$ns_obj = new Nuvei_Pfw_Subscription();
 			$resp   = $ns_obj->process( $data['subs_data'] );
 
 			// On Error
@@ -514,12 +514,12 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	 */
 	private function subscription_cancel( $transaction_type, $order_id, $req_status ) {
 		if ( 'Void' != $transaction_type ) {
-			Nuvei_Logger::write( $transaction_type, 'Only Void can cancel a subscription.' );
+			Nuvei_Pfw_Logger::write( $transaction_type, 'Only Void can cancel a subscription.' );
 			return;
 		}
 
 		if ( 'approved' != strtolower( $req_status ) ) {
-			Nuvei_Logger::write( $transaction_type, 'The void was not approved.' );
+			Nuvei_Pfw_Logger::write( $transaction_type, 'The void was not approved.' );
 			return;
 		}
 
@@ -527,14 +527,14 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		$subscr_list    = $this->get_order_rebiling_details( $order_all_meta );
 
 		foreach ( $subscr_list as $data ) {
-			Nuvei_Logger::write( $data );
+			Nuvei_Pfw_Logger::write( $data );
 
 			if ( empty( $data['subs_data']['state'] ) || 'active' != $data['subs_data']['state'] ) {
-				Nuvei_Logger::write( 'The subscription is not Active.' );
+				Nuvei_Pfw_Logger::write( 'The subscription is not Active.' );
 				continue;
 			}
 
-			$ncs_obj = new Nuvei_Subscription_Cancel();
+			$ncs_obj = new Nuvei_Pfw_Subscription_Cancel();
 			$ncs_obj->process( array( 'subscriptionId' => $data['subs_data']['subscr_id'] ) );
 		}
 	}
@@ -548,12 +548,12 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	 * @param int $refund_id The ID of the Refund into WC
 	 */
 	private function change_order_status( $order_id, $req_status, $transaction_type, $refund_id = null ) {
-		Nuvei_Logger::write(
+		Nuvei_Pfw_Logger::write(
 			'Order ' . $order_id . ' was ' . $req_status,
 			'Nuvei change_order_status()'
 		);
 
-		$dmn_amount = Nuvei_Http::get_param( 'totalAmount', 'float' );
+		$dmn_amount = Nuvei_Pfw_Http::get_param( 'totalAmount', 'float' );
 
         // phpcs:ignore
 		$msg_transaction = '<b>' . $transaction_type . ' </b> ' 
@@ -561,18 +561,18 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 		$gw_data = $msg_transaction
 			. __( 'Response status: ', 'nuvei-payments-for-woocommerce' ) . '<b>' . $req_status . '</b>.<br/>'
-			. __( 'Payment Method: ', 'nuvei-payments-for-woocommerce' ) . Nuvei_Http::get_param( 'payment_method' ) . '.<br/>'
-			. __( 'Transaction ID: ', 'nuvei-payments-for-woocommerce' ) . Nuvei_Http::get_param( 'TransactionID', 'int' ) . '.<br/>'
+			. __( 'Payment Method: ', 'nuvei-payments-for-woocommerce' ) . Nuvei_Pfw_Http::get_param( 'payment_method' ) . '.<br/>'
+			. __( 'Transaction ID: ', 'nuvei-payments-for-woocommerce' ) . Nuvei_Pfw_Http::get_param( 'TransactionID', 'int' ) . '.<br/>'
 			. __( 'Related Transaction ID: ', 'nuvei-payments-for-woocommerce' )
-				. Nuvei_Http::get_param( 'relatedTransactionId', 'int' ) . '.<br/>'
+				. Nuvei_Pfw_Http::get_param( 'relatedTransactionId', 'int' ) . '.<br/>'
 			. __( 'Transaction Amount: ', 'nuvei-payments-for-woocommerce' )
 				. number_format( $dmn_amount, 2, '.', '' )
-				. ' ' . Nuvei_Http::get_param( 'currency' ) . '.';
+				. ' ' . Nuvei_Pfw_Http::get_param( 'currency' ) . '.';
 
 		$message = '';
 		$status  = $this->sc_order->get_status();
 
-		Nuvei_Logger::write( array( $status, $req_status, $transaction_type ), 'order status' );
+		Nuvei_Pfw_Logger::write( array( $status, $req_status, $transaction_type ), 'order status' );
 
 		switch ( $req_status ) {
 			case 'CANCELED':
@@ -629,7 +629,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 					$this->sc_order->payment_complete( $order_id );
 
-					Nuvei_Logger::write( $status, 'Settle/Sale status' );
+					Nuvei_Pfw_Logger::write( $status, 'Settle/Sale status' );
 				}
 
 				// check for correct amount
@@ -637,40 +637,40 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 					$set_amount_warning = false;
 					$set_curr_warning   = false;
 
-					Nuvei_Logger::write(
+					Nuvei_Pfw_Logger::write(
 						array(
 							'$order_amount'     => $order_amount,
 							'$dmn_amount'       => $dmn_amount,
-							'customField1'      => Nuvei_Http::get_param( 'customField1' ),
+							'customField1'      => Nuvei_Pfw_Http::get_param( 'customField1' ),
 							'order currency'    => $this->sc_order->get_currency(),
-							'param currency'    => Nuvei_Http::get_param( 'currency' ),
-							'customField2'      => Nuvei_Http::get_param( 'customField2' ),
+							'param currency'    => Nuvei_Pfw_Http::get_param( 'currency' ),
+							'customField2'      => Nuvei_Pfw_Http::get_param( 'customField2' ),
 						),
 						'Check for fraud order.'
 					);
 
 					// check for correct amount
 					if ( $order_amount != $dmn_amount
-						&& Nuvei_Http::get_param( 'customField1' ) != $order_amount
+						&& Nuvei_Pfw_Http::get_param( 'customField1' ) != $order_amount
 					) {
 						$set_amount_warning = true;
-						Nuvei_Logger::write( 'Amount warning!' );
+						Nuvei_Pfw_Logger::write( 'Amount warning!' );
 					}
 
 					// check for correct currency
-					if ( $this->sc_order->get_currency() !== Nuvei_Http::get_param( 'currency' )
-						&& $this->sc_order->get_currency() !== Nuvei_Http::get_param( 'customField2' )
+					if ( $this->sc_order->get_currency() !== Nuvei_Pfw_Http::get_param( 'currency' )
+						&& $this->sc_order->get_currency() !== Nuvei_Pfw_Http::get_param( 'customField2' )
 					) {
 						$set_curr_warning = true;
-						Nuvei_Logger::write( 'Currency warning!' );
+						Nuvei_Pfw_Logger::write( 'Currency warning!' );
 					}
 
 					// when currency is same, check the amount again, in case of some kind partial transaction
-					if ( $this->sc_order->get_currency() === Nuvei_Http::get_param( 'currency' )
+					if ( $this->sc_order->get_currency() === Nuvei_Pfw_Http::get_param( 'currency' )
 						&& $order_amount != $dmn_amount
 					) {
 						$set_amount_warning = true;
-						Nuvei_Logger::write( 'Amount warning when currency is same!' );
+						Nuvei_Pfw_Logger::write( 'Amount warning when currency is same!' );
 					}
 
 					$this->sc_order->update_meta_data(
@@ -687,12 +687,12 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			case 'ERROR':
 			case 'DECLINED':
 			case 'FAIL':
-				$message    = Nuvei_Http::get_param( 'message' );
-				$err_code   = Nuvei_Http::get_param( 'ErrCode' );
-				$reason     = Nuvei_Http::get_param( 'Reason' );
+				$message    = Nuvei_Pfw_Http::get_param( 'message' );
+				$err_code   = Nuvei_Pfw_Http::get_param( 'ErrCode' );
+				$reason     = Nuvei_Pfw_Http::get_param( 'Reason' );
 
 				if ( empty( $reason ) ) {
-					$reason = Nuvei_Http::get_param( 'reason' );
+					$reason = Nuvei_Pfw_Http::get_param( 'reason' );
 				}
 
 				$message = $gw_data . '<br/>'
@@ -726,7 +726,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 		$this->sc_order->update_status( $status );
 
-		Nuvei_Logger::write(
+		Nuvei_Pfw_Logger::write(
 			array(
 				'$order_id' => $order_id,
 				'$status'   => $status,
@@ -759,17 +759,17 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	}
 
 	private function check_for_repeating_dmn() {
-		Nuvei_Logger::write( 'check_for_repeating_dmn' );
+		Nuvei_Pfw_Logger::write( 'check_for_repeating_dmn' );
 
 		$order_data = $this->sc_order->get_meta( NUVEI_PFW_TRANSACTIONS );
-		$dmn_tr_id  = Nuvei_Http::get_param( 'TransactionID', 'int' );
-		$dmn_status = Nuvei_Http::get_request_status();
+		$dmn_tr_id  = Nuvei_Pfw_Http::get_param( 'TransactionID', 'int' );
+		$dmn_status = Nuvei_Pfw_Http::get_request_status();
 
 		if ( ! empty( $order_data[ $dmn_tr_id ] )
 			&& ! empty( $order_data[ $dmn_tr_id ]['status'] )
 			&& $dmn_status == $order_data[ $dmn_tr_id ]['status']
 		) {
-			Nuvei_Logger::write( 'Repating DMN message detected. Stop the process.' );
+			Nuvei_Pfw_Logger::write( 'Repating DMN message detected. Stop the process.' );
 			exit( 'This DMN is already received.' );
 		}
 
@@ -783,13 +783,13 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	 * @return void
 	 */
 	private function process_subscription_dmn( $client_request_id ) {
-		$subscription_state = strtolower( Nuvei_Http::get_param( 'subscriptionState' ) );
-		$subscription_id    = Nuvei_Http::get_param( 'subscriptionId', 'int' );
-		$plan_id            = Nuvei_Http::get_param( 'planId', 'int' );
+		$subscription_state = strtolower( Nuvei_Pfw_Http::get_param( 'subscriptionState' ) );
+		$subscription_id    = Nuvei_Pfw_Http::get_param( 'subscriptionId', 'int' );
+		$plan_id            = Nuvei_Pfw_Http::get_param( 'planId', 'int' );
 		$cri_parts          = explode( '_', $client_request_id );
 
 		if ( empty( $cri_parts ) || empty( $cri_parts[0] ) || ! is_numeric( $cri_parts[0] ) ) {
-			Nuvei_Logger::write( $cri_parts, 'DMN Subscription Error with Client Request Id parts:' );
+			Nuvei_Pfw_Logger::write( $cri_parts, 'DMN Subscription Error with Client Request Id parts:' );
 			exit( 'DMN Subscription Error with Client Request Id parts.' );
 		}
 
@@ -801,7 +801,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		$this->is_order_valid( (int) $cri_parts[0] );
 
 		$subsc_data = $this->sc_order->get_meta( $subs_data_key );
-		Nuvei_Logger::write( array( $subs_data_key, $subsc_data ), '$subs_data_key $subsc_data' );
+		Nuvei_Pfw_Logger::write( array( $subs_data_key, $subsc_data ), '$subs_data_key $subsc_data' );
 
 		if ( empty( $subsc_data ) ) {
 			$subsc_data = array();
@@ -813,7 +813,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 					. '</b>.<br/><b>' . __( 'Subscription ID:', 'nuvei-payments-for-woocommerce' )
 					. '</b> ' . $subscription_id . '<br/><b>'
 					. __( 'Plan ID:', 'nuvei-payments-for-woocommerce' ) . '</b> '
-					. Nuvei_Http::get_param( 'planId', 'int' );
+					. Nuvei_Pfw_Http::get_param( 'planId', 'int' );
 			} elseif ( 'inactive' == $subscription_state ) {
 				$msg = '<b>' . __( 'Subscription is Inactive', 'nuvei-payments-for-woocommerce' )
 					. '</b>.<br/><b>' . __( 'Subscription ID:', 'nuvei-payments-for-woocommerce' ) . '</b> '
@@ -851,13 +851,13 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	 * @return void
 	 */
 	private function process_subscription_payment_dmn( $client_request_id, $req_status, $transaction_id ) {
-		$total          = Nuvei_Http::get_param( 'totalAmount', 'float' );
+		$total          = Nuvei_Pfw_Http::get_param( 'totalAmount', 'float' );
 		$cri_parts      = explode( '_', $client_request_id );
-		$subscription_id = Nuvei_Http::get_param( 'subscriptionId', 'int' );
-		$plan_id         = Nuvei_Http::get_param( 'planId', 'int' );
+		$subscription_id = Nuvei_Pfw_Http::get_param( 'subscriptionId', 'int' );
+		$plan_id         = Nuvei_Pfw_Http::get_param( 'planId', 'int' );
 
 		if ( empty( $cri_parts ) || empty( $cri_parts[0] ) || ! is_numeric( $cri_parts[0] ) ) {
-			Nuvei_Logger::write( $cri_parts, 'DMN Subscription Payment Error with Client Request Id parts:' );
+			Nuvei_Pfw_Logger::write( $cri_parts, 'DMN Subscription Payment Error with Client Request Id parts:' );
 			exit( 'DMN Subscription Payment Error with Client Request Id parts.' );
 		}
 
@@ -880,7 +880,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			. '<br/><b>' . __( 'Amount:', 'nuvei-payments-for-woocommerce' ) . '</b> ' . $ord_curr . ' ' . $total . '.'
 			. '<br/><b>' . __( 'TransactionId:', 'nuvei-payments-for-woocommerce' ) . '</b> ' . $transaction_id;
 
-		Nuvei_Logger::write( $msg, 'Subscription DMN Payment' );
+		Nuvei_Pfw_Logger::write( $msg, 'Subscription DMN Payment' );
 
 		$subsc_data = $this->sc_order->get_meta( $subs_data_key );
 
@@ -888,7 +888,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			'amount'            => $total,
 			'order_currency'    => $ord_curr,
 			'transaction_id'    => $transaction_id,
-			'resp_time'         => Nuvei_Http::get_param( 'responseTimeStamp' ),
+			'resp_time'         => Nuvei_Pfw_Http::get_param( 'responseTimeStamp' ),
 		);
 
 		$this->sc_order->update_meta_data( $subs_data_key, $subsc_data );
@@ -916,19 +916,19 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	 */
 	private function process_auth_sale_dmn( $transaction_type, $client_request_id, $transaction_id, $req_status ) {
 		$is_sdk_order       = false;
-		$merchant_unique_id = Nuvei_Http::get_param( 'merchant_unique_id', 'int', false );
+		$merchant_unique_id = Nuvei_Pfw_Http::get_param( 'merchant_unique_id', 'int', false );
 
 		// Cashier
 		if ( $merchant_unique_id ) {
-			Nuvei_Logger::write( 'Cashier Order' );
+			Nuvei_Pfw_Logger::write( 'Cashier Order' );
 			$order_id = $merchant_unique_id;
-		} elseif ( 'renewal_order' == Nuvei_Http::get_param( 'customField4' )
+		} elseif ( 'renewal_order' == Nuvei_Pfw_Http::get_param( 'customField4' )
 			&& ! empty( $client_request_id )
 		) { // WCS renewal order
-			Nuvei_Logger::write( 'Renewal Order' );
+			Nuvei_Pfw_Logger::write( 'Renewal Order' );
 			$order_id = current( explode( '_', $client_request_id ) );
 		} elseif ( $transaction_id ) { // SDK
-			Nuvei_Logger::write( 'SDK Order' );
+			Nuvei_Pfw_Logger::write( 'SDK Order' );
 			$is_sdk_order   = true;
 			$order_id       = $this->search_order_by_dmn_data( null, $transaction_type );
 		}
@@ -937,10 +937,10 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 		// error check for SDK orders only
 		if ( $is_sdk_order
-			&& $this->sc_order->get_meta( NUVEI_PFW_ORDER_ID ) != Nuvei_Http::get_param( 'PPP_TransactionID' )
+			&& $this->sc_order->get_meta( NUVEI_PFW_ORDER_ID ) != Nuvei_Pfw_Http::get_param( 'PPP_TransactionID' )
 		) {
 			$msg = 'Saved Nuvei Order ID is different than the ID in the DMN.';
-			Nuvei_Logger::write( $msg );
+			Nuvei_Pfw_Logger::write( $msg );
 			exit( esc_html( $msg ) );
 		}
 
@@ -964,7 +964,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 		$msg = 'DMN process end for Order #' . $order_id;
 
-		Nuvei_Logger::write( $msg );
+		Nuvei_Pfw_Logger::write( $msg );
 		http_response_code( 200 );
 		exit( esc_html( $msg ) );
 	}
@@ -993,7 +993,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 		$msg = 'DMN received.';
 
-		Nuvei_Logger::write( $msg );
+		Nuvei_Pfw_Logger::write( $msg );
 		exit( esc_html( $msg ) );
 	}
 
@@ -1008,9 +1008,9 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	 */
 	private function process_refund_dmn( $related_tr_id, $transaction_type, $req_status ) {
 		$order_id   = $this->search_order_by_dmn_data( $related_tr_id, $transaction_type );
-		$total      = Nuvei_Http::get_param( 'totalAmount', 'float' );
+		$total      = Nuvei_Pfw_Http::get_param( 'totalAmount', 'float' );
 
-		Nuvei_Logger::write( $order_id );
+		Nuvei_Pfw_Logger::write( $order_id );
 
 		$this->is_order_valid( $order_id );
 
@@ -1027,7 +1027,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 			if ( is_a( $refund, 'WP_Error' ) ) {
 				http_response_code( 400 );
-				Nuvei_Logger::write( (array) $refund, 'The Refund process in WC returns error: ' );
+				Nuvei_Pfw_Logger::write( (array) $refund, 'The Refund process in WC returns error: ' );
 				exit( 'The Refund process in WC returns error.' );
 			}
 			# /create Refund in WC
@@ -1042,7 +1042,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 		$msg = 'DMN process end for Order #' . $order_id;
 
-		Nuvei_Logger::write( $msg );
+		Nuvei_Pfw_Logger::write( $msg );
 		exit( esc_html( $msg ) );
 	}
 }

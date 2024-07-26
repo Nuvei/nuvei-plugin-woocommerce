@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Autoloader class.
  */
-class Nuvei_Autoloader {
+class Nuvei_Pfw_Autoloader {
 
 	/**
 	 * Path to the includes directories.
@@ -19,8 +19,8 @@ class Nuvei_Autoloader {
 	 */
 	public function __construct() {
 		$this->include_paths = array(
-			untrailingslashit( plugin_dir_path( NUVEI_PLUGIN_FILE ) ) . '/includes/',
-			untrailingslashit( plugin_dir_path( NUVEI_PLUGIN_FILE ) ) . '/includes/abstracts/',
+			untrailingslashit( plugin_dir_path( NUVEI_PFW_PLUGIN_FILE ) ) . '/includes/',
+			untrailingslashit( plugin_dir_path( NUVEI_PFW_PLUGIN_FILE ) ) . '/includes/abstracts/',
 		//            untrailingslashit( ABSPATH ) . '/wp-admin/includes/',
 		);
 
@@ -65,4 +65,4 @@ class Nuvei_Autoloader {
 	}
 }
 
-new Nuvei_Autoloader();
+new Nuvei_Pfw_Autoloader();

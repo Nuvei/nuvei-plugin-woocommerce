@@ -7,7 +7,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * @author Nuvei
  */
-class Nuvei_Payment extends Nuvei_Request {
+class Nuvei_Pfw_Payment extends Nuvei_Pfw_Request {
 
 	public function process() {
 		/**
@@ -16,7 +16,7 @@ class Nuvei_Payment extends Nuvei_Request {
 		 */
 		$data = current( func_get_args() );
 
-		Nuvei_Logger::write( $data, 'Nuvei_Payment process' );
+		Nuvei_Pfw_Logger::write( $data, 'Nuvei_Pfw_Payment process' );
 
 		$params = array_merge(
 			array(
@@ -26,7 +26,7 @@ class Nuvei_Payment extends Nuvei_Request {
 				'currency'              => @$data['currency'],
 				'amount'                => @$data['amount'],
 				'transactionType'       => 'Sale',
-				'urlDetails'            => array( 'notificationUrl' => Nuvei_String::get_notify_url( $this->plugin_settings ) ),
+				'urlDetails'            => array( 'notificationUrl' => Nuvei_Pfw_String::get_notify_url( $this->plugin_settings ) ),
 				'merchantDetails'   => array(
 					'customField4'      => 'renewal_order',
 				),

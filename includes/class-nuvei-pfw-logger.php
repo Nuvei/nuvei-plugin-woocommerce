@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A custom class for logs.
  */
-class Nuvei_Logger {
+class Nuvei_Pfw_Logger {
 
 	private static $fields_to_mask = array(
 		'ips'       => array( 'ipAddress' ),
@@ -44,7 +44,7 @@ class Nuvei_Logger {
 			return;
 		}
 
-		$plugin_data    = get_plugin_data( NUVEI_PLUGIN_FILE );
+		$plugin_data    = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
 		$test_mode      = $nuvei_gw->get_option( 'test' );
 		$mask_user_data = $nuvei_gw->get_option( 'mask_user_data' );
 

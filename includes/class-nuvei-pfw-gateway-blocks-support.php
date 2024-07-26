@@ -10,7 +10,7 @@ defined( 'ABSPATH' ) || exit;
  * @author Nuvei
  * @extends AbstractPaymentMethodType
  */
-final class Nuvei_Gateway_Blocks_Support extends AbstractPaymentMethodType {
+final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 
 	protected $name = NUVEI_PFW_GATEWAY_NAME;
 
@@ -45,8 +45,6 @@ final class Nuvei_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 	}
 
 	public function get_payment_method_data() {
-		//        Nuvei_Logger::write(null, 'get_payment_method_data', "DEBUG");
-
 		$settings = array(
 			'title'         => $this->settings['title'],
 			'description'   => $this->settings['description'],

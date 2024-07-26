@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A class for createPlan request.
  */
-class Nuvei_Create_Plan extends Nuvei_Request {
+class Nuvei_Pfw_Create_Plan extends Nuvei_Pfw_Request {
 
 	/**
 	 * The main method.
@@ -17,7 +17,7 @@ class Nuvei_Create_Plan extends Nuvei_Request {
         $hiden_args = func_get_args();
         
         if (empty($hiden_args[0]['merchantSiteId'])) {
-            Nuvei_Logger::write($hiden_args, 'We expect plugin settings here.');
+            Nuvei_Pfw_Logger::write($hiden_args, 'We expect plugin settings here.');
             
             return array(
 				'status'    => 'ERROR',

@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A class for getPlansList request.
  */
-class Nuvei_Download_Plans extends Nuvei_Request {
+class Nuvei_Pfw_Download_Plans extends Nuvei_Pfw_Request {
 
 	/**
 	 * The main method.

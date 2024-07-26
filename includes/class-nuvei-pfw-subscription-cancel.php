@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Cancel Subscription request class.
  */
-class Nuvei_Subscription_Cancel extends Nuvei_Request {
+class Nuvei_Pfw_Subscription_Cancel extends Nuvei_Pfw_Request {
 
 	/**
 	 * Main method
@@ -15,10 +15,10 @@ class Nuvei_Subscription_Cancel extends Nuvei_Request {
 	 */
 	public function process() {
 		$params = current( func_get_args() );
-		Nuvei_Logger::write( $params, 'Nuvei_Subscription_Cancel' );
+		Nuvei_Pfw_Logger::write( $params, 'Nuvei_Pfw_Subscription_Cancel' );
 
 		if ( empty( $params['subscriptionId'] ) ) {
-			Nuvei_Logger::write( $params['subscriptionId'], 'There is no Subscription to be canceled.' );
+			Nuvei_Pfw_Logger::write( $params['subscriptionId'], 'There is no Subscription to be canceled.' );
 
 			return array(
 				'status' => 'ERROR',

@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * The class for openOrder request.
  */
-class Nuvei_Open_Order extends Nuvei_Request {
+class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 
 	/**
 	 * Set is_ajax parameter to the Process metohd.
@@ -27,7 +27,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 	 * @return array|boolean
 	 */
 	public function process() {
-		Nuvei_Logger::write( 'OpenOrder class.' );
+		Nuvei_Pfw_Logger::write( 'OpenOrder class.' );
 
 		global $woocommerce;
 
@@ -60,13 +60,13 @@ class Nuvei_Open_Order extends Nuvei_Request {
 			$transaction_type   = 0 == $cart_total ? 'Auth' : $this->plugin_settings['payment_action'];
 		}
 
-		Nuvei_Logger::write( $open_order_details, '$open_order_details' );
+		Nuvei_Pfw_Logger::write( $open_order_details, '$open_order_details' );
 
 		// do not allow WCS and Nuvei Subscription in same Order
 		if ( ! empty( $products_data['subscr_data'] ) && $products_data['wc_subscr'] ) {
 			$msg = 'It is not allowed to put product with WCS and product witn Nuvei Subscription in same Order! Please, contact the site administrator for this problem!';
 
-			Nuvei_Logger::write( $msg );
+			Nuvei_Pfw_Logger::write( $msg );
 
 			return array(
 				'status'        => 0,
@@ -81,7 +81,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		//        ) {
 		//            foreach ($products_data['products_data'] as $data) {
 		//                if (!$data['in_stock']) {
-		//                    Nuvei_Logger::write($data, 'An item is not available.');
+		//                    Nuvei_Pfw_Logger::write($data, 'An item is not available.');
 		//
 		//                    wp_send_json(array(
 		//                        'status'    => 0,
@@ -101,7 +101,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 			|| $open_order_details['userTokenId'] != $addresses['billingAddress']['email']
             || !empty($this->sc_order)
 		) {
-			Nuvei_Logger::write(
+			Nuvei_Pfw_Logger::write(
 				array(
 					'$open_order_details'   => $open_order_details,
 					'$transaction_type'     => $transaction_type,
@@ -115,7 +115,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		}
 
 		if ( $try_update_order ) {
-			$uo_obj = new Nuvei_Update_Order( $this->rest_params );
+			$uo_obj = new Nuvei_Pfw_Update_Order( $this->rest_params );
 			$resp   = $uo_obj->process(
 				array(
 					'open_order_details'    => $open_order_details,
@@ -133,15 +133,8 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		}
 		# /try to update Order or not
 
-//		$form_data = Nuvei_Http::get_param( 'scFormData' );
-
-//		if ( ! empty( $form_data ) ) {
-////			parse_str( $form_data, $ajax_params );
-//            $ajax_params = Nuvei_Http::get_param( 'scFormData', 'array' );
-//		}
-        
 		$url_details = array(
-			'notificationUrl'   => Nuvei_String::get_notify_url( $this->plugin_settings ),
+			'notificationUrl'   => Nuvei_Pfw_String::get_notify_url( $this->plugin_settings ),
 			'backUrl'           => wc_get_checkout_url(),
 		);
 
@@ -211,7 +204,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 				$products_data
 			);
 
-			Nuvei_Logger::write( $open_order_details, 'session open_order_details' );
+			Nuvei_Pfw_Logger::write( $open_order_details, 'session open_order_details' );
 		}
 
 		$resp['products_data'] = $products_data;

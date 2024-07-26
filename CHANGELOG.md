@@ -7,6 +7,7 @@
     * Changed the way plugin gets its own data from the header.
     * Other chnages made by recommendation of WP.
     * Changed the names of all constants.
+    * Changed the names of the classes and its files.
 ```
 
 # 3.1.0

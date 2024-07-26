@@ -6,7 +6,7 @@ defined( 'ABSPATH' ) || exit;
  * The base class for requests. The different requests classes inherit this one.
  * Some common methods are also here.
  */
-abstract class Nuvei_Request {
+abstract class Nuvei_Pfw_Request {
 
 	protected $rest_params = array();
 	protected $plugin_settings;
@@ -31,7 +31,7 @@ abstract class Nuvei_Request {
 	 *  ),
 	 */
 	public function __construct() {
-		$plugin_data    = get_plugin_data( NUVEI_PLUGIN_FILE );
+		$plugin_data    = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
 		$this->nuvei_gw = WC()->payment_gateways->payment_gateways()[ NUVEI_PFW_GATEWAY_NAME ];
 		$time           = gmdate( 'Ymdhis' );
 
@@ -60,18 +60,18 @@ abstract class Nuvei_Request {
 	 */
 	//  protected function is_order_valid($order_id, $return = false)
 	protected function is_order_valid( $order_id ) {
-		Nuvei_Logger::write( $order_id, 'is_order_valid() check.' );
+		Nuvei_Pfw_Logger::write( $order_id, 'is_order_valid() check.' );
 
 		$this->sc_order = wc_get_order( $order_id );
 
 		// error
 		if ( ! is_a( $this->sc_order, 'WC_Order' ) ) {
 			$msg = 'Error - Provided Order ID is not a WC Order';
-			Nuvei_Logger::write( $order_id, $msg );
+			Nuvei_Pfw_Logger::write( $order_id, $msg );
 			exit( esc_html( $msg ) );
 		}
 
-		Nuvei_Logger::write( 'The Order is valid.' );
+		Nuvei_Pfw_Logger::write( 'The Order is valid.' );
 
 		// in case of Subscription states DMNs - stop proccess here. We will save only a message to the Order.
 		if ( 'subscription' == sanitize_text_field($_REQUEST['dmnType']) ) {
@@ -81,7 +81,7 @@ abstract class Nuvei_Request {
 		// check for 'sc' also because of the older Orders
 		if ( ! in_array( $this->sc_order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) ) ) {
 			$msg = 'Error - the order does not belongs to Nuvei.';
-			Nuvei_Logger::write(
+			Nuvei_Pfw_Logger::write(
 				array(
 					'order_id'          => $order_id,
 					'payment_method'    => $this->sc_order->get_payment_method(),
@@ -97,7 +97,7 @@ abstract class Nuvei_Request {
 
 		if ( in_array( $ord_status, array( 'cancelled', 'refunded' ) ) ) {
 			$msg = 'Error - can not override status of Voided/Refunded Order.';
-			Nuvei_Logger::write( $this->sc_order->get_payment_method(), $msg );
+			Nuvei_Pfw_Logger::write( $this->sc_order->get_payment_method(), $msg );
 
 			exit( esc_html( $msg ) );
 		}
@@ -107,7 +107,7 @@ abstract class Nuvei_Request {
 			&& 'auth' == strtolower(sanitize_text_field($_REQUEST['transactionType']) )
 		) {
 			$msg = 'Error - can not override status Completed with Auth.';
-			Nuvei_Logger::write( $this->sc_order->get_payment_method(), $msg );
+			Nuvei_Pfw_Logger::write( $this->sc_order->get_payment_method(), $msg );
 
 			exit( esc_html( $msg ) );
 		}
@@ -128,7 +128,7 @@ abstract class Nuvei_Request {
             $form_params = $this->sanitize_assoc_array($_REQUEST['scFormData']);
         }
                 
-        Nuvei_Logger::write($form_params, 'get_order_addresses');
+        Nuvei_Pfw_Logger::write($form_params, 'get_order_addresses');
         
 		// REST API flow
 		if ( ! empty( $this->rest_params ) ) {
@@ -484,7 +484,7 @@ abstract class Nuvei_Request {
         
         // Error. if there is validation error and Satus was set to Error return the response.
         if (isset($all_params['status']) && 'error' == strtolower($all_params['status'])) {
-            Nuvei_Logger::write($all_params, 'Error before call the REST API during the validation');
+            Nuvei_Pfw_Logger::write($all_params, 'Error before call the REST API during the validation');
             return $all_params;
         }
 
@@ -511,7 +511,7 @@ abstract class Nuvei_Request {
 		// add the checksum END
 
 		try {
-			Nuvei_Logger::write(
+			Nuvei_Pfw_Logger::write(
 				array(
 					'Request URL'                   => $url,
 					NUVEI_PFW_LOG_REQUEST_PARAMS    => $all_params,
@@ -531,7 +531,7 @@ abstract class Nuvei_Request {
 				)
 			);
             
-            Nuvei_Logger::write( $resp, 'Response info' );
+            Nuvei_Pfw_Logger::write( $resp, 'Response info' );
 
 			if ( false === $resp || ! is_array( $resp ) || empty( $resp['body'] ) ) {
 				return array(
@@ -657,7 +657,7 @@ abstract class Nuvei_Request {
 			'totals'        => 0,
 		);
 
-		$nuvei_taxonomy_name    = wc_attribute_taxonomy_name( Nuvei_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) );
+		$nuvei_taxonomy_name    = wc_attribute_taxonomy_name( Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) );
 		$nuvei_plan_variation   = 'attribute_' . $nuvei_taxonomy_name;
 
 		// default plugin flow
@@ -679,7 +679,7 @@ abstract class Nuvei_Request {
                 }
             }
             
-            Nuvei_Logger::write( $items, 'get_products_data() items' );
+            Nuvei_Pfw_Logger::write( $items, 'get_products_data() items' );
             
             if (empty($items)) {
                 return $data;
@@ -699,7 +699,7 @@ abstract class Nuvei_Request {
 					'item_id'       => $item_id,
 				);
 
-				//                Nuvei_Logger::write([
+				//                Nuvei_Pfw_Logger::write([
 				//                    'nuvei taxonomy name'   => $nuvei_taxonomy_name,
 				//                    'product attributes'    => $cart_prod_attr
 				//                ]);
@@ -718,10 +718,10 @@ abstract class Nuvei_Request {
 				) {
 					$term = get_term_by( 'slug', $item['variation'][ $nuvei_plan_variation ], $nuvei_taxonomy_name );
 
-					Nuvei_Logger::write( (array) $term, '$term' );
+					Nuvei_Pfw_Logger::write( (array) $term, '$term' );
 
 					if ( is_wp_error( $term ) || empty( $term->term_id ) ) {
-						Nuvei_Logger::write(
+						Nuvei_Pfw_Logger::write(
 							$item['variation'][ $nuvei_plan_variation ],
 							'Error when try to get Term by Slug'
 						);
@@ -731,7 +731,7 @@ abstract class Nuvei_Request {
 
 					$term_meta = get_term_meta( $term->term_id );
 
-					//                    Nuvei_Logger::write($term_meta, '$term_meta');
+					//                    Nuvei_Pfw_Logger::write($term_meta, '$term_meta');
 
 					if ( empty( $term_meta['planId'][0] ) ) {
 						continue;
@@ -759,13 +759,13 @@ abstract class Nuvei_Request {
 
 				# check if product has only Nuvei Payment Plan Attribute
 				foreach ( $cart_prod_attr as $attr ) {
-					Nuvei_Logger::write( (array) $attr, '$attr' );
+					Nuvei_Pfw_Logger::write( (array) $attr, '$attr' );
 
 					$name = $attr->get_name();
 
 					// if the attribute name is not nuvei taxonomy name go to next attribute
 					if ( $name != $nuvei_taxonomy_name ) {
-						Nuvei_Logger::write( $name, 'Not Nuvei attribute, check the next one.' );
+						Nuvei_Pfw_Logger::write( $name, 'Not Nuvei attribute, check the next one.' );
 						continue;
 					}
 
@@ -784,7 +784,7 @@ abstract class Nuvei_Request {
 
 					// in case of missing Nuvei Plan ID
 					if ( empty( $term_meta['planId'][0] ) ) {
-						Nuvei_Logger::write( $term_meta, 'Iteam with attribute $term_meta' );
+						Nuvei_Pfw_Logger::write( $term_meta, 'Iteam with attribute $term_meta' );
 						continue;
 					}
 
@@ -808,7 +808,7 @@ abstract class Nuvei_Request {
 				# /check if product has only Nuvei Payment Plan Attribute
 			}
 
-			Nuvei_Logger::write( $data, 'get_products_data() data' );
+			Nuvei_Pfw_Logger::write( $data, 'get_products_data() data' );
 
 			return $data;
 		}
@@ -834,7 +834,7 @@ abstract class Nuvei_Request {
 				'item_id'       => $item['key'] ?? '',
 			);
 
-			Nuvei_Logger::write(
+			Nuvei_Pfw_Logger::write(
 				array(
 					'nuvei taxonomy name'   => $nuvei_taxonomy_name,
 					'product attributes'    => $cart_prod_attr,
@@ -858,10 +858,10 @@ abstract class Nuvei_Request {
 					$nuvei_taxonomy_name
 				);
 
-				Nuvei_Logger::write( (array) $term, '$term' );
+				Nuvei_Pfw_Logger::write( (array) $term, '$term' );
 
 				if ( is_wp_error( $term ) || empty( $term->term_id ) ) {
-					Nuvei_Logger::write(
+					Nuvei_Pfw_Logger::write(
 						$item['variation'][ $nuvei_plan_variation ],
 						'Error when try to get Term by Slug'
 					);
@@ -871,7 +871,7 @@ abstract class Nuvei_Request {
 
 				$term_meta = get_term_meta( $term->term_id );
 
-				Nuvei_Logger::write( (array) $term_meta, '$term_meta' );
+				Nuvei_Pfw_Logger::write( (array) $term_meta, '$term_meta' );
 
 				if ( empty( $term_meta['planId'][0] ) ) {
 					continue;
@@ -900,13 +900,13 @@ abstract class Nuvei_Request {
 
 			# check if product has only Nuvei Payment Plan Attribute
 			foreach ( $cart_prod_attr as $attr ) {
-				Nuvei_Logger::write( (array) $attr, '$attr' );
+				Nuvei_Pfw_Logger::write( (array) $attr, '$attr' );
 
 				$name = $attr->get_name();
 
 				// if the attribute name is not nuvei taxonomy name go to next attribute
 				if ( $name != $nuvei_taxonomy_name ) {
-					Nuvei_Logger::write( $name, 'Not Nuvei attribute, check the next one.' );
+					Nuvei_Pfw_Logger::write( $name, 'Not Nuvei attribute, check the next one.' );
 					continue;
 				}
 
@@ -924,7 +924,7 @@ abstract class Nuvei_Request {
 
 				// in case of missing Nuvei Plan ID
 				if ( empty( $term_meta['planId'][0] ) ) {
-					Nuvei_Logger::write( $term_meta, 'Iteam with attribute $term_meta' );
+					Nuvei_Pfw_Logger::write( $term_meta, 'Iteam with attribute $term_meta' );
 					continue;
 				}
 
@@ -948,7 +948,7 @@ abstract class Nuvei_Request {
 			# /check if product has only Nuvei Payment Plan Attribute
 		}
 
-		Nuvei_Logger::write( $data, 'get_products_data() final data' );
+		Nuvei_Pfw_Logger::write( $data, 'get_products_data() final data' );
 
 		return $data;
 	}
@@ -989,7 +989,7 @@ abstract class Nuvei_Request {
 	 * @param array $product_data       Short product and subscription data.
 	 */
 	protected function set_nuvei_session_data( $session_token, $last_req_details, $product_data ) {
-        Nuvei_Logger::write(
+        Nuvei_Pfw_Logger::write(
             [
                 '$session_token'    => $session_token,
                 '$last_req_details' => $last_req_details,
@@ -1023,7 +1023,7 @@ abstract class Nuvei_Request {
 	 */
 	protected function get_last_transaction( array $transactions, array $types = array() ) {
 		if ( empty( $transactions ) || ! is_array( $transactions ) ) {
-			Nuvei_Logger::write( $transactions, 'Problem with trnsactions array.' );
+			Nuvei_Pfw_Logger::write( $transactions, 'Problem with trnsactions array.' );
 			return array();
 		}
 
@@ -1037,12 +1037,12 @@ abstract class Nuvei_Request {
 			) {
 				// fix for the case when work on Order made with plugin before v2.0.0
 				if ( ! isset( $data['transactionId'] ) ) {
-					Nuvei_Logger::write( $data, 'modify Order made with plugin version before v2.0.0.' );
+					Nuvei_Pfw_Logger::write( $data, 'modify Order made with plugin version before v2.0.0.' );
 
 					$data['transactionId'] = $tr_id;
 				}
 
-				Nuvei_Logger::write( $data, 'get_last_transaction()' );
+				Nuvei_Pfw_Logger::write( $data, 'get_last_transaction()' );
 
 				return $data;
 			}
@@ -1131,15 +1131,15 @@ abstract class Nuvei_Request {
 	 * @return void
 	 */
 	protected function save_transaction_data( $params = array(), $wc_refund_id = null ) {
-		Nuvei_Logger::write( array( $params, $wc_refund_id ), 'save_transaction_data()' );
+		Nuvei_Pfw_Logger::write( array( $params, $wc_refund_id ), 'save_transaction_data()' );
 
-		$transaction_id = Nuvei_Http::get_param( 'TransactionID', 'int', '', $params );
+		$transaction_id = Nuvei_Pfw_Http::get_param( 'TransactionID', 'int', '', $params );
 
 		if ( empty( $transaction_id ) ) {
-			$transaction_id = Nuvei_Http::get_param( 'transactionId', 'int', '', $params );
+			$transaction_id = Nuvei_Pfw_Http::get_param( 'transactionId', 'int', '', $params );
 		}
 		if ( empty( $transaction_id ) ) {
-			Nuvei_Logger::write( $transaction_id, 'TransactionID param is empty!', 'CRITICAL' );
+			Nuvei_Pfw_Logger::write( $transaction_id, 'TransactionID param is empty!', 'CRITICAL' );
 			return;
 		}
 
@@ -1150,29 +1150,29 @@ abstract class Nuvei_Request {
 			$transactions_data = array();
 		}
 
-		$transaction_type   = Nuvei_Http::get_param( 'transactionType', 'string', '', $params );
-		$status             = Nuvei_Http::get_request_status();
+		$transaction_type   = Nuvei_Pfw_Http::get_param( 'transactionType', 'string', '', $params );
+		$status             = Nuvei_Pfw_Http::get_request_status();
 
 		// check for already existing data
 		if ( ! empty( $transactions_data[ $transaction_id ] )
 			&& $transactions_data[ $transaction_id ]['transactionType'] == $transaction_type
 			&& $transactions_data[ $transaction_id ]['status'] == $status
 		) {
-			Nuvei_Logger::write( 'We have information for this transaction and will not save it again.' );
+			Nuvei_Pfw_Logger::write( 'We have information for this transaction and will not save it again.' );
 			return;
 		}
 
 		$transactions_data[ $transaction_id ]  = array(
-			'authCode'              => Nuvei_Http::get_param( 'AuthCode', 'string', '', $params ),
-			'paymentMethod'         => Nuvei_Http::get_param( 'payment_method', 'string', '', $params ),
+			'authCode'              => Nuvei_Pfw_Http::get_param( 'AuthCode', 'string', '', $params ),
+			'paymentMethod'         => Nuvei_Pfw_Http::get_param( 'payment_method', 'string', '', $params ),
 			'transactionType'       => $transaction_type,
 			'transactionId'         => $transaction_id,
-			'relatedTransactionId'  => Nuvei_Http::get_param( 'relatedTransactionId', 'int', 0, $params ),
-			'totalAmount'           => Nuvei_Http::get_param( 'totalAmount', 'float', 0, $params ),
-			'currency'              => Nuvei_Http::get_param( 'currency', 'string', '', $params ),
+			'relatedTransactionId'  => Nuvei_Pfw_Http::get_param( 'relatedTransactionId', 'int', 0, $params ),
+			'totalAmount'           => Nuvei_Pfw_Http::get_param( 'totalAmount', 'float', 0, $params ),
+			'currency'              => Nuvei_Pfw_Http::get_param( 'currency', 'string', '', $params ),
 			'status'                => $status,
-			'userPaymentOptionId'   => Nuvei_Http::get_param( 'userPaymentOptionId', 'int' ),
-			'wcsRenewal'            => 'renewal_order' == Nuvei_Http::get_param( 'customField4', 'string', '', $params )
+			'userPaymentOptionId'   => Nuvei_Pfw_Http::get_param( 'userPaymentOptionId', 'int' ),
+			'wcsRenewal'            => 'renewal_order' == Nuvei_Pfw_Http::get_param( 'customField4', 'string', '', $params )
 				? true : false,
 		);
 
@@ -1219,14 +1219,14 @@ abstract class Nuvei_Request {
 		$subscr_list = array();
 
 		if ( empty( $all_data ) || ! is_array( $all_data ) ) {
-			Nuvei_Logger::write( $all_data, 'There is no meta data or it is in wrong format!', 'WARN' );
+			Nuvei_Pfw_Logger::write( $all_data, 'There is no meta data or it is in wrong format!', 'WARN' );
 			return $subscr_list;
 		}
 
 		foreach ( $all_data as $key => $data ) {
 			// legacy
 			if ( ! is_numeric( $key ) ) {
-				//                Nuvei_Logger::write($data);
+				//                Nuvei_Pfw_Logger::write($data);
 
 				if ( false === strpos( $key, NUVEI_PFW_ORDER_SUBSCR ) ) {
 					continue;
@@ -1239,7 +1239,7 @@ abstract class Nuvei_Request {
 			} else { // for HPOS
 				$meta_data = $data->get_data();
 
-				//                Nuvei_Logger::write($meta_data);
+				//                Nuvei_Pfw_Logger::write($meta_data);
 
 				if ( empty( $meta_data['key'] )
 					|| false === strpos( $meta_data['key'], NUVEI_PFW_ORDER_SUBSCR )
@@ -1307,7 +1307,7 @@ abstract class Nuvei_Request {
 	 * @return array
 	 */
 	private function validate_parameters( $params ) {
-		Nuvei_Logger::write( 'validate_parameters' );
+		Nuvei_Pfw_Logger::write( 'validate_parameters' );
 
 		// directly check the mails
 		if ( isset( $params['billingAddress']['email'] ) ) {

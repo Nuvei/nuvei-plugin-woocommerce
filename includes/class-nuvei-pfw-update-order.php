@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Update Order request class.
  */
-class Nuvei_Update_Order extends Nuvei_Request {
+class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 
 	public function __construct( $rest_params = array() ) {
 		if ( ! empty( $rest_params ) ) {
@@ -34,8 +34,6 @@ class Nuvei_Update_Order extends Nuvei_Request {
 		$open_order_details = $func_params['open_order_details'] ?? array();
 		$plugin_settings    = $func_params['plugin_settings'] ?? array();
 
-		//        Nuvei_Logger::write(json_encode($woocommerce->cart->cart_contents));
-
 		// default flow
 		if ( empty( $this->rest_params ) && ! empty( $woocommerce->session ) ) {
 			$open_order_details = $woocommerce->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
@@ -48,7 +46,7 @@ class Nuvei_Update_Order extends Nuvei_Request {
 			|| empty( $open_order_details['sessionToken'] )
 			|| empty( $open_order_details['orderId'] )
 		) {
-			Nuvei_Logger::write( $open_order_details, 'update_order() - Missing last Order session data.' );
+			Nuvei_Pfw_Logger::write( $open_order_details, 'update_order() - Missing last Order session data.' );
 
 			return array( 'status' => 'ERROR' );
 		}
@@ -65,7 +63,7 @@ class Nuvei_Update_Order extends Nuvei_Request {
 		$currency = get_woocommerce_currency();
 
 		$url_details = array(
-			'notificationUrl'   => Nuvei_String::get_notify_url( $this->plugin_settings ),
+			'notificationUrl'   => Nuvei_Pfw_String::get_notify_url( $this->plugin_settings ),
 			'backUrl'           => wc_get_checkout_url(),
 		);
 
@@ -138,7 +136,7 @@ class Nuvei_Update_Order extends Nuvei_Request {
 			return array_merge( $params, $resp );
 		}
 
-		Nuvei_Logger::write( 'Nuvei_Update_Order - Order update was not successful.' );
+		Nuvei_Pfw_Logger::write( 'Nuvei_Pfw_Update_Order - Order update was not successful.' );
 
 		return array( 'status' => 'ERROR' );
 	}

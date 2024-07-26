@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A class for getMerchantPaymentMethods request.
  */
-class Nuvei_Get_Apms extends Nuvei_Request {
+class Nuvei_Pfw_Get_Apms extends Nuvei_Pfw_Request {
 
 	/**
 	 * The main method.
@@ -17,9 +17,8 @@ class Nuvei_Get_Apms extends Nuvei_Request {
 		$args = current( func_get_args() );
 
 		$apms_params = array(
-			'sessionToken'      => $args['sessionToken'],
-			//          'currencyCode'      => get_woocommerce_currency(),
-							'languageCode'      => Nuvei_String::format_location( get_locale() ),
+			'sessionToken'  => $args['sessionToken'],
+            'languageCode'  => Nuvei_Pfw_String::format_location( get_locale() ),
 		);
 
 		return $this->call_rest_api( 'getMerchantPaymentMethods', $apms_params );

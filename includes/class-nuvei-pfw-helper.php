@@ -4,9 +4,9 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Just a helper class to use some functions form Request class for the Cashier
- * and/or Nuvei_Gateway Class.
+ * and/or Nuvei_Pfw_Gateway Class.
  */
-class Nuvei_Helper extends Nuvei_Request {
+class Nuvei_Pfw_Helper extends Nuvei_Pfw_Request {
 
 	public function process() {
 	}

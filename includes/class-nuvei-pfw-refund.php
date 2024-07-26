@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A class for Refund requests.
  */
-class Nuvei_Refund extends Nuvei_Request {
+class Nuvei_Pfw_Refund extends Nuvei_Pfw_Request {
 
 	/**
 	 * The main method.
@@ -17,13 +17,13 @@ class Nuvei_Refund extends Nuvei_Request {
 		$data = current( func_get_args() );
 
 		if ( empty( $data['order_id'] ) || empty( $data['ref_amount'] ) ) {
-			Nuvei_Logger::write( $data, 'Nuvei_Refund error missing mandatoriy parameters.' );
+			Nuvei_Pfw_Logger::write( $data, 'Nuvei_Pfw_Refund error missing mandatoriy parameters.' );
 			return false;
 		}
 
 		$time       = gmdate( 'YmdHis', time() );
 		$order      = wc_get_order( $data['order_id'] );
-		$notify_url = Nuvei_String::get_notify_url( $this->plugin_settings );
+		$notify_url = Nuvei_Pfw_String::get_notify_url( $this->plugin_settings );
 		$nuvei_data = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
 		$last_tr    = $this->get_last_transaction( $nuvei_data, array( 'Sale', 'Settle' ) );
 
@@ -62,7 +62,7 @@ class Nuvei_Refund extends Nuvei_Request {
 	public function create_refund_request( $order_id, $ref_amount ) {
 		// error
 		if ( $order_id < 1 ) {
-			Nuvei_Logger::write( $order_id, 'create_refund_request() Error - Post parameter is less than 1.' );
+			Nuvei_Pfw_Logger::write( $order_id, 'create_refund_request() Error - Post parameter is less than 1.' );
 
 			wp_send_json(
 				array(
@@ -171,7 +171,7 @@ class Nuvei_Refund extends Nuvei_Request {
 			$this->sc_order->add_order_note( $msg );
 			$this->sc_order->save();
 
-			Nuvei_Logger::write( $msg );
+			Nuvei_Pfw_Logger::write( $msg );
 
 			wp_send_json(
 				array(
@@ -186,7 +186,7 @@ class Nuvei_Refund extends Nuvei_Request {
 		if ( isset( $json_arr['status'] ) && 'ERROR' === $json_arr['status'] ) {
 			$msg = __( 'Request ERROR: ', 'nuvei-payments-for-woocommerce' ) . $json_arr['reason'];
 
-			Nuvei_Logger::write( $msg );
+			Nuvei_Pfw_Logger::write( $msg );
 
 			wp_send_json(
 				array(
@@ -210,7 +210,7 @@ class Nuvei_Refund extends Nuvei_Request {
 			$this->sc_order->add_order_note( $msg );
 			$this->sc_order->save();
 
-			Nuvei_Logger::write( $msg );
+			Nuvei_Pfw_Logger::write( $msg );
 
 			wp_send_json(
 				array(
@@ -227,7 +227,7 @@ class Nuvei_Refund extends Nuvei_Request {
 			$this->sc_order->add_order_note( $msg );
 			$this->sc_order->save();
 
-			Nuvei_Logger::write( $msg );
+			Nuvei_Pfw_Logger::write( $msg );
 
 			wp_send_json(
 				array(
@@ -243,7 +243,7 @@ class Nuvei_Refund extends Nuvei_Request {
 		$this->sc_order->add_order_note( $msg );
 		$this->sc_order->save();
 
-		Nuvei_Logger::write( $msg );
+		Nuvei_Pfw_Logger::write( $msg );
 
 		wp_send_json(
 			array(

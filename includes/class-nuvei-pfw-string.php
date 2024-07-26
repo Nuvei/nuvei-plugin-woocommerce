@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A class to help with some strings.
  */
-class Nuvei_String {
+class Nuvei_Pfw_String {
 
 	/**
 	 * Generate base of the Notify URL.
