@@ -32,7 +32,7 @@ abstract class Nuvei_Request {
 	 */
 	public function __construct() {
 		$plugin_data    = get_plugin_data( NUVEI_PLUGIN_FILE );
-		$this->nuvei_gw = WC()->payment_gateways->payment_gateways()[ NUVEI_GATEWAY_NAME ];
+		$this->nuvei_gw = WC()->payment_gateways->payment_gateways()[ NUVEI_PFW_GATEWAY_NAME ];
 		$time           = gmdate( 'Ymdhis' );
 
 		$this->request_base_params = array(
@@ -41,7 +41,7 @@ abstract class Nuvei_Request {
             'clientRequestId'   => uniqid( '', true ),
 			'timeStamp'         => $time,
 			'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION . '; Plugin v' . nuvei_get_plugin_version(),
-			'sourceApplication' => NUVEI_SOURCE_APPLICATION,
+			'sourceApplication' => NUVEI_PFW_SOURCE_APPLICATION,
 			'encoding'          => 'UTF-8',
 			'deviceDetails'     => $this->get_device_details(),
 		);
@@ -79,7 +79,7 @@ abstract class Nuvei_Request {
 		}
 
 		// check for 'sc' also because of the older Orders
-		if ( ! in_array( $this->sc_order->get_payment_method(), array( NUVEI_GATEWAY_NAME, 'sc' ) ) ) {
+		if ( ! in_array( $this->sc_order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) ) ) {
 			$msg = 'Error - the order does not belongs to Nuvei.';
 			Nuvei_Logger::write(
 				array(
@@ -513,8 +513,8 @@ abstract class Nuvei_Request {
 		try {
 			Nuvei_Logger::write(
 				array(
-					'Request URL'               => $url,
-					NUVEI_LOG_REQUEST_PARAMS    => $all_params,
+					'Request URL'                   => $url,
+					NUVEI_PFW_LOG_REQUEST_PARAMS    => $all_params,
 				),
 				'Nuvei Request data'
 			);
@@ -582,7 +582,7 @@ abstract class Nuvei_Request {
 
 		$device_details['deviceName'] = $user_agent;
 
-		foreach ( NUVEI_DEVICES_TYPES_LIST as $d ) {
+		foreach ( NUVEI_PFW_DEVICES_TYPES_LIST as $d ) {
 			if ( strstr( $user_agent, $d ) !== false ) {
 				if ( in_array( $d, array( 'linux', 'windows', 'macintosh' ), true ) ) {
 					$device_details['deviceType'] = 'DESKTOP';
@@ -598,14 +598,14 @@ abstract class Nuvei_Request {
 			}
 		}
 
-		foreach ( NUVEI_DEVICES_LIST as $d ) {
+		foreach ( NUVEI_PFW_DEVICES_LIST as $d ) {
 			if ( strstr( $user_agent, $d ) !== false ) {
 				$device_details['deviceOS'] = $d;
 				break;
 			}
 		}
 
-		foreach ( NUVEI_BROWSERS_LIST as $b ) {
+		foreach ( NUVEI_PFW_BROWSERS_LIST as $b ) {
 			if ( strstr( $user_agent, $b ) !== false ) {
 				$device_details['browser'] = $b;
 				break;
@@ -657,7 +657,7 @@ abstract class Nuvei_Request {
 			'totals'        => 0,
 		);
 
-		$nuvei_taxonomy_name    = wc_attribute_taxonomy_name( Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ) );
+		$nuvei_taxonomy_name    = wc_attribute_taxonomy_name( Nuvei_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) );
 		$nuvei_plan_variation   = 'attribute_' . $nuvei_taxonomy_name;
 
 		// default plugin flow
@@ -998,9 +998,9 @@ abstract class Nuvei_Request {
             'set_nuvei_session_data'
         );
         
-		WC()->session->set( NUVEI_SESSION_OO_DETAILS, $last_req_details );
+		WC()->session->set( NUVEI_PFW_SESSION_OO_DETAILS, $last_req_details );
 		WC()->session->set(
-			NUVEI_SESSION_PROD_DETAILS,
+			NUVEI_PFW_SESSION_PROD_DETAILS,
 			array(
 				$session_token => array(
 					'wc_subscr'             => $product_data['wc_subscr'],
@@ -1063,13 +1063,13 @@ abstract class Nuvei_Request {
 		$order = $this->get_order( $order_id );
 
 		// first check for new meta data
-		$ord_tr_id = $order->get_meta( NUVEI_TR_ID );
+		$ord_tr_id = $order->get_meta( NUVEI_PFW_TR_ID );
 
 		if ( ! empty( $ord_tr_id ) ) {
 			return $ord_tr_id;
 		}
 
-		$nuvei_data = $order->get_meta( NUVEI_TRANSACTIONS );
+		$nuvei_data = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
 
 		if ( ! empty( $nuvei_data ) && is_array( $nuvei_data ) ) {
 			// just get from last transaction
@@ -1098,7 +1098,7 @@ abstract class Nuvei_Request {
 		$order = $this->get_order( $order_id );
 
 		// first check for new meta data
-		$nuvei_data = $order->get_meta( NUVEI_TRANSACTIONS );
+		$nuvei_data = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
 
 		if ( ! empty( $nuvei_data ) && is_array( $nuvei_data ) ) {
 			$last_tr = end( $nuvei_data );
@@ -1144,7 +1144,7 @@ abstract class Nuvei_Request {
 		}
 
 		// get previous data if exists
-		$transactions_data = $this->sc_order->get_meta( NUVEI_TRANSACTIONS );
+		$transactions_data = $this->sc_order->get_meta( NUVEI_PFW_TRANSACTIONS );
 		// in case it is empty
 		if ( empty( $transactions_data ) || ! is_array( $transactions_data ) ) {
 			$transactions_data = array();
@@ -1180,15 +1180,15 @@ abstract class Nuvei_Request {
 			$transactions_data[ $transaction_id ]['wcRefundId'] = $wc_refund_id;
 		}
 
-		$this->sc_order->update_meta_data( NUVEI_TRANSACTIONS, $transactions_data );
+		$this->sc_order->update_meta_data( NUVEI_PFW_TRANSACTIONS, $transactions_data );
 
 		// update it only for Auth, Settle and Sale. They are base an we will need this TrID
 		if ( in_array( $transaction_type, array( 'Auth', 'Settle', 'Sale' ) ) ) {
-			$this->sc_order->update_meta_data( NUVEI_TR_ID, $transaction_id );
+			$this->sc_order->update_meta_data( NUVEI_PFW_TR_ID, $transaction_id );
 		}
 
 		if ( isset( $transactions_data['wcsRenewal'] ) ) {
-			$this->sc_order->update_meta_data( NUVEI_WC_RENEWAL, true );
+			$this->sc_order->update_meta_data( NUVEI_PFW_WC_RENEWAL, true );
 		}
 
 		//        $this->sc_order->save();
@@ -1228,7 +1228,7 @@ abstract class Nuvei_Request {
 			if ( ! is_numeric( $key ) ) {
 				//                Nuvei_Logger::write($data);
 
-				if ( false === strpos( $key, NUVEI_ORDER_SUBSCR ) ) {
+				if ( false === strpos( $key, NUVEI_PFW_ORDER_SUBSCR ) ) {
 					continue;
 				}
 
@@ -1242,7 +1242,7 @@ abstract class Nuvei_Request {
 				//                Nuvei_Logger::write($meta_data);
 
 				if ( empty( $meta_data['key'] )
-					|| false === strpos( $meta_data['key'], NUVEI_ORDER_SUBSCR )
+					|| false === strpos( $meta_data['key'], NUVEI_PFW_ORDER_SUBSCR )
 				) {
 					continue;
 				}
@@ -1294,10 +1294,10 @@ abstract class Nuvei_Request {
 	 */
 	private function get_endpoint_base() {
 		if ( 'yes' == $this->nuvei_gw->get_option( 'test' ) ) {
-			return NUVEI_REST_ENDPOINT_INT;
+			return NUVEI_PFW_REST_ENDPOINT_INT;
 		}
 
-		return NUVEI_REST_ENDPOINT_PROD;
+		return NUVEI_PFW_REST_ENDPOINT_PROD;
 	}
 
 	/**
@@ -1311,7 +1311,7 @@ abstract class Nuvei_Request {
 
 		// directly check the mails
 		if ( isset( $params['billingAddress']['email'] ) ) {
-			if ( ! filter_var( $params['billingAddress']['email'], NUVEI_PARAMS_VALIDATION_EMAIL['flag'] ) ) {
+			if ( ! filter_var( $params['billingAddress']['email'], NUVEI_PFW_PARAMS_VALIDATION_EMAIL['flag'] ) ) {
 				return array(
 					'status'    => 'ERROR',
 					'message'   => 'The parameter Billing Address Email is not valid.',
@@ -1319,7 +1319,7 @@ abstract class Nuvei_Request {
 				);
 			}
 
-			if ( strlen( $params['billingAddress']['email'] ) > NUVEI_PARAMS_VALIDATION_EMAIL['length'] ) {
+			if ( strlen( $params['billingAddress']['email'] ) > NUVEI_PFW_PARAMS_VALIDATION_EMAIL['length'] ) {
 				return array(
 					'status'    => 'ERROR',
 					'message'   => 'The parameter Billing Address Email is too long.',
@@ -1329,7 +1329,7 @@ abstract class Nuvei_Request {
 		}
 
 		if ( isset( $params['shippingAddress']['email'] ) ) {
-			if ( ! filter_var( $params['shippingAddress']['email'], NUVEI_PARAMS_VALIDATION_EMAIL['flag'] ) ) {
+			if ( ! filter_var( $params['shippingAddress']['email'], NUVEI_PFW_PARAMS_VALIDATION_EMAIL['flag'] ) ) {
 				return array(
 					'status'    => 'ERROR',
 					'message'   => 'The parameter Shipping Address Email is not valid.',
@@ -1337,7 +1337,7 @@ abstract class Nuvei_Request {
 				);
 			}
 
-			if ( strlen( $params['shippingAddress']['email'] ) > NUVEI_PARAMS_VALIDATION_EMAIL['length'] ) {
+			if ( strlen( $params['shippingAddress']['email'] ) > NUVEI_PFW_PARAMS_VALIDATION_EMAIL['length'] ) {
 				return array(
 					'status'    => 'ERROR',
 					'message'   => 'The parameter Shipping Address Email is too long.',
@@ -1348,28 +1348,28 @@ abstract class Nuvei_Request {
 		// directly check the mails END
 
 		foreach ( $params as $key1 => $val1 ) {
-			if ( ! is_array( $val1 ) && ! empty( $val1 ) && array_key_exists( $key1, NUVEI_PARAMS_VALIDATION ) ) {
+			if ( ! is_array( $val1 ) && ! empty( $val1 ) && array_key_exists( $key1, NUVEI_PFW_PARAMS_VALIDATION ) ) {
 				$new_val = $val1;
 
-				if ( mb_strlen( $val1 ) > NUVEI_PARAMS_VALIDATION[ $key1 ]['length'] ) {
-					$new_val = mb_substr( $val1, 0, NUVEI_PARAMS_VALIDATION[ $key1 ]['length'] );
+				if ( mb_strlen( $val1 ) > NUVEI_PFW_PARAMS_VALIDATION[ $key1 ]['length'] ) {
+					$new_val = mb_substr( $val1, 0, NUVEI_PFW_PARAMS_VALIDATION[ $key1 ]['length'] );
 				}
 
-				$params[ $key1 ] = filter_var( $new_val, NUVEI_PARAMS_VALIDATION[ $key1 ]['flag'] );
+				$params[ $key1 ] = filter_var( $new_val, NUVEI_PFW_PARAMS_VALIDATION[ $key1 ]['flag'] );
 
 				if ( ! $params[ $key1 ] ) {
 					$params[ $key1 ] = 'The value is not valid.';
 				}
 			} elseif ( is_array( $val1 ) && ! empty( $val1 ) ) {
 				foreach ( $val1 as $key2 => $val2 ) {
-					if ( ! is_array( $val2 ) && ! empty( $val2 ) && array_key_exists( $key2, NUVEI_PARAMS_VALIDATION ) ) {
+					if ( ! is_array( $val2 ) && ! empty( $val2 ) && array_key_exists( $key2, NUVEI_PFW_PARAMS_VALIDATION ) ) {
 						$new_val = $val2;
 
-						if ( mb_strlen( $val2 ) > NUVEI_PARAMS_VALIDATION[ $key2 ]['length'] ) {
-							$new_val = mb_substr( $val2, 0, NUVEI_PARAMS_VALIDATION[ $key2 ]['length'] );
+						if ( mb_strlen( $val2 ) > NUVEI_PFW_PARAMS_VALIDATION[ $key2 ]['length'] ) {
+							$new_val = mb_substr( $val2, 0, NUVEI_PFW_PARAMS_VALIDATION[ $key2 ]['length'] );
 						}
 
-						$params[ $key1 ][ $key2 ] = filter_var( $new_val, NUVEI_PARAMS_VALIDATION[ $key2 ]['flag'] );
+						$params[ $key1 ][ $key2 ] = filter_var( $new_val, NUVEI_PFW_PARAMS_VALIDATION[ $key2 ]['flag'] );
 
 						if ( ! $params[ $key1 ][ $key2 ] ) {
 							$params[ $key1 ][ $key2 ] = 'The value is not valid.';

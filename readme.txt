@@ -3,7 +3,7 @@
 Contributors: miroslavnuvei
 Requires at least: 4.7
 Tested up to: 6.6.1
-Stable tag: 3.1.1
+Stable tag: 3.2.0
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -40,8 +40,12 @@ https://reactjs.org - React base domain used from Simply Connect;
 
 == Changelog ==
 
-= 3.1.1 =
+= 3.2.0 =
 * Fix for Admin generated Orders, when the store use WC Blocks.
+* Changed the name of main plugin file.
+* Changed the way plugin gets its own data from the header.
+* Other chnages made by recommendation of WP.
+* Changed the names of all constants.
 
 = 3.1.0 =
 * Added custom hook 'nuvei_pfwc_after_rebilling_payment' at the end of DMN Rebilling payment logic.

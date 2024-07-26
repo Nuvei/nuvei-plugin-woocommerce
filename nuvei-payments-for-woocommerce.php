@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.1.1
+ * Version: 3.2.0
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
@@ -93,15 +93,15 @@ add_action(
  * On activate try to create custom logs directory and few files.
  */
 function nuvei_plugin_activate() {
-	$htaccess_file  = NUVEI_LOGS_DIR . '.htaccess';
-	$index_file     = NUVEI_LOGS_DIR . 'index.html';
+	$htaccess_file  = NUVEI_PFW_LOGS_DIR . '.htaccess';
+	$index_file     = NUVEI_PFW_LOGS_DIR . 'index.html';
 	$wp_fs_direct   = new WP_Filesystem_Direct( null );
 
-	if ( ! is_dir( NUVEI_LOGS_DIR ) ) {
-		$wp_fs_direct->mkdir( NUVEI_LOGS_DIR );
+	if ( ! is_dir( NUVEI_PFW_LOGS_DIR ) ) {
+		$wp_fs_direct->mkdir( NUVEI_PFW_LOGS_DIR );
 	}
 
-	if ( is_dir( NUVEI_LOGS_DIR ) ) {
+	if ( is_dir( NUVEI_PFW_LOGS_DIR ) ) {
 		if ( ! file_exists( $htaccess_file ) ) {
 			$wp_fs_direct->put_contents( $htaccess_file, 'deny from all' );
 		}
@@ -152,7 +152,7 @@ function nuvei_init() {
             Nuvei_Logger::write([$data, $errors], 'action woocommerce_after_checkout_validation 1' );
 
 			if ( empty( $errors->errors )
-                && NUVEI_GATEWAY_NAME == $data['payment_method']
+                && NUVEI_PFW_GATEWAY_NAME == $data['payment_method']
                 && empty( Nuvei_Http::get_param( 'nuvei_transaction_id' ) )
 			) {
 				if ( isset( $wc_nuvei->settings['integration_type'] )
@@ -184,13 +184,13 @@ function nuvei_init() {
 
 	# Payment Plans taxonomies
 	// extend Term form to add meta data
-	add_action( 'pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ) . '_add_form_fields', 'nuvei_add_term_fields_form', 10, 2 );
+	add_action( 'pa_' . Nuvei_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) . '_add_form_fields', 'nuvei_add_term_fields_form', 10, 2 );
 	// update Terms' meta data form
-	add_action( 'pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ) . '_edit_form_fields', 'nuvei_edit_term_meta_form', 10, 2 );
+	add_action( 'pa_' . Nuvei_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) . '_edit_form_fields', 'nuvei_edit_term_meta_form', 10, 2 );
 	// hook to catch our meta data and save it
-	add_action( 'created_pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ), 'nuvei_save_term_meta', 10, 2 );
+	add_action( 'created_pa_' . Nuvei_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ), 'nuvei_save_term_meta', 10, 2 );
 	// edit Term meta data
-	add_action( 'edited_pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ), 'nuvei_edit_term_meta', 10, 2 );
+	add_action( 'edited_pa_' . Nuvei_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ), 'nuvei_edit_term_meta', 10, 2 );
 	// before add a product to the cart
 	add_filter( 'woocommerce_add_to_cart_validation', array( $wc_nuvei, 'add_to_cart_validation' ), 10, 3 );
 	// Hide payment gateways in case of product with Nuvei Payment plan in the Cart
@@ -220,7 +220,7 @@ function nuvei_init() {
 	add_action( 'woocommerce_after_order_itemmeta', 'nuvei_after_order_itemmeta', 10, 3 );
 	// listent for the WC Subscription Payment
 	add_action(
-		'woocommerce_scheduled_subscription_payment_' . NUVEI_GATEWAY_NAME,
+		'woocommerce_scheduled_subscription_payment_' . NUVEI_PFW_GATEWAY_NAME,
 		array( $wc_nuvei, 'create_wc_subscr_order' ),
 		10,
 		2
@@ -382,7 +382,7 @@ function nuvei_load_scripts() {
     // load the SDK
     wp_register_script(
 		'nuvei_checkout_sdk',
-		NUVEI_SIMPLY_CONNECT_PATH . 'simplyConnect.js',
+		NUVEI_PFW_SIMPLY_CONNECT_PATH . 'simplyConnect.js',
 		array('jquery'),
 		'1.140.0',
         false
@@ -431,7 +431,7 @@ function nuvei_load_scripts() {
 
 	// put translations here into the array
 	$localizations = array_merge(
-		NUVEI_JS_LOCALIZATIONS,
+		NUVEI_PFW_JS_LOCALIZATIONS,
 		array(
 			'security'              => wp_create_nonce( 'sc-security-nonce' ),
 			'wcThSep'               => $wc_th_sep,
@@ -538,7 +538,7 @@ function nuvei_load_admin_styles_scripts( $hook ) {
 	);
 
 	// get the list of the plans
-	$nuvei_plans_path   = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
+	$nuvei_plans_path   = NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE;
 	$plans_list         = array();
 	$wp_fs_direct       = new WP_Filesystem_Direct( null );
 
@@ -549,7 +549,7 @@ function nuvei_load_admin_styles_scripts( $hook ) {
 
 	// put translations here into the array
 	$localizations = array_merge(
-		NUVEI_JS_LOCALIZATIONS,
+		NUVEI_PFW_JS_LOCALIZATIONS,
 		array(
 			'security'          => wp_create_nonce( 'sc-security-nonce' ),
 			'nuveiPaymentPlans' => $plans_list,
@@ -599,7 +599,7 @@ function nuvei_add_buttons( $order ) {
 
 	// error - in case this is not Nuvei order
 	if ( empty( $order->get_payment_method() )
-		|| ! in_array( $order->get_payment_method(), array( NUVEI_GATEWAY_NAME, 'sc' ) )
+		|| ! in_array( $order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) )
 	) {
         wp_add_inline_script(
             'nuvei_empty_js',
@@ -614,7 +614,7 @@ function nuvei_add_buttons( $order ) {
 	$helper         = new Nuvei_Helper();
 	$ord_tr_id      = $helper->helper_get_tr_id( $order_id );
 	$order_total    = $order->get_total();
-	$order_data     = $order->get_meta( NUVEI_TRANSACTIONS );
+	$order_data     = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
 	$last_tr_data   = array();
 	$order_refunds  = array();
 	$ref_amount       = 0;
@@ -661,7 +661,7 @@ function nuvei_add_buttons( $order ) {
 	}
 
 	// hide Refund Button, it is visible by default
-	if ( ! in_array( $order_payment_method, NUVEI_APMS_REFUND_VOID )
+	if ( ! in_array( $order_payment_method, NUVEI_PFW_PMS_REFUND_VOID )
 		|| ! in_array( $last_tr_data['transactionType'], array( 'Sale', 'Settle', 'Credit', 'Refund' ) )
 		|| 'approved' != strtolower( $last_tr_data['status'] )
 		|| 0 == $order_total
@@ -751,7 +751,7 @@ function nuvei_add_buttons( $order ) {
 function nuvei_mod_thank_you_page( $order_id ) {
 	$order = wc_get_order( $order_id );
 
-	if ( $order->get_payment_method() != NUVEI_GATEWAY_NAME ) {
+	if ( $order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME ) {
 		return;
 	}
 
@@ -804,7 +804,7 @@ function nuvei_edit_order_buttons() {
     );
 
 	// check for 'sc' also, because of the older Orders
-	if ( in_array( $chosen_payment_method, array( NUVEI_GATEWAY_NAME, 'sc' ) ) ) {
+	if ( in_array( $chosen_payment_method, array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) ) ) {
 		return $sc_continue_text;
 	}
 
@@ -867,7 +867,7 @@ function nuvei_show_message_on_cart( $data ) {
 
 // Attributes, Terms and Meta functions
 function nuvei_add_term_fields_form( $taxonomy ) {
-	$nuvei_plans_path   = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
+	$nuvei_plans_path   = NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE;
 	$wp_fs_direct       = new WP_Filesystem_Direct( null );
 
 	ob_start();
@@ -886,7 +886,7 @@ function nuvei_add_term_fields_form( $taxonomy ) {
 }
 
 function nuvei_edit_term_meta_form( $term, $taxonomy ) {
-	$nuvei_plans_path   = NUVEI_LOGS_DIR . NUVEI_PLANS_FILE;
+	$nuvei_plans_path   = NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE;
 	$wp_fs_direct       = new WP_Filesystem_Direct( null );
 
 	ob_start();
@@ -910,7 +910,7 @@ function nuvei_edit_term_meta_form( $term, $taxonomy ) {
 }
 
 function nuvei_save_term_meta( $term_id, $tt_id ) {
-	$taxonomy      = 'pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME );
+	$taxonomy      = 'pa_' . Nuvei_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME );
 	$post_taxonomy = Nuvei_Http::get_param( 'taxonomy', 'string' );
 
 	if ( $post_taxonomy != $taxonomy ) {
@@ -931,7 +931,7 @@ function nuvei_save_term_meta( $term_id, $tt_id ) {
 }
 
 function nuvei_edit_term_meta( $term_id, $tt_id ) {
-	$taxonomy      = 'pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME );
+	$taxonomy      = 'pa_' . Nuvei_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME );
 	$post_taxonomy = Nuvei_Http::get_param( 'taxonomy', 'string' );
 
 	if ( $post_taxonomy != $taxonomy ) {
@@ -965,23 +965,14 @@ function nuvei_edit_order_list_columns( $column, $col_id ) {
 
 	$order = wc_get_order( $post->ID );
 
-	if ( $order->get_payment_method() != NUVEI_GATEWAY_NAME ) {
+	if ( $order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME ) {
 		return;
 	}
 
 	$all_meta       = $order->get_meta_data();
-	//    $nuvei_subscr   = [];
-	$order_changes  = $order->get_meta( NUVEI_ORDER_CHANGES ); // this is the flag for fraud
-	//
-	//    foreach ($all_meta as $key => $data) {
-	//        if (false !== strpos($key, NUVEI_ORDER_SUBSCR)) {
-	//            $nuvei_subscr = $order->get_meta($key);
-	//            break;
-	//        }
-	//    }
-
-	$helper = new Nuvei_Helper();
-	$subs_list  = $helper->get_rebiling_details( $all_meta );
+	$order_changes  = $order->get_meta( NUVEI_PFW_ORDER_CHANGES ); // this is the flag for fraud
+	$helper         = new Nuvei_Helper();
+	$subs_list      = $helper->get_rebiling_details( $all_meta );
 
 	// put subscription baloon
 	if ( 'order_number' == $column && ! empty( $subs_list ) ) {
@@ -1007,12 +998,12 @@ function nuvei_hpos_edit_order_list_columns( $column, $order ) {
 		return;
 	}
 
-	if ( $order->get_payment_method() != NUVEI_GATEWAY_NAME ) {
+	if ( $order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME ) {
 		return;
 	}
 
 	$all_meta       = $order->get_meta_data();
-	$order_changes  = $order->get_meta( NUVEI_ORDER_CHANGES ); // this is the flag for fraud
+	$order_changes  = $order->get_meta( NUVEI_PFW_ORDER_CHANGES ); // this is the flag for fraud
 	$helper         = new Nuvei_Helper();
 	$subs_list      = $helper->get_rebiling_details( $all_meta );
 
@@ -1043,15 +1034,6 @@ function nuvei_edit_my_account_orders_col( $order ) {
 	$post_meta      = $order->get_meta_data();
 	$subscr_list    = $helper->get_rebiling_details( $post_meta );
 	$is_subscr      = ! empty( $subscr_list ) ? true : false;
-
-	//    if (!empty($post_meta) && is_array($post_meta)) {
-	//        foreach ($post_meta as $key => $data) {
-	//            if (false !== strpos($key, NUVEI_ORDER_SUBSCR)) {
-	//                $is_subscr = true;
-	//                break;
-	//            }
-	//        }
-	//    }
 
 	echo '<a href="' . esc_url( $order->get_view_order_url() ) . '"';
 
@@ -1084,7 +1066,7 @@ function nuvei_wc_cart_needs_payment( $needs_payment, $cart ) {
 		$cart_prod_attr = $cart_product->get_attributes();
 
 		// check for product with a payment plan
-		if ( ! empty( $cart_prod_attr[ 'pa_' . Nuvei_String::get_slug( NUVEI_GLOB_ATTR_NAME ) ] ) ) {
+		if ( ! empty( $cart_prod_attr[ 'pa_' . Nuvei_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) ] ) ) {
 			return true;
 		}
 	}
@@ -1130,19 +1112,11 @@ function nuvei_after_order_itemmeta( $item_id, $item, $_product ) {
 	$post_meta      = $order->get_meta_data();
 	$subscr_list    = $helper->get_rebiling_details( $post_meta );
 
-	//    if (empty($post_meta) || !is_array($post_meta)) {
-	//        return;
-	//    }
 	if ( empty( $post_meta ) || empty( $subscr_list ) ) {
 		return;
 	}
 
-	//    foreach ($post_meta as $mk => $md) {
 	foreach ( $subscr_list as $data ) {
-		//        if (false === strpos($mk, NUVEI_ORDER_SUBSCR)) {
-		//            continue;
-		//        }
-
 		if ( 'WC_Order_Item_Product' != get_class( $item ) ) {
 			continue;
 		}

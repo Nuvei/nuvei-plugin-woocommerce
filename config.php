@@ -6,51 +6,49 @@ defined( 'ABSPATH' ) || exit;
  * Put all Constants here.
  */
 
-const NUVEI_GATEWAY_TITLE   = 'Nuvei';
-const NUVEI_GATEWAY_NAME    = 'nuvei'; // the name by WC recognize this Gateway
+const NUVEI_PFW_GATEWAY_TITLE   = 'Nuvei';
+const NUVEI_PFW_GATEWAY_NAME    = 'nuvei'; // the name by WC recognize this Gateway
 
 // keys for order metadata, we make them hiden when starts with underscore
-const NUVEI_TR_ID               = '_nuveiTrId'; // we will keep this data for fast search in Orders
-const NUVEI_ORDER_ID            = '_nuveiOrderId';
-const NUVEI_CLIENT_UNIQUE_ID    = '_nuveiClientUniqueId';
-const NUVEI_ORDER_CHANGES       = '_nuveiOrderChanges'; // mark here total ana currency changes
-const NUVEI_WC_SUBSCR           = '_wcSubscription';
-const NUVEI_WC_RENEWAL          = '_wcsRenewal';
-const NUVEI_TRANSACTIONS        = '_nuveiTransactions';
-const NUVEI_ORDER_SUBSCR        = '_nuveiSubscr';
-const NUVEI_DCC_DATA            = '_nuveiDccData';
-const NUVEI_PREV_TRANS_STATUS   = '_nuveiPrevTransactionStatus';
+const NUVEI_PFW_TR_ID               = '_nuveiTrId'; // we will keep this data for fast search in Orders
+const NUVEI_PFW_ORDER_ID            = '_nuveiOrderId';
+const NUVEI_PFW_CLIENT_UNIQUE_ID    = '_nuveiClientUniqueId';
+const NUVEI_PFW_ORDER_CHANGES       = '_nuveiOrderChanges'; // mark here total ana currency changes
+const NUVEI_PFW_WC_SUBSCR           = '_wcSubscription';
+const NUVEI_PFW_WC_RENEWAL          = '_wcsRenewal';
+const NUVEI_PFW_TRANSACTIONS        = '_nuveiTransactions';
+const NUVEI_PFW_ORDER_SUBSCR        = '_nuveiSubscr';
+const NUVEI_PFW_PREV_TRANS_STATUS   = '_nuveiPrevTransactionStatus';
 
-const NUVEI_SOURCE_APPLICATION  = 'WOOCOMMERCE_PLUGIN';
-const NUVEI_GLOB_ATTR_NAME      = 'Nuvei Payment Plan'; // the name of the Nuvei Global Product Attribute name
-const NUVEI_LOG_EXT             = 'log';
-const NUVEI_PLANS_FILE          = 'sc_plans.json';
-const NUVEI_APMS_REFUND_VOID    = array( 'cc_card', 'apmgw_expresscheckout' );
+const NUVEI_PFW_SOURCE_APPLICATION  = 'WOOCOMMERCE_PLUGIN';
+const NUVEI_PFW_GLOB_ATTR_NAME      = 'Nuvei Payment Plan'; // the name of the Nuvei Global Product Attribute name
+const NUVEI_PFW_LOG_EXT             = 'log';
+const NUVEI_PFW_PLANS_FILE          = 'sc_plans.json';
+const NUVEI_PFW_PMS_REFUND_VOID    = array( 'cc_card', 'apmgw_expresscheckout' );
 
-const NUVEI_REST_ENDPOINT_INT   = 'https://ppp-test.nuvei.com/ppp/api/v1/';
-const NUVEI_REST_ENDPOINT_PROD  = 'https://secure.safecharge.com/ppp/api/v1/';
-const NUVEI_SDK_AUTOCLOSE_URL   = 'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html';
+const NUVEI_PFW_REST_ENDPOINT_INT   = 'https://ppp-test.nuvei.com/ppp/api/v1/';
+const NUVEI_PFW_REST_ENDPOINT_PROD  = 'https://secure.safecharge.com/ppp/api/v1/';
+const NUVEI_PFW_POPUP_AUTOCLOSE_URL = 'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html';
 
-const NUVEI_SESSION_OO_DETAILS      = 'nuvei_last_open_order_details'; // a session key
-const NUVEI_SESSION_PROD_DETAILS    = 'nuvei_order_details'; // products details
-const NUVEI_LOG_REQUEST_PARAMS      = 'Request params';
+const NUVEI_PFW_SESSION_OO_DETAILS      = 'nuvei_last_open_order_details'; // a session key
+const NUVEI_PFW_SESSION_PROD_DETAILS    = 'nuvei_order_details'; // products details
+const NUVEI_PFW_LOG_REQUEST_PARAMS      = 'Request params';
 
-define('NUVEI_SIMPLY_CONNECT_PATH', plugin_dir_url( __FILE__ ) . 'assets/js/nuveiSimplyConnect/');
+define('NUVEI_PFW_SIMPLY_CONNECT_PATH', plugin_dir_url( __FILE__ ) . 'assets/js/nuveiSimplyConnect/');
 
 define(
-	'NUVEI_LOGS_DIR',
+	'NUVEI_PFW_LOGS_DIR',
 	dirname( __DIR__, 2 ) . DIRECTORY_SEPARATOR
 	. 'uploads' . DIRECTORY_SEPARATOR . 'nuvei-logs' . DIRECTORY_SEPARATOR
 );
 
 define(
-	'NUVEI_JS_LOCALIZATIONS',
+	'NUVEI_PFW_JS_LOCALIZATIONS',
 	array(
 		'ajaxurl'               => admin_url( 'admin-ajax.php' ),
-		'sourceApplication'     => NUVEI_SOURCE_APPLICATION,
+		'sourceApplication'     => NUVEI_PFW_SOURCE_APPLICATION,
 		'plugin_dir_url'        => plugin_dir_url( __FILE__ ),
-		'paymentGatewayName'    => NUVEI_GATEWAY_NAME,
-//		'simplyConnectUrl'      => NUVEI_SIMPLY_CONNECT_PATH . 'simplyConnect.js',
+		'paymentGatewayName'    => NUVEI_PFW_GATEWAY_NAME,
 
 		// translations
 		'insuffFunds'       => __( 'You have Insufficient funds, please go back and remove some of the items in your shopping cart, or use another card.', 'nuvei-payments-for-woocommerce' ),
@@ -77,7 +75,7 @@ define(
 );
 
 define(
-	'NUVEI_PARAMS_VALIDATION',
+	'NUVEI_PFW_PARAMS_VALIDATION',
 	array(
 		// deviceDetails
 		'deviceType' => array(
@@ -178,18 +176,15 @@ define(
 );
 
 define(
-	'NUVEI_PARAMS_VALIDATION_EMAIL',
+	'NUVEI_PFW_PARAMS_VALIDATION_EMAIL',
 	array(
 		'length'    => 79,
 		'flag'      => FILTER_VALIDATE_EMAIL,
 	)
 );
 
-define( 'NUVEI_BROWSERS_LIST', array( 'ucbrowser', 'firefox', 'chrome', 'opera', 'msie', 'edge', 'safari', 'blackberry', 'trident' ) );
-define( 'NUVEI_DEVICES_LIST', array( 'iphone', 'ipad', 'android', 'silk', 'blackberry', 'touch', 'linux', 'windows', 'mac' ) );
-define( 'NUVEI_DEVICES_TYPES_LIST', array( 'macintosh', 'tablet', 'mobile', 'tv', 'windows', 'linux', 'tv', 'smarttv', 'googletv', 'appletv', 'hbbtv', 'pov_tv', 'netcast.tv', 'bluray' ) );
+define( 'NUVEI_PFW_BROWSERS_LIST', array( 'ucbrowser', 'firefox', 'chrome', 'opera', 'msie', 'edge', 'safari', 'blackberry', 'trident' ) );
 
-// to sanitize DMN params we will describe them here as field name and type
-define( 'NUVEI_DMN_PARAMS', array(
-    
-) );
+define( 'NUVEI_PFW_DEVICES_LIST', array( 'iphone', 'ipad', 'android', 'silk', 'blackberry', 'touch', 'linux', 'windows', 'mac' ) );
+
+define( 'NUVEI_PFW_DEVICES_TYPES_LIST', array( 'macintosh', 'tablet', 'mobile', 'tv', 'windows', 'linux', 'tv', 'smarttv', 'googletv', 'appletv', 'hbbtv', 'pov_tv', 'netcast.tv', 'bluray' ) );

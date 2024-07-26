@@ -53,7 +53,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 			$transaction_type   = $this->get_total_from_rest_params() == 0
 				? 'Auth' : $this->plugin_settings['payment_action'];
 		} else { // default flow
-			$open_order_details = $woocommerce->session->get( NUVEI_SESSION_OO_DETAILS );
+			$open_order_details = $woocommerce->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
 			$products_data      = $this->get_products_data();
 			$cart_total         = (float) $products_data['totals']['total'];
 			$addresses          = $this->get_order_addresses();
@@ -146,9 +146,9 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		);
 
 		if ( 1 == $this->plugin_settings['close_popup'] ) {
-			$url_details['successUrl']  = NUVEI_SDK_AUTOCLOSE_URL;
-			$url_details['failureUrl']  = NUVEI_SDK_AUTOCLOSE_URL;
-			$url_details['pendingUrl']  = NUVEI_SDK_AUTOCLOSE_URL;
+			$url_details['successUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
+			$url_details['failureUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
+			$url_details['pendingUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
 		}
 
 		$amount     = (string) number_format( $cart_total, 2, '.', '' );

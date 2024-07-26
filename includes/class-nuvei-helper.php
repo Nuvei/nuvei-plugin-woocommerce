@@ -44,7 +44,7 @@ class Nuvei_Helper extends Nuvei_Request {
 		$order = $this->get_order( $order_id );
 
 		// first check for new meta data
-		$nuvei_data = $order->get_meta( NUVEI_TRANSACTIONS );
+		$nuvei_data = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
 
 		if ( ! empty( $nuvei_data ) && is_array( $nuvei_data ) ) {
 			$last_tr = end( $nuvei_data );
@@ -68,7 +68,7 @@ class Nuvei_Helper extends Nuvei_Request {
 		$order = $this->get_order( $order_id );
 
 		// first check for new meta data
-		$nuvei_data = $order->get_meta( NUVEI_TRANSACTIONS );
+		$nuvei_data = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
 
 		if ( ! empty( $nuvei_data ) && is_array( $nuvei_data ) ) {
 			$last_tr = $this->get_last_transaction( $nuvei_data, array( 'Sale', 'Settle', 'Auth' ) );
@@ -92,7 +92,7 @@ class Nuvei_Helper extends Nuvei_Request {
 		$order = $this->get_order( $order_id );
 
 		// first check for new meta data
-		$nuvei_data = $order->get_meta( NUVEI_TRANSACTIONS );
+		$nuvei_data = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
 
 		if ( ! empty( $nuvei_data ) && is_array( $nuvei_data ) ) {
 			$last_tr = end( $nuvei_data );

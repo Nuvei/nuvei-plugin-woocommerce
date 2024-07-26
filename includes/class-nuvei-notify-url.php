@@ -298,7 +298,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		}
 		# /break Auto-Void process
 
-		$nuvei_gw   = WC()->payment_gateways->payment_gateways()[ NUVEI_GATEWAY_NAME ];
+		$nuvei_gw   = WC()->payment_gateways->payment_gateways()[ NUVEI_PFW_GATEWAY_NAME ];
 		$notify_url = Nuvei_String::get_notify_url(
 			array(
 				'notify_url' => $nuvei_gw->get_option( 'notify_url' ),
@@ -354,7 +354,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 				"SELECT post_id FROM {$wpdb->prefix}postmeta "
 					. 'WHERE meta_key = %s '
 						. 'AND meta_value = %s ;',
-				NUVEI_CLIENT_UNIQUE_ID,
+				NUVEI_PFW_CLIENT_UNIQUE_ID,
 				Nuvei_Http::get_param( 'clientUniqueId' )
 			);
 
@@ -371,7 +371,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 				. "FROM {$wpdb->prefix}wc_orders_meta  "
 					. 'WHERE meta_key = %s '
 						. 'AND meta_value = %s ;',
-				NUVEI_CLIENT_UNIQUE_ID,
+				NUVEI_PFW_CLIENT_UNIQUE_ID,
 				Nuvei_Http::get_param( 'clientUniqueId' )
 			);
 
@@ -385,13 +385,13 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			return array();
 		}
 
-		// plugin legacy search, TODO - after few versions stop search by "_transactionId" and search only by NUVEI_TR_ID
+		// plugin legacy search, TODO - after few versions stop search by "_transactionId" and search only by NUVEI_PFW_TR_ID
 		// search in WC legacy table
 		$query = $wpdb->prepare(
 			"SELECT post_id FROM {$wpdb->prefix}postmeta "
 				. "WHERE (meta_key = '_transactionId' OR meta_key = %s )"
 					. 'AND meta_value = %s ;',
-			NUVEI_TR_ID,
+			NUVEI_PFW_TR_ID,
 			$transaction_id
 		);
 
@@ -408,7 +408,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 			. " FROM {$wpdb->prefix}wc_orders_meta "
 				. "WHERE (meta_key = '_transactionId' OR meta_key = %s )"
 					. 'AND meta_value = %s ;',
-			NUVEI_TR_ID,
+			NUVEI_PFW_TR_ID,
 			$transaction_id
 		);
 
@@ -433,7 +433,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	private function subscription_start( $transaction_type, $order_id, $order_total = null ) {
 		Nuvei_Logger::write( 'Try to start subscription.' );
 
-		if ( $this->sc_order->get_meta( NUVEI_WC_SUBSCR ) ) {
+		if ( $this->sc_order->get_meta( NUVEI_PFW_WC_SUBSCR ) ) {
 			Nuvei_Logger::write( 'WC Subscription.' );
 			return;
 		}
@@ -525,23 +525,6 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 		$order_all_meta = $this->sc_order->get_meta_data();
 		$subscr_list    = $this->get_order_rebiling_details( $order_all_meta );
-
-		//        foreach ($order_all_meta as $key => $data) {
-		//            if (false === strpos($key, NUVEI_ORDER_SUBSCR)) {
-		//                continue;
-		//            }
-		//
-		//            $subs_data = $this->sc_order->get_meta($key);
-		//            Nuvei_Logger::write([$key, $subs_data]);
-		//
-		//            if (empty($subs_data['state']) || 'active' != $subs_data['state']) {
-		//                Nuvei_Logger::write($subs_data, 'The subscription is not Active.');
-		//                continue;
-		//            }
-		//
-		//            $ncs_obj = new Nuvei_Subscription_Cancel();
-		//            $ncs_obj->process(['subscriptionId' => $subs_data['subscr_id']]);
-		//        }
 
 		foreach ( $subscr_list as $data ) {
 			Nuvei_Logger::write( $data );
@@ -691,7 +674,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 					}
 
 					$this->sc_order->update_meta_data(
-						NUVEI_ORDER_CHANGES,
+						NUVEI_PFW_ORDER_CHANGES,
 						array(
 							'curr_change'   => $set_curr_warning,
 							'total_change'  => $set_amount_warning,
@@ -721,7 +704,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 					$status = $this->nuvei_gw->get_option( 'status_fail' );
 				}
 				if ( 'Void' == $transaction_type ) {
-					$status = $this->sc_order->get_meta( NUVEI_PREV_TRANS_STATUS );
+					$status = $this->sc_order->get_meta( NUVEI_PFW_PREV_TRANS_STATUS );
 				}
 				if ( 'Refund' == $transaction_type ) {
 					$status = $this->nuvei_gw->get_option( 'status_paid' );
@@ -755,7 +738,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 	private function sum_order_refunds() {
 		$sum        = 0;
-		$nuvei_data = $this->sc_order->get_meta( NUVEI_TRANSACTIONS );
+		$nuvei_data = $this->sc_order->get_meta( NUVEI_PFW_TRANSACTIONS );
 
 		if ( empty( $nuvei_data ) || ! is_array( $nuvei_data ) ) {
 			return '0.00';
@@ -778,7 +761,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 	private function check_for_repeating_dmn() {
 		Nuvei_Logger::write( 'check_for_repeating_dmn' );
 
-		$order_data = $this->sc_order->get_meta( NUVEI_TRANSACTIONS );
+		$order_data = $this->sc_order->get_meta( NUVEI_PFW_TRANSACTIONS );
 		$dmn_tr_id  = Nuvei_Http::get_param( 'TransactionID', 'int' );
 		$dmn_status = Nuvei_Http::get_request_status();
 
@@ -954,7 +937,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 		// error check for SDK orders only
 		if ( $is_sdk_order
-			&& $this->sc_order->get_meta( NUVEI_ORDER_ID ) != Nuvei_Http::get_param( 'PPP_TransactionID' )
+			&& $this->sc_order->get_meta( NUVEI_PFW_ORDER_ID ) != Nuvei_Http::get_param( 'PPP_TransactionID' )
 		) {
 			$msg = 'Saved Nuvei Order ID is different than the ID in the DMN.';
 			Nuvei_Logger::write( $msg );

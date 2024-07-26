@@ -24,7 +24,7 @@ class Nuvei_Refund extends Nuvei_Request {
 		$time       = gmdate( 'YmdHis', time() );
 		$order      = wc_get_order( $data['order_id'] );
 		$notify_url = Nuvei_String::get_notify_url( $this->plugin_settings );
-		$nuvei_data = $order->get_meta( NUVEI_TRANSACTIONS );
+		$nuvei_data = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
 		$last_tr    = $this->get_last_transaction( $nuvei_data, array( 'Sale', 'Settle' ) );
 
 		if ( empty( $last_tr['transactionId'] ) ) {

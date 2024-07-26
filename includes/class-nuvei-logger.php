@@ -33,11 +33,11 @@ class Nuvei_Logger {
 	 * @param string $span_id Process unique ID.
 	 */
 	public static function write( $data, $message = '', $log_level = 'INFO', $span_id = '' ) {
-		$nuvei_gw           = WC()->payment_gateways->payment_gateways()[ NUVEI_GATEWAY_NAME ];
+		$nuvei_gw           = WC()->payment_gateways->payment_gateways()[ NUVEI_PFW_GATEWAY_NAME ];
 		$save_logs          = $nuvei_gw->get_option( 'save_logs' );
 		$save_single_log    = $nuvei_gw->get_option( 'save_single_log' );
 
-		if ( ! is_dir( NUVEI_LOGS_DIR ) ) {
+		if ( ! is_dir( NUVEI_PFW_LOGS_DIR ) ) {
 			return;
 		}
 		if ( 'no' == $save_logs && 'no' == $save_single_log ) {
@@ -66,7 +66,7 @@ class Nuvei_Logger {
 		}
 
 		$machine_name       = '';
-		$service_name       = NUVEI_SOURCE_APPLICATION . ' ' . $plugin_data['Version'] . '|';
+		$service_name       = NUVEI_PFW_SOURCE_APPLICATION . ' ' . $plugin_data['Version'] . '|';
 		$source_file_name   = '';
 		$member_name        = '';
 		$source_line_number = '';
@@ -147,12 +147,12 @@ class Nuvei_Logger {
 
 		$string             .= "\r\n\r\n";
 		$file_name          = gmdate( 'Y-m-d', time() ) . '-' . md5( $nuvei_gw->get_option( 'secret' ) . gmdate( 'Ymd' ) );
-		$single_file_name   = NUVEI_GATEWAY_NAME . '-' . md5( $nuvei_gw->get_option( 'secret' ) );
+		$single_file_name   = NUVEI_PFW_GATEWAY_NAME . '-' . md5( $nuvei_gw->get_option( 'secret' ) );
 
 		if ( 'yes' == $save_logs ) {
             // phpcs:ignore
 			$res = file_put_contents(
-				NUVEI_LOGS_DIR . $file_name . '.' . NUVEI_LOG_EXT,
+				NUVEI_PFW_LOGS_DIR . $file_name . '.' . NUVEI_PFW_LOG_EXT,
 				$string,
 				FILE_APPEND
 			);
@@ -161,7 +161,7 @@ class Nuvei_Logger {
 		if ( 'yes' == $save_single_log ) {
             // phpcs:ignore
 			$res = file_put_contents(
-				NUVEI_LOGS_DIR . $single_file_name . '.' . NUVEI_LOG_EXT,
+				NUVEI_PFW_LOGS_DIR . $single_file_name . '.' . NUVEI_PFW_LOG_EXT,
 				$string,
 				FILE_APPEND
 			);

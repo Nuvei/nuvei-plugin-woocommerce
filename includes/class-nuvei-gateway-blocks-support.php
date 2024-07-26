@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Nuvei_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 
-	protected $name = NUVEI_GATEWAY_NAME;
+	protected $name = NUVEI_PFW_GATEWAY_NAME;
 
 	private $plugin_dir_url;
 

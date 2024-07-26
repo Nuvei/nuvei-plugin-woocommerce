@@ -73,8 +73,7 @@ class Nuvei_Settle_Void extends Nuvei_Request {
 		if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
 			$ord_status = 1;
 
-			$this->sc_order->update_meta_data( NUVEI_PREV_TRANS_STATUS, $this->sc_order->get_status() );
-			//          $this->sc_order->update_status('processing');
+			$this->sc_order->update_meta_data( NUVEI_PFW_PREV_TRANS_STATUS, $this->sc_order->get_status() );
 			// change order status
 			$this->sc_order->update_status( $this->nuvei_gw->get_option( 'status_pending' ) );
 

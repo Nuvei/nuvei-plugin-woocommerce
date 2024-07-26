@@ -38,7 +38,7 @@ class Nuvei_Update_Order extends Nuvei_Request {
 
 		// default flow
 		if ( empty( $this->rest_params ) && ! empty( $woocommerce->session ) ) {
-			$open_order_details = $woocommerce->session->get( NUVEI_SESSION_OO_DETAILS );
+			$open_order_details = $woocommerce->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
 			$cart_amount        = (string) number_format( (float) $woocommerce->cart->total, 2, '.', '' );
 		} else { // REST API flow
 			$cart_amount = (string) number_format( (float) $products_data['totals'], 2, '.', '' );
@@ -70,9 +70,9 @@ class Nuvei_Update_Order extends Nuvei_Request {
 		);
 
 		if ( 1 == $plugin_settings['close_popup'] ) {
-			$url_details['successUrl']  = NUVEI_SDK_AUTOCLOSE_URL;
-			$url_details['failureUrl']  = NUVEI_SDK_AUTOCLOSE_URL;
-			$url_details['pendingUrl']  = NUVEI_SDK_AUTOCLOSE_URL;
+			$url_details['successUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
+			$url_details['failureUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
+			$url_details['pendingUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
 		}
 
 		// create Order upgrade
