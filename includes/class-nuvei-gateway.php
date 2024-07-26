@@ -31,7 +31,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		// required for the Store
 		$this->title       = $this->get_option( 'title', NUVEI_GATEWAY_TITLE );
 		$this->description = $this->get_option( 'description', $this->method_description );
-		$this->plugin_data = get_plugin_data( plugin_dir_path( NUVEI_PLUGIN_FILE ) . DIRECTORY_SEPARATOR . 'index.php' );
+		$this->plugin_data = get_plugin_data( NUVEI_PLUGIN_FILE );
 
 		//      $this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page'])
 		//          ? $this->settings['use_wpml_thanks_page'] : 'no';
@@ -55,7 +55,11 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			array( $this, 'process_admin_options' )
 		);
 
+        /**
+         * TODO - do we still use this hook?
+         */
 		add_action( 'woocommerce_order_after_calculate_totals', array( $this, 'return_settle_btn' ), 10, 2 );
+        
 		add_action( 'woocommerce_order_status_refunded', array( $this, 'restock_on_refunded_status' ), 10, 1 );
 	}
 
@@ -348,6 +352,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	}
 
 	public function return_settle_btn( $and_taxes, $order ) {
+        Nuvei_Logger::write('', 'return_settle_btn', "TRACE");
+        
 		if ( ! is_a( $order, 'WC_Order' ) || is_a( $order, 'WC_Subscription' ) ) {
 			return false;
 		}
@@ -360,8 +366,13 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		}
 
 		// revert buttons on Recalculate
-		if ( Nuvei_Http::get_param( 'refund_amount', 'float', 0 ) == 0 && ! empty( Nuvei_Http::get_param( 'items' ) ) ) {
-			echo esc_js( '<script type="text/javascript">returnSCBtns();</script>' );
+		if ( Nuvei_Http::get_param( 'refund_amount', 'float', 0 ) == 0 
+            && ! empty( Nuvei_Http::get_param( 'items' ) ) 
+        ) {
+            wp_add_inline_script(
+                'nuvei_empty_js',
+                'console.log("return_settle_btn"); returnSCBtns();'
+            );
 		}
 	}
 
@@ -474,8 +485,8 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 		// in case there are  no active plans - create default one
 		if ( isset( $resp['total'] ) && 0 == $resp['total'] ) {
-			$ncp_obj     = new Nuvei_Create_Plan( $this->settings );
-			$create_resp = $ncp_obj->process();
+			$ncp_obj     = new Nuvei_Create_Plan();
+			$create_resp = $ncp_obj->process( $this->settings );
 
 			if ( ! empty( $create_resp['planId'] ) ) {
 				$recursions++;
@@ -486,9 +497,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 		// in case there are  no active plans - create default one END
 
 		if ( $wp_fs_direct->put_contents(
-			NUVEI_LOGS_DIR . NUVEI_PLANS_FILE,
-			wp_json_encode( $resp['plans'] )
-		)
+                NUVEI_LOGS_DIR . NUVEI_PLANS_FILE,
+                wp_json_encode( $resp['plans'] ),
+                0644
+            )
 		) {
 			$this->create_nuvei_global_attribute();
 
@@ -574,7 +586,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 			wp_send_json(
 				array(
 					'status'    => 0,
-					'msg'       => __( 'Plans json is not readable.' ),
+					'msg'       => __( 'Plans json is not readable.', 'nuvei-payments-for-woocommerce' ),
 				)
 			);
 			exit;
@@ -587,12 +599,12 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 		// a check
 		if ( empty( $plans ) || ! is_array( $plans ) ) {
-			Nuvei_Logger::write( $plans, 'Unexpected problem with the Plans list.' );
+			Nuvei_Logger::write( $plans, 'Unexpected problem with the Plans list.', 'nuvei-payments-for-woocommerce' );
 
 			wp_send_json(
 				array(
 					'status'    => 0,
-					'msg'       => __( 'Unexpected problem with the Plans list.' ),
+					'msg'       => __( 'Unexpected problem with the Plans list.', 'nuvei-payments-for-woocommerce' ),
 				)
 			);
 			exit;
@@ -909,10 +921,10 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 
 		wp_send_json(
 			array(
-				'result'    => 'failure', // this is just to stop WC send the form, and show APMs
-				'refresh'   => false,
-				'reload'    => false,
-				'messages'  => '<script>showNuveiCheckout(' . wp_json_encode( $checkout_data ) . ');</script>',
+				'result'        => 'failure', // this is just to stop WC send the form, and show APMs
+				'refresh'       => false,
+				'reload'        => false,
+				'nuveiParams'   => $checkout_data,
 			)
 		);
 
@@ -968,20 +980,23 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	 * @return array
 	 */
 	public function hide_payment_gateways( $available_gateways ) {
+        global $woocommerce;
+        
         // we expect this method to be used on the Store only
-        if (is_admin()) {
+        if (is_admin() || !isset($woocommerce->cart)) {
             return $available_gateways;
         }
         
         Nuvei_Logger::write(
             [
-                '$available_gateways' => array_keys($available_gateways),
-//                'is_admin' => is_admin(),
+                '$available_gateways'   => array_keys($available_gateways),
+                'is_admin'              => is_admin(),
 //                'is_checkout' => is_checkout(),
 //                'is_checkout_pay_page' => is_checkout_pay_page(),
 //                'is_wc_endpoint_url' => is_wc_endpoint_url(),
 //                'is_shop()' => is_shop(),
-//                'isset(WC()->session)' => isset(WC()->session),
+//                'isset(WC()->session)'  => isset(WC()->session),
+                'isset(WC cart)'        => isset($woocommerce->cart),
 //                'checkout_id ' => WC()->session->get('checkout_id'),
 //                'get checkoutid ' => @$_GET['checkoutid'],
             ], 
@@ -1023,24 +1038,23 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 	public function create_wc_subscr_order( $amount_to_charge, $renewal_order ) {
 		$renewal_order_id   = $renewal_order->get_id();
 		$subscription       = wc_get_order( $renewal_order->get_meta( '_subscription_renewal' ) );
+        $helper             = new Nuvei_Helper();
 
 		if ( ! is_object( $subscription ) ) {
 			Nuvei_Logger::write(
 				array(
 					'$amount_to_charge' => $amount_to_charge,
-					'$renewal_order' => (array) $renewal_order,
-                    //phpcs:ignore
-					'$_REQUEST' => $_REQUEST,
-					'$subscription' => $subscription,
+					'$renewal_order'    => (array) $renewal_order,
+					'$request'          => $helper->helper_sanitize_assoc_array(),
+					'$subscription'     => $subscription,
 					'$renewal_order_id' => $renewal_order_id,
-					'get_post_meta' => $renewal_order->get_meta_data(),
+					'get_post_meta'     => $renewal_order->get_meta_data(),
 				),
 				'Error, the Subscription is not an object.'
 			);
 			return;
 		}
 
-		$helper             = new Nuvei_Helper();
 		$parent_order_id    = $subscription->get_parent_id();
 		$parent_order       = wc_get_order( $parent_order_id );
 		$parent_tr_id       = $helper->helper_get_tr_id( $parent_order_id );
@@ -1384,7 +1398,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				'type' => 'select',
 				'required' => 'required',
 				'options' => array(
-					'' => __( 'Select an option...' ),
+					'' => __( 'Select an option...', 'nuvei-payments-for-woocommerce' ),
 					'yes' => 'Sandbox',
 					'no' => 'Production',
 				),
@@ -1394,30 +1408,30 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				'type' => 'text',
 				'required' => true,
                 // phpcs:ignore
-				'description' => __( 'Merchant ID is provided by ' . NUVEI_GATEWAY_TITLE . '.' ),
+				'description' => __( 'Merchant ID is provided by Nuvei', 'nuvei-payments-for-woocommerce' ),
 			),
 			'merchantSiteId' => array(
 				'title' => __( 'Merchant Site ID', 'nuvei-payments-for-woocommerce' ) . ' *',
 				'type' => 'text',
 				'required' => true,
                 // phpcs:ignore
-				'description' => __( 'Merchant Site ID is provided by ' . NUVEI_GATEWAY_TITLE . '.' ),
+				'description' => __( 'Merchant Site ID is provided by Nuvei', 'nuvei-payments-for-woocommerce' ),
 			),
 			'secret' => array(
 				'title' => __( 'Secret Key', 'nuvei-payments-for-woocommerce' ) . ' *',
 				'type' => 'text',
 				'required' => true,
                 // phpcs:ignore
-				'description' => __( 'Secret key is provided by ' . NUVEI_GATEWAY_TITLE, 'nuvei-payments-for-woocommerce' ),
+				'description' => __( 'Secret key is provided by Nuvei', 'nuvei-payments-for-woocommerce' ),
 			),
 			'hash_type' => array(
 				'title'         => __( 'Hash Type', 'nuvei-payments-for-woocommerce' ) . ' *',
 				'type'          => 'select',
 				'required'      => true,
                 // phpcs:ignore
-				'description'   => __( 'Choose Hash type provided by ' . NUVEI_GATEWAY_TITLE, 'nuvei-payments-for-woocommerce' ),
+				'description'   => __( 'Choose Hash type provided by Nuvei', 'nuvei-payments-for-woocommerce' ),
 				'options'       => array(
-					'' => __( 'Select an option...' ),
+					'' => __( 'Select an option...', 'nuvei-payments-for-woocommerce' ),
 					'sha256' => 'sha256',
 					'md5' => 'md5',
 				),
@@ -1427,7 +1441,7 @@ class Nuvei_Gateway extends WC_Payment_Gateway {
 				'type'      => 'select',
 				'required'  => true,
 				'options'   => array(
-					'' => __( 'Select an option...' ),
+					'' => __( 'Select an option...', 'nuvei-payments-for-woocommerce' ),
 					'Sale' => 'Authorize and Capture',
 					'Auth' => 'Authorize',
 				),

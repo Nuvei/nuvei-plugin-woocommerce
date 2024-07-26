@@ -1,5 +1,6 @@
-var scSettleBtn		= null;
-var scVoidBtn		= null;
+var scSettleBtn = null;
+var scVoidBtn   = null;
+var nuveiPlans  = JSON.parse(scTrans.nuveiPaymentPlans);
 
 // when the admin select to Settle, Void or Cancel Subscription actions
 function nuveiAction(question, action, orderId, subscrId) {
@@ -266,6 +267,69 @@ function nuveiDisablePm(_value) {
 function nuveiCleanBlockedPMs() {
 	jQuery('#woocommerce_nuvei_pm_black_list, #woocommerce_nuvei_pm_black_list_visible').val('');
 	jQuery('#nuvei_block_pms_multiselect option').show();
+}
+
+/**
+ * Function for the terms form.
+ * 
+ * @param int _planId
+ * @returns void
+ */
+function nuveiFillPlanData(_planId) {
+    if('' == _planId) {
+        return;
+    }
+
+    for(var nuveiPlData in nuveiPlans) {
+        if(_planId == nuveiPlans[nuveiPlData].planId) {
+            // Recurring Amount
+            jQuery('#recurringAmount').val(nuveiPlans[nuveiPlData].recurringAmount);
+
+            // Recurring Units and Period
+            if(nuveiPlans[nuveiPlData].recurringPeriod.year > 0) {
+                jQuery('#recurringPeriodUnit').val('year');
+                jQuery('#recurringPeriodPeriod').val(nuveiPlans[nuveiPlData].recurringPeriod.year);
+            }
+            else if(nuveiPlans[nuveiPlData].recurringPeriod.month > 0) {
+                jQuery('#recurringPeriodUnit').val('month');
+                jQuery('#recurringPeriodPeriod').val(nuveiPlans[nuveiPlData].recurringPeriod.month);
+            }
+            else {
+                jQuery('#recurringPeriodUnit').val('day');
+                jQuery('#recurringPeriodPeriod').val(nuveiPlans[nuveiPlData].recurringPeriod.day);
+            }
+
+            // Recurring End-After Units and Period
+            if(nuveiPlans[nuveiPlData].endAfter.year > 0) {
+                jQuery('#endAfterUnit').val('year');
+                jQuery('#endAfterPeriod').val(nuveiPlans[nuveiPlData].endAfter.year);
+            }
+            else if(nuveiPlans[nuveiPlData].endAfter.month > 0) {
+                jQuery('#endAfterUnit').val('month');
+                jQuery('#endAfterPeriod').val(nuveiPlans[nuveiPlData].endAfter.month);
+            }
+            else {
+                jQuery('#endAfterUnit').val('day');
+                jQuery('#endAfterPeriod').val(nuveiPlans[nuveiPlData].endAfter.day);
+            }
+
+            // Recurring Trial Units and Period
+            if(nuveiPlans[nuveiPlData].startAfter.year > 0) {
+                jQuery('#startAfterUnit').val('year');
+                jQuery('#startAfterPeriod').val(nuveiPlans[nuveiPlData].startAfter.year);
+            }
+            else if(nuveiPlans[nuveiPlData].startAfter.month > 0) {
+                jQuery('#startAfterUnit').val('month');
+                jQuery('#startAfterPeriod').val(nuveiPlans[nuveiPlData].startAfter.month);
+            }
+            else {
+                jQuery('#startAfterUnit').val('day');
+                jQuery('#startAfterPeriod').val(nuveiPlans[nuveiPlData].startAfter.day);
+            }
+
+            break;
+        }
+    }
 }
 
 jQuery(function() {

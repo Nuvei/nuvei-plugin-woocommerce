@@ -29,7 +29,7 @@ class Nuvei_Subscription_Cancel extends Nuvei_Request {
 		$resp = $this->call_rest_api( 'cancelSubscription', $params );
 
 		if ( ! $resp || ! is_array( $resp ) || 'SUCCESS' != $resp['status'] ) {
-			$msg = __( '<b>Error</b> when try to cancel Subscription #', 'nuvei-payments-for-woocommerce' )
+			$msg = __( 'Error when try to cancel Subscription #', 'nuvei-payments-for-woocommerce' )
 				. $params['subscriptionId'] . ' ';
 
 			if ( ! empty( $resp['reason'] ) ) {

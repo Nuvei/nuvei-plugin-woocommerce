@@ -3,6 +3,9 @@
 # 3.1.1
 ```
     * Fix for Admin generated Orders, when the store use WC Blocks.
+    * Changed the name of main plugin file.
+    * Changed the way plugin gets its own data from the header.
+    * Other chnages made by recommendation of WP.
 ```
 
 # 3.1.0

@@ -11,17 +11,20 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		Nuvei_Logger::write(
 			array(
                 //phpcs:ignore
-				'Request params'    => @$_REQUEST,
-				'REMOTE_ADDR'       => @$_SERVER['REMOTE_ADDR'],
-				'REMOTE_PORT'       => @$_SERVER['REMOTE_PORT'],
-				'REQUEST_METHOD'    => @$_SERVER['REQUEST_METHOD'],
-				'HTTP_USER_AGENT'   => @$_SERVER['HTTP_USER_AGENT'],
+				'Request params'    => $this->sanitize_assoc_array(),
+				'REMOTE_ADDR'       => isset($_SERVER['REMOTE_ADDR']) 
+                    ? filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) : '',
+				'REMOTE_PORT'       => isset($_SERVER['REMOTE_PORT']) ? (int) $_SERVER['REMOTE_PORT'] : '',
+				'REQUEST_METHOD'    => isset($_SERVER['REQUEST_METHOD']) 
+                    ? sanitize_text_field($_SERVER['REQUEST_METHOD']) : '',
+				'HTTP_USER_AGENT'   => isset($_SERVER['HTTP_USER_AGENT'])
+                    ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : '',
 			),
 			'DMN params'
 		);
 
 		# stop DMNs only on test mode
-		//        exit(wp_json_encode('DMN was stopped, please run it manually!'));
+		        exit(wp_json_encode('DMN was stopped, please run it manually!'));
 
 		if ( 'CARD_TOKENIZATION' == Nuvei_Http::get_param( 'type' ) ) {
 			$msg = 'Tokenization DMN, waiting for the next one.';
@@ -127,7 +130,11 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		$responsechecksum   = Nuvei_Http::get_param( 'responsechecksum' );
 
 		if ( empty( $adv_resp_checksum ) && empty( $responsechecksum ) ) {
-			Nuvei_Logger::write( null, 'advanceResponseChecksum and responsechecksum parameters are empty.', 'CRITICAL' );
+			Nuvei_Logger::write(
+                null, 
+                'advanceResponseChecksum and responsechecksum parameters are empty.', 
+                'CRITICAL'
+            );
 			return false;
 		}
 
@@ -155,8 +162,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 
 		# subscription DMN with responsechecksum case
 		$concat        = '';
-        //phpcs:ignore
-		$request_arr   = $_REQUEST;
+		$request_arr   = $this->sanitize_assoc_array();
 		$custom_params = array(
 			'wc-api'            => '',
 			'responsechecksum'  => '',
@@ -488,7 +494,7 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 					$msg .= '<br/>' . __( 'Reason: ', 'nuvei-payments-for-woocommerce' ) . $resp['reason'];
 				}
 			} else { // On Success
-				$msg = __( 'Subscription was created. ' ) . '<br/>'
+				$msg = __( 'Subscription was created. ', 'nuvei-payments-for-woocommerce' ) . '<br/>'
 					. __( 'Subscription ID: ', 'nuvei-payments-for-woocommerce' ) . $resp['subscriptionId'] . '.<br/>'
 					. __( 'Recurring amount: ', 'nuvei-payments-for-woocommerce' ) . $this->sc_order->get_currency() . ' '
 					. $data['subs_data']['recurringAmount'];
@@ -567,8 +573,8 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 		$dmn_amount = Nuvei_Http::get_param( 'totalAmount', 'float' );
 
         // phpcs:ignore
-		$msg_transaction = '<b>' . __( $transaction_type, 'nuvei-payments-for-woocommerce' )
-			. ' </b> ' . __( 'request', 'nuvei-payments-for-woocommerce' ) . '.<br/>';
+		$msg_transaction = '<b>' . $transaction_type . ' </b> ' 
+            . __( 'request', 'nuvei-payments-for-woocommerce' ) . '.<br/>';
 
 		$gw_data = $msg_transaction
 			. __( 'Response status: ', 'nuvei-payments-for-woocommerce' ) . '<b>' . $req_status . '</b>.<br/>'
@@ -614,7 +620,8 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 					// get current refund amount
 					$currency_code   = $this->sc_order->get_currency();
 					$currency_symbol = get_woocommerce_currency_symbol( $currency_code );
-					$message        .= '<br/>' . __( '<b>Refund: ' ) . ' #' . $refund_id;
+					$message        .= '<br/><b>' . __( 'Refund: ', 'nuvei-payments-for-woocommerce' ) 
+                        . '<b> #' . $refund_id;
 
 					if ( $order_amount == $this->sum_order_refunds() + $dmn_amount ) {
 						$status = $this->nuvei_gw->get_option( 'status_refund' );
@@ -825,8 +832,8 @@ class Nuvei_Notify_Url extends Nuvei_Request {
 					. __( 'Plan ID:', 'nuvei-payments-for-woocommerce' ) . '</b> '
 					. Nuvei_Http::get_param( 'planId', 'int' );
 			} elseif ( 'inactive' == $subscription_state ) {
-				$msg = '<b>' . __( 'Subscription is Inactive</b>.', 'nuvei-payments-for-woocommerce' )
-					. '<br/><b>' . __( 'Subscription ID:', 'nuvei-payments-for-woocommerce' ) . '</b> '
+				$msg = '<b>' . __( 'Subscription is Inactive', 'nuvei-payments-for-woocommerce' )
+					. '</b>.<br/><b>' . __( 'Subscription ID:', 'nuvei-payments-for-woocommerce' ) . '</b> '
 					. $subscription_id . '<br/><b>'
 					. __( 'Plan ID:', 'nuvei-payments-for-woocommerce' ) . '</b> ' . $plan_id;
 			} elseif ( 'canceled' == $subscription_state ) {

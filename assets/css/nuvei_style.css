@@ -67,3 +67,8 @@
     max-width: 30px;
     margin-left: calc(50% - 15px);
 }
+
+button#nuvei_place_order {
+    float: right;
+    display: none;
+}

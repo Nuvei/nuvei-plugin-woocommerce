@@ -1,4 +1,10 @@
-<?php $field = $this->plugin_id . $this->id . '_' . $key; ?>
+<?php
+
+defined( 'ABSPATH' ) || exit;
+
+$field = $this->plugin_id . $this->id . '_' . $key;
+
+?>
 
 <tr valign="top">
 	<th scope="row" class="titledesc">

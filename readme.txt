@@ -18,6 +18,19 @@ A wide selection of region-specific payment methods can help your business grow 
 
 Right payment methods at the checkout page can bring you global reach, help you increase conversions and create a seamless experience for your customers.
 
+This plugin use pre-build version of Nuvei Simply Connect SDK. For more information about Simply Connect, please check its [documentation](https://docs.nuvei.com/documentation/accept-payment/simply-connect/).
+
+To work proper our plugin relay of 3rd party services to send and receive information. All of this services belongs to Nuvei, former SafeCharge. Below are described the services we are using:
+
+https://ppp-test.safecharge.com - Nuvei's Cashier Sanbox domain;
+https://secure.safecharge.com - Nuvei's Cashier Production domain;
+https://docs.nuvei.com - Nuvei's Documentation domain;
+https://ppp-test.nuvei.com/ppp/api/v1/ - The base part ot Nuvei's Sanbox REST API URL;
+https://secure.safecharge.com/ppp/api/v1/ - The nase part of Nuvei's Production REST API URL;
+https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html - A help URL who close APM popup, when use it;
+https://fonts.googleapis.com - Base domain for fonts used from Simply Connect;
+https://reactjs.org - React base domain used from Simply Connect;
+
 == Screenshots ==
 
 1. screenshot-1.png.

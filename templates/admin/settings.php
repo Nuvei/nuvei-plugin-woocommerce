@@ -1,3 +1,5 @@
+<?php defined( 'ABSPATH' ) || exit; ?>
+
 <h2>
 	<?php
 		echo esc_html__( 'Nuvei Checkout', 'nuvei-payments-for-woocommerce' );

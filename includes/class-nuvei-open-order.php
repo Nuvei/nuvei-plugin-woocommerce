@@ -85,7 +85,7 @@ class Nuvei_Open_Order extends Nuvei_Request {
 		//
 		//                    wp_send_json(array(
 		//                        'status'    => 0,
-		//                        'msg'       => __('An item is not available.')
+		//                        'msg'       => __('An item is not available.', 'nuvei-payments-for-woocommerce')
 		//                    ));
 		//                    exit;
 		//                }

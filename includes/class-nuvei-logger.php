@@ -44,7 +44,7 @@ class Nuvei_Logger {
 			return;
 		}
 
-		$plugin_data    = get_plugin_data( plugin_dir_path( NUVEI_PLUGIN_FILE ) . 'index.php' );
+		$plugin_data    = get_plugin_data( NUVEI_PLUGIN_FILE );
 		$test_mode      = $nuvei_gw->get_option( 'test' );
 		$mask_user_data = $nuvei_gw->get_option( 'mask_user_data' );
 

@@ -21,14 +21,14 @@ class Nuvei_Http {
 		if ( ! empty( $parent ) && is_array( $parent ) ) {
 			$arr = $parent;
 		} else {
-            //phpcs:ignore
-			$arr = $_REQUEST;
+            $helper = new Nuvei_Helper();
+			$arr    = $helper->helper_sanitize_assoc_array();
 		}
 
 		switch ( $type ) {
 			case 'mail':
 			case 'email':
-				return ! empty( $arr[ $key ] ) ? filter_var( $arr[ $key ], FILTER_VALIDATE_EMAIL ) : $default;
+				return ! empty( $arr[ $key ] ) ? sanitize_email( $arr[ $key ] ) : $default;
 
 			case 'float':
 				if ( empty( $default ) ) {
@@ -52,13 +52,14 @@ class Nuvei_Http {
 				return (isset($arr[ $key ]) && is_array($arr[ $key ])) ? $arr[ $key ] : $default;
 
 			case 'string':
-				return ! empty( $arr[ $key ] ) ? filter_var( $arr[ $key ] ) : $default;
+				return ! empty( $arr[ $key ] ) ? sanitize_text_field( $arr[ $key ] ) : $default;
 
 			case 'json':
-				return ! empty( $arr[ $key ] ) ? filter_var( stripslashes( $arr[ $key ] ), FILTER_DEFAULT ) : $default;
+//				return ! empty( $arr[ $key ] ) ? filter_var( stripslashes( $arr[ $key ] ), FILTER_DEFAULT ) : $default;
+				return ! empty( $arr[ $key ] ) ? htmlspecialchars( $arr[ $key ], ENT_NOQUOTES ) : $default;
 
 			default:
-				return ! empty( $arr[ $key ] ) ? filter_var( $arr[ $key ], FILTER_DEFAULT ) : $default;
+				return ! empty( $arr[ $key ] ) ? sanitize_text_field( $arr[ $key ] ) : $default;
 		}
 	}
 

@@ -1,5 +1,7 @@
 <?php
 
+defined( 'ABSPATH' ) || exit;
+
 /**
  * Put all Constants here.
  */
@@ -31,7 +33,7 @@ const NUVEI_SDK_AUTOCLOSE_URL   = 'https://cdn.safecharge.com/safecharge_resourc
 
 const NUVEI_SESSION_OO_DETAILS      = 'nuvei_last_open_order_details'; // a session key
 const NUVEI_SESSION_PROD_DETAILS    = 'nuvei_order_details'; // products details
-const LOG_REQUEST_PARAMS            = 'Request params';
+const NUVEI_LOG_REQUEST_PARAMS      = 'Request params';
 
 define('NUVEI_SIMPLY_CONNECT_PATH', plugin_dir_url( __FILE__ ) . 'assets/js/nuveiSimplyConnect/');
 
@@ -186,3 +188,8 @@ define(
 define( 'NUVEI_BROWSERS_LIST', array( 'ucbrowser', 'firefox', 'chrome', 'opera', 'msie', 'edge', 'safari', 'blackberry', 'trident' ) );
 define( 'NUVEI_DEVICES_LIST', array( 'iphone', 'ipad', 'android', 'silk', 'blackberry', 'touch', 'linux', 'windows', 'mac' ) );
 define( 'NUVEI_DEVICES_TYPES_LIST', array( 'macintosh', 'tablet', 'mobile', 'tv', 'windows', 'linux', 'tv', 'smarttv', 'googletv', 'appletv', 'hbbtv', 'pov_tv', 'netcast.tv', 'bluray' ) );
+
+// to sanitize DMN params we will describe them here as field name and type
+define( 'NUVEI_DMN_PARAMS', array(
+    
+) );

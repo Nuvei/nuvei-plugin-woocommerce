@@ -1,3 +1,4 @@
+/* the styles for the Order details ::START */
 #woocommerce-product-data ul.wc-tabs li.sc_subscr_tab a::before {
 	content: '\f18e';
 }
@@ -26,3 +27,46 @@
 #woocommerce_nuvei_notify_url {
     display: none;
 }
+/* the styles for the Order details ::END */
+
+/* the styles for terms form ::START */
+#nuvei_plan_attr_terms input {
+    -moz-appearance: textfield !important;
+}
+
+#nuvei_plan_attr_terms input::-webkit-outer-spin-button,
+#nuvei_plan_attr_terms input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+select.nuvei_units {
+    float: left;
+    margin-right: 10px;
+}
+
+input.nuvei_periods {
+    width: auto !important;
+}
+/* the styles for the terms form ::END */
+
+/* the styles for edit terms form ::START */
+.nuvei_meta_fileds input {
+    -moz-appearance: textfield !important;
+}
+
+endAfter.nuvei_meta_fileds input::-webkit-outer-spin-button,
+endAfter.nuvei_meta_fileds input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+select.nuvei_units {
+    float: left;
+    margin-right: 10px;
+}
+
+th {
+    text-align: left;
+}
+/* the styles for edit terms form ::END */

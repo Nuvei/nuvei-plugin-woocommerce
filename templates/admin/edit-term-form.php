@@ -1,23 +1,4 @@
-<style>
-	.nuvei_meta_fileds input {
-		-moz-appearance: textfield !important;
-	}
-
-	endAfter.nuvei_meta_fileds input::-webkit-outer-spin-button,
-	endAfter.nuvei_meta_fileds input::-webkit-inner-spin-button {
-		-webkit-appearance: none;
-		margin: 0;
-	}
-	
-	select.nuvei_units {
-		float: left;
-		margin-right: 10px;
-	}
-	
-	th {
-		text-align: left;
-	}
-</style>
+<?php defined( 'ABSPATH' ) || exit; ?>
 
 <tr class="nuvei_meta_fileds">
 	<th><?php echo esc_html__( 'Plan ID', 'nuvei-payments-for-woocommerce' ); ?></th>
