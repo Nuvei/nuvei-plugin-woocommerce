@@ -74,7 +74,7 @@ abstract class Nuvei_Pfw_Request {
 		Nuvei_Pfw_Logger::write( 'The Order is valid.' );
 
 		// in case of Subscription states DMNs - stop proccess here. We will save only a message to the Order.
-		if ( 'subscription' == sanitize_text_field($_REQUEST['dmnType']) ) {
+		if ( 'subscription' == Nuvei_Pfw_Http::get_param('dmnType') ) {
 			return;
 		}
 
