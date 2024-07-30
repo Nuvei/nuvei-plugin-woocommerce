@@ -397,15 +397,6 @@ function nuvei_load_scripts() {
 		false
 	);
     
-    // register and enqueue empty script
-    wp_register_script(
-		'nuvei_empty_js',
-		$plugin_url . 'assets/js/nuvei_empty.js',
-		array(),
-		1,
-		false
-	);
-    
 	// get selected WC price separators
 	$wc_th_sep  = '';
 	$wc_dec_sep = '';
@@ -454,8 +445,6 @@ function nuvei_load_scripts() {
 
     wp_localize_script( 'nuvei_js_public', 'scTrans', $localizations );
     wp_enqueue_script( 'nuvei_js_public' );
-    
-    wp_enqueue_script( 'nuvei_empty_js' );
 }
 
 /**
@@ -528,15 +517,6 @@ function nuvei_load_admin_styles_scripts( $hook ) {
 		true
 	);
     
-    // register and enqueue empty script
-    wp_register_script(
-		'nuvei_empty_js',
-		$plugin_url . 'assets/js/nuvei_empty.js',
-		array(),
-		1,
-		false
-	);
-
 	// get the list of the plans
 	$nuvei_plans_path   = NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE;
 	$plans_list         = array();
@@ -560,11 +540,6 @@ function nuvei_load_admin_styles_scripts( $hook ) {
 
 	wp_localize_script( 'nuvei_js_admin', 'scTrans', $localizations );
 	wp_enqueue_script( 'nuvei_js_admin' );
-    
-    wp_enqueue_script( 'nuvei_empty_js' );
-    
-    // the styles/scripts from the admin template files
-    
 }
 # Load Styles and Scripts END
 
@@ -602,8 +577,9 @@ function nuvei_add_buttons( $order ) {
 		|| ! in_array( $order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) )
 	) {
         wp_add_inline_script(
-            'nuvei_empty_js',
-            'var notNuveiOrder = true;'
+            'nuvei_js_admin',
+            'var notNuveiOrder = true;',
+            'before'
         );
         
 		return false;
@@ -617,7 +593,7 @@ function nuvei_add_buttons( $order ) {
 	$order_data     = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
 	$last_tr_data   = array();
 	$order_refunds  = array();
-	$ref_amount       = 0;
+	$ref_amount     = 0;
 	$order_time     = 0;
 
 	// error
@@ -632,8 +608,9 @@ function nuvei_add_buttons( $order ) {
 
 		// disable refund button
         wp_add_inline_script(
-            'nuvei_empty_js',
-            'jQuery(".refund-item").prop("disabled", true);'
+            'nuvei_js_admin',
+            'nuveiPfwDisableRefundBtn()',
+            'after'
         );
         
 		return false;
@@ -660,6 +637,14 @@ function nuvei_add_buttons( $order ) {
 		$order_time = $order->get_date_completed()->getTimestamp();
 	}
 
+//    var_dump([
+//        ! in_array( $order_payment_method, NUVEI_PFW_PMS_REFUND_VOID ),
+//        ! in_array( $last_tr_data['transactionType'], array( 'Sale', 'Settle', 'Credit', 'Refund' ) ),
+//        'approved' != strtolower( $last_tr_data['status'] ),
+//        0 == $order_total,
+//        $ref_amount >= $order_total
+//    ]);
+    
 	// hide Refund Button, it is visible by default
 	if ( ! in_array( $order_payment_method, NUVEI_PFW_PMS_REFUND_VOID )
 		|| ! in_array( $last_tr_data['transactionType'], array( 'Sale', 'Settle', 'Credit', 'Refund' ) )
@@ -668,8 +653,9 @@ function nuvei_add_buttons( $order ) {
 		|| $ref_amount >= $order_total
 	) {
         wp_add_inline_script(
-            'nuvei_empty_js',
-            'jQuery(".refund-item").prop("disabled", true);'
+            'nuvei_js_admin',
+            'nuveiPfwDisableRefundBtn()',
+            'after'
         );
 	}
 
@@ -688,8 +674,9 @@ function nuvei_add_buttons( $order ) {
 
 		// disable refund button
         wp_add_inline_script(
-            'nuvei_empty_js',
-            'jQuery(".refund-item").prop("disabled", true);'
+            'nuvei_js_admin',
+            'nuveiPfwDisableRefundBtn()',
+            'after'
         );
 
 		return false;
@@ -755,12 +742,16 @@ function nuvei_mod_thank_you_page( $order_id ) {
 		return;
 	}
 
-	$output = '';
-
 	# Modify title and the text on errors
-	$request_status = Nuvei_Pfw_Http::get_request_status();
-	$new_msg        = esc_html__( 'Please check your Order status for more information.', 'nuvei-payments-for-woocommerce' );
-	$new_title      = '';
+    $output             = '';
+    $new_title          = '';
+    $remove_wcs_pay_btn = false;
+	$request_status     = Nuvei_Pfw_Http::get_request_status();
+	$new_msg            = esc_html__(
+        'Please check your Order status for more information.',
+        'nuvei-payments-for-woocommerce'
+    );
+	
 
 	if ( 'error' == $request_status
 		|| 'fail' == strtolower( Nuvei_Pfw_Http::get_param( 'ppp_status' ) )
@@ -770,20 +761,23 @@ function nuvei_mod_thank_you_page( $order_id ) {
 		$new_title  = esc_html__( 'Order canceled', 'nuvei-payments-for-woocommerce' );
 	}
 
-	if ( ! empty( $new_title ) ) {
-		$output .= 'jQuery(".entry-title").html("' . $new_title . '"); '
-			. 'jQuery(".woocommerce-thankyou-order-received").html("' . $new_msg . '"); ';
-	}
+//	if ( ! empty( $new_title ) ) {
+//		$output .= 'jQuery(".entry-title").html("' . $new_title . '"); '
+//			. 'jQuery(".woocommerce-thankyou-order-received").html("' . $new_msg . '"); ';
+//	}
 	# /Modify title and the text on errors
 
 	# when WCS is turn on, remove Pay button
 	if ( is_plugin_active( 'woocommerce-subscriptions' . DIRECTORY_SEPARATOR . 'woocommerce-subscriptions.php' ) ) {
-		$output .= 'if (0 == jQuery("a.pay").length) { jQuery("a.pay").hide(); }';
+        $removeWCSPayBtn = true;
+//		$output .= 'if (0 == jQuery("a.pay").length) { jQuery("a.pay").hide(); }';
 	}
 
     wp_add_inline_script(
-        'nuvei_empty_js',
-        $output
+        'nuvei_js_public',
+        $output,
+        'nuveiPfwChangeThankYouPageMsg("'. $new_title .'", "'. $new_msg .'", '. $remove_wcs_pay_btn .');',
+        'after'
     );
 }
 
@@ -799,7 +793,7 @@ function nuvei_edit_order_buttons() {
 
 	// save default text into button attribute
     wp_add_inline_script(
-        'nuvei_empty_js',
+        'nuvei_js_public',
         'jQuery("#place_order").attr("data-default-text", "' .  $default_text .'").attr("data-sc-text", "' . $sc_continue_text . '"); });'
     );
 
@@ -823,7 +817,7 @@ function nuvei_change_title_order_received( $title, $id ) {
 }
 
 /**
- * W.hen the client click Pay button on the Order from My Account -> Orders menu.
+ * When the client click Pay button on the Order from My Account -> Orders menu.
  * This Order was created in the store admin, from some of the admins (merchants).
  *
  * @global type $wp
@@ -852,16 +846,18 @@ function nuvei_user_orders() {
     $checkout_data = $wc_nuvei->call_checkout(false, true, $wp->query_vars['order-pay']);
 
     wp_add_inline_script(
-        'nuvei_empty_js',
-        'nuveiCheckoutImplementation.name = "order-pay"; Object.freeze(nuveiCheckoutImplementation); jQuery(function() { nuveiPayForExistingOrder('. wp_json_encode( $checkout_data ) .'); });'
+        'nuvei_js_public',
+        'nuveiCheckoutImplementation.name = "order-pay"; Object.freeze(nuveiCheckoutImplementation); jQuery(function() { nuveiPayForExistingOrder('. wp_json_encode( $checkout_data ) .'); });',
+        'after'
     );
 }
 
 // on reorder, show warning message to the cart if need to
 function nuvei_show_message_on_cart( $data ) {
     wp_add_inline_script(
-        'nuvei_empty_js',
-        'jQuery("#content .woocommerce:first").append("<div class=\'woocommerce-warning\'>' . wp_kses_post( Nuvei_Pfw_Http::get_param( 'sc_msg' ) ) . '</div>");'
+        'nuvei_js_public',
+        'jQuery("#content .woocommerce:first").append("<div class=\'woocommerce-warning\'>' . wp_kses_post( Nuvei_Pfw_Http::get_param( 'sc_msg' ) ) . '</div>");',
+        'after'
     );
 }
 

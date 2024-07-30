@@ -371,8 +371,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             && ! empty( Nuvei_Pfw_Http::get_param( 'items' ) ) 
         ) {
             wp_add_inline_script(
-                'nuvei_empty_js',
-                'console.log("return_settle_btn"); returnSCBtns();'
+                'nuvei_js_admin',
+                'nuveiReturnNuveiBtns();'
             );
 		}
 	}

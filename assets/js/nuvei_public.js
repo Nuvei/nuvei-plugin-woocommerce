@@ -434,6 +434,19 @@ function nuveiPayForExistingOrder(_params) {
     }
 }
 
+function nuveiPfwChangeThankYouPageMsg(new_title, new_msg, remove_wcs_pay_btn) {
+    // on error change thank you page title and message
+    if (new_title && '' != new_title) {
+        jQuery(".entry-title").html(new_title);
+        jQuery(".woocommerce-thankyou-order-received").html(new_msg);
+    }
+    
+    // if there is pay button on thank you page - hide it!
+    if (remove_wcs_pay_btn && jQuery("a.pay").length > 0) {
+        jQuery("a.pay").hide();
+    }
+}
+
 jQuery(function() {
 	if('no' === scTrans.isPluginActive) {
 		return;

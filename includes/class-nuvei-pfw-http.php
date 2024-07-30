@@ -49,15 +49,13 @@ class Nuvei_Pfw_Http {
 					$default = array();
 				}
 
-				return (isset($arr[ $key ]) && is_array($arr[ $key ])) ? $arr[ $key ] : $default;
-
-			case 'string':
-				return ! empty( $arr[ $key ] ) ? sanitize_text_field( $arr[ $key ] ) : $default;
+				return (isset($arr[ $key ]) && is_array($arr[ $key ])) ? sanitize_text_field($arr[ $key ]) : $default;
 
 			case 'json':
 //				return ! empty( $arr[ $key ] ) ? filter_var( stripslashes( $arr[ $key ] ), FILTER_DEFAULT ) : $default;
 				return ! empty( $arr[ $key ] ) ? htmlspecialchars( $arr[ $key ], ENT_NOQUOTES ) : $default;
 
+            case 'string':
 			default:
 				return ! empty( $arr[ $key ] ) ? sanitize_text_field( $arr[ $key ] ) : $default;
 		}

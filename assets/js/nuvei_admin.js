@@ -67,10 +67,9 @@ function nuveiAction(question, action, orderId, subscrId) {
 }
 
 /**
- * Function returnSCSettleBtn
- * Returns the SC Settle button
+ * Returns the Settle button.
  */
-function returnSCBtns() {
+function nuveiReturnNuveiBtns() {
 	if (scVoidBtn !== null) {
 		jQuery('.wc-order-bulk-actions p').append(scVoidBtn);
 		scVoidBtn = null;
@@ -332,6 +331,10 @@ function nuveiFillPlanData(_planId) {
     }
 }
 
+function nuveiPfwDisableRefundBtn() {
+    jQuery(".refund-item, .refund-items").prop("disabled", true);
+}
+
 jQuery(function() {
 	// if the Order does not belongs to Nuvei stop here.
 	if(typeof notNuveiOrder != 'undefined' && notNuveiOrder) {
@@ -381,7 +384,7 @@ jQuery(function() {
 	jQuery('#woocommerce_nuvei_integration_type').on('change', function() {
 		nuvei_show_hide_rest_settings();
 	});
-	
+    
 });
 // document ready function END
 
