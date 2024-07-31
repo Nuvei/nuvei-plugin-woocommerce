@@ -169,13 +169,13 @@ function nuvei_init() {
 	);
 
 	/**
-     * TODO - try to remove this hook.
+     * TODO - remove this hook.
      * use this to change button text, because of the cache the jQuery not always works
      */
 //	add_filter( 'woocommerce_order_button_text', 'nuvei_edit_order_buttons' );
     
     // when the client click Pay button on the Order from My Account -> Orders menu.
-	add_filter( 'woocommerce_pay_order_after_submit', 'nuvei_user_orders', 10, 2 );
+	add_filter( 'woocommerce_pay_order_after_submit', 'nuvei_user_orders' );
 
     //phpcs:ignore
 	if ( ! empty( $_GET['sc_msg']) ) {
@@ -285,7 +285,18 @@ function nuvei_ajax_action() {
 	# recognize the action:
     // Get Blocks Checkout data
     if (Nuvei_Pfw_Http::get_param( 'getBlocksCheckoutData', 'int' ) == 1 ) {
-        wp_send_json($wc_nuvei->call_checkout(false, true));
+        // Simply Connect flow
+        if ('sdk' == $wc_nuvei->settings['integration_type']) {
+            wp_send_json($wc_nuvei->call_checkout(false, true));
+            exit;
+        }
+        
+        // Cashier flow
+        if ('cashier' == $wc_nuvei->settings['integration_type']) {
+            // TODO
+            exit;
+        }
+            
         exit;
     }
     
@@ -348,6 +359,17 @@ function nuvei_ajax_action() {
 	if ( Nuvei_Pfw_Http::get_param( 'downloadPlans', 'int' ) == 1 ) {
 		$wc_nuvei->download_subscr_pans();
 	}
+    
+    // when need data to pay Existing Order for Simply Connect flow
+    if ( Nuvei_Pfw_Http::get_param('payForExistingOrder', 'int') == 1 
+        && Nuvei_Pfw_Http::get_param('orderId', 'int') > 0
+        && 'sdk' == $wc_nuvei->settings['integration_type']
+    ) {
+        $params = $wc_nuvei->call_checkout(false, true, Nuvei_Pfw_Http::get_param('orderId', 'int'));
+
+        wp_send_json($params);
+        wp_die();
+    }
 
 	wp_send_json_error( __( 'Not recognized Ajax call.', 'nuvei-payments-for-woocommerce' ) );
 	wp_die();
@@ -393,7 +415,7 @@ function nuvei_load_scripts() {
 		'nuvei_js_public',
 		$plugin_url . 'assets/js/nuvei_public.js',
 		array( 'jquery' ),
-		'2024-06-28',
+		'2024-07-30',
 		false
 	);
     
@@ -436,10 +458,6 @@ function nuvei_load_scripts() {
 				. '; Plugin v' . nuvei_get_plugin_version(),
 		)
 	);
-
-//    if (is_checkout_pay_page()) {
-//        wp_enqueue_script( 'nuvei_js_reorder' );
-//    }
 
     wp_enqueue_script( 'nuvei_checkout_sdk' );
 
@@ -513,7 +531,7 @@ function nuvei_load_admin_styles_scripts( $hook ) {
 		'nuvei_js_admin',
 		$plugin_url . 'assets/js/nuvei_admin.js',
 		array( 'jquery' ),
-		'1',
+		'2024-07-30',
 		true
 	);
     
@@ -821,15 +839,26 @@ function nuvei_change_title_order_received( $title, $id ) {
  * This Order was created in the store admin, from some of the admins (merchants).
  *
  * @global type $wp
+ * @global Nuvei_Pfw_Gateway $wc_nuvei
+ * 
+ * @return void
  */
 function nuvei_user_orders() {
     Nuvei_Pfw_Logger::write('nuvei_user_orders()');
 	
     global $wp;
     global $wc_nuvei;
+    
+    //  for Cashier - just don't touch it! It works by default. :D
+    if ( isset($wc_nuvei->settings['integration_type']) 
+        && 'cashier' == $wc_nuvei->settings['integration_type']
+    ) {
+        return;
+    }
 
-	$order     = wc_get_order( $wp->query_vars['order-pay'] );
-	$order_key = $order->get_order_key();
+    $order_id   = $wp->query_vars['order-pay'];
+	$order      = wc_get_order( $order_id );
+	$order_key  = $order->get_order_key();
     
     // error
 	if ( Nuvei_Pfw_Http::get_param( 'key' ) != $order_key ) {
@@ -840,16 +869,12 @@ function nuvei_user_orders() {
             ],
             'Order key problem.'
         );
+        
 		return;
 	}
 
-    $checkout_data = $wc_nuvei->call_checkout(false, true, $wp->query_vars['order-pay']);
-
-    wp_add_inline_script(
-        'nuvei_js_public',
-        'nuveiCheckoutImplementation.name = "order-pay"; Object.freeze(nuveiCheckoutImplementation); jQuery(function() { nuveiPayForExistingOrder('. wp_json_encode( $checkout_data ) .'); });',
-        'after'
-    );
+    // Pass the orderId in custom element, as approve to use Simply Connect logic later.
+    echo '<input type="hidden" id="nuveiPayForExistingOrder" value="'. esc_attr($order_id) .'" />';
 }
 
 // on reorder, show warning message to the cart if need to

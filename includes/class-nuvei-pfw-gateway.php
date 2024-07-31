@@ -200,7 +200,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		Nuvei_Pfw_Logger::write(
 			array(
-				'$order_id'                 => $order_id,
+				'$order_id'                     => $order_id,
                 NUVEI_PFW_SESSION_PROD_DETAILS  => $nuvei_order_details,
 				NUVEI_PFW_SESSION_OO_DETAILS    => $nuvei_oo_details,
 			),
@@ -992,9 +992,9 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             [
                 '$available_gateways'   => array_keys($available_gateways),
                 'is_admin'              => is_admin(),
-//                'is_checkout' => is_checkout(),
-//                'is_checkout_pay_page' => is_checkout_pay_page(),
-//                'is_wc_endpoint_url' => is_wc_endpoint_url(),
+                'is_checkout' => is_checkout(),
+                'is_checkout_pay_page' => is_checkout_pay_page(),
+                'is_wc_endpoint_url' => is_wc_endpoint_url(),
 //                'is_shop()' => is_shop(),
 //                'isset(WC()->session)'  => isset(WC()->session),
                 'isset(WC cart)'        => isset($woocommerce->cart),
@@ -1493,7 +1493,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'title'         => __( 'Integration Type', 'nuvei-payments-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => array(
-					'sdk'       => __( 'Checkout SDK', 'nuvei-payments-for-woocommerce' ),
+					'sdk'       => __( 'Simply Connect', 'nuvei-payments-for-woocommerce' ),
 					'cashier'   => __( 'Payment page - Cashier', 'nuvei-payments-for-woocommerce' ),
 				),
 				'default'       => 0,

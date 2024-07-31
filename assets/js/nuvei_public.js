@@ -370,22 +370,21 @@ function nuveiWcShortcode() {
         onClick: 'someFunction()'
     })
         .insertAfter('#place_order');
-//debugger;
-    jQuery('#place_order').html('Continue');
 
-    // change text on Place order button
-//        jQuery('form.woocommerce-checkout').on('change', 'input[name=payment_method]', function(){
-//            if(jQuery('input[name=payment_method]:checked').val() == scTrans.paymentGatewayName) {
-//                jQuery('#place_order').html(jQuery('#place_order').attr('data-sc-text'));
-//            }
-//            else if(jQuery('#place_order').html() == jQuery('#place_order').attr('data-sc-text')) {
-//                jQuery('#place_order').html(jQuery('#place_order').attr('data-default-text'));
-//            }
-//        });
+    jQuery('#place_order').html('Continue');
 }
 
-function nuveiPayForExistingOrder(_params) {
+/**
+ * A method for the case when the merchant create an Order in the admin, then
+ * the client pay it from its Store profile.
+ * 
+ * @param object _params The SDK params.
+ */
+function nuveiPayForExistingOrder(_orderId) {
     console.log('nuveiPayForExistingOrder');
+    
+    nuveiCheckoutImplementation.name = "order-pay";
+    Object.freeze(nuveiCheckoutImplementation);
     
     // place Checkout container
     // if #nuvei_checkout_container does not exists - create it.
@@ -406,32 +405,55 @@ function nuveiPayForExistingOrder(_params) {
             .append('<input id="nuvei_transaction_id" type="hidden" name="nuvei_transaction_id" value="" />');
     }
 
-    // set event on Place order button
-    jQuery('input[name=payment_method]').on('change', function() {
-        var _self = jQuery(this);
+    // TODO - Prepare form - get Simply Connect params
+    jQuery.ajax({
+        type: "POST",
+        url: scTrans.ajaxurl,
+        data: {
+            action: 'sc-ajax-action',
+            security: scTrans.security,
+            payForExistingOrder: 1,
+            orderId: _orderId
+        },
+        dataType: 'json'
+    })
+        .fail(function() {
+            console.log('Nuvei request failed.');
+            nuveiShowErrorMsg();
+            return;
+        })
+        .done(function(resp) {
+            console.log(resp);
 
-        if(_self.val() == scTrans.paymentGatewayName) {
-            jQuery('#place_order').hide();
-        }
-        else {
-            jQuery('#place_order').show();
-        }
-        
-        if (!nuveiIsCheckoutLoaded) {
-            nuveiIsCheckoutLoaded = true;
-            showNuveiCheckout(_params);
-        }
-    });
-    
-    // hide Place order button if need to
-    if (jQuery('input[name=payment_method]').val() == scTrans.paymentGatewayName) {
-        jQuery('#place_order').hide();
-        
-        if (!nuveiIsCheckoutLoaded) {
-            nuveiIsCheckoutLoaded = true;
-            showNuveiCheckout(_params);
-        }
-    }
+            // set event on Place order button
+            jQuery('input[name=payment_method]').on('change', function() {
+                var _self = jQuery(this);
+
+                if(_self.val() == scTrans.paymentGatewayName) {
+                    jQuery('#place_order').hide();
+                }
+                else {
+                    jQuery('#place_order').show();
+                }
+
+                if (!nuveiIsCheckoutLoaded) {
+                    nuveiIsCheckoutLoaded = true;
+                    showNuveiCheckout(resp);
+                }
+            });
+
+            // hide Place order button if need to
+            if (jQuery('input[name=payment_method]').val() == scTrans.paymentGatewayName) {
+                jQuery('#place_order').hide();
+
+                if (!nuveiIsCheckoutLoaded) {
+                    nuveiIsCheckoutLoaded = true;
+                    showNuveiCheckout(resp);
+                }
+            }
+            
+            return;
+        });
 }
 
 function nuveiPfwChangeThankYouPageMsg(new_title, new_msg, remove_wcs_pay_btn) {
@@ -482,6 +504,15 @@ jQuery(function() {
             return;
         }
     });
+    
+    // When the client is on accout -> orders page and to pay an order
+    // created from the merchant.
+    if (jQuery('#nuveiPayForExistingOrder').length > 0
+        && ! isNaN(jQuery('#nuveiPayForExistingOrder').val())
+        && jQuery('#nuveiPayForExistingOrder').val() > 0
+    ) {
+        nuveiPayForExistingOrder(jQuery('#nuveiPayForExistingOrder').val());
+    }
 });
 // document ready function END
 
