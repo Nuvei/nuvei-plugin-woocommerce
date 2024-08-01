@@ -8,6 +8,7 @@
     * Other chnages made by recommendation of WP.
     * Changed the names of all constants.
     * Changed the names of the classes and its files.
+    * Changed the names of the functions in the main plugin file.
 ```
 
 # 3.1.0

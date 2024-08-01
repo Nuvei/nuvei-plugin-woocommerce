@@ -40,7 +40,7 @@ abstract class Nuvei_Pfw_Request {
 			'merchantSiteId'    => trim( $this->nuvei_gw->get_option( 'merchantSiteId' ) ),
             'clientRequestId'   => uniqid( '', true ),
 			'timeStamp'         => $time,
-			'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION . '; Plugin v' . nuvei_get_plugin_version(),
+			'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION . '; Plugin v' . nuvei_pfw_get_plugin_version(),
 			'sourceApplication' => NUVEI_PFW_SOURCE_APPLICATION,
 			'encoding'          => 'UTF-8',
 			'deviceDetails'     => $this->get_device_details(),
@@ -58,7 +58,6 @@ abstract class Nuvei_Pfw_Request {
 	 *
 	 * @return void
 	 */
-	//  protected function is_order_valid($order_id, $return = false)
 	protected function is_order_valid( $order_id ) {
 		Nuvei_Pfw_Logger::write( $order_id, 'is_order_valid() check.' );
 
@@ -104,7 +103,7 @@ abstract class Nuvei_Pfw_Request {
 
 		// do not replace "completed" with "auth" status
 		if ( 'completed' == $ord_status
-			&& 'auth' == strtolower(sanitize_text_field($_REQUEST['transactionType']) )
+			&& 'auth' == strtolower(Nuvei_Pfw_Http::get_param('transactionType') )
 		) {
 			$msg = 'Error - can not override status Completed with Auth.';
 			Nuvei_Pfw_Logger::write( $this->sc_order->get_payment_method(), $msg );
@@ -122,13 +121,7 @@ abstract class Nuvei_Pfw_Request {
 	 * @return array
 	 */
 	protected function get_order_addresses() {
-        $form_params = [];
-        
-        if ( !empty($_REQUEST['scFormData']) && is_array($_REQUEST['scFormData']) ) {
-            $form_params = $this->sanitize_assoc_array($_REQUEST['scFormData']);
-        }
-                
-        Nuvei_Pfw_Logger::write($form_params, 'get_order_addresses');
+        Nuvei_Pfw_Logger::write('get_order_addresses()');
         
 		// REST API flow
 		if ( ! empty( $this->rest_params ) ) {
@@ -180,6 +173,13 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address        = array();
 		$cart                   = $woocommerce->cart;
         $existing_order_data    = [];
+        $form_params            = [];
+        
+        if ( !empty($_REQUEST['scFormData']) && is_array($_REQUEST['scFormData']) ) {
+            $form_params = $this->sanitize_assoc_array($_REQUEST['scFormData']);
+        }
+        
+        Nuvei_Pfw_Logger::write($form_params, 'get_order_addresses');
         
         if (!empty($this->sc_order)) {
             $existing_order_data = $this->sc_order->get_data();

@@ -47,6 +47,7 @@ https://reactjs.org - React base domain used from Simply Connect;
 * Other chnages made by recommendation of WP.
 * Changed the names of all constants.
 * Changed the names of the classes and its files.
+* Changed the names of the functions in the main plugin file.
 
 = 3.1.0 =
 * Added custom hook 'nuvei_pfwc_after_rebilling_payment' at the end of DMN Rebilling payment logic.
