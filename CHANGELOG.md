@@ -9,6 +9,7 @@
     * Changed the names of all constants.
     * Changed the names of the classes and its files.
     * Changed the names of the functions in the main plugin file.
+    * A direct call to the DB to get few WC settings was replaced with a WP method.
 ```
 
 # 3.1.0

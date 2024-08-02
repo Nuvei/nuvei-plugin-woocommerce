@@ -409,36 +409,13 @@ function nuvei_pfw_load_scripts() {
 		false
 	);
     
-	// get selected WC price separators
-	$wc_th_sep  = '';
-	$wc_dec_sep = '';
-
-	$res = $wpdb->get_results(
-		'SELECT option_name, option_value '
-			. "FROM {$wpdb->prefix}options "
-			. "WHERE option_name LIKE 'woocommerce%_sep' ;",
-		ARRAY_N
-	);
-
-	if ( ! empty( $res ) ) {
-		foreach ( $res as $row ) {
-			if ( false != strpos( $row[0], 'thousand_sep' ) && ! empty( $row[1] ) ) {
-				$wc_th_sep = $row[1];
-			}
-
-			if ( false != strpos( $row[0], 'decimal_sep' ) && ! empty( $row[1] ) ) {
-				$wc_dec_sep = $row[1];
-			}
-		}
-	}
-
 	// put translations here into the array
 	$localizations = array_merge(
 		NUVEI_PFW_JS_LOCALIZATIONS,
 		array(
 			'security'              => wp_create_nonce( 'sc-security-nonce' ),
-			'wcThSep'               => $wc_th_sep,
-			'wcDecSep'              => $wc_dec_sep,
+			'wcThSep'               => get_option('woocommerce_price_thousand_sep'),
+            'wcDecSep'              => get_option('woocommerce_price_decimal_sep'),
 			'useUpos'               => $wc_nuvei->can_use_upos(),
 			'isUserLogged'          => is_user_logged_in() ? 1 : 0,
 			'isPluginActive'        => $wc_nuvei->settings['enabled'],
