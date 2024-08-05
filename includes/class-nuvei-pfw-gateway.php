@@ -195,7 +195,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		Nuvei_Pfw_Logger::write( $order_id, 'process_payment' );
 
 		$nuvei_order_details    = WC()->session->get( NUVEI_PFW_SESSION_PROD_DETAILS );
-		$nuvei_session_token    = key( $nuvei_order_details );
 		$nuvei_oo_details       = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
 
 		Nuvei_Pfw_Logger::write(
@@ -288,9 +287,9 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		# /in case we use Cashier
 
 		 // search for subscr data
-		if ( ! empty( $nuvei_order_details ) ) {
-			Nuvei_Pfw_Logger::write( $nuvei_order_details, '$nuvei_order_details' );
-
+		if ( ! empty( $nuvei_order_details ) && is_array( $nuvei_order_details ) ) {
+            $nuvei_session_token = key( $nuvei_order_details );
+            
 			// save the Nuvei Subscr data to the order
 			if ( ! empty( $nuvei_order_details[ $nuvei_session_token ]['subscr_data'] ) ) {
 				foreach ( $nuvei_order_details[ $nuvei_session_token ]['subscr_data'] as $data ) {
