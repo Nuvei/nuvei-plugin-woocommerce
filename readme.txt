@@ -50,6 +50,8 @@ https://reactjs.org - React base domain used from Simply Connect;
 * Changed the names of the functions in the main plugin file.
 * A direct call to the DB to get few WC settings was replaced with a WP method.
 * Fiexed the problem with the null $nuvei_order_details parameter in process_payment().
+* Changed the defult WC Status for Nuvei Auth transactions to "On-hold", by WC recommendation.
+* Do not controll Refund button form js script, but only form a php hook.
 
 = 3.1.0 =
 * Added custom hook 'nuvei_pfwc_after_rebilling_payment' at the end of DMN Rebilling payment logic.

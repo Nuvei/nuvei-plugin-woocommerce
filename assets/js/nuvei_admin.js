@@ -360,14 +360,14 @@ jQuery(function() {
 	// set the flags END
 	
 	// hide Refund button if the status is refunded
-	if (jQuery('#order_status').val() == 'wc-refunded'
-		|| jQuery('#order_status').val() == 'wc-cancelled'
-		|| jQuery('#order_status').val() == 'wc-pending'
-		|| jQuery('#order_status').val() == 'wc-on-hold'
-		|| jQuery('#order_status').val() == 'wc-failed'
-	) {
-		jQuery('.refund-items').prop('disabled', true);
-	}
+//	if (jQuery('#order_status').val() == 'wc-refunded'
+//		|| jQuery('#order_status').val() == 'wc-cancelled'
+//		|| jQuery('#order_status').val() == 'wc-pending'
+//		|| jQuery('#order_status').val() == 'wc-on-hold'
+//		|| jQuery('#order_status').val() == 'wc-failed'
+//	) {
+//		jQuery('.refund-items').prop('disabled', true);
+//	}
 	
 	jQuery('#refund_amount').prop('readonly', false);
 	jQuery('.do-manual-refund').remove();

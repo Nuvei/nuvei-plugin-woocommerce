@@ -608,7 +608,7 @@ function nuvei_pfw_add_buttons( $order ) {
 			&& 'approved' == strtolower( $tr['status'] )
 		) {
 			$order_refunds[]    = $tr;
-			$ref_amount           += $tr['totalAmount'];
+			$ref_amount         += $tr['totalAmount'];
 		}
 	}
 
@@ -622,14 +622,6 @@ function nuvei_pfw_add_buttons( $order ) {
 		$order_time = $order->get_date_completed()->getTimestamp();
 	}
 
-//    var_dump([
-//        ! in_array( $order_payment_method, NUVEI_PFW_PMS_REFUND_VOID ),
-//        ! in_array( $last_tr_data['transactionType'], array( 'Sale', 'Settle', 'Credit', 'Refund' ) ),
-//        'approved' != strtolower( $last_tr_data['status'] ),
-//        0 == $order_total,
-//        $ref_amount >= $order_total
-//    ]);
-    
 	// hide Refund Button, it is visible by default
 	if ( ! in_array( $order_payment_method, NUVEI_PFW_PMS_REFUND_VOID )
 		|| ! in_array( $last_tr_data['transactionType'], array( 'Sale', 'Settle', 'Credit', 'Refund' ) )

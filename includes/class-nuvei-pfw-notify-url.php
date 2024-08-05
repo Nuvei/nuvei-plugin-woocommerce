@@ -26,6 +26,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		# stop DMNs only on test mode
 //		        exit(wp_json_encode('DMN was stopped, please run it manually!'));
 
+        // Exit - do not process CARD_TOKENIZATION DMNs
 		if ( 'CARD_TOKENIZATION' == Nuvei_Pfw_Http::get_param( 'type' ) ) {
 			$msg = 'Tokenization DMN, waiting for the next one.';
 
@@ -35,6 +36,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 
 		$req_status = Nuvei_Pfw_Http::get_request_status();
 
+        // Exit - do not process PENDING DMNs
 		if ( 'pending' == strtolower( $req_status ) ) {
 			$msg = 'Pending DMN, waiting for the next.';
 
