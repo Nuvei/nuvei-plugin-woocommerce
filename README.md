@@ -33,6 +33,8 @@ Right payment methods at the checkout page can bring you global reach, help you 
 ## Importanat note
 If you have installed plugin version before v1.3.0, and this is your first upgrade, after the upgrade, deactivate and activate plugin again, so new logs directory be created!
 
+If you are used our plugin before v3.2.0, please change plugin setting "Status Authorized" in "Advanced Settings" tab to "On-hold"!
+
 ## Automatic installation
 To do an automatic install, log in to your WordPress dashboard, navigate to the Plugins menu and click Add New. Upload the provided archive and install it. As a final step you should activate the plugin.
 

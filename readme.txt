@@ -31,6 +31,8 @@ https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html - A hel
 https://fonts.googleapis.com - Base domain for fonts used from Simply Connect;
 https://reactjs.org - React base domain used from Simply Connect;
 
+If you are used our plugin before v3.2.0, please change plugin setting "Status Authorized" in "Advanced Settings" tab to "On-hold"!
+
 == Screenshots ==
 
 1. screenshot-1.png.
@@ -51,7 +53,7 @@ https://reactjs.org - React base domain used from Simply Connect;
 * A direct call to the DB to get few WC settings was replaced with a WP method.
 * Fiexed the problem with the null $nuvei_order_details parameter in process_payment().
 * Changed the defult WC Status for Nuvei Auth transactions to "On-hold", by WC recommendation.
-* Do not controll Refund button form js script, but only form a php hook.
+* Do not control Refund button form js script, but only form a php hook.
 
 = 3.1.0 =
 * Added custom hook 'nuvei_pfwc_after_rebilling_payment' at the end of DMN Rebilling payment logic.

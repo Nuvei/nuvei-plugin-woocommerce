@@ -1499,17 +1499,19 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			),
 			// pending dmn -> proccessing
 			'status_pending' => array(
-				'title'     => __( 'Status Pending DMN', 'nuvei-payments-for-woocommerce' ),
-				'type'      => 'select',
-				'options'   => $statuses,
-				'default'   => 'processing',
+				'title'         => __( 'Status Pending DMN', 'nuvei-payments-for-woocommerce' ),
+				'type'          => 'select',
+				'options'       => $statuses,
+				'default'       => 'processing',
+                'description'   => __( 'The status for Nuvei transactions who still wait for a DMN. This change is triggered after Settle, Refund and Void.', 'nuvei-payments-for-woocommerce' ),
 			),
 			// auth -> pending payment
 			'status_auth' => array(
-				'title'     => __( 'Status Authorized', 'nuvei-payments-for-woocommerce' ),
-				'type'      => 'select',
-				'options'   => $statuses,
-				'default'   => 'on-hold',
+				'title'         => __( 'Status Authorized', 'nuvei-payments-for-woocommerce' ),
+				'type'          => 'select',
+				'options'       => $statuses,
+				'default'       => 'on-hold',
+                'description'   => __( 'The status for Nuvei Authorized transactions.', 'nuvei-payments-for-woocommerce' ),
 			),
 			// settle & sale -> completed
 			'status_paid' => array(
@@ -1525,6 +1527,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'type'          => 'select',
 				'options'       => $statuses,
 				'default'       => 'refunded',
+                'description'   => __( 'The status for Nuvei Refunded transactions.', 'nuvei-payments-for-woocommerce' ),
 			),
 			// void -> cancelled
 			'status_void' => array(
@@ -1532,6 +1535,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'type'          => 'select',
 				'options'       => $statuses,
 				'default'       => 'cancelled',
+                'description'   => __( 'The status for Nuvei Voided transactions.', 'nuvei-payments-for-woocommerce' ),
 			),
 			// failed -> failed
 			'status_fail' => array(
@@ -1539,6 +1543,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'type'          => 'select',
 				'options'       => $statuses,
 				'default'       => 'failed',
+                'description'   => __( 'The status for Nuvei Failed transactions.', 'nuvei-payments-for-woocommerce' ),
 			),
 			'combine_cashier_products' => array(
 				'title'         => __( 'Combine Cashier Products into One', 'nuvei-payments-for-woocommerce' ),
