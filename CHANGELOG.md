@@ -1,5 +1,11 @@
 # WooCommerce Extension Changelog
 
+# 3.2.1
+```
+    * Removed old index.php file.
+    * Fix for the admin, when the plugin try to get the unexisting file with the payment plans.
+```
+
 # 3.2.0
 ```
     * Fix for Admin generated Orders, when the store use WC Blocks.

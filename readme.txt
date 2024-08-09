@@ -3,7 +3,7 @@
 Contributors: miroslavnuvei
 Requires at least: 4.7
 Tested up to: 6.6.1
-Stable tag: 3.2.0
+Stable tag: 3.2.1
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -41,6 +41,10 @@ If you are used our plugin before v3.2.0, please change plugin setting "Status A
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.2.1 =
+* Removed old index.php file.
+* Fix for the admin, when the plugin try to get the unexisting file with the payment plans.
 
 = 3.2.0 =
 * Fix for Admin generated Orders, when the store use WC Blocks.

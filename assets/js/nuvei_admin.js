@@ -1,6 +1,11 @@
 var scSettleBtn = null;
 var scVoidBtn   = null;
-var nuveiPlans  = JSON.parse(scTrans.nuveiPaymentPlans);
+
+try {
+	var nuveiPlans = JSON.parse(scTrans.nuveiPaymentPlans);
+} catch (e) {
+	var nuveiPlans = {};
+}
 
 // when the admin select to Settle, Void or Cancel Subscription actions
 function nuveiAction(question, action, orderId, subscrId) {
