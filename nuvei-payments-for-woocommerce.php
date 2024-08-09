@@ -91,9 +91,18 @@ add_action(
 );
 
 /**
- * On activate try to create custom logs directory and few files.
+ * On activate.
+ * Deactivate the old version plugin who use index.php file.
+ * Try to create custom logs directory and few files.
  */
 function nuvei_pfw_plugin_activate() {
+    // try to deactivate the version with index.php
+    try {
+        deactivate_plugins(basename(__DIR__) . '/index.php');
+    } catch (Exception $ex) {
+        // if fail then this plugin not exists
+    }
+    
 	$htaccess_file  = NUVEI_PFW_LOGS_DIR . '.htaccess';
 	$index_file     = NUVEI_PFW_LOGS_DIR . 'index.html';
 	$wp_fs_direct   = new WP_Filesystem_Direct( null );

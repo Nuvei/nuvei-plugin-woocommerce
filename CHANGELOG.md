@@ -2,7 +2,7 @@
 
 # 3.2.1
 ```
-    * Removed old index.php file.
+    * Removed old index.php file and deactivate the version with index.php.
     * Fix for the admin, when the plugin try to get the unexisting file with the payment plans.
 ```
 
