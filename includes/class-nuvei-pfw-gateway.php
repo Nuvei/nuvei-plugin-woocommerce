@@ -1037,8 +1037,38 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	 */
 	public function create_wc_subscr_order( $amount_to_charge, $renewal_order ) {
 		$renewal_order_id   = $renewal_order->get_id();
-		$subscription       = wc_get_order( $renewal_order->get_meta( '_subscription_renewal' ) );
-        $helper             = new Nuvei_Pfw_Helper();
+        $order_all_meta     = $renewal_order->get_meta_data();
+        $subscription_id    = null;
+        $billing_mail       = null;
+        $billing_country    = null;
+        
+        foreach ($order_all_meta as $data) {
+            if (isset($data->key)
+                && '_subscription_renewal' == $data->key
+                && isset($data->value)
+            ) {
+                $subscription_id = $data->value;
+            }
+            
+            if (isset($data->key)
+                && '_billing_email' == $data->key
+                && isset($data->value)
+            ) {
+                $billing_mail = $data->value;
+            }
+            
+            if (isset($data->key)
+                && '_billing_country' == $data->key
+                && isset($data->value)
+            ) {
+                $billing_country = $data->value;
+            }
+            
+        }
+        
+//		$subscription   = wc_get_order( $renewal_order->get_meta( '_subscription_renewal' ) );
+		$subscription   = wc_get_order( $subscription_id );
+        $helper         = new Nuvei_Pfw_Helper();
 
 		if ( ! is_object( $subscription ) ) {
 			Nuvei_Pfw_Logger::write(
@@ -1089,7 +1119,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		}
 		// /get Session Token
 
-		$billing_mail   = $renewal_order->get_meta( '_billing_email' );
+//		$billing_mail   = $renewal_order->get_meta( '_billing_email' );
 		$payment_obj    = new Nuvei_Pfw_Payment( $this->settings );
 		$params         = array(
 			'sessionToken'          => $st_resp['sessionToken'],
@@ -1098,7 +1128,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'currency'              => $renewal_order->get_currency(),
 			'amount'                => round( $renewal_order->get_total(), 2 ),
 			'billingAddress'        => array(
-				'country'   => $renewal_order->get_meta( '_billing_country' ),
+//				'country'   => $renewal_order->get_meta( '_billing_country' ),
+				'country'   => $billing_country,
 				'email'     => $billing_mail,
 			),
 			'paymentOption'         => array( 'userPaymentOptionId' => $helper->get_tr_upo_id( $parent_order_id ) ),

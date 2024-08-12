@@ -1,5 +1,10 @@
 # WooCommerce Extension Changelog
 
+# 3.2.2
+```
+    * Use proper way to get Order private meta data in create_wc_subscr_order();
+```
+
 # 3.2.1
 ```
     * Removed old index.php file and deactivate the version with index.php.
