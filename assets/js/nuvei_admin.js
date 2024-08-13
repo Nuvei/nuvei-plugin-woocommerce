@@ -18,9 +18,9 @@ function nuveiAction(question, action, orderId, subscrId) {
     jQuery('#custom_loader').show();
 
     var data = {
-        action      : 'sc-ajax-action',
-        security    : scTrans.security,
-        orderId     : orderId
+        action: 'sc-ajax-action',
+        nuveiSecurity: scTrans.nuveiSecurity,
+        orderId: orderId
     };
 
     if (action == 'settle') {
@@ -110,10 +110,10 @@ function scCreateRefund(question) {
 	jQuery('body').find('#sc_refund_spinner').show();
 	
 	var data = {
-		action      : 'sc-ajax-action',
-		security	: scTrans.security,
-		refAmount	: refAmount,
-		postId		: jQuery("#post_ID").val()
+		action: 'sc-ajax-action',
+		nuveiSecurity: scTrans.nuveiSecurity,
+		refAmount: refAmount,
+		postId: jQuery("#post_ID").val()
 	};
 
 	jQuery.ajax({
@@ -205,9 +205,9 @@ function nuveiSyncPaymentPlans() {
 		type: "POST",
 		url: scTrans.ajaxurl,
 		data: {
-			action			: 'sc-ajax-action',
-			downloadPlans	: 1,
-			security		: scTrans.security,
+			action: 'sc-ajax-action',
+			downloadPlans: 1,
+			nuveiSecurity: scTrans.nuveiSecurity,
 		},
 		dataType: 'json'
 	})

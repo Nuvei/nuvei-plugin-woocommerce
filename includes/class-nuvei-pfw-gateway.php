@@ -366,7 +366,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		}
 
 		// revert buttons on Recalculate
-		if ( Nuvei_Pfw_Http::get_param( 'refund_amount', 'float', 0 ) == 0 
+		if ( Nuvei_Pfw_Http::get_param( 'refund_amount', 'float', 0, array(), true ) == 0 
             && ! empty( Nuvei_Pfw_Http::get_param( 'items' ) ) 
         ) {
             wp_add_inline_script(
@@ -399,6 +399,11 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		return;
 	}
 
+    /**
+     * @global $woocommerce $woocommerce
+     * 
+     * @deprecated since version 3.1.0
+     */
 	public function reorder() {
 		global $woocommerce;
 
@@ -777,14 +782,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$pm_black_list          = trim( $this->get_option( 'pm_black_list', '' ) );
 		$is_there_subscription  = false;
 		$locale                 = substr( get_locale(), 0, 2 );
-//		$total                  = '0.00';
 		$total                  = $oo_data['amount'];
-
-//		if ( isset( $woocommerce->cart->total ) ) {
-//			$total = (string) number_format( (float) $woocommerce->cart->total, 2, '.', '' );
-//		} elseif ( ! empty( $this->rest_params ) ) {
-//			$total = $nuvei_helper->get_rest_total( $this->rest_params );
-//		}
 
 		if ( ! empty( $pm_black_list ) ) {
 			$pm_black_list = explode( ',', $pm_black_list );
@@ -850,7 +848,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				),
 			),
             'sourceApplication'         => NUVEI_PFW_SOURCE_APPLICATION,
-            'urlPrefix'                 => NUVEI_PFW_SIMPLY_CONNECT_PATH,
+//            'urlPrefix'                 => NUVEI_PFW_SIMPLY_CONNECT_PATH,
 		);
 
 		// check for product with a plan
@@ -1075,7 +1073,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				array(
 					'$amount_to_charge' => $amount_to_charge,
 					'$renewal_order'    => (array) $renewal_order,
-					'$request'          => $helper->helper_sanitize_assoc_array(),
+//					'$request'          => $helper->helper_sanitize_assoc_array(),
 					'$subscription'     => $subscription,
 					'$renewal_order_id' => $renewal_order_id,
 					'get_post_meta'     => $renewal_order->get_meta_data(),
@@ -1264,7 +1262,9 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		Nuvei_Pfw_Logger::write( 'get_cashier_url()' );
 
 		$nuvei_helper  = new Nuvei_Pfw_Helper();
-		$addresses     = $nuvei_helper->get_addresses( array( 'billing_address' => $this->order->get_address() ) );
+		$addresses     = $nuvei_helper->get_addresses( array( 
+            'billing_address' => $this->order->get_address()
+        ) );
 		$total_amount  = (string) number_format( (float) $this->order->get_total(), 2, '.', '' );
 		$shipping      = '0.00';
 		$handling      = '0.00'; // put the tax here, because for Cashier the tax is in %

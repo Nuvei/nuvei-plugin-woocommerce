@@ -18,18 +18,22 @@ A wide selection of region-specific payment methods can help your business grow 
 
 Right payment methods at the checkout page can bring you global reach, help you increase conversions and create a seamless experience for your customers.
 
-This plugin use pre-build version of Nuvei Simply Connect SDK. For more information about Simply Connect, please check its [documentation](https://docs.nuvei.com/documentation/accept-payment/simply-connect/).
+Our plug in is enabling customer to accept payments over credit / debit cards and other methods. For the purpose, our plug in is using Nuvei’s own simply connect SDK. Since we are top tier payment provider, we hold the highest Data security standard level 1 and we take payment data security seriously. Our simply connect is hosted on our won Nuvei servers which are audited every year for PCI compliance.
 
-To work proper our plugin relay of 3rd party services to send and receive information. All of this services belongs to Nuvei, former SafeCharge. Below are described the services we are using:
+For more information about Simply Connect, please check its [documentation](https://docs.nuvei.com/documentation/accept-payment/simply-connect/).
 
-https://ppp-test.safecharge.com - Nuvei's Cashier Sanbox domain;
-https://secure.safecharge.com - Nuvei's Cashier Production domain;
-https://docs.nuvei.com - Nuvei's Documentation domain;
-https://ppp-test.nuvei.com/ppp/api/v1/ - The base part ot Nuvei's Sanbox REST API URL;
-https://secure.safecharge.com/ppp/api/v1/ - The nase part of Nuvei's Production REST API URL;
-https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html - A help URL who close APM popup, when use it;
-https://fonts.googleapis.com - Base domain for fonts used from Simply Connect;
-https://reactjs.org - React base domain used from Simply Connect;
+To work proper our plugin relay of additional services to send order and client data and receive information about the transactions. All of this services (and the plugin) belongs to Nuvei, former SafeCharge. Below are described the services we are using:
+
+https://ppp-test.nuvei.com/ppp/api/v1/ - Nuvei' Sandbox REST API path;
+https://secure.safecharge.com/ppp/api/v1/ - Nuvei's Production REST API path;
+https://cdn.safecharge.com/safecharge_resources/v1/checkout/simplyConnect.js - The Production URL to the Nuvei' Simply Connect;
+https://devmobile.sccdev-qa.com/checkoutNext/simplyConnect.js - The QA URL to the Nuvei' Simply Connect;
+https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html - A help URL who close APM popup, when it is used;
+https://ppp-test.safecharge.com/ppp/purchase.do - Nuvei' Sandbox Redirect payment page;
+https://secure.safecharge.com/ppp/purchase.do - Nuvei's Production Redirect payment page;
+https://docs.nuvei.com/documentation/accept-payment/simply-connect/payment-customization/#dynamic-currency-conversion - A link to Nuvei's Documentation;
+https://docs.nuvei.com/documentation/accept-payment/checkout-2/payment-customization/#card-processing - A link to Nuvei's Documentation;
+https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation - A link to Nuvei's Documentation;
 
 If you are used our plugin before v3.2.0, please change plugin setting "Status Authorized" in "Advanced Settings" tab to "On-hold"!
 

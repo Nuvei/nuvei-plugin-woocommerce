@@ -116,7 +116,7 @@ class Nuvei_Pfw_Helper extends Nuvei_Pfw_Request {
 		return $this->get_order_rebiling_details( $all_data );
 	}
     
-    public function helper_sanitize_assoc_array($glob_arr = array()) {
-        return $this->sanitize_assoc_array($glob_arr);
-    }
+//    public function helper_sanitize_assoc_array($glob_arr = array()) {
+//        return $this->sanitize_assoc_array($glob_arr);
+//    }
 }

@@ -8,56 +8,83 @@ defined( 'ABSPATH' ) || exit;
 class Nuvei_Pfw_Http {
 
 	/**
-	 * Get request parameter by key
+	 * Get request parameter by key.
 	 *
-	 * @param string    $key - request key
-	 * @param string    $type - possible vaues: string, float, int, array, mail/email, other
-	 * @param mixed     $default - return value if fail
-	 * @param array     $parent - optional list with parameters
+	 * @param string    $key            Request key.
+	 * @param string    $type           Possible vaues: string, float, int, array, mail/email, other.
+	 * @param mixed     $default        Return value if fail.
+	 * @param array     $parent         Optional array with parameters to search in.
+	 * @param bool      $check_nonce    Check for nonce or no. We use this method mostly for otside requests, so the default will be false.
 	 *
 	 * @return mixed
 	 */
-	public static function get_param( $key, $type = 'string', $default = '', $parent = array() ) {
-		if ( ! empty( $parent ) && is_array( $parent ) ) {
-			$arr = $parent;
-		} else {
-            $helper = new Nuvei_Pfw_Helper();
-			$arr    = $helper->helper_sanitize_assoc_array();
-		}
-
-		switch ( $type ) {
+	public static function get_param( $key, $type = 'string', $default = '', $parent = array(), $check_nonce = false ) {
+		if ($check_nonce 
+            && ! check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false )
+        ) {
+            Nuvei_Pfw_Logger::write(
+                ['$key' => sanitize_text_field($key)],
+                'Faild to check nonce.'
+            );
+            
+            if (in_array($type, array('int', 'float'))) {
+                return 0;
+            }
+            
+            return '';
+        }
+        
+        switch ( $type ) {
 			case 'mail':
 			case 'email':
-				return ! empty( $arr[ $key ] ) ? sanitize_email( $arr[ $key ] ) : $default;
+                if ( ! empty( $parent[ $key ] ) ) {
+                    return sanitize_email( $parent[ $key ] );
+                }
+                
+                if ( ! empty( $_REQUEST[ $key ] ) ) {
+                    return sanitize_email( $_REQUEST[ $key ] );
+                }
+                
+                return $default;
 
 			case 'float':
-				if ( empty( $default ) ) {
+                if ( isset( $parent[ $key ] ) ) {
+                    return (float) $parent[ $key ];
+                } 
+                if ( isset( $_REQUEST[ $key ] ) ) {
+                    return (float) $_REQUEST[ $key ];
+                }
+                
+				if ( !is_numeric( $default ) ) {
 					$default = 0;
 				}
-
-				return ( ! empty( $arr[ $key ] ) && is_numeric( $arr[ $key ] ) ) ? (float) $arr[ $key ] : $default;
+                
+                return $default;
 
 			case 'int':
-				if ( empty( $default ) ) {
+                if ( isset( $parent[ $key ] ) ) {
+                    return (int) $parent[ $key ];
+                } 
+                if ( isset( $_REQUEST[ $key ] ) ) {
+                    return (int) $_REQUEST[ $key ];
+                }
+                
+				if ( !is_numeric( $default ) ) {
 					$default = 0;
 				}
 
-				return ( ! empty( $arr[ $key ] ) && is_numeric( $arr[ $key ] ) ) ? (int) $arr[ $key ] : $default;
-
-			case 'array':
-				if ( empty( $default ) || ! is_array( $default ) ) {
-					$default = array();
-				}
-
-				return (isset($arr[ $key ]) && is_array($arr[ $key ])) ? sanitize_text_field($arr[ $key ]) : $default;
-
-			case 'json':
-//				return ! empty( $arr[ $key ] ) ? filter_var( stripslashes( $arr[ $key ] ), FILTER_DEFAULT ) : $default;
-				return ! empty( $arr[ $key ] ) ? htmlspecialchars( $arr[ $key ], ENT_NOQUOTES ) : $default;
+				return $default;
 
             case 'string':
 			default:
-				return ! empty( $arr[ $key ] ) ? sanitize_text_field( $arr[ $key ] ) : $default;
+                if ( isset( $parent[ $key ] ) ) {
+                    return sanitize_term_field($parent[ $key ]);
+                } 
+                if ( isset( $_REQUEST[ $key ] ) ) {
+                    return sanitize_term_field($_REQUEST[ $key ]);
+                }
+                
+				return $default;
 		}
 	}
 

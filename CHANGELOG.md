@@ -3,6 +3,7 @@
 # 3.2.2
 ```
     * Use proper way to get Order private meta data in create_wc_subscr_order();
+    * Replaced local Simply Connect with a link to its SDN.
 ```
 
 # 3.2.1

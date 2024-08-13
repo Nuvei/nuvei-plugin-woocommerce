@@ -163,7 +163,7 @@ function nuvei_pfw_init() {
 
 			if ( empty( $errors->errors )
                 && NUVEI_PFW_GATEWAY_NAME == $data['payment_method']
-                && empty( Nuvei_Pfw_Http::get_param( 'nuvei_transaction_id' ) )
+                && empty( Nuvei_Pfw_Http::get_param( 'nuvei_transaction_id', 'int', 0, array(), true ) )
 			) {
 				if ( isset( $wc_nuvei->settings['integration_type'] )
                     && 'cashier' != $wc_nuvei->settings['integration_type']
@@ -188,7 +188,7 @@ function nuvei_pfw_init() {
 	add_filter( 'woocommerce_pay_order_after_submit', 'nuvei_pfw_user_orders' );
 
     // Show some custom meassages if need to.
-	if ( ! empty( Nuvei_Pfw_Http::get_param('sc_msg')) ) {
+	if ( ! empty( Nuvei_Pfw_Http::get_param('sc_msg', 'string', '', array(), true)) ) {
 		add_filter( 'woocommerce_before_cart', 'nuvei_pfw_show_message_on_cart', 10, 2 );
 	}
 
@@ -267,7 +267,7 @@ function nuvei_pfw_init() {
  * Main function for the Ajax requests.
  */
 function nuvei_pfw_ajax_action() {
-	if ( ! check_ajax_referer( 'sc-security-nonce', 'security', false ) ) {
+	if ( ! check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false ) ) {
 		wp_send_json_error( __( 'Invalid security token sent.', 'nuvei-payments-for-woocommerce' ) );
 		wp_die( 'Invalid security token sent' );
 	}
@@ -350,9 +350,9 @@ function nuvei_pfw_ajax_action() {
 	}
 
 	// when Reorder
-	if ( Nuvei_Pfw_Http::get_param( 'sc_request' ) == 'scReorder' ) {
-		$wc_nuvei->reorder();
-	}
+//	if ( Nuvei_Pfw_Http::get_param( 'sc_request' ) == 'scReorder' ) {
+//		$wc_nuvei->reorder();
+//	}
 
 	// download Subscriptions Plans
 	if ( Nuvei_Pfw_Http::get_param( 'downloadPlans', 'int' ) == 1 ) {
@@ -398,14 +398,24 @@ function nuvei_pfw_load_scripts() {
 	global $wc_nuvei;
 	global $wpdb;
 
-	$plugin_url = plugin_dir_url( __FILE__ );
+	$plugin_url     = plugin_dir_url( __FILE__ );
+    $sdkUrl         = NUVEI_PFW_SDK_URL_PROD;
+    $server_name    = filter_var($_SERVER['SERVER_NAME'], FILTER_SANITIZE_URL);
+    
+    if (!empty($server_name) 
+        && 'woocommerceautomation.gw-4u.com' == $server_name
+        && defined('NUVEI_SDK_URL_TAG')
+    ) {
+        $sdkUrl = NUVEI_PFW_SDK_URL_TAG;
+    }
     
     // load the SDK
     wp_register_script(
 		'nuvei_checkout_sdk',
-		NUVEI_PFW_SIMPLY_CONNECT_PATH . 'simplyConnect.js',
+//		NUVEI_PFW_SIMPLY_CONNECT_PATH . 'simplyConnect.js',
+		$sdkUrl,
 		array('jquery'),
-		'1.140.0',
+		'2024-08-13',
         false
 	);
 
@@ -422,7 +432,7 @@ function nuvei_pfw_load_scripts() {
 	$localizations = array_merge(
 		NUVEI_PFW_JS_LOCALIZATIONS,
 		array(
-			'security'              => wp_create_nonce( 'sc-security-nonce' ),
+			'nuveiSecurity'         => wp_create_nonce( 'nuvei-security-nonce' ),
 			'wcThSep'               => get_option('woocommerce_price_thousand_sep'),
             'wcDecSep'              => get_option('woocommerce_price_decimal_sep'),
 			'useUpos'               => $wc_nuvei->can_use_upos(),
@@ -513,7 +523,7 @@ function nuvei_pfw_load_admin_styles_scripts( $hook ) {
     
 	// get the list of the plans
 	$nuvei_plans_path   = NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE;
-	$plans_list         = json_encode(array());
+	$plans_list         = wp_json_encode(array());
 	$wp_fs_direct       = new WP_Filesystem_Direct( null );
 
 	if ( is_readable( $nuvei_plans_path ) ) {
@@ -525,7 +535,7 @@ function nuvei_pfw_load_admin_styles_scripts( $hook ) {
 	$localizations = array_merge(
 		NUVEI_PFW_JS_LOCALIZATIONS,
 		array(
-			'security'          => wp_create_nonce( 'sc-security-nonce' ),
+			'nuveiSecurity'     => wp_create_nonce( 'nuvei-security-nonce' ),
 			'nuveiPaymentPlans' => $plans_list,
 			'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION
 				. '; Plugin v' . nuvei_pfw_get_plugin_version(),
@@ -747,16 +757,11 @@ function nuvei_pfw_mod_thank_you_page( $order_id ) {
 		$new_title  = esc_html__( 'Order canceled', 'nuvei-payments-for-woocommerce' );
 	}
 
-//	if ( ! empty( $new_title ) ) {
-//		$output .= 'jQuery(".entry-title").html("' . $new_title . '"); '
-//			. 'jQuery(".woocommerce-thankyou-order-received").html("' . $new_msg . '"); ';
-//	}
 	# /Modify title and the text on errors
 
 	# when WCS is turn on, remove Pay button
 	if ( is_plugin_active( 'woocommerce-subscriptions' . DIRECTORY_SEPARATOR . 'woocommerce-subscriptions.php' ) ) {
         $removeWCSPayBtn = true;
-//		$output .= 'if (0 == jQuery("a.pay").length) { jQuery("a.pay").hide(); }';
 	}
 
     wp_add_inline_script(
@@ -773,22 +778,22 @@ function nuvei_pfw_mod_thank_you_page( $order_id ) {
  * @deprecated since version 3.1.1
  */
 function nuvei_pfw_edit_order_buttons() {
-	$default_text          = __( 'Place order', 'nuvei-payments-for-woocommerce' );
-	$sc_continue_text      = __( 'Continue', 'nuvei-payments-for-woocommerce' );
 	$chosen_payment_method = WC()->session->get( 'chosen_payment_method' );
 
 	// save default text into button attribute
     wp_add_inline_script(
         'nuvei_js_public',
-        'jQuery("#place_order").attr("data-default-text", "' .  $default_text .'").attr("data-sc-text", "' . $sc_continue_text . '"); });'
+        'jQuery("#place_order").attr("data-default-text", "' 
+            . esc_html__('Place order', 'nuvei-payments-for-woocommerce') .'").attr("data-sc-text", "' 
+            . esc_html__('Continue', 'nuvei-payments-for-woocommerce') . '"); });'
     );
 
 	// check for 'sc' also, because of the older Orders
 	if ( in_array( $chosen_payment_method, array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) ) ) {
-		return $sc_continue_text;
+		return __( 'Continue', 'nuvei-payments-for-woocommerce' );
 	}
 
-	return $default_text;
+	return __( 'Place order', 'nuvei-payments-for-woocommerce' );
 }
 
 /**
@@ -832,15 +837,16 @@ function nuvei_pfw_user_orders() {
         return;
     }
 
-    $order_id   = $wp->query_vars['order-pay'];
-	$order      = wc_get_order( $order_id );
-	$order_key  = $order->get_order_key();
+    $order_id       = $wp->query_vars['order-pay'];
+	$order          = wc_get_order( $order_id );
+	$order_key      = $order->get_order_key();
+    $order_key_url  = Nuvei_Pfw_Http::get_param( 'key' );
     
     // error
-	if ( Nuvei_Pfw_Http::get_param( 'key' ) != $order_key ) {
+	if ( $order_key_url != $order_key ) {
         Nuvei_Pfw_Logger::write(
             [
-                'param key' => Nuvei_Pfw_Http::get_param( 'key' ),
+                'param key' => $order_key_url,
                 '$order_key' => $order_key
             ],
             'Order key problem.'
@@ -857,7 +863,8 @@ function nuvei_pfw_user_orders() {
 function nuvei_pfw_show_message_on_cart( $data ) {
     wp_add_inline_script(
         'nuvei_js_public',
-        'jQuery("#content .woocommerce:first").append("<div class=\'woocommerce-warning\'>' . wp_kses_post( Nuvei_Pfw_Http::get_param( 'sc_msg' ) ) . '</div>");',
+        'jQuery("#content .woocommerce:first").append("<div class=\'woocommerce-warning\'>' 
+            . wp_kses_post( Nuvei_Pfw_Http::get_param( 'sc_msg' ) ) . '</div>");',
         'after'
     );
 }
@@ -907,6 +914,11 @@ function nuvei_pfw_edit_term_meta_form( $term, $taxonomy ) {
 }
 
 function nuvei_pfw_save_term_meta( $term_id, $tt_id ) {
+    if (!check_admin_referer('_wpnonce')) {
+        Nuvei_Pfw_Logger::write('', 'Cannot validate admin nonce.', 'WARN');
+        return;
+    }
+    
 	$taxonomy      = 'pa_' . Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME );
 	$post_taxonomy = Nuvei_Pfw_Http::get_param( 'taxonomy', 'string' );
 
@@ -928,6 +940,11 @@ function nuvei_pfw_save_term_meta( $term_id, $tt_id ) {
 }
 
 function nuvei_pfw_edit_term_meta( $term_id, $tt_id ) {
+    if (!check_admin_referer('_wpnonce')) {
+        Nuvei_Pfw_Logger::write('', 'Cannot validate admin nonce.', 'WARN');
+        return;
+    }
+    
 	$taxonomy      = 'pa_' . Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME );
 	$post_taxonomy = Nuvei_Pfw_Http::get_param( 'taxonomy', 'string' );
 

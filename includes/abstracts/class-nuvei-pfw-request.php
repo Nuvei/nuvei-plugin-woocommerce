@@ -173,13 +173,6 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address        = array();
 		$cart                   = $woocommerce->cart;
         $existing_order_data    = [];
-        $form_params            = [];
-        
-        if ( !empty($_REQUEST['scFormData']) && is_array($_REQUEST['scFormData']) ) {
-            $form_params = $this->sanitize_assoc_array($_REQUEST['scFormData']);
-        }
-        
-        Nuvei_Pfw_Logger::write($form_params, 'get_order_addresses');
         
         if (!empty($this->sc_order)) {
             $existing_order_data = $this->sc_order->get_data();
@@ -187,10 +180,7 @@ abstract class Nuvei_Pfw_Request {
         
 		# Set billing params.
 		// billing_first_name
-        $bfn = max(
-            trim(Nuvei_Pfw_Http::get_param('billing_first_name', 'string', '', $form_params)), // shortcode
-            trim(Nuvei_Pfw_Http::get_param('billing-first_name', 'string', '', $form_params)), // blocks
-        );
+        $bfn = $this->get_scformdata_address_parts('first_name');
         
         if (!empty($existing_order_data['billing']['first_name'])) {
             $bfn = trim($existing_order_data['billing']['first_name']);
@@ -202,10 +192,7 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['firstName'] = ! empty( $bfn ) ? $bfn : 'Missing parameter';
 
 		// billing_last_name
-		$bln = max(
-            trim(Nuvei_Pfw_Http::get_param('billing_last_name', 'string', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('billing-last_name', 'string', '', $form_params))
-        );
+        $bln = $this->get_scformdata_address_parts('last_name');
         
         if (!empty($existing_order_data['billing']['last_name'])) {
             $bln = trim($existing_order_data['billing']['last_name']);
@@ -218,15 +205,9 @@ abstract class Nuvei_Pfw_Request {
 
 		// address
 		$ba     = '';
-		$ba_ln1 = max(
-            trim(Nuvei_Pfw_Http::get_param('billing_address_1', 'string', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('billing-address_1', 'string', '', $form_params))
-        );
-		$ba_ln2 = max(
-            trim(Nuvei_Pfw_Http::get_param('billing_address_2', 'string', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('billing-address_2', 'string', '', $form_params))
-        );
-
+        $ba_ln1 = $this->get_scformdata_address_parts('address_1');
+        $ba_ln2 = $this->get_scformdata_address_parts('address_2');
+        
 		if ( ! empty( $ba_ln1 ) ) {
 			$ba = $ba_ln1;
 
@@ -262,11 +243,8 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['address'] = ! empty( $ba ) ? $ba : 'Missing parameter';
 
 		// billing_phone
-		$bp = max(
-            trim(Nuvei_Pfw_Http::get_param('billing_phone', 'string', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('billing-phone', 'string', '', $form_params))
-        );
-		
+        $bp = $this->get_scformdata_address_parts('phone');
+        
         if (!empty($existing_order_data['billing']['phone'])) {
             $bp = trim($existing_order_data['billing']['phone']);
         }
@@ -277,10 +255,7 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['phone'] = ! empty( $bp ) ? $bp : 'Missing parameter';
 
 		// billing_postcode
-		$bz = max(
-            trim(Nuvei_Pfw_Http::get_param('billing_postcode', 'string', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('billing-postcode', 'string', '', $form_params))
-        );
+        $bz = $this->get_scformdata_address_parts('postcode');
         
         if (!empty($existing_order_data['billing']['postcode'])) {
             $bz = trim($existing_order_data['billing']['postcode']);
@@ -292,11 +267,8 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['zip'] = ! empty( $bz ) ? $bz : 'Missing parameter';
 
 		// billing_city
-		$bc = max(
-            trim(Nuvei_Pfw_Http::get_param('billing_city', 'string', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('billing-city', 'string', '', $form_params))
-        );
-		
+        $bc = $this->get_scformdata_address_parts('city');
+        
         if (!empty($existing_order_data['billing']['city'])) {
             $bc = trim($existing_order_data['billing']['city']);
         }
@@ -307,11 +279,8 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['city'] = ! empty( $bc ) ? $bc : 'Missing parameter';
 
 		// billing_country
-		$bcn = max(
-            trim(Nuvei_Pfw_Http::get_param('billing_country', 'string', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('billing-country', 'string', '', $form_params))
-        );
-		
+        $bcn = $this->get_scformdata_address_parts('country');
+        
         if (!empty($existing_order_data['billing']['country'])) {
             $bcn = trim($existing_order_data['billing']['country']);
         }
@@ -322,11 +291,8 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['country'] = $bcn;
 
 		//billing state
-		$bst = max(
-            trim(Nuvei_Pfw_Http::get_param('billing_state', 'string', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('billing-state', 'string', '', $form_params))
-        );
-		
+        $bst = $this->get_scformdata_address_parts('state');
+        
         if (!empty($existing_order_data['billing']['state'])) {
             $bst = trim($existing_order_data['billing']['state']);
         }
@@ -337,12 +303,8 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['state'] = $bst;
 
 		// billing_email
-		$be = max(
-            trim(Nuvei_Pfw_Http::get_param('billing_email', 'email', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('billing-email', 'email', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('email', 'email', '', $form_params))
-        );
-		
+        $be = $this->get_scformdata_address_parts('email');
+        
         if (!empty($existing_order_data['billing']['email'])) {
             $be = trim($existing_order_data['billing']['email']);
         }
@@ -354,10 +316,8 @@ abstract class Nuvei_Pfw_Request {
 		# set billing params END
 
         # set shipping params
-		$sfn = max(
-            trim(Nuvei_Pfw_Http::get_param('shipping_first_name', 'string', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('shipping-first_name', 'string', '', $form_params))
-        );
+        // shipping first name
+        $sfn = $this->get_scformdata_address_parts('first_name', 'shipping');
         
         if (!empty($existing_order_data['shipping']['first_name'])) {
             $sfn = trim($existing_order_data['shipping']['first_name']);
@@ -366,11 +326,8 @@ abstract class Nuvei_Pfw_Request {
 			$sfn = trim($cart->get_customer()->get_shipping_first_name());
 		}
 
-        //
-		$sln = max(
-            trim(Nuvei_Pfw_Http::get_param('shipping_last_name', 'string', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('shipping-last_name', 'string', '', $form_params))
-        );
+        // shippinh last name
+        $sln = $this->get_scformdata_address_parts('last_name', 'shipping');
         
         if (!empty($existing_order_data['shipping']['last_name'])) {
             $sln = trim($existing_order_data['shipping']['last_name']);
@@ -379,13 +336,10 @@ abstract class Nuvei_Pfw_Request {
 			$sln = trim($cart->get_customer()->get_shipping_last_name());
 		}
 
-        //
-		$sa = max(
-            trim(Nuvei_Pfw_Http::get_param('shipping_address_1', 'string', '', $form_params) . ' ' 
-                . Nuvei_Pfw_Http::get_param('shipping_address_2', 'string', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('shipping-address_1', 'string', '', $form_params) . ' ' 
-                . Nuvei_Pfw_Http::get_param('shipping-address_2', 'string', '', $form_params))
-        );
+        // shipping address
+        $sa_l1  = $this->get_scformdata_address_parts('address_1', 'shipping');
+        $sa_l2  = $this->get_scformdata_address_parts('address_2', 'shipping');
+        $sa     = trim($sa_l1 . ' ' . $sa_l2);
         
         if (!empty($existing_order_data['shipping']['address_1'])) {
             $sa = trim($existing_order_data['shipping']['address_1']);
@@ -399,11 +353,8 @@ abstract class Nuvei_Pfw_Request {
 				. $cart->get_customer()->get_shipping_address_2());
 		}
 
-        //
-		$sz = max(
-            trim(Nuvei_Pfw_Http::get_param('shipping_postcode', 'string', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('shipping-postcode', 'string', '', $form_params))
-        );
+        // shipping zip
+        $sz = $this->get_scformdata_address_parts('postcode', 'shipping');
         
         if (!empty($existing_order_data['shipping']['postcode'])) {
             $sz = trim($existing_order_data['shipping']['postcode']);
@@ -412,11 +363,8 @@ abstract class Nuvei_Pfw_Request {
 			$sz = trim($cart->get_customer()->get_shipping_postcode());
 		}
 
-        //
-		$sc = max(
-            trim(Nuvei_Pfw_Http::get_param('shipping_city', 'string', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('shipping-city', 'string', '', $form_params))
-        );
+        // shipping city
+        $sc = $this->get_scformdata_address_parts('city', 'shipping');
         
         if (!empty($existing_order_data['shipping']['city'])) {
             $sc = trim($existing_order_data['shipping']['city']);
@@ -425,11 +373,8 @@ abstract class Nuvei_Pfw_Request {
 			$sc = trim($cart->get_customer()->get_shipping_city());
 		}
 
-        //
-		$scn = max(
-            trim(Nuvei_Pfw_Http::get_param('shipping_country', 'string', '', $form_params)),
-            trim(Nuvei_Pfw_Http::get_param('shipping-country', 'string', '', $form_params)),
-        );
+        // shipping country
+        $scn = $this->get_scformdata_address_parts('country', 'shipping');
         
         if (!empty($existing_order_data['shipping']['country'])) {
             $scn = trim($existing_order_data['shipping']['country']);
@@ -450,6 +395,37 @@ abstract class Nuvei_Pfw_Request {
 			),
 		);
 	}
+    
+    /**
+     * A helper function to safty check for, and get address parameters from the store request.
+     * 
+     * @param string $field The field we are looking for.
+     * @param string $group The address group - shipping or billing.
+     * 
+     * @return string
+     */
+    private function get_scformdata_address_parts($field, $group = 'billing') {
+        if ( ! check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false ) ) {
+            Nuvei_Pfw_Logger::write('Securtity parameter is missing or nonce is not valid');
+            return '';
+        }
+
+        // shortcode
+        if (!empty($_REQUEST['scFormData'][$group . '_' . $field])) {
+            return trim(sanitize_text_field($_REQUEST['scFormData'][$group . '_' . $field]));
+        }
+        // blocks
+        elseif (!empty($_REQUEST['scFormData'][$group . '-' . $field])) {
+            return trim(sanitize_text_field($_REQUEST['scFormData'][$group . '-' . $field]));
+        }
+        
+        // additional check for the email
+        if ('email' == $field && !empty($_REQUEST['scFormData']['email'])) {
+            $be = trim(sanitize_email($_REQUEST['scFormData']['email']));
+        }
+        
+        return '';
+    }
 
 	/**
 	 * Call REST API with cURL post and get response.
@@ -1265,28 +1241,28 @@ abstract class Nuvei_Pfw_Request {
      * @param array $arr
      * @return array
      */
-    protected function sanitize_assoc_array($arr = array()) {
-        if ( !is_array($arr) ) {
-            return array();
-        }
-        
-        if ( empty($arr) ) {
-            $arr = $_REQUEST;
-        }
-        
-        $keys   = array_keys($arr);
-        $values = array_values($arr);
-        
-        $san_keys = array_map(function($val) {
-            return sanitize_text_field($val);
-        }, $keys);
-        
-        $san_values = array_map(function($val) {
-            return sanitize_text_field($val);
-        }, $values);
-        
-        return array_combine($san_keys, $san_values);
-    }
+//    protected function sanitize_assoc_array($arr = array()) {
+//        if ( !is_array($arr) ) {
+//            return array();
+//        }
+//        
+//        if ( empty($arr) ) {
+//            $arr = $_REQUEST;
+//        }
+//        
+//        $keys   = array_keys($arr);
+//        $values = array_values($arr);
+//        
+//        $san_keys = array_map(function($val) {
+//            return sanitize_text_field($val);
+//        }, $keys);
+//        
+//        $san_values = array_map(function($val) {
+//            return sanitize_text_field($val);
+//        }, $values);
+//        
+//        return array_combine($san_keys, $san_values);
+//    }
 
     /**
 	 * Get the request endpoint - sandbox or production.

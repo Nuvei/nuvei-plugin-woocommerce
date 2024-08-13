@@ -120,7 +120,7 @@ var nuveiCheckoutBlocks = {
             url: scTrans.ajaxurl,
             data: {
                 action: 'sc-ajax-action',
-                security: scTrans.security,
+                nuveiSecurity: scTrans.nuveiSecurity,
                 getBlocksCheckoutData: 1,
                 scFormData: scFormData
             },
@@ -313,7 +313,7 @@ function nuveiPrePayment(paymentDetails) {
     
     var postData    = {
         action: 'sc-ajax-action',
-        security: scTrans.security,
+        nuveiSecurity: scTrans.nuveiSecurity,
         prePayment: 1
     };
     
@@ -411,7 +411,7 @@ function nuveiPayForExistingOrder(_orderId) {
         url: scTrans.ajaxurl,
         data: {
             action: 'sc-ajax-action',
-            security: scTrans.security,
+            nuveiSecurity: scTrans.nuveiSecurity,
             payForExistingOrder: 1,
             orderId: _orderId
         },

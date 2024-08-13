@@ -3,15 +3,44 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * A class to work the DMNs.
+ * A class to work with the DMNs.
+ * Here we expect outside requests. Validating with nonce is not needed, because we validate by another specific parameter.
  */
 class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 
 	public function process() {
 		Nuvei_Pfw_Logger::write(
 			array(
-                //phpcs:ignore
-				'Request params'    => $this->sanitize_assoc_array(),
+                // not all parameters are available all the time
+				'Request params'    => array(
+                    'Status' => Nuvei_Pfw_Http::get_param('Status', 'string'),
+                    'ErrCode' => Nuvei_Pfw_Http::get_param('ErrCode', 'int'),
+                    'Reason' => Nuvei_Pfw_Http::get_param('Reason', 'string'),
+                    'dmnType' => Nuvei_Pfw_Http::get_param('dmnType', 'string'),
+                    'subscriptionId' => Nuvei_Pfw_Http::get_param('subscriptionId', 'int'),
+                    'subscriptionState' => Nuvei_Pfw_Http::get_param('subscriptionState', 'string'),
+                    'planId' => Nuvei_Pfw_Http::get_param('planId', 'int'),
+                    'templateId' => Nuvei_Pfw_Http::get_param('templateId', 'int'),
+                    'productId' => Nuvei_Pfw_Http::get_param('productId', 'int'),
+                    'productName' => Nuvei_Pfw_Http::get_param('productName', 'string'),
+                    'userPaymentOptionId' => Nuvei_Pfw_Http::get_param('userPaymentOptionId', 'int'),
+                    'PPP_TransactionID' => Nuvei_Pfw_Http::get_param('PPP_TransactionID', 'int'),
+                    'merchant_unique_id' => Nuvei_Pfw_Http::get_param('merchant_unique_id', 'string'),
+                    'email' => Nuvei_Pfw_Http::get_param('email', 'email'),
+                    'currency' => Nuvei_Pfw_Http::get_param('currency', 'string'),
+                    'clientUniqueId' => Nuvei_Pfw_Http::get_param('clientUniqueId', 'string'),
+                    'clientRequestId' => Nuvei_Pfw_Http::get_param('clientRequestId', 'string'),
+                    'customField1' => Nuvei_Pfw_Http::get_param('customField1', 'string'),
+                    'customField2' => Nuvei_Pfw_Http::get_param('customField2', 'string'),
+                    'customField3' => Nuvei_Pfw_Http::get_param('customField3', 'string'),
+                    'payment_method' => Nuvei_Pfw_Http::get_param('payment_method', 'string'),
+                    'webMasterId' => Nuvei_Pfw_Http::get_param('webMasterId', 'string'),
+                    'transactionType' => Nuvei_Pfw_Http::get_param('transactionType', 'string'),
+                    'user_token_id' => Nuvei_Pfw_Http::get_param('user_token_id', 'email'),
+                    'userPaymentOptionId' => Nuvei_Pfw_Http::get_param('userPaymentOptionId', 'int'),
+                    'TransactionID' => Nuvei_Pfw_Http::get_param('TransactionID', 'int'),
+                    'totalAmount' => Nuvei_Pfw_Http::get_param('totalAmount', 'float'),
+                ),
 				'REMOTE_ADDR'       => isset($_SERVER['REMOTE_ADDR']) 
                     ? filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) : '',
 				'REMOTE_PORT'       => isset($_SERVER['REMOTE_PORT']) ? (int) $_SERVER['REMOTE_PORT'] : '',
@@ -163,8 +192,6 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		}
 
 		# subscription DMN with responsechecksum case
-		$concat        = '';
-		$request_arr   = $this->sanitize_assoc_array();
 		$custom_params = array(
 			'wc-api'            => '',
 			'responsechecksum'  => '',
@@ -179,7 +206,9 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		);
 
 		// remove parameters not part of the checksum
-		$dmn_params = array_diff_key( $request_arr, $custom_params );
+        // This is the only way to validate this request. And we need all parameters.
+        //phpcs:ignore
+		$dmn_params = array_diff_key( $_REQUEST, $custom_params );
 		$concat     = implode( '', $dmn_params );
 
 		$concat_final = $concat . $merchant_secret;
