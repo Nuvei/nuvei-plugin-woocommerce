@@ -192,8 +192,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	  * @return array
 	 */
 	public function process_payment( $order_id ) {
-		Nuvei_Pfw_Logger::write( $order_id, 'process_payment' );
-
 		$nuvei_order_details    = WC()->session->get( NUVEI_PFW_SESSION_PROD_DETAILS );
 		$nuvei_oo_details       = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
 
@@ -206,22 +204,22 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'Process payment(), Order'
 		);
 
-		$sc_nonce = Nuvei_Pfw_Http::get_param( 'sc_nonce' );
-
-		// error
-		if ( ! empty( $sc_nonce )
-			&& ! wp_verify_nonce( $sc_nonce, 'sc_checkout' )
-		) {
-			Nuvei_Pfw_Logger::write( 'process_payment() Error - can not verify WP Nonce.' );
-
-			return array(
-				'result'    => 'success',
-				'redirect'  => array(
-					'Status'    => 'error',
-				),
-				wc_get_checkout_url() . 'order-received/' . $order_id . '/',
-			);
-		}
+//		$sc_nonce = Nuvei_Pfw_Http::get_param( 'sc_nonce' );
+//
+//		// error
+//		if ( ! empty( $sc_nonce )
+//			&& ! wp_verify_nonce( $sc_nonce, 'sc_checkout' )
+//		) {
+//			Nuvei_Pfw_Logger::write( 'process_payment() Error - can not verify WP Nonce.' );
+//
+//			return array(
+//				'result'    => 'success',
+//				'redirect'  => array(
+//					'Status'    => 'error',
+//				),
+//				wc_get_checkout_url() . 'order-received/' . $order_id . '/',
+//			);
+//		}
 
 		$order = wc_get_order( $order_id );
 		$key   = $order->get_order_key();

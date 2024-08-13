@@ -65,4 +65,6 @@
 		
 		<input type="number" min="0" step="1" name="startAfterPeriod" id="startAfterPeriod" class="nuvei_periods" required="" />
 	</div>
+    
+    <input type="hidden" name="nuveiTermNonce" value="<?php echo esc_html(wp_create_nonce( 'nuvei-term-nonce' )); ?>" />
 </div>

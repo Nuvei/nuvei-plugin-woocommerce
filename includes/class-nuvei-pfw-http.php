@@ -11,10 +11,10 @@ class Nuvei_Pfw_Http {
 	 * Get request parameter by key.
 	 *
 	 * @param string    $key            Request key.
-	 * @param string    $type           Possible vaues: string, float, int, array, mail/email, other.
-	 * @param mixed     $default        Return value if fail.
+	 * @param string    $type           Optional. Possible vaues: string, float, int, array, mail/email, other.
+	 * @param mixed     $default        Optional. Return value if fail.
 	 * @param array     $parent         Optional array with parameters to search in.
-	 * @param bool      $check_nonce    Check for nonce or no. We use this method mostly for otside requests, so the default will be false.
+	 * @param bool      $check_nonce    Optional. Check for nonce or no. We use this method mostly for outside requests, so the default will be false.
 	 *
 	 * @return mixed
 	 */
@@ -78,10 +78,10 @@ class Nuvei_Pfw_Http {
             case 'string':
 			default:
                 if ( isset( $parent[ $key ] ) ) {
-                    return sanitize_term_field($parent[ $key ]);
+                    return sanitize_text_field($parent[ $key ]);
                 } 
                 if ( isset( $_REQUEST[ $key ] ) ) {
-                    return sanitize_term_field($_REQUEST[ $key ]);
+                    return sanitize_text_field($_REQUEST[ $key ]);
                 }
                 
 				return $default;

@@ -914,9 +914,9 @@ function nuvei_pfw_edit_term_meta_form( $term, $taxonomy ) {
 }
 
 function nuvei_pfw_save_term_meta( $term_id, $tt_id ) {
-    if (!check_admin_referer('_wpnonce')) {
+    if (!check_admin_referer('nuvei-term-nonce', 'nuveiTermNonce')) {
         Nuvei_Pfw_Logger::write('', 'Cannot validate admin nonce.', 'WARN');
-        return;
+        die('Cannot validate admin nonce.');
     }
     
 	$taxonomy      = 'pa_' . Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME );
@@ -940,9 +940,9 @@ function nuvei_pfw_save_term_meta( $term_id, $tt_id ) {
 }
 
 function nuvei_pfw_edit_term_meta( $term_id, $tt_id ) {
-    if (!check_admin_referer('_wpnonce')) {
+    if (!check_admin_referer('nuvei-term-nonce', 'nuveiTermNonce')) {
         Nuvei_Pfw_Logger::write('', 'Cannot validate admin nonce.', 'WARN');
-        return;
+        die('Cannot validate admin nonce.');
     }
     
 	$taxonomy      = 'pa_' . Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME );

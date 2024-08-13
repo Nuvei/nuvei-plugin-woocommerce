@@ -113,5 +113,7 @@
 			   name="startAfterPeriod" 
 			   id="startAfterPeriod" 
 			   value="<?php echo esc_attr( current( $term_meta['startAfterPeriod'] ) ); ?>" required="" />
+        
+        <input type="hidden" name="nuveiTermNonce" value="<?php echo esc_html(wp_create_nonce( 'nuvei-term-nonce' )); ?>" />
 	</td>
 </tr>
