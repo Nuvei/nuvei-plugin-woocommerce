@@ -350,7 +350,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	}
 
 	public function return_settle_btn( $and_taxes, $order ) {
-        Nuvei_Pfw_Logger::write('', 'return_settle_btn', "TRACE");
+//        Nuvei_Pfw_Logger::write('', 'return_settle_btn', "TRACE");
         
 		if ( ! is_a( $order, 'WC_Order' ) || is_a( $order, 'WC_Subscription' ) ) {
 			return false;
@@ -979,7 +979,10 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
         global $woocommerce;
         
         // we expect this method to be used on the Store only
-        if (is_admin() || !isset($woocommerce->cart)) {
+        if (is_admin() 
+            || !isset($woocommerce->cart) 
+            || empty($woocommerce->cart->get_cart())
+        ) {
             return $available_gateways;
         }
         
@@ -993,6 +996,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 //                'is_shop()' => is_shop(),
 //                'isset(WC()->session)'  => isset(WC()->session),
                 'isset(WC cart)'        => isset($woocommerce->cart),
+                'items'                 => isset($woocommerce->cart) ? $woocommerce->cart->get_cart() : null,
+//                'SCRIPT_FILENAME'       => $_SERVER['SCRIPT_FILENAME'],
 //                'checkout_id ' => WC()->session->get('checkout_id'),
 //                'get checkoutid ' => @$_GET['checkoutid'],
             ], 

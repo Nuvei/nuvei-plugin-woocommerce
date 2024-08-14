@@ -48,10 +48,10 @@ class Nuvei_Pfw_Http {
                 return $default;
 
 			case 'float':
-                if ( isset( $parent[ $key ] ) ) {
+                if ( isset( $parent[ $key ] ) && is_numeric($parent[ $key ]) ) {
                     return (float) $parent[ $key ];
                 } 
-                if ( isset( $_REQUEST[ $key ] ) ) {
+                if ( isset( $_REQUEST[ $key ] ) && is_numeric($_REQUEST[ $key ]) ) {
                     return (float) $_REQUEST[ $key ];
                 }
                 
@@ -62,10 +62,10 @@ class Nuvei_Pfw_Http {
                 return $default;
 
 			case 'int':
-                if ( isset( $parent[ $key ] ) ) {
+                if ( isset( $parent[ $key ] ) && is_numeric($parent[ $key ]) ) {
                     return (int) $parent[ $key ];
                 } 
-                if ( isset( $_REQUEST[ $key ] ) ) {
+                if ( isset( $_REQUEST[ $key ] ) && is_numeric($_REQUEST[ $key ]) ) {
                     return (int) $_REQUEST[ $key ];
                 }
                 

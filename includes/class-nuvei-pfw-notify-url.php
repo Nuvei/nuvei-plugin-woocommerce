@@ -28,6 +28,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
                     'merchant_unique_id' => Nuvei_Pfw_Http::get_param('merchant_unique_id', 'string'),
                     'email' => Nuvei_Pfw_Http::get_param('email', 'email'),
                     'currency' => Nuvei_Pfw_Http::get_param('currency', 'string'),
+                    'totalAmount' => Nuvei_Pfw_Http::get_param('totalAmount', 'float'),
                     'clientUniqueId' => Nuvei_Pfw_Http::get_param('clientUniqueId', 'string'),
                     'clientRequestId' => Nuvei_Pfw_Http::get_param('clientRequestId', 'string'),
                     'customField1' => Nuvei_Pfw_Http::get_param('customField1', 'string'),
@@ -39,7 +40,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
                     'user_token_id' => Nuvei_Pfw_Http::get_param('user_token_id', 'email'),
                     'userPaymentOptionId' => Nuvei_Pfw_Http::get_param('userPaymentOptionId', 'int'),
                     'TransactionID' => Nuvei_Pfw_Http::get_param('TransactionID', 'int'),
-                    'totalAmount' => Nuvei_Pfw_Http::get_param('totalAmount', 'float'),
+                    'authCode' => Nuvei_Pfw_Http::get_param('authCode', 'int'),
                 ),
 				'REMOTE_ADDR'       => isset($_SERVER['REMOTE_ADDR']) 
                     ? filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) : '',

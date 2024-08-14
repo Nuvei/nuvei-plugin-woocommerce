@@ -186,9 +186,10 @@ function nuvei_pfw_init() {
     
     // when the client click Pay button on the Order from My Account -> Orders menu.
 	add_filter( 'woocommerce_pay_order_after_submit', 'nuvei_pfw_user_orders' );
-
+    
     // Show some custom meassages if need to.
-	if ( ! empty( Nuvei_Pfw_Http::get_param('sc_msg', 'string', '', array(), true)) ) {
+    if  (!is_admin() && !empty(sanitize_text_field($_REQUEST['sc_msg']))) {
+//	if ( ! empty( Nuvei_Pfw_Http::get_param('sc_msg', 'string', '', array(), true)) ) {
 		add_filter( 'woocommerce_before_cart', 'nuvei_pfw_show_message_on_cart', 10, 2 );
 	}
 
@@ -864,7 +865,7 @@ function nuvei_pfw_show_message_on_cart( $data ) {
     wp_add_inline_script(
         'nuvei_js_public',
         'jQuery("#content .woocommerce:first").append("<div class=\'woocommerce-warning\'>' 
-            . wp_kses_post( Nuvei_Pfw_Http::get_param( 'sc_msg' ) ) . '</div>");',
+            . wp_kses_post( Nuvei_Pfw_Http::get_param( 'sc_msg', 'string', '', array(), true ) ) . '</div>");',
         'after'
     );
 }
