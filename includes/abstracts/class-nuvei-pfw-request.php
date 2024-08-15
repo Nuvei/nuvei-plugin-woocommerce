@@ -405,8 +405,11 @@ abstract class Nuvei_Pfw_Request {
      * @return string
      */
     private function get_scformdata_address_parts($field, $group = 'billing') {
-        if ( ! check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false ) ) {
-            Nuvei_Pfw_Logger::write('Securtity parameter is missing or nonce is not valid');
+        // here we check for Nuvei nonce or WC Checkout nonc
+        if ( ! check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false ) 
+            && ! wp_verify_nonce( sanitize_text_field( $_POST['woocommerce-process-checkout-nonce'] ), 'woocommerce-process_checkout' )
+        ) {
+            Nuvei_Pfw_Logger::write($field, 'Securtity parameter is missing or nonce is not valid');
             return '';
         }
 

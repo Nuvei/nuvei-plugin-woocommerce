@@ -19,8 +19,10 @@ class Nuvei_Pfw_Http {
 	 * @return mixed
 	 */
 	public static function get_param( $key, $type = 'string', $default = '', $parent = array(), $check_nonce = false ) {
-		if ($check_nonce 
+		// check for Nuvei or WC nonoce. If at least one of them pass - the incoming data is safe.
+        if ($check_nonce 
             && ! check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false )
+            && ! wp_verify_nonce( sanitize_text_field( $_POST['woocommerce-process-checkout-nonce'] ), 'woocommerce-process_checkout' )
         ) {
             Nuvei_Pfw_Logger::write(
                 ['$key' => sanitize_text_field($key)],
