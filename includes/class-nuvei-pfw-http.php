@@ -23,6 +23,7 @@ class Nuvei_Pfw_Http {
         if ($check_nonce) {
             $helper = new Nuvei_Pfw_Helper();
             
+            // here we check the nonce
             if ( ! $helper->helper_is_request_safe() ) {
                 Nuvei_Pfw_Logger::write(
                     ['$key' => sanitize_text_field($key)],

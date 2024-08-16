@@ -187,8 +187,13 @@ function nuvei_pfw_init() {
     // when the client click Pay button on the Order from My Account -> Orders menu.
 	add_filter( 'woocommerce_pay_order_after_submit', 'nuvei_pfw_user_orders' );
     
-    // Show some custom meassages if need to.
-    if  (!is_admin() && !empty(sanitize_text_field($_REQUEST['sc_msg']))) {
+    /**
+     * Show some custom meassages if need to.
+     * Here we just check if sc_msg is not empty. The nonce will be check in nuvei_pfw_show_message_on_cart().
+     * 
+     * @deprecated since version 3.1.0.
+     */
+    if  (!is_admin() && !empty($_REQUEST['sc_msg'])) {
 //	if ( ! empty( Nuvei_Pfw_Http::get_param('sc_msg', 'string', '', array(), true)) ) {
 		add_filter( 'woocommerce_before_cart', 'nuvei_pfw_show_message_on_cart', 10, 2 );
 	}
@@ -860,7 +865,13 @@ function nuvei_pfw_user_orders() {
     echo '<input type="hidden" id="nuveiPayForExistingOrder" value="'. esc_attr($order_id) .'" />';
 }
 
-// on reorder, show warning message to the cart if need to
+/**
+ * On reorder, show warning message to the cart if need to.
+ * The sc_msg parameter were passed from Nuvei_Pfw_Gateway reorder() method, but it is also deprecated.
+ * 
+ * @param array $data
+ * @deprecated since version 3.1.0
+ */
 function nuvei_pfw_show_message_on_cart( $data ) {
     wp_add_inline_script(
         'nuvei_js_public',
