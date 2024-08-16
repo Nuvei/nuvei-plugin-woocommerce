@@ -1088,6 +1088,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		$parent_order_id    = $subscription->get_parent_id();
 		$parent_order       = wc_get_order( $parent_order_id );
+        // we get those from Nuvei metadata, if exists
 		$parent_tr_id       = $helper->helper_get_tr_id( $parent_order_id );
 		$parent_tr_upo_id   = $helper->get_tr_upo_id( $parent_order_id );
 
@@ -1118,7 +1119,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			WC_Subscriptions_Manager::process_subscription_payment_failure_on_order( $parent_order );
 			return;
 		}
-		// /get Session Token
 
 //		$billing_mail   = $renewal_order->get_meta( '_billing_email' );
 		$payment_obj    = new Nuvei_Pfw_Payment( $this->settings );
