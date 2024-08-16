@@ -777,7 +777,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$nuvei_helper           = new Nuvei_Pfw_Helper();
 		$ord_details            = $nuvei_helper->get_addresses( $this->rest_params );
 		$prod_details           = $oo_data['products_data'];
-		$pm_black_list          = trim( $this->get_option( 'pm_black_list', '' ) );
+		$pm_black_list          = trim( (string) $this->get_option( 'pm_black_list', '' ) );
 		$is_there_subscription  = false;
 		$locale                 = substr( get_locale(), 0, 2 );
 		$total                  = $oo_data['amount'];
@@ -1293,8 +1293,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$currency = get_woocommerce_currency();
 
 		$params = array(
-			'merchant_id'           => trim( $this->settings['merchantId'] ),
-			'merchant_site_id'      => trim( $this->settings['merchantSiteId'] ),
+			'merchant_id'           => trim( (int) $this->settings['merchantId'] ),
+			'merchant_site_id'      => trim( (int) $this->settings['merchantSiteId'] ),
 			'merchant_unique_id'    => $this->order->get_id(),
 			'version'               => '4.0.0',
 			'time_stamp'            => gmdate( 'Y-m-d H:i:s' ),
@@ -1390,7 +1390,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		$params['checksum'] = hash(
 			$this->settings['hash_type'],
-			trim( $this->settings['secret'] ) . implode( '', $params )
+			trim( (string) $this->settings['secret'] ) . implode( '', $params )
 		);
 
 		Nuvei_Pfw_Logger::write( $params, 'get_cashier_url() $params.' );

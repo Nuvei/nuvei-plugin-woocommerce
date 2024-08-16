@@ -170,7 +170,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 			return false;
 		}
 
-		$merchant_secret = trim( $this->nuvei_gw->get_option( 'secret' ) );
+		$merchant_secret = trim( (string) $this->nuvei_gw->get_option( 'secret' ) );
 
 		// advanceResponseChecksum case
 		if ( ! empty( $adv_resp_checksum ) ) {

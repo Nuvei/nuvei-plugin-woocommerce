@@ -48,6 +48,8 @@ If you are used our plugin before v3.2.0, please change plugin setting "Status A
 
 = 3.2.2 =
 * Use proper way to get Order private meta data in create_wc_subscr_order();
+* Replaced local Simply Connect with a link to its SDN.
+* Typecast all parameters passed to rtrim() and trim() methods.
 
 = 3.2.1 =
 * Removed old index.php file and deactivate the version with index.php.

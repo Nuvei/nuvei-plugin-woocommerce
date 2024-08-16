@@ -4,6 +4,7 @@
 ```
     * Use proper way to get Order private meta data in create_wc_subscr_order();
     * Replaced local Simply Connect with a link to its SDN.
+    * Typecast all parameters passed to rtrim() and trim() methods.
 ```
 
 # 3.2.1

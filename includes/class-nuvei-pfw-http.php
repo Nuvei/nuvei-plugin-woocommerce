@@ -20,21 +20,38 @@ class Nuvei_Pfw_Http {
 	 */
 	public static function get_param( $key, $type = 'string', $default = '', $parent = array(), $check_nonce = false ) {
 		// check for Nuvei or WC nonoce. If at least one of them pass - the incoming data is safe.
-        if ($check_nonce 
-            && ! check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false )
-            && ! wp_verify_nonce( sanitize_text_field( $_POST['woocommerce-process-checkout-nonce'] ), 'woocommerce-process_checkout' )
-        ) {
-            Nuvei_Pfw_Logger::write(
-                ['$key' => sanitize_text_field($key)],
-                'Faild to check nonce.'
-            );
+        if ($check_nonce) {
+            $helper = new Nuvei_Pfw_Helper();
             
-            if (in_array($type, array('int', 'float'))) {
-                return 0;
+            if ( ! $helper->helper_is_request_safe() ) {
+                Nuvei_Pfw_Logger::write(
+                    ['$key' => sanitize_text_field($key)],
+                    'Faild to check nonce.'
+                );
+
+                if (in_array($type, array('int', 'float'))) {
+                    return 0;
+                }
+
+                return '';
             }
-            
-            return '';
         }
+        
+//        if ($check_nonce 
+//            && ! check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false )
+//            && ! wp_verify_nonce( sanitize_text_field( $_POST['woocommerce-process-checkout-nonce'] ), 'woocommerce-process_checkout' )
+//        ) {
+//            Nuvei_Pfw_Logger::write(
+//                ['$key' => sanitize_text_field($key)],
+//                'Faild to check nonce.'
+//            );
+//            
+//            if (in_array($type, array('int', 'float'))) {
+//                return 0;
+//            }
+//            
+//            return '';
+//        }
         
         switch ( $type ) {
 			case 'mail':

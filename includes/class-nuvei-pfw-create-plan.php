@@ -27,7 +27,8 @@ class Nuvei_Pfw_Create_Plan extends Nuvei_Pfw_Request {
         
         $this->plugin_settings  = $hiden_args[0];
 		$create_params          = array(
-			'name'                  => 'Default_plan_for_site_' . trim( $this->plugin_settings['merchantSiteId'] ),
+			'name'                  => 'Default_plan_for_site_' 
+                . trim( (string) $this->plugin_settings['merchantSiteId'] ),
 			'initialAmount'         => 0,
 			'recurringAmount'       => 1,
 			'currency'              => get_woocommerce_currency(),

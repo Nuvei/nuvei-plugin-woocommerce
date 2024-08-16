@@ -55,7 +55,7 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 
 		// prevent update with empty values
 		foreach ( $addresses['billingAddress'] as $key => $val ) {
-			if ( empty( trim( $val ) ) ) {
+			if ( empty( trim( (string) $val ) ) ) {
 				unset( $addresses['billingAddress'][ $key ] );
 			}
 		}
