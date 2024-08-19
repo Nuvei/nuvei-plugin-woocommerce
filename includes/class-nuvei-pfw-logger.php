@@ -95,7 +95,8 @@ class Nuvei_Pfw_Logger {
 				// clean possible objects inside array
 				$data = json_decode( wp_json_encode( $data ), true );
 
-				array_walk_recursive( $data, 'self::mask_data', self::$fields_to_mask );
+//				array_walk_recursive( $data, 'self::mask_data', self::$fields_to_mask );
+				array_walk_recursive( $data, array(self::class, 'mask_data'), self::$fields_to_mask );
 			}
 
 			// paymentMethods can be very big array
@@ -110,7 +111,8 @@ class Nuvei_Pfw_Logger {
 				// clean possible objects inside array
 				$data = json_decode( wp_json_encode( $data ), true );
 
-				array_walk_recursive( $data, 'self::mask_data', self::$fields_to_mask );
+//				array_walk_recursive( $data, 'self::mask_data', self::$fields_to_mask );
+                array_walk_recursive( $data, array(self::class, 'mask_data'), self::$fields_to_mask );
 			}
 
 			$data_tmp   = print_r( (array) $data, true );

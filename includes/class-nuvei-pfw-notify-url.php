@@ -40,6 +40,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
                     'user_token_id' => Nuvei_Pfw_Http::get_param('user_token_id', 'email'),
                     'userPaymentOptionId' => Nuvei_Pfw_Http::get_param('userPaymentOptionId', 'int'),
                     'TransactionID' => Nuvei_Pfw_Http::get_param('TransactionID', 'int'),
+                    'relatedTransactionId' => Nuvei_Pfw_Http::get_param('relatedTransactionId', 'int'),
                     'authCode' => Nuvei_Pfw_Http::get_param('authCode', 'int'),
                 ),
 				'REMOTE_ADDR'       => isset($_SERVER['REMOTE_ADDR']) 
@@ -54,7 +55,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		);
 
 		# stop DMNs only on test mode
-//		        exit(wp_json_encode('DMN was stopped, please run it manually!'));
+//        exit(wp_json_encode('DMN was stopped, please run it manually!'));
 
         // Exit - do not process CARD_TOKENIZATION DMNs
 		if ( 'CARD_TOKENIZATION' == Nuvei_Pfw_Http::get_param( 'type' ) ) {

@@ -7,6 +7,9 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
+    protected $msg = array();
+    protected $method_name;
+    
 	private $plugin_data    = array();
 	private $subscr_units   = array( 'year', 'month', 'day' );
 	private $rest_params    = array(); // Cart data passed from REST API call.
@@ -1531,12 +1534,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				),
 				'default'       => 0,
 			),
-			// pending dmn -> proccessing
+			// pending dmn -> on-hold
 			'status_pending' => array(
 				'title'         => __( 'Status Pending DMN', 'nuvei-payments-for-woocommerce' ),
 				'type'          => 'select',
 				'options'       => $statuses,
-				'default'       => 'processing',
+				'default'       => 'on-hold',
                 'description'   => __( 'The status for Nuvei transactions who still wait for a DMN. This change is triggered after Settle, Refund and Void.', 'nuvei-payments-for-woocommerce' ),
 			),
 			// auth -> pending payment

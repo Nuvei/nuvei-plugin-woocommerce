@@ -51,6 +51,9 @@ If you are used our plugin before v3.2.0, please change plugin setting "Status A
 * Replaced local Simply Connect with a link to its SDN.
 * Typecast all parameters passed to rtrim() and trim() methods.
 * When the merchant trigger Refund, change Order status before Nuvei request. In any negative case revert the previous status of the Order.
+* Few changes because of depracations in PHP 8.2.
+* The Default status for "Status Pending DMN" was changed to "On hold".
+* relatedTransactionId paramter was added to DMN logged data.
 
 = 3.2.1 =
 * Removed old index.php file and deactivate the version with index.php.
