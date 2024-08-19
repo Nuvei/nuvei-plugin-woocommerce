@@ -22,10 +22,10 @@ Our plug in is enabling customer to accept payments over credit / debit cards an
 
 For more information about Simply Connect, please check its [documentation](https://docs.nuvei.com/documentation/accept-payment/simply-connect/).
 
-To work proper our plugin relay of additional services to send order and client data and receive information about the transactions. All of this services (and the plugin) belongs to Nuvei, former SafeCharge. Below are described the services we are using:
+To work proper our plugin relay of additional services to send order and client data and receive information about the transactions. All of those services (including the current plugin) belongs to Nuvei, former SafeCharge. Below are described the services we are using:
 
-https://ppp-test.nuvei.com/ppp/api/v1/ - Nuvei' Sandbox REST API path;
-https://secure.safecharge.com/ppp/api/v1/ - Nuvei's Production REST API path;
+https://ppp-test.nuvei.com/ppp/api/v1/... - Nuvei' Sandbox REST API path;
+https://secure.safecharge.com/ppp/api/v1/... - Nuvei's Production REST API path;
 https://cdn.safecharge.com/safecharge_resources/v1/checkout/simplyConnect.js - The Production URL to the Nuvei' Simply Connect;
 https://devmobile.sccdev-qa.com/checkoutNext/simplyConnect.js - The QA URL to the Nuvei' Simply Connect;
 https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html - A help URL who close APM popup, when it is used;
@@ -35,7 +35,7 @@ https://docs.nuvei.com/documentation/accept-payment/simply-connect/payment-custo
 https://docs.nuvei.com/documentation/accept-payment/checkout-2/payment-customization/#card-processing - A link to Nuvei's Documentation;
 https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation - A link to Nuvei's Documentation;
 
-If you are used our plugin before v3.2.0, please change plugin setting "Status Authorized" in "Advanced Settings" tab to "On-hold"!
+If you are used our plugin before v3.2.0, please change plugin settings "Status Authorized" and "Status Pending DMN" in "Advanced Settings" tab to "On-hold"!
 
 == Screenshots ==
 
