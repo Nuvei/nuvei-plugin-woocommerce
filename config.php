@@ -24,7 +24,7 @@ const NUVEI_PFW_SOURCE_APPLICATION  = 'WOOCOMMERCE_PLUGIN';
 const NUVEI_PFW_GLOB_ATTR_NAME      = 'Nuvei Payment Plan'; // the name of the Nuvei Global Product Attribute name
 const NUVEI_PFW_LOG_EXT             = 'log';
 const NUVEI_PFW_PLANS_FILE          = 'sc_plans.json';
-const NUVEI_PFW_PMS_REFUND_VOID    = array( 'cc_card', 'apmgw_expresscheckout' );
+const NUVEI_PFW_PMS_REFUND_VOID     = array( 'cc_card', 'apmgw_expresscheckout' );
 
 const NUVEI_PFW_REST_ENDPOINT_INT   = 'https://ppp-test.nuvei.com/ppp/api/v1/';
 const NUVEI_PFW_REST_ENDPOINT_PROD  = 'https://secure.safecharge.com/ppp/api/v1/';
@@ -41,7 +41,7 @@ const NUVEI_PFW_LOG_REQUEST_PARAMS      = 'Request params';
 define(
 	'NUVEI_PFW_LOGS_DIR',
 	dirname( __DIR__, 2 ) . DIRECTORY_SEPARATOR
-	. 'uploads' . DIRECTORY_SEPARATOR . 'nuvei-logs' . DIRECTORY_SEPARATOR
+        . 'uploads' . DIRECTORY_SEPARATOR . 'nuvei-logs' . DIRECTORY_SEPARATOR
 );
 
 define(

@@ -103,23 +103,41 @@ function nuvei_pfw_plugin_activate() {
         // if fail then this plugin not exists
     }
     
-	$htaccess_file  = NUVEI_PFW_LOGS_DIR . '.htaccess';
-	$index_file     = NUVEI_PFW_LOGS_DIR . 'index.html';
-	$wp_fs_direct   = new WP_Filesystem_Direct( null );
+	$htaccess_file      = NUVEI_PFW_LOGS_DIR . '.htaccess';
+	$index_file         = NUVEI_PFW_LOGS_DIR . 'index.html';
+	$wp_fs_direct       = new WP_Filesystem_Direct( null );
+    
+    if (!defined('FS_CHMOD_DIR') || !defined('FS_CHMOD_FILE')) {
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        WP_Filesystem();
+    }
+    
+//    $log_dir_rights     = false;
+//    $log_files_rights   = false;
+    
+    // in case permissions constants are missing
+//    if (!defined('FS_CHMOD_DIR')) {
+//        $log_dir_rights = ( fileperms( ABSPATH ) & 0777 | 0755 );
+//    }
+//    if (!defined('FS_CHMOD_FILE')) {
+//        $log_files_rights = ( fileperms( ABSPATH . 'index.php' ) & 0777 | 0644 );
+//    }
 
 	if ( ! is_dir( NUVEI_PFW_LOGS_DIR ) ) {
 		$wp_fs_direct->mkdir( NUVEI_PFW_LOGS_DIR );
 	}
-
+    
 	if ( is_dir( NUVEI_PFW_LOGS_DIR ) ) {
 		if ( ! file_exists( $htaccess_file ) ) {
 			$wp_fs_direct->put_contents( $htaccess_file, 'deny from all' );
 		}
 
 		if ( ! file_exists( $index_file ) ) {
-			$wp_fs_direct->put_contents( $htaccess_file, '' );
+			$wp_fs_direct->put_contents( $index_file, '' );
 		}
 	}
+    
+    return;
 }
 
 function nuvei_pfw_init() {
@@ -883,8 +901,7 @@ function nuvei_pfw_show_message_on_cart( $data ) {
 
 // Attributes, Terms and Meta functions
 function nuvei_pfw_add_term_fields_form( $taxonomy ) {
-	$nuvei_plans_path   = NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE;
-	$wp_fs_direct       = new WP_Filesystem_Direct( null );
+	$nuvei_plans_path = NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE;
 
 	ob_start();
 
@@ -902,8 +919,7 @@ function nuvei_pfw_add_term_fields_form( $taxonomy ) {
 }
 
 function nuvei_pfw_edit_term_meta_form( $term, $taxonomy ) {
-	$nuvei_plans_path   = NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE;
-	$wp_fs_direct       = new WP_Filesystem_Direct( null );
+	$nuvei_plans_path = NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE;
 
 	ob_start();
 	$term_meta  = get_term_meta( $term->term_id );

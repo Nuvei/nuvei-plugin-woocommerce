@@ -477,10 +477,9 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			wp_send_json( array( 'status' => 0 ) );
 			exit;
 		}
-
-		$wp_fs_direct   = new WP_Filesystem_Direct( null );
-		$ndp_obj        = new Nuvei_Pfw_Download_Plans( $this->settings );
-		$resp           = $ndp_obj->process();
+		
+		$ndp_obj    = new Nuvei_Pfw_Download_Plans( $this->settings );
+		$resp       = $ndp_obj->process();
 
 		if ( empty( $resp ) || ! is_array( $resp ) || 'SUCCESS' != $resp['status'] ) {
 			Nuvei_Pfw_Logger::write( 'Get Plans response error.' );
@@ -500,7 +499,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				return;
 			}
 		}
-		// in case there are  no active plans - create default one END
+        
+        $wp_fs_direct = new WP_Filesystem_Direct( null );
 
 		if ( $wp_fs_direct->put_contents(
                 NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE,
@@ -529,8 +529,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	}
 
 	public function get_today_log() {
-		$log_file       = NUVEI_PFW_LOGS_DIR . gmdate( 'Y-m-d' ) . '.' . NUVEI_PFW_LOG_EXT;
-		$wp_fs_direct   = new WP_Filesystem_Direct( null );
+		$log_file = NUVEI_PFW_LOGS_DIR . gmdate( 'Y-m-d' ) . '.' . NUVEI_PFW_LOG_EXT;
 
 		if ( ! file_exists( $log_file ) ) {
 			wp_send_json(
@@ -552,6 +551,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			exit;
 		}
 
+        $wp_fs_direct = new WP_Filesystem_Direct( null );
+        
 		wp_send_json(
 			array(
 				'status'    => 1,
@@ -583,7 +584,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$nuvei_plans_path           = NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE;
 		$nuvei_glob_attr_name_slug  = Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME );
 		$taxonomy_name              = wc_attribute_taxonomy_name( $nuvei_glob_attr_name_slug );
-		$wp_fs_direct               = new WP_Filesystem_Direct( null );
 
 		// a check
 		if ( ! is_readable( $nuvei_plans_path ) ) {

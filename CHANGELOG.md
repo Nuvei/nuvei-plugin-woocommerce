@@ -9,6 +9,7 @@
     * Few changes because of depracations in PHP 8.2.
     * The Default status for "Status Pending DMN" was changed to "On hold".
     * relatedTransactionId paramter was added to DMN logged data.
+    * When try to create the plugin logs directory and its content,s check if FS_CHMOD_DIR and FS_CHMOD_FILE are defined. If they are not, call WP_Filesystem() method, to define them or the code will crash.
 ```
 
 # 3.2.1
