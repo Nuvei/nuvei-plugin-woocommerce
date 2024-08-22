@@ -1,6 +1,6 @@
 === Nuvei Checkout for Woocommerce ===
 
-Contributors: miroslavnuvei
+Contributors: Nuvei
 Requires at least: 4.7
 Tested up to: 6.6.1
 Stable tag: 3.2.2
@@ -12,30 +12,31 @@ The plugin adds Nuvei Gateway for WooCommerce.
 
 == Description ==
 
-Nuvei offers major international credit and debit cards enabling you to accept payments from your global customers. 
+Nuvei supports major international credit and debit cards enabling you to accept payments from your global customers. 
 
-A wide selection of region-specific payment methods can help your business grow in new markets. Other popular payment methods from mobile payments to eWallets, can be easily implemented at your checkout page.
+A wide selection of region-specific payment methods can help your business grow in new markets. Other popular payment methods from mobile payments to e-wallets can be easily implemented on your checkout page.
 
-Right payment methods at the checkout page can bring you global reach, help you increase conversions and create a seamless experience for your customers.
+The correct payment methods at the checkout page can bring you global reach, help you increase conversions, and create a seamless experience for your customers.
 
-Our plug in is enabling customer to accept payments over credit / debit cards and other methods. For the purpose, our plug in is using Nuvei’s own simply connect SDK. Since we are top tier payment provider, we hold the highest Data security standard level 1 and we take payment data security seriously. Our simply connect is hosted on our won Nuvei servers which are audited every year for PCI compliance.
+Our plugin enables customers to accept payments by credit,  debit cards, and other methods. For this purpose, our plugin uses Nuvei’s own Simply Connect SDK. Since we are a top-tier payment provider, we hold the highest data security standard (Level 1) and we take payment data security seriously. Our Simply Connect platform is hosted on our own Nuvei servers, which are audited every year for PCI compliance.
 
-For more information about Simply Connect, please check its [documentation](https://docs.nuvei.com/documentation/accept-payment/simply-connect/).
+For more information about Simply Connect, please press [here](https://docs.nuvei.com/documentation/accept-payment/simply-connect/).
 
-To work proper our plugin relay of additional services to send order and client data and receive information about the transactions. All of those services (including the current plugin) belongs to Nuvei, former SafeCharge. Below are described the services we are using:
+To work properly, our plugin relays additional services to send order and client data, and receive information about the transactions. All of these services (including the current plugin) belong to Nuvei, formerly known as SafeCharge. The services we are using are listed below:
 
-https://ppp-test.nuvei.com/ppp/api/v1/... - Nuvei' Sandbox REST API path;
-https://secure.safecharge.com/ppp/api/v1/... - Nuvei's Production REST API path;
-https://cdn.safecharge.com/safecharge_resources/v1/checkout/simplyConnect.js - The Production URL to the Nuvei' Simply Connect;
-https://devmobile.sccdev-qa.com/checkoutNext/simplyConnect.js - The QA URL to the Nuvei' Simply Connect;
-https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html - A help URL who close APM popup, when it is used;
-https://ppp-test.safecharge.com/ppp/purchase.do - Nuvei' Sandbox Redirect payment page;
-https://secure.safecharge.com/ppp/purchase.do - Nuvei's Production Redirect payment page;
-https://docs.nuvei.com/documentation/accept-payment/simply-connect/payment-customization/#dynamic-currency-conversion - A link to Nuvei's Documentation;
-https://docs.nuvei.com/documentation/accept-payment/checkout-2/payment-customization/#card-processing - A link to Nuvei's Documentation;
-https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation - A link to Nuvei's Documentation;
+* https://ppp-test.nuvei.com/ppp/api/v1/... - Nuvei' Sandbox REST API path;
+* https://secure.safecharge.com/ppp/api/v1/... - Nuvei's Production REST API path;
+* https://cdn.safecharge.com/safecharge_resources/v1/checkout/simplyConnect.js - The Production URL to the Nuvei' Simply Connect;
+* https://devmobile.sccdev-qa.com/checkoutNext/simplyConnect.js - The QA URL to the Nuvei' Simply Connect;
+* https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html - A help URL who close APM popup, when it is used;
+* https://ppp-test.safecharge.com/ppp/purchase.do - Nuvei' Sandbox Redirect payment page;
+* https://secure.safecharge.com/ppp/purchase.do - Nuvei's Production Redirect payment page;
+* Links to Nuvei documentation:
+  * https://docs.nuvei.com/documentation/accept-payment/simply-connect/payment-customization/#dynamic-currency-conversion
+  * https://docs.nuvei.com/documentation/accept-payment/checkout-2/payment-customization/#card-processing
+  * https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation
 
-If you are used our plugin before v3.2.0, please change plugin settings "Status Authorized" and "Status Pending DMN" in "Advanced Settings" tab to "On-hold"!
+If you are using a plugin version of v3.2.0 or older, please change plugin settings "Status Authorized" and "Status Pending DMN" in "Advanced Settings" tab to "On-hold"!
 
 == Screenshots ==
 
@@ -58,20 +59,20 @@ If you are used our plugin before v3.2.0, please change plugin settings "Status 
 
 = 3.2.1 =
 * Removed old index.php file and deactivate the version with index.php.
-* Fix for the admin, when the plugin try to get the unexisting file with the payment plans.
+* Fix for the admin, when the plugin try to get the non-existent file with the payment plans.
 
 = 3.2.0 =
 * Fix for Admin generated Orders, when the store use WC Blocks.
 * Changed the name of main plugin file.
 * Changed the way plugin gets its own data from the header.
-* Other chnages made by recommendation of WP.
+* Other changes made by recommendation of WP..
 * Changed the names of all constants.
 * Changed the names of the classes and its files.
 * Changed the names of the functions in the main plugin file.
 * A direct call to the DB to get few WC settings was replaced with a WP method.
-* Fiexed the problem with the null $nuvei_order_details parameter in process_payment().
-* Changed the defult WC Status for Nuvei Auth transactions to "On-hold", by WC recommendation.
-* Do not control Refund button form js script, but only form a php hook.
+* Fixed the problem with the null $nuvei_order_details parameter in process_payment().
+* Changed the default WC Status for Nuvei Auth transactions to "On-hold", by WC recommendation.
+* Do not control Refund button form js script, but only form a PHP hook.
 
 = 3.1.0 =
 * Added custom hook 'nuvei_pfwc_after_rebilling_payment' at the end of DMN Rebilling payment logic.
@@ -96,7 +97,7 @@ If you are used our plugin before v3.2.0, please change plugin settings "Status 
 * The plugin name and text domain were changed from "nuvei-checkout-for-woocommerce" to "nuvei-payments-for-woocommerce".
 
 = 3.0.1 =
-* In plugin description was added WooCommerce dependancy.
+* In plugin description was added WooCommerce dependency.
 * Marked NUVEI_SDK_URL_PROD and NUVEI_SDK_URL_TAG constants as deprecated.
 * Use Simply Connect v1.138.0.
 * Add Simply Connect in nuvei_public.js before the WC checkout script.
@@ -123,13 +124,13 @@ If you are used our plugin before v3.2.0, please change plugin settings "Status 
 
 = 2.1.0-p1 =
 * For the QA site use Tag endpoints for the SDKs.
-* Do not proccess Pending DMNs, just save their parameters in the log file.
+* Do not process Pending DMNs, just save their parameters in the log file.
 
 = 2.1.0 =
 * Removed old commented parts of code.
 * In the plugin options was added possibility to set custom statuses for the Order.
 * Fixes for plugin settings links to Nuvei documentation.
-* Fixed the example for SimplyConnect translations.
+* Fixed the example for Simply Connect translations.
 * Added Gpay locale.
 
 = 2.0.1 =
@@ -143,7 +144,7 @@ If you are used our plugin before v3.2.0, please change plugin settings "Status 
 * Added an option into the plugin settings to enable Nuvei GW for Zero-Total checkout.
 * Added additional security for the log files.
 * Hide "SimplyConnect theme" setting, when Cashier was set as payment option.
-* When DMN can not find the Order, return 400 only for the parent transactions as Auth and Sale.
+* When DMN cannot find the Order, return 400 only for the parent transactions as Auth and Sale.
 * Changed the order of few hooks.
 * When place Nuvei buttons in the admin, do it only for WC_Order objects.
 * Fixed the wrong Failed status of the Order when DCC was used.
@@ -152,7 +153,7 @@ If you are used our plugin before v3.2.0, please change plugin settings "Status 
 * Fix for the checkout page when the plugin get response for "Pending" transaction status.
 * Replaced the changelog file.
 * Do not create Refund record in WC after error in Nuvei Refund request.
-* Save a Note in WC Orders when Pendin DMN come.
+* Save a Note in WC Orders when Pending DMN comes.
 * Disable DCC when the Total is Zero.
 * Added high priority when loading plugin scripts and libraries.
 
@@ -180,10 +181,10 @@ If you are used our plugin before v3.2.0, please change plugin settings "Status 
 
 = 1.4.3 =
 * Added option to save UPOs for Guest users, when the user try to buy a product with Subscription.
-* Added Auto-Void functionality in case of payment, but did not created Order in WC.
+* Added Auto-Void functionality in case of payment, but did not create Order in WC.
 
 = 1.4.2 =
-* Added support for theme picking for SimplyConnect.
+* Added support for theme picking for Simply Connect.
 * Added option to save logs into second log file - nuvei.log.
 * Added id attribute to the "Block Payment methods" setting "Clean" button.
 * Removed the "SDK Version" option into the plugin.
@@ -193,7 +194,7 @@ If you are used our plugin before v3.2.0, please change plugin settings "Status 
 
 = 1.4.1 =
 * Changed the value of sourceApplication and webMasterId values.
-* Fixed the problem when receive DMN from the CPanel.
+* Fixed the problem when receive DMN from the Control Panel.
 
 = 1.4.0 =
 * Add support for WC Subscriptions plugin.
