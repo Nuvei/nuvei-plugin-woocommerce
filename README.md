@@ -30,17 +30,17 @@ A wide selection of region-specific payment methods can help your business grow 
 
 The correct payment methods at the checkout page can bring you global reach, help you increase conversions, and create a seamless experience for your customers.
 
-## Importanat note
+## Important Note
 If you have installed a plugin version earlier than v1.3.0 and you are upgrading for the first time, then you should deactivate and activate plugin again after the upgrade, so new logs directory be created!
 
 If you are used our plugin before v3.2.0, please change plugin setting "Status Authorized" in "Advanced Settings" tab to "On-hold"!
 
-## Automatic installation
+## Automatic Installation
 To perform an automatic installation, log in to your WordPress dashboard, navigate to the Plugins menu, and click Add New. Upload the provided archive and install it. As a final step, you should activate the plugin.
 
 After the upgrade, check your plugin settings and save them!
 
-## Manual installation
+## Manual Installation
 1. Back up your site completely before proceeding.
 2. Download your WordPress plugin to your desktop.
 3. If you have previously installed the Nuvei WooCommerce plugin, then deactivate it.
