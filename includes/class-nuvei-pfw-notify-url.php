@@ -9,40 +9,42 @@ defined( 'ABSPATH' ) || exit;
 class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 
 	public function process() {
+        $logged_params = array(
+            'Status' => Nuvei_Pfw_Http::get_param('Status', 'string'),
+            'ErrCode' => Nuvei_Pfw_Http::get_param('ErrCode', 'int'),
+            'Reason' => Nuvei_Pfw_Http::get_param('Reason', 'string'),
+            'dmnType' => Nuvei_Pfw_Http::get_param('dmnType', 'string'),
+            'subscriptionId' => Nuvei_Pfw_Http::get_param('subscriptionId', 'int'),
+            'subscriptionState' => Nuvei_Pfw_Http::get_param('subscriptionState', 'string'),
+            'planId' => Nuvei_Pfw_Http::get_param('planId', 'int'),
+            'templateId' => Nuvei_Pfw_Http::get_param('templateId', 'int'),
+            'productId' => Nuvei_Pfw_Http::get_param('productId', 'int'),
+            'productName' => Nuvei_Pfw_Http::get_param('productName', 'string'),
+            'userPaymentOptionId' => Nuvei_Pfw_Http::get_param('userPaymentOptionId', 'int'),
+            'PPP_TransactionID' => Nuvei_Pfw_Http::get_param('PPP_TransactionID', 'int'),
+            'merchant_unique_id' => Nuvei_Pfw_Http::get_param('merchant_unique_id', 'string'),
+            'email' => Nuvei_Pfw_Http::get_param('email', 'email'),
+            'currency' => Nuvei_Pfw_Http::get_param('currency', 'string'),
+            'totalAmount' => Nuvei_Pfw_Http::get_param('totalAmount', 'float'),
+            'clientUniqueId' => Nuvei_Pfw_Http::get_param('clientUniqueId', 'string'),
+            'clientRequestId' => Nuvei_Pfw_Http::get_param('clientRequestId', 'string'),
+            'customField1' => Nuvei_Pfw_Http::get_param('customField1', 'string'),
+            'customField2' => Nuvei_Pfw_Http::get_param('customField2', 'string'),
+            'customField3' => Nuvei_Pfw_Http::get_param('customField3', 'string'),
+            'payment_method' => Nuvei_Pfw_Http::get_param('payment_method', 'string'),
+            'webMasterId' => Nuvei_Pfw_Http::get_param('webMasterId', 'string'),
+            'transactionType' => Nuvei_Pfw_Http::get_param('transactionType', 'string'),
+            'user_token_id' => Nuvei_Pfw_Http::get_param('user_token_id', 'email'),
+            'userPaymentOptionId' => Nuvei_Pfw_Http::get_param('userPaymentOptionId', 'int'),
+            'TransactionID' => Nuvei_Pfw_Http::get_param('TransactionID', 'int'),
+            'relatedTransactionId' => Nuvei_Pfw_Http::get_param('relatedTransactionId', 'int'),
+            'authCode' => Nuvei_Pfw_Http::get_param('authCode', 'string'),
+        );
+        
 		Nuvei_Pfw_Logger::write(
 			array(
                 // not all parameters are available all the time
-				'Request params'    => array(
-                    'Status' => Nuvei_Pfw_Http::get_param('Status', 'string'),
-                    'ErrCode' => Nuvei_Pfw_Http::get_param('ErrCode', 'int'),
-                    'Reason' => Nuvei_Pfw_Http::get_param('Reason', 'string'),
-                    'dmnType' => Nuvei_Pfw_Http::get_param('dmnType', 'string'),
-                    'subscriptionId' => Nuvei_Pfw_Http::get_param('subscriptionId', 'int'),
-                    'subscriptionState' => Nuvei_Pfw_Http::get_param('subscriptionState', 'string'),
-                    'planId' => Nuvei_Pfw_Http::get_param('planId', 'int'),
-                    'templateId' => Nuvei_Pfw_Http::get_param('templateId', 'int'),
-                    'productId' => Nuvei_Pfw_Http::get_param('productId', 'int'),
-                    'productName' => Nuvei_Pfw_Http::get_param('productName', 'string'),
-                    'userPaymentOptionId' => Nuvei_Pfw_Http::get_param('userPaymentOptionId', 'int'),
-                    'PPP_TransactionID' => Nuvei_Pfw_Http::get_param('PPP_TransactionID', 'int'),
-                    'merchant_unique_id' => Nuvei_Pfw_Http::get_param('merchant_unique_id', 'string'),
-                    'email' => Nuvei_Pfw_Http::get_param('email', 'email'),
-                    'currency' => Nuvei_Pfw_Http::get_param('currency', 'string'),
-                    'totalAmount' => Nuvei_Pfw_Http::get_param('totalAmount', 'float'),
-                    'clientUniqueId' => Nuvei_Pfw_Http::get_param('clientUniqueId', 'string'),
-                    'clientRequestId' => Nuvei_Pfw_Http::get_param('clientRequestId', 'string'),
-                    'customField1' => Nuvei_Pfw_Http::get_param('customField1', 'string'),
-                    'customField2' => Nuvei_Pfw_Http::get_param('customField2', 'string'),
-                    'customField3' => Nuvei_Pfw_Http::get_param('customField3', 'string'),
-                    'payment_method' => Nuvei_Pfw_Http::get_param('payment_method', 'string'),
-                    'webMasterId' => Nuvei_Pfw_Http::get_param('webMasterId', 'string'),
-                    'transactionType' => Nuvei_Pfw_Http::get_param('transactionType', 'string'),
-                    'user_token_id' => Nuvei_Pfw_Http::get_param('user_token_id', 'email'),
-                    'userPaymentOptionId' => Nuvei_Pfw_Http::get_param('userPaymentOptionId', 'int'),
-                    'TransactionID' => Nuvei_Pfw_Http::get_param('TransactionID', 'int'),
-                    'relatedTransactionId' => Nuvei_Pfw_Http::get_param('relatedTransactionId', 'int'),
-                    'authCode' => Nuvei_Pfw_Http::get_param('authCode', 'int'),
-                ),
+				'Request params'    => ksort($logged_params),
 				'REMOTE_ADDR'       => isset($_SERVER['REMOTE_ADDR']) 
                     ? filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) : '',
 				'REMOTE_PORT'       => isset($_SERVER['REMOTE_PORT']) ? (int) $_SERVER['REMOTE_PORT'] : '',
@@ -375,12 +377,13 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	 * Just a repeating code.
 	 *
 	 * @global $wpdb
-	 * @param int $transaction_id
+	 * @param int|null $transaction_id
 	 * @return array
 	 */
 	private function get_order_data( $transaction_id ) {
 		global $wpdb;
         
+        // we pass null when this is SDK Order
 		if ( is_null( $transaction_id ) ) {
 			// old WC records
 			$query = $wpdb->prepare(

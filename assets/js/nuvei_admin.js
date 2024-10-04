@@ -237,6 +237,9 @@ function nuveiSyncPaymentPlans() {
 	});
 }
 
+/**
+ * @deprecated since v3.2.3
+ */
 function nuveiDisablePm(_value) {
     console.log('nuveiDisablePm', _value);
     
@@ -271,6 +274,9 @@ function nuveiDisablePm(_value) {
 function nuveiCleanBlockedPMs() {
 	jQuery('#woocommerce_nuvei_pm_black_list, #woocommerce_nuvei_pm_black_list_visible').val('');
 	jQuery('#nuvei_block_pms_multiselect option').show();
+    
+    // activate "Save changes" button when change the selected Block Payment Methods
+    jQuery(".woocommerce-save-button").removeAttr("disabled");
 }
 
 /**
@@ -363,16 +369,6 @@ jQuery(function() {
 		scVoidBtn = jQuery('#sc_void_btn');
 	}
 	// set the flags END
-	
-	// hide Refund button if the status is refunded
-//	if (jQuery('#order_status').val() == 'wc-refunded'
-//		|| jQuery('#order_status').val() == 'wc-cancelled'
-//		|| jQuery('#order_status').val() == 'wc-pending'
-//		|| jQuery('#order_status').val() == 'wc-on-hold'
-//		|| jQuery('#order_status').val() == 'wc-failed'
-//	) {
-//		jQuery('.refund-items').prop('disabled', true);
-//	}
 	
 	jQuery('#refund_amount').prop('readonly', false);
 	jQuery('.do-manual-refund').remove();

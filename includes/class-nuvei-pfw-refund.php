@@ -103,7 +103,7 @@ class Nuvei_Pfw_Refund extends Nuvei_Pfw_Request {
         $msg                = '';
         
         // first set Pending status
-        $this->sc_order->update_status( $this->nuvei_gw->get_option( 'status_pending' ) );
+//        $this->sc_order->update_status( $this->nuvei_gw->get_option( 'status_pending' ) );
         
         // then create the Refund request
 		$resp = $this->process(array(
@@ -160,6 +160,12 @@ class Nuvei_Pfw_Refund extends Nuvei_Pfw_Request {
 //
 //			$this->save_transaction_data( $json_arr );
 
+            $this->sc_order->add_order_note(__(
+                'A Refund request was send. Please, wait for response!', 
+                'nuvei-payments-for-woocommerce' 
+            ));
+			$this->sc_order->save();
+            
 			wp_send_json( array( 'status' => 1 ) );
 			wp_die();
 		}

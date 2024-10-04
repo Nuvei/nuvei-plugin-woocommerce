@@ -36,7 +36,22 @@ To work properly, our plugin relays additional services to send order and client
   * https://docs.nuvei.com/documentation/accept-payment/checkout-2/payment-customization/#card-processing
   * https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation
 
-If you are using a plugin version of v3.2.0 or older, please change plugin settings "Status Authorized" and "Status Pending DMN" in "Advanced Settings" tab to "On-hold"!
+== System Requirements ==
+
+* Enabled PHP cURL support.
+* Public access to the plugin notify URL. Check plugin settings, Help Tools tab, for it.
+
+== Nuvei Requirements ==
+
+In the Merchant configuration:
+  * Enabled DMNs.
+  * On SiteID level "DMN  timeout" setting is recommended to be not less than 20 seconds, 30 seconds is better.
+
+== Notes ==
+
+If you have installed a plugin version earlier than v1.3.0 and you are upgrading for the first time, then you should deactivate and activate plugin again after the upgrade, so new logs directory be created!
+
+If you are used our plugin before v3.2.0, please change plugin setting "Status Authorized" in "Advanced Settings" tab to "On-hold"!
 
 == Screenshots ==
 
@@ -46,6 +61,13 @@ If you are using a plugin version of v3.2.0 or older, please change plugin setti
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.2.3 =
+* Changed few logs texts.
+* Updated the readme files.
+* A JS function was marked as deprecated.
+* When do Refeund, do not set the order in pending status, until it waits for DMN. Just add a message.
+* In the plugin settings activate "Save changes" when click on "Clean" button.
 
 = 3.2.2 =
 * Use proper way to get Order private meta data in create_wc_subscr_order();

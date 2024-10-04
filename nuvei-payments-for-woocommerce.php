@@ -3,17 +3,17 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.2.2
+ * Version: 3.2.3
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
  * Text Domain: nuvei-payments-for-woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.6.1
+ * Tested up to: 6.6.2
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 9.1.4
+ * WC tested up to: 9.3.3
 */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -626,13 +626,13 @@ function nuvei_pfw_add_buttons( $order ) {
 
 	// error
 	if ( empty( $ord_tr_id ) ) {
-		Nuvei_Pfw_Logger::write( $ord_tr_id, 'Invalid Transaction ID! May be this post is not an Order.' );
+		Nuvei_Pfw_Logger::write( $ord_tr_id, 'Invalid Transaction ID! We will not add any buttons.' );
 		return false;
 	}
 
 	// error
 	if ( empty( $order_data ) || ! is_array( $order_data ) ) {
-		Nuvei_Pfw_Logger::write( $order_data, 'Missing or wrong Nuvei transactions data for the order.' );
+		Nuvei_Pfw_Logger::write( $order_data, 'Missing or wrong Nuvei transactions data for the order. We will not add any buttons.' );
 
 		// disable refund button
         wp_add_inline_script(

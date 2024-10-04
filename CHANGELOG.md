@@ -1,5 +1,14 @@
 # WooCommerce Extension Changelog
 
+# 3.2.3
+```
+    * Changed few logs texts.
+    * Updated the readme files.
+    * A JS function was marked as deprecated.
+    * When do Refeund, do not set the order in pending status, until it waits for DMN. Just add a message.
+    * In the plugin settings activate "Save changes" when click on "Clean" button.
+```
+
 # 3.2.2
 ```
     * Use proper way to get Order private meta data in create_wc_subscr_order();
