@@ -44,7 +44,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		Nuvei_Pfw_Logger::write(
 			array(
                 // not all parameters are available all the time
-				'Request params'    => ksort($logged_params),
+				'Request params'    => $logged_params,
 				'REMOTE_ADDR'       => isset($_SERVER['REMOTE_ADDR']) 
                     ? filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) : '',
 				'REMOTE_PORT'       => isset($_SERVER['REMOTE_PORT']) ? (int) $_SERVER['REMOTE_PORT'] : '',

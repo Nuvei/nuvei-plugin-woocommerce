@@ -1,11 +1,16 @@
 # WooCommerce Extension Changelog
 
+# 3.2.4
+```
+    * Fix for the broken DMN log record in the log file.
+```
+
 # 3.2.3
 ```
     * Changed few logs texts.
     * Updated the readme files.
     * A JS function was marked as deprecated.
-    * When do Refeund, do not set the order in pending status, until it waits for DMN. Just add a message.
+    * When do Refund, do not set the order in pending status, until it waits for DMN. Just add a message.
     * In the plugin settings activate "Save changes" when click on "Clean" button.
 ```
 

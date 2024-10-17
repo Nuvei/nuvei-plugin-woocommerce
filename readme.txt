@@ -3,7 +3,7 @@
 Contributors: Nuvei
 Requires at least: 4.7
 Tested up to: 6.6.2
-Stable tag: 3.2.2
+Stable tag: 3.2.4
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -61,6 +61,9 @@ If you are used our plugin before v3.2.0, please change plugin setting "Status A
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.2.4 =
+* Fix for the broken DMN log record in the log file.
 
 = 3.2.3 =
 * Changed few logs texts.
