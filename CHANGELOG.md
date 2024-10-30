@@ -3,6 +3,7 @@
 # 3.3.0
 ```
     * Nuvei Order's action buttons and Nuvei Order's messages were added into WCFM Order details page.
+    * When Void DMN come, and this is an Auto-Void, directly return response to the Cashier.
 ```
 
 # 3.2.4

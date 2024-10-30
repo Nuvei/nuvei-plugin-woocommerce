@@ -31,6 +31,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
             'customField1' => Nuvei_Pfw_Http::get_param('customField1', 'string'),
             'customField2' => Nuvei_Pfw_Http::get_param('customField2', 'string'),
             'customField3' => Nuvei_Pfw_Http::get_param('customField3', 'string'),
+            'customData' => Nuvei_Pfw_Http::get_param('customData', 'string'),
             'payment_method' => Nuvei_Pfw_Http::get_param('payment_method', 'string'),
             'webMasterId' => Nuvei_Pfw_Http::get_param('webMasterId', 'string'),
             'transactionType' => Nuvei_Pfw_Http::get_param('transactionType', 'string'),
@@ -1016,9 +1017,18 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	 * @return void
 	 */
 	private function process_settle_void_dmn( $order_id, $req_status, $transaction_type, $client_unique_id ) {
-		$order_id = 0 < $order_id ? $order_id : $client_unique_id;
+		$order_id       = 0 < $order_id ? $order_id : $client_unique_id;
+        $custom_data    = strtolower(Nuvei_Pfw_Http::get_param('customData', 'string'));
         
-        // TODO - chek for Auto-Void DMN, if this is the case return message here!
+        // Chek for Auto-Void DMN, if this is the case return message here!
+        if ('void' == strtolower($transaction_type)
+            && strpos($custom_data, 'auto-void') !== false 
+        ) {
+            $msg = 'Auto-Void DMN received.';
+
+            Nuvei_Pfw_Logger::write( $msg );
+            exit( esc_html( $msg ) );
+        }
 
 		$this->is_order_valid( $order_id );
 		$this->check_for_repeating_dmn();
