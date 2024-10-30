@@ -640,7 +640,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 					$currency_code   = $this->sc_order->get_currency();
 					$currency_symbol = get_woocommerce_currency_symbol( $currency_code );
 					$message        .= '<br/><b>' . __( 'Refund: ', 'nuvei-payments-for-woocommerce' ) 
-                        . '<b> #' . $refund_id;
+                        . '</b> #' . $refund_id;
 
 					if ( $order_amount == $this->sum_order_refunds() + $dmn_amount ) {
 						$status = $this->nuvei_gw->get_option( 'status_refund' );
@@ -1017,6 +1017,8 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	 */
 	private function process_settle_void_dmn( $order_id, $req_status, $transaction_type, $client_unique_id ) {
 		$order_id = 0 < $order_id ? $order_id : $client_unique_id;
+        
+        // TODO - chek for Auto-Void DMN, if this is the case return message here!
 
 		$this->is_order_valid( $order_id );
 		$this->check_for_repeating_dmn();

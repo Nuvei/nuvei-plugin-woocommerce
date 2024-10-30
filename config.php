@@ -73,6 +73,7 @@ define(
 		'RefreshLogError'   => __( 'Getting log faild, please check the console for more information!', 'nuvei-payments-for-woocommerce' ),
 		'CheckoutFormError' => __( 'Checkout form class error, please contact the site administrator!', 'nuvei-payments-for-woocommerce' ),
 		'TransactionAppr'   => __( 'The transaction was approved.', 'nuvei-payments-for-woocommerce' ),
+        'RefundAmountError' => __( 'Please, check requested Refund amount!', 'nuvei-payments-for-woocommerce' ),
 	)
 );
 

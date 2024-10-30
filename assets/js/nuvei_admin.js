@@ -7,8 +7,12 @@ try {
 	var nuveiPlans = {};
 }
 
-// when the admin select to Settle, Void or Cancel Subscription actions
-function nuveiAction(question, action, orderId, subscrId) {
+/**
+ * When the admin select to Settle, Void or Cancel Subscription actions
+ * 
+ * @returns void
+ */
+function nuveiAction(question, action, orderId, subscrId, isWcfm) {
 	console.log('settleAndCancelOrder')
 	
 	if (!confirm(question)) {
@@ -48,10 +52,15 @@ function nuveiAction(question, action, orderId, subscrId) {
             console.error(errorThrown)
         })
         .done(function(resp) {
-            console.log(resp);
+            console.log(resp, isWcfm);
 
             if (resp && typeof resp.status != 'undefined' && resp.data != 'undefined') {
                 if (resp.status == 1) {
+                    if (isWcfm) {
+                        window.location = '/store-manager/orderslist/';
+                        return;
+                    }
+                    
                     var urlParts    = window.location.toString().split('post.php');
                     window.location = urlParts[0] + 'edit.php?post_type=shop_order';
                 } else if (resp.data.reason != 'undefined' && resp.data.reason != '') {
@@ -85,7 +94,7 @@ function nuveiReturnNuveiBtns() {
 	}
 }
 
-function scCreateRefund(question) {
+function scCreateRefund(question, showMsg, isWcfm) {
 	console.log('scCreateRefund()');
 	
 	var refAmount	= jQuery('#refund_amount').val().replaceAll(' ', '');
@@ -98,6 +107,9 @@ function scCreateRefund(question) {
 		jQuery('#refund_amount').on('focus', function() {
 			jQuery('#refund_amount').css('border-color', 'inherit');
 		});
+        
+        console.log(scTrans.RefundAmountError);
+        alert(scTrans.RefundAmountError);
 		
 		return;
 	}
@@ -132,10 +144,15 @@ function scCreateRefund(question) {
 			console.error(errorThrown)
 		})
 		.done(function(resp) {
-			console.log(resp);
+			console.log(resp, isWcfm);
 
 			if (resp && typeof resp.status != 'undefined' && resp.data != 'undefined') {
 				if (resp.status == 1) {
+                    if (isWcfm) {
+                        window.location = '/store-manager/orderslist/';
+                        return;
+                    }
+                    
 					var urlParts    = window.location.toString().split('post.php');
 					window.location = urlParts[0] + 'edit.php?post_type=shop_order';
 				}
@@ -342,8 +359,22 @@ function nuveiFillPlanData(_planId) {
     }
 }
 
-function nuveiPfwDisableRefundBtn() {
+function nuveiPfwDisableRefundBtn(isWcfm) {
     jQuery(".refund-item, .refund-items").prop("disabled", true);
+    
+    if (isWcfm) {
+        jQuery(".refund-item, .refund-items").hide();
+    }
+}
+
+function nuveiShowWcfmRefundBlock() {
+    jQuery('#nuvei_wcfm_refund_block').show();
+    jQuery('#nuvei_wcfm_buttons_block').hide();
+}
+
+function nuveiHideWcfmRefundBlock() {
+    jQuery('#nuvei_wcfm_refund_block').hide();
+    jQuery('#nuvei_wcfm_buttons_block').show();
 }
 
 jQuery(function() {
