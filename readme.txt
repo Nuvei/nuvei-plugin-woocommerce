@@ -2,8 +2,8 @@
 
 Contributors: Nuvei
 Requires at least: 4.7
-Tested up to: 6.6.2
-Stable tag: 3.3.0
+Tested up to: 6.7
+Stable tag: 3.3.1
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -61,6 +61,9 @@ If you are used our plugin before v3.2.0, please change plugin setting "Status A
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.3.1 =
+* Removed option "Auto-close APM Pop-Up".
 
 = 3.3.0 =
 * Nuvei Order's action buttons and Nuvei Order's messages were added into WCFM Order details page.

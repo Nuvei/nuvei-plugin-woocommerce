@@ -1681,16 +1681,16 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'default'       => 1,
 				'class'         => 'nuvei_checkout_setting',
 			),
-			'close_popup' => array(
-				'title'         => __( 'Auto-close APM Pop-Up', 'nuvei-payments-for-woocommerce' ),
-				'type'          => 'select',
-				'options'       => array(
-					1   => __( 'Yes (Recommended)', 'nuvei-payments-for-woocommerce' ),
-					0   => __( 'No', 'nuvei-payments-for-woocommerce' ),
-				),
-				'default'       => 1,
-				'class'         => 'nuvei_checkout_setting',
-			),
+//			'close_popup' => array(
+//				'title'         => __( 'Auto-close APM Pop-Up', 'nuvei-payments-for-woocommerce' ),
+//				'type'          => 'select',
+//				'options'       => array(
+//					1   => __( 'Yes (Recommended)', 'nuvei-payments-for-woocommerce' ),
+//					0   => __( 'No', 'nuvei-payments-for-woocommerce' ),
+//				),
+//				'default'       => 1,
+//				'class'         => 'nuvei_checkout_setting',
+//			),
 			'mask_user_data' => array(
 				'title'         => __( 'Mask User Data into the Log', 'nuvei-payments-for-woocommerce' ),
 				'type'          => 'select',

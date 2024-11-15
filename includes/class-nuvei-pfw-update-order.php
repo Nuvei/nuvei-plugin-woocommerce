@@ -67,11 +67,11 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 			'backUrl'           => wc_get_checkout_url(),
 		);
 
-		if ( 1 == $plugin_settings['close_popup'] ) {
-			$url_details['successUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
-			$url_details['failureUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
-			$url_details['pendingUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
-		}
+//		if ( 1 == $plugin_settings['close_popup'] ) {
+        $url_details['successUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
+        $url_details['failureUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
+        $url_details['pendingUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
+//		}
 
 		// create Order upgrade
 		$params = array(
