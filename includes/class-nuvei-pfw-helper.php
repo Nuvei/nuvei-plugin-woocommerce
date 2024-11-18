@@ -119,4 +119,8 @@ class Nuvei_Pfw_Helper extends Nuvei_Pfw_Request {
     public function helper_is_request_safe() {
         return $this->is_request_safe();
     }
+    
+    public function helper_get_web_master_id() {
+        return $this->get_web_master_id();
+    }
 }

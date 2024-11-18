@@ -3,6 +3,7 @@
 # 3.3.1
 ```
     * Removed option "Auto-close APM Pop-Up".
+    * Added webMasterId in Cashier redirect URL.
 ```
 
 # 3.3.0

@@ -1310,6 +1310,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'total_tax'         => 0,
 			'total_amount'      => $total_amount,
 			'encoding'          => 'UTF-8',
+            'webMasterId'       => $nuvei_helper->helper_get_web_master_id(),
 		);
 
 		if ( 1 == $this->settings['use_upos'] ) {

@@ -64,6 +64,7 @@ If you are used our plugin before v3.2.0, please change plugin setting "Status A
 
 = 3.3.1 =
 * Removed option "Auto-close APM Pop-Up".
+* Added webMasterId in Cashier redirect URL.
 
 = 3.3.0 =
 * Nuvei Order's action buttons and Nuvei Order's messages were added into WCFM Order details page.

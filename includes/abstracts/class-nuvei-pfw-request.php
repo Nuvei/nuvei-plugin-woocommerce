@@ -40,7 +40,7 @@ abstract class Nuvei_Pfw_Request {
 			'merchantSiteId'    => trim( (int) $this->nuvei_gw->get_option( 'merchantSiteId' ) ),
             'clientRequestId'   => uniqid( '', true ),
 			'timeStamp'         => $time,
-			'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION . '; Plugin v' . nuvei_pfw_get_plugin_version(),
+			'webMasterId'       => $this->get_web_master_id(),
 			'sourceApplication' => NUVEI_PFW_SOURCE_APPLICATION,
 			'encoding'          => 'UTF-8',
 			'deviceDetails'     => $this->get_device_details(),
@@ -113,7 +113,16 @@ abstract class Nuvei_Pfw_Request {
 		// can we override Order status (state) END
 	}
 
-	/**
+    /**
+     * A help function to get webMasterId parameter.
+     * 
+     * @return string
+     */
+    protected function get_web_master_id() {
+        return 'WooCommerce ' . WOOCOMMERCE_VERSION . '; Plugin v' . nuvei_pfw_get_plugin_version();
+    }
+
+    /**
 	 * Help function to generate Billing and Shipping details.
 	 *
 	 * @global Woocommerce $woocommerce
