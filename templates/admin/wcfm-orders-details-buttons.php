@@ -6,24 +6,24 @@
 	<p class="add-items">
         <?php if ($data['showRefundBtn']): ?>
             <button id="sc_refund_btn" type="button" class="button refund-items" onclick="nuveiShowWcfmRefundBlock();">
-                <?= esc_html__( 'Refund', 'nuvei-payments-for-woocommerce' ); ?>
+                <?php echo esc_html__( 'Refund', 'nuvei-payments-for-woocommerce' ); ?>
             </button>
         <?php endif; ?>
         
         <?php if ($data['voidQuestion']): ?>
-            <button id="sc_void_btn" type="button" onclick="nuveiAction('<?= esc_html( $data['voidQuestion'] ); ?>', 'void', <?= esc_html( $data['orderId'] ); ?>, null, 1)" class="button generate-items">
-                <?= esc_html__( 'Void', 'nuvei-payments-for-woocommerce' ); ?>
+            <button id="sc_void_btn" type="button" onclick="nuveiAction('<?php echo esc_html( $data['voidQuestion'] ); ?>', 'void', <?php echo esc_html( $data['orderId'] ); ?>, null, 1)" class="button generate-items">
+                <?php echo esc_html__( 'Void', 'nuvei-payments-for-woocommerce' ); ?>
             </button>
         <?php endif; ?>
         
         <?php if ($data['settleQuestion']): ?>
-            <button id="sc_settle_btn" type="button" onclick="nuveiAction('<?= esc_html( $data['settleQuestion'] ); ?>', 'settle', <?= esc_html( $data['orderId'] ); ?>, null, 1)" class="button generate-items">
-                <?= esc_html__( 'Settle', 'nuvei-payments-for-woocommerce' ); ?>
+            <button id="sc_settle_btn" type="button" onclick="nuveiAction('<?php echo esc_html( $data['settleQuestion'] ); ?>', 'settle', <?php echo esc_html( $data['orderId'] ); ?>, null, 1)" class="button generate-items">
+                <?php echo esc_html__( 'Settle', 'nuvei-payments-for-woocommerce' ); ?>
             </button>
         <?php endif; ?>
     </p>
     
-    <input type="hidden" id="post_ID" value="<?= esc_html( $data['orderId'] ); ?>" />
+    <input type="hidden" id="post_ID" value="<?php echo esc_html( $data['orderId'] ); ?>" />
 </div>
 
 <?php if ($data['showRefundBtn']): ?>
@@ -33,7 +33,7 @@
                 <tr>
                     <td class="label">
                         <label for="refund_amount">
-                            <?= esc_html__( 'Refund amount', 'nuvei-payments-for-woocommerce' ); ?>:
+                            <?php echo esc_html__( 'Refund amount', 'nuvei-payments-for-woocommerce' ); ?>:
                         </label>
                     </td>
 
@@ -45,7 +45,7 @@
                 <tr>
                     <td class="label">
                         <label for="refund_reason">
-                            <?= esc_html__( 'Reason for refund (optional)', 'nuvei-payments-for-woocommerce' ); ?>:
+                            <?php echo esc_html__( 'Reason for refund (optional)', 'nuvei-payments-for-woocommerce' ); ?>:
                         </label>
                     </td>
 
@@ -60,11 +60,11 @@
 
         <div class="refund-actions" style="text-align: right;">
             <button type="button" class="button cancel-action" onclick="nuveiHideWcfmRefundBlock();">
-                <?= esc_html__( 'Cancel', 'nuvei-payments-for-woocommerce' ); ?>
+                <?php echo esc_html__( 'Cancel', 'nuvei-payments-for-woocommerce' ); ?>
             </button>
 
-            <button type="button" class="button button-primary" id="sc_api_refund" onclick="scCreateRefund('<?= esc_html__( 'Are you sure about this Refund?', 'nuvei-payments-for-woocommerce'); ?>', '', 1);">
-                <?= esc_html__( 'Refund via Nuvei Checkout', 'nuvei-payments-for-woocommerce' ); ?>
+            <button type="button" class="button button-primary" id="sc_api_refund" onclick="scCreateRefund('<?php echo esc_html__( 'Are you sure about this Refund?', 'nuvei-payments-for-woocommerce'); ?>', '', 1);">
+                <?php echo esc_html__( 'Refund via Nuvei Checkout', 'nuvei-payments-for-woocommerce' ); ?>
             </button>
 
             <div class="clear"></div>

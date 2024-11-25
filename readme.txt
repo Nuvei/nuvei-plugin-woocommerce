@@ -1,4 +1,4 @@
-=== Nuvei Checkout for Woocommerce ===
+=== Nuvei Payments for Woocommerce ===
 
 Contributors: Nuvei
 Requires at least: 4.7
@@ -52,6 +52,8 @@ In the Merchant configuration:
 If you have installed a plugin version earlier than v1.3.0 and you are upgrading for the first time, then you should deactivate and activate plugin again after the upgrade, so new logs directory be created!
 
 If you are used our plugin before v3.2.0, please change plugin setting "Status Authorized" in "Advanced Settings" tab to "On-hold"!
+
+If you plan to install this plugin form WP store, but use a version downloaded from Nuvei's GIT repo, please remove the old plugin first!
 
 == Screenshots ==
 

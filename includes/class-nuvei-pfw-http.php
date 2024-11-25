@@ -38,22 +38,6 @@ class Nuvei_Pfw_Http {
             }
         }
         
-//        if ($check_nonce 
-//            && ! check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false )
-//            && ! wp_verify_nonce( sanitize_text_field( $_POST['woocommerce-process-checkout-nonce'] ), 'woocommerce-process_checkout' )
-//        ) {
-//            Nuvei_Pfw_Logger::write(
-//                ['$key' => sanitize_text_field($key)],
-//                'Faild to check nonce.'
-//            );
-//            
-//            if (in_array($type, array('int', 'float'))) {
-//                return 0;
-//            }
-//            
-//            return '';
-//        }
-        
         switch ( $type ) {
 			case 'mail':
 			case 'email':
@@ -62,7 +46,7 @@ class Nuvei_Pfw_Http {
                 }
                 
                 if ( ! empty( $_REQUEST[ $key ] ) ) {
-                    return sanitize_email( $_REQUEST[ $key ] );
+                    return sanitize_email( wp_unslash($_REQUEST[ $key ]) );
                 }
                 
                 return $default;
@@ -101,7 +85,7 @@ class Nuvei_Pfw_Http {
                     return sanitize_text_field($parent[ $key ]);
                 } 
                 if ( isset( $_REQUEST[ $key ] ) ) {
-                    return sanitize_text_field($_REQUEST[ $key ]);
+                    return sanitize_text_field(wp_unslash($_REQUEST[ $key ]));
                 }
                 
 				return $default;

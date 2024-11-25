@@ -13,7 +13,7 @@
  * Tested up to: 6.7
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 9.4.1
+ * WC tested up to: 9.4.2
 */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -215,10 +215,9 @@ function nuvei_pfw_init() {
      * 
      * @deprecated since version 3.1.0.
      */
-    if  (!is_admin() && !empty($_REQUEST['sc_msg'])) {
-//	if ( ! empty( Nuvei_Pfw_Http::get_param('sc_msg', 'string', '', array(), true)) ) {
-		add_filter( 'woocommerce_before_cart', 'nuvei_pfw_show_message_on_cart', 10, 2 );
-	}
+//    if  (!is_admin() && !empty($_REQUEST['sc_msg'])) {
+//		add_filter( 'woocommerce_before_cart', 'nuvei_pfw_show_message_on_cart', 10, 2 );
+//	}
 
 	# Payment Plans taxonomies
 	// extend Term form to add meta data
@@ -428,7 +427,11 @@ function nuvei_pfw_load_scripts() {
 
 	$plugin_url     = plugin_dir_url( __FILE__ );
     $sdkUrl         = NUVEI_PFW_SDK_URL_PROD;
-    $server_name    = filter_var($_SERVER['SERVER_NAME'], FILTER_SANITIZE_URL);
+    $server_name    = '';
+    
+    if (isset($_SERVER['SERVER_NAME'])) {
+        $server_name = filter_var(wp_unslash($_SERVER['SERVER_NAME']), FILTER_SANITIZE_URL);
+    }
     
     if (!empty($server_name) 
         && 'woocommerceautomation.gw-4u.com' == $server_name
@@ -983,14 +986,14 @@ function nuvei_pfw_user_orders() {
  * @param array $data
  * @deprecated since version 3.1.0
  */
-function nuvei_pfw_show_message_on_cart( $data ) {
-    wp_add_inline_script(
-        'nuvei_js_public',
-        'jQuery("#content .woocommerce:first").append("<div class=\'woocommerce-warning\'>' 
-            . wp_kses_post( Nuvei_Pfw_Http::get_param( 'sc_msg', 'string', '', array(), true ) ) . '</div>");',
-        'after'
-    );
-}
+//function nuvei_pfw_show_message_on_cart( $data ) {
+//    wp_add_inline_script(
+//        'nuvei_js_public',
+//        'jQuery("#content .woocommerce:first").append("<div class=\'woocommerce-warning\'>' 
+//            . wp_kses_post( Nuvei_Pfw_Http::get_param( 'sc_msg', 'string', '', array(), true ) ) . '</div>");',
+//        'after'
+//    );
+//}
 
 // Attributes, Terms and Meta functions
 function nuvei_pfw_add_term_fields_form( $taxonomy ) {

@@ -70,6 +70,8 @@ class Nuvei_Pfw_Logger {
 		$source_file_name   = '';
 		$member_name        = '';
 		$source_line_number = '';
+        // We use debug_backtrace to get the file and the line where call the log method.
+        // phpcs:ignore
 		$backtrace          = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 1 );
 
 		if ( ! empty( $backtrace ) ) {
@@ -115,6 +117,8 @@ class Nuvei_Pfw_Logger {
                 array_walk_recursive( $data, array(self::class, 'mask_data'), self::$fields_to_mask );
 			}
 
+            // We use print_r to log the data
+            // phpcs:ignore
 			$data_tmp   = print_r( (array) $data, true );
             // phpcs:ignore
 			$exception  = $beauty_log ? json_encode( $data_tmp, JSON_PRETTY_PRINT ) : wp_json_encode( $data_tmp );

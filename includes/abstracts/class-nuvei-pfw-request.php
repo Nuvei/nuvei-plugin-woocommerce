@@ -417,7 +417,7 @@ abstract class Nuvei_Pfw_Request {
             return true;
         }
         if (isset($_POST['woocommerce-process-checkout-nonce']) 
-            && false !== wp_verify_nonce( sanitize_text_field( $_POST['woocommerce-process-checkout-nonce'] ), 'woocommerce-process_checkout' )
+            && false !== wp_verify_nonce( sanitize_text_field( wp_unslash($_POST['woocommerce-process-checkout-nonce']) ), 'woocommerce-process_checkout' )
         ) {
             return true;
         }
@@ -436,26 +436,22 @@ abstract class Nuvei_Pfw_Request {
     private function get_scformdata_address_parts($field, $group = 'billing') {
         // here we check for Nuvei nonce or WC Checkout nonce
         if ( ! $this->is_request_safe() ) {
-//        if ( ! check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false ) 
-//            && ! ( isset($_POST['woocommerce-process-checkout-nonce']) 
-//                && wp_verify_nonce( sanitize_text_field( $_POST['woocommerce-process-checkout-nonce'] ), 'woocommerce-process_checkout' ) )
-//        ) {
             Nuvei_Pfw_Logger::write($field, 'Securtity parameter is missing or nonce is not valid');
             return '';
         }
 
         // shortcode
         if (!empty($_REQUEST['scFormData'][$group . '_' . $field])) {
-            return trim(sanitize_text_field($_REQUEST['scFormData'][$group . '_' . $field]));
+            return trim(sanitize_text_field(wp_unslash($_REQUEST['scFormData'][$group . '_' . $field])));
         }
         // blocks
         elseif (!empty($_REQUEST['scFormData'][$group . '-' . $field])) {
-            return trim(sanitize_text_field($_REQUEST['scFormData'][$group . '-' . $field]));
+            return trim(sanitize_text_field(wp_unslash($_REQUEST['scFormData'][$group . '-' . $field])));
         }
         
         // additional check for the email
         if ('email' == $field && !empty($_REQUEST['scFormData']['email'])) {
-            $be = trim(sanitize_email($_REQUEST['scFormData']['email']));
+            $be = trim(sanitize_email(wp_unslash($_REQUEST['scFormData']['email'])));
         }
         
         return '';
@@ -583,7 +579,7 @@ abstract class Nuvei_Pfw_Request {
 			return $device_details;
 		}
 
-		$user_agent = strtolower(sanitize_text_field( $_SERVER['HTTP_USER_AGENT'] ) );
+		$user_agent = strtolower(sanitize_text_field( wp_unslash($_SERVER['HTTP_USER_AGENT']) ) );
 
 		if ( empty( $user_agent ) ) {
 			$device_details['Warning'] = 'Probably the merchant Server has problems with PHP filter_var function!';
@@ -625,24 +621,24 @@ abstract class Nuvei_Pfw_Request {
 
 		// get ip
 		if ( ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
-			$ip_address = filter_var( $_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP );
+			$ip_address = filter_var( wp_unslash($_SERVER['REMOTE_ADDR']), FILTER_VALIDATE_IP );
 		}
 		if ( empty( $ip_address ) && ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-			$ip_address = filter_var( $_SERVER['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP );
+			$ip_address = filter_var( wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR']), FILTER_VALIDATE_IP );
 		}
 		if ( empty( $ip_address ) && ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
-			$ip_address = filter_var( $_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP );
+			$ip_address = filter_var( wp_unslash($_SERVER['HTTP_CLIENT_IP']), FILTER_VALIDATE_IP );
 		}
 		if ( ! empty( $ip_address ) ) {
 			$device_details['ipAddress'] = (string) $ip_address;
 		} else {
 			$device_details['Warning'] = array(
 				'REMOTE_ADDR'           => empty( $_SERVER['REMOTE_ADDR'] )
-					? '' : filter_var( $_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP ),
+					? '' : filter_var( wp_unslash($_SERVER['REMOTE_ADDR']), FILTER_VALIDATE_IP ),
 				'HTTP_X_FORWARDED_FOR'  => empty( $_SERVER['HTTP_X_FORWARDED_FOR'] )
-					? '' : filter_var( $_SERVER['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP ),
+					? '' : filter_var( wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR']), FILTER_VALIDATE_IP ),
 				'HTTP_CLIENT_IP'        => empty( $_SERVER['HTTP_CLIENT_IP'] )
-					? '' : filter_var( $_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP ),
+					? '' : filter_var( wp_unslash($_SERVER['HTTP_CLIENT_IP']), FILTER_VALIDATE_IP ),
 			);
 		}
 

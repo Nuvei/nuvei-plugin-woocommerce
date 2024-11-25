@@ -47,12 +47,12 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
                 // not all parameters are available all the time
 				'Request params'    => $logged_params,
 				'REMOTE_ADDR'       => isset($_SERVER['REMOTE_ADDR']) 
-                    ? filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) : '',
+                    ? filter_var(wp_unslash($_SERVER['REMOTE_ADDR']), FILTER_VALIDATE_IP) : '',
 				'REMOTE_PORT'       => isset($_SERVER['REMOTE_PORT']) ? (int) $_SERVER['REMOTE_PORT'] : '',
 				'REQUEST_METHOD'    => isset($_SERVER['REQUEST_METHOD']) 
-                    ? sanitize_text_field($_SERVER['REQUEST_METHOD']) : '',
+                    ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])) : '',
 				'HTTP_USER_AGENT'   => isset($_SERVER['HTTP_USER_AGENT'])
-                    ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : '',
+                    ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '',
 			),
 			'DMN params'
 		);
