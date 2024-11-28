@@ -832,8 +832,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				),
 			),
             'sourceApplication'         => NUVEI_PFW_SOURCE_APPLICATION,
-//            'urlPrefix'                 => NUVEI_PFW_SIMPLY_CONNECT_PATH,
 		);
+        
+        // For the QA site only
+        if ($this->is_qa_site()) {
+            $checkout_data['webSdkEnv'] = 'devmobile';
+        }
 
 		// check for product with a plan
 		if ( $is_there_subscription ) {
@@ -1223,6 +1227,29 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		return array( 'url' => $url );
 	}
 
+    /**
+     * Common method to check if the plugin is used on the QA site.
+     * The method also check if NUVEI_PFW_SDK_URL_TAG constant is defined.
+     * 
+     * @return bool
+     */
+    public function is_qa_site() {
+        $server_name    = '';
+    
+        if (isset($_SERVER['SERVER_NAME'])) {
+            $server_name = filter_var(wp_unslash($_SERVER['SERVER_NAME']), FILTER_SANITIZE_URL);
+        }
+
+        if (!empty($server_name) 
+            && 'woocommerceautomation.gw-4u.com' == $server_name
+            && defined('NUVEI_PFW_SDK_URL_TAG')
+        ) {
+            return true;
+        }
+        
+        return false;
+    }
+    
 	/**
 	 * Get a plugin setting by its key.
 	 * If key does not exists, return default value.

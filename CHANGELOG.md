@@ -1,5 +1,11 @@
 # WooCommerce Extension Changelog
 
+# 3.3.2
+```
+    * For testing purpose, to the Simply Connect was added parameter "webSdkEnv".
+    * From the readme.txt was removed Contributor parameter.
+```
+
 # 3.3.1
 ```
     * Removed option "Auto-close APM Pop-Up".

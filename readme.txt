@@ -1,9 +1,8 @@
 === Nuvei Payments for Woocommerce ===
 
-Contributors: Nuvei
 Requires at least: 4.7
 Tested up to: 6.7
-Stable tag: 3.3.1
+Stable tag: 3.3.2
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -63,6 +62,10 @@ If you plan to install this plugin form WP store, but use a version downloaded f
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.3.2 =
+* For testing purpose, to the Simply Connect was added parameter "webSdkEnv".
+* From the readme.txt was removed Contributor parameter.
 
 = 3.3.1 =
 * Removed option "Auto-close APM Pop-Up".
