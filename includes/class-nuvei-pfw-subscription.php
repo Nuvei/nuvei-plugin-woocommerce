@@ -7,10 +7,11 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Subscription extends Nuvei_Pfw_Request {
 
+
 	/**
 	 * Main method
 	 *
-	 * @param array $prod_plan - plan details
+	 * @param  array $prod_plan - plan details
 	 * @return array|bool
 	 */
 	public function process() {
@@ -20,10 +21,10 @@ class Nuvei_Pfw_Subscription extends Nuvei_Pfw_Request {
 
 		$params = array_merge(
 			array(
-				'userPaymentOptionId'   => Nuvei_Pfw_Http::get_param( 'userPaymentOptionId', 'int' ),
-				'userTokenId'           => Nuvei_Pfw_Http::get_param( 'user_token_id', 'mail' ),
-				'currency'              => Nuvei_Pfw_Http::get_param( 'currency' ),
-				'initialAmount'         => 0,
+				'userPaymentOptionId' => Nuvei_Pfw_Http::get_param( 'userPaymentOptionId', 'int' ),
+				'userTokenId'         => Nuvei_Pfw_Http::get_param( 'user_token_id', 'mail' ),
+				'currency'            => Nuvei_Pfw_Http::get_param( 'currency' ),
+				'initialAmount'       => 0,
 			),
 			$prod_plan
 		);

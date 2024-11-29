@@ -7,87 +7,88 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Http {
 
+
 	/**
 	 * Get request parameter by key.
 	 *
-	 * @param string    $key            Request key.
-	 * @param string    $type           Optional. Possible vaues: string, float, int, array, mail/email, other.
-	 * @param mixed     $default        Optional. Return value if fail.
-	 * @param array     $parent         Optional array with parameters to search in.
-	 * @param bool      $check_nonce    Optional. Check for nonce or no. We use this method mostly for outside requests, so the default will be false.
+	 * @param string $key         Request key.
+	 * @param string $type        Optional. Possible vaues: string, float, int, array, mail/email, other.
+	 * @param mixed  $default     Optional. Return value if fail.
+	 * @param array  $parent      Optional array with parameters to search in.
+	 * @param bool   $check_nonce Optional. Check for nonce or no. We use this method mostly for outside requests, so the default will be false.
 	 *
 	 * @return mixed
 	 */
 	public static function get_param( $key, $type = 'string', $default = '', $parent = array(), $check_nonce = false ) {
 		// check for Nuvei or WC nonoce. If at least one of them pass - the incoming data is safe.
-        if ($check_nonce) {
-            $helper = new Nuvei_Pfw_Helper();
-            
-            // here we check the nonce
-            if ( ! $helper->helper_is_request_safe() ) {
-                Nuvei_Pfw_Logger::write(
-                    ['$key' => sanitize_text_field($key)],
-                    'Faild to check nonce.'
-                );
+		if ( $check_nonce ) {
+			$helper = new Nuvei_Pfw_Helper();
 
-                if (in_array($type, array('int', 'float'))) {
-                    return 0;
-                }
+			// here we check the nonce
+			if ( ! $helper->helper_is_request_safe() ) {
+				Nuvei_Pfw_Logger::write(
+					array( '$key' => sanitize_text_field( $key ) ),
+					'Faild to check nonce.'
+				);
 
-                return '';
-            }
-        }
-        
-        switch ( $type ) {
+				if ( in_array( $type, array( 'int', 'float' ) ) ) {
+					return 0;
+				}
+
+				return '';
+			}
+		}
+
+		switch ( $type ) {
 			case 'mail':
 			case 'email':
-                if ( ! empty( $parent[ $key ] ) ) {
-                    return sanitize_email( $parent[ $key ] );
-                }
-                
-                if ( ! empty( $_REQUEST[ $key ] ) ) {
-                    return sanitize_email( wp_unslash($_REQUEST[ $key ]) );
-                }
-                
-                return $default;
+				if ( ! empty( $parent[ $key ] ) ) {
+					return sanitize_email( $parent[ $key ] );
+				}
+
+				if ( ! empty( $_REQUEST[ $key ] ) ) {
+					return sanitize_email( wp_unslash( $_REQUEST[ $key ] ) );
+				}
+
+				return $default;
 
 			case 'float':
-                if ( isset( $parent[ $key ] ) && is_numeric($parent[ $key ]) ) {
-                    return (float) $parent[ $key ];
-                } 
-                if ( isset( $_REQUEST[ $key ] ) && is_numeric($_REQUEST[ $key ]) ) {
-                    return (float) $_REQUEST[ $key ];
-                }
-                
-				if ( !is_numeric( $default ) ) {
-					$default = 0;
+				if ( isset( $parent[ $key ] ) && is_numeric( $parent[ $key ] ) ) {
+					return (float) $parent[ $key ];
 				}
-                
-                return $default;
+				if ( isset( $_REQUEST[ $key ] ) && is_numeric( $_REQUEST[ $key ] ) ) {
+					return (float) $_REQUEST[ $key ];
+				}
 
-			case 'int':
-                if ( isset( $parent[ $key ] ) && is_numeric($parent[ $key ]) ) {
-                    return (int) $parent[ $key ];
-                } 
-                if ( isset( $_REQUEST[ $key ] ) && is_numeric($_REQUEST[ $key ]) ) {
-                    return (int) $_REQUEST[ $key ];
-                }
-                
-				if ( !is_numeric( $default ) ) {
+				if ( ! is_numeric( $default ) ) {
 					$default = 0;
 				}
 
 				return $default;
 
-            case 'string':
+			case 'int':
+				if ( isset( $parent[ $key ] ) && is_numeric( $parent[ $key ] ) ) {
+					return (int) $parent[ $key ];
+				}
+				if ( isset( $_REQUEST[ $key ] ) && is_numeric( $_REQUEST[ $key ] ) ) {
+					return (int) $_REQUEST[ $key ];
+				}
+
+				if ( ! is_numeric( $default ) ) {
+					$default = 0;
+				}
+
+				return $default;
+
+			case 'string':
 			default:
-                if ( isset( $parent[ $key ] ) ) {
-                    return sanitize_text_field($parent[ $key ]);
-                } 
-                if ( isset( $_REQUEST[ $key ] ) ) {
-                    return sanitize_text_field(wp_unslash($_REQUEST[ $key ]));
-                }
-                
+				if ( isset( $parent[ $key ] ) ) {
+					return sanitize_text_field( $parent[ $key ] );
+				}
+				if ( isset( $_REQUEST[ $key ] ) ) {
+					return sanitize_text_field( wp_unslash( $_REQUEST[ $key ] ) );
+				}
+
 				return $default;
 		}
 	}
@@ -96,7 +97,7 @@ class Nuvei_Pfw_Http {
 	 * We need this stupid function because as response request variable
 	 * we get 'Status' or 'status'...
 	 *
-	 * @param array $params
+	 * @param  array $params
 	 * @return string
 	 */
 	public static function get_request_status( $params = array() ) {

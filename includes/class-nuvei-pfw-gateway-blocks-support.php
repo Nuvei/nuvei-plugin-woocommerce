@@ -7,10 +7,11 @@ defined( 'ABSPATH' ) || exit;
 /**
  * A class to supports blocks front-end.
  *
- * @author Nuvei
+ * @author  Nuvei
  * @extends AbstractPaymentMethodType
  */
 final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
+
 
 	protected $name = NUVEI_PFW_GATEWAY_NAME;
 
@@ -40,15 +41,15 @@ final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 			1,
 			true
 		);
-        
+
 		return array( 'nuvei-checkout-blocks' );
 	}
 
 	public function get_payment_method_data() {
 		$settings = array(
-			'title'         => $this->settings['title'],
-			'description'   => $this->settings['description'],
-			'icon'          => $this->plugin_dir_url . 'assets/icons/nuvei.png',
+			'title'       => $this->settings['title'],
+			'description' => $this->settings['description'],
+			'icon'        => $this->plugin_dir_url . 'assets/icons/nuvei.png',
 		);
 
 		return $settings;

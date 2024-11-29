@@ -7,6 +7,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 
+
 	public function __construct( $rest_params = array() ) {
 		if ( ! empty( $rest_params ) ) {
 			$this->rest_params = $rest_params;
@@ -25,7 +26,7 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 	 *
 	 * @return array
 	 */
-	//  public function process($products_data, $open_order_details = [])
+	// public function process($products_data, $open_order_details = [])
 	public function process() {
 		global $woocommerce;
 
@@ -63,66 +64,66 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 		$currency = get_woocommerce_currency();
 
 		$url_details = array(
-			'notificationUrl'   => Nuvei_Pfw_String::get_notify_url( $this->plugin_settings ),
-			'backUrl'           => wc_get_checkout_url(),
+			'notificationUrl' => Nuvei_Pfw_String::get_notify_url( $this->plugin_settings ),
+			'backUrl'         => wc_get_checkout_url(),
 		);
 
-//		if ( 1 == $plugin_settings['close_popup'] ) {
-        $url_details['successUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
-        $url_details['failureUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
-        $url_details['pendingUrl']  = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
-//		}
+		// if ( 1 == $plugin_settings['close_popup'] ) {
+		$url_details['successUrl'] = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
+		$url_details['failureUrl'] = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
+		$url_details['pendingUrl'] = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
+		// }
 
 		// create Order upgrade
 		$params = array(
-			'sessionToken'      => $open_order_details['sessionToken'],
-			'orderId'           => $open_order_details['orderId'],
-			'currency'          => $currency,
-			'amount'            => $cart_amount,
-			'billingAddress'    => $addresses['billingAddress'],
-			'userDetails'       => $addresses['billingAddress'],
-			'shippingAddress'   => $addresses['shippingAddress'],
-			'urlDetails'        => $url_details,
+			'sessionToken'    => $open_order_details['sessionToken'],
+			'orderId'         => $open_order_details['orderId'],
+			'currency'        => $currency,
+			'amount'          => $cart_amount,
+			'billingAddress'  => $addresses['billingAddress'],
+			'userDetails'     => $addresses['billingAddress'],
+			'shippingAddress' => $addresses['shippingAddress'],
+			'urlDetails'      => $url_details,
 
-			'items'             => array(
+			'items'           => array(
 				array(
-					'name'      => 'wc_order',
-					'price'     => $cart_amount,
-					'quantity'  => 1,
+					'name'     => 'wc_order',
+					'price'    => $cart_amount,
+					'quantity' => 1,
 				),
 			),
 
-			'merchantDetails'   => array(
-				'customField1'      => $cart_amount,
-				'customField2'      => $currency,
+			'merchantDetails' => array(
+				'customField1' => $cart_amount,
+				'customField2' => $currency,
 			),
 		);
 
 		// WC Subsc
 		if ( ! empty( $products_data['wc_subscr'] ) ) {
-			$oo_params['isRebilling'] = 0;
+			$oo_params['isRebilling']                          = 0;
 			$oo_params['card']['threeD']['v2AdditionalParams'] = array( // some default params
-				'rebillFrequency'   => 30, // days
-				'rebillExpiry '     => gmdate( 'Ymd', strtotime( '+5 years' ) ),
+				'rebillFrequency' => 30, // days
+				'rebillExpiry '   => gmdate( 'Ymd', strtotime( '+5 years' ) ),
 			);
 		} else {
-			$oo_params['isRebilling']   = null;
-			$oo_params['card']          = null;
+			$oo_params['isRebilling'] = null;
+			$oo_params['card']        = null;
 		}
 
 		$resp = $this->call_rest_api( 'updateOrder', $params );
 
-		# Success
+		// Success
 		if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
 			// in default flow
 			if ( empty( $this->rest_params ) ) {
 				// put the new data in the session
-				$open_order_details['amount']                       = $cart_amount;
-				$open_order_details['billingAddress']['country']    = $params['billingAddress']['country'];
-				$open_order_details['amount']                       = $params['amount'];
-				$open_order_details['sessionToken']                 = $resp['sessionToken'];
-				$open_order_details['orderId']                      = $resp['orderId'];
-				$open_order_details['billingAddress']               = $params['billingAddress'];
+				$open_order_details['amount']                    = $cart_amount;
+				$open_order_details['billingAddress']['country'] = $params['billingAddress']['country'];
+				$open_order_details['amount']                    = $params['amount'];
+				$open_order_details['sessionToken']              = $resp['sessionToken'];
+				$open_order_details['orderId']                   = $resp['orderId'];
+				$open_order_details['billingAddress']            = $params['billingAddress'];
 
 				$this->set_nuvei_session_data(
 					$resp['sessionToken'],

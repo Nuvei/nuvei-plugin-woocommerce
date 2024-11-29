@@ -25,26 +25,30 @@ $field = $this->plugin_id . $this->id . '_' . $key;
 				<?php foreach ( $data['merchant_pms'] as $val => $name ) : ?>
 					<option value="<?php echo esc_attr( $val ); ?>" 
 							id="nuvei_block_pm_<?php echo esc_attr( $val ); ?>" 
-							<?php
-							if ( in_array( $val, $data['nuvei_blocked_pms'] ) ) :
-								?>
-								style="display: none;"<?php endif; ?>><?php echo wp_kses_post( $name ); ?></option>
+					<?php
+					if ( in_array( $val, $data['nuvei_blocked_pms'] ) ) :
+						?>
+								style="display: none;"
+								<?php
+					endif;
+					?>
+					><?php echo wp_kses_post( $name ); ?></option>
 				<?php endforeach; ?>
 			</select>
 			<br/>
 			<br/>
-			
+			 
 			<input type="text" 
-				   id="woocommerce_nuvei_pm_black_list_visible" 
-				   class="input-text regular-input" 
-				   readonly="" 
-				   value="<?php echo esc_attr( $data['nuvei_blocked_pms_visible'] ); ?>" />
-			
+					id="woocommerce_nuvei_pm_black_list_visible" 
+					class="input-text regular-input" 
+					readonly="" 
+					value="<?php echo esc_attr( $data['nuvei_blocked_pms_visible'] ); ?>" />
+			 
 			<input type="hidden" name="woocommerce_nuvei_pm_black_list" 
-				   id="woocommerce_nuvei_pm_black_list" 
-				   readonly="" 
-				   value="<?php echo esc_attr( $this->get_option( 'pm_black_list', '' ) ); ?>" />
-			
+					id="woocommerce_nuvei_pm_black_list" 
+					readonly="" 
+					value="<?php echo esc_attr( $this->get_option( 'pm_black_list', '' ) ); ?>" />
+			 
 			<button type="button" id="nuvei_clean_blocked_pms" class="button-secondary" onclick="nuveiCleanBlockedPMs()">
 				<?php echo esc_html( 'Clean', 'nuvei-payments-for-woocommerce' ); ?>
 			</button>

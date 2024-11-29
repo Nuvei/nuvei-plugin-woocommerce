@@ -8,6 +8,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Helper extends Nuvei_Pfw_Request {
 
+
 	public function process() {
 	}
 
@@ -37,7 +38,7 @@ class Nuvei_Pfw_Helper extends Nuvei_Pfw_Request {
 	/**
 	 * Temp help function until stop using old Order meta fields.
 	 *
-	 * @param int|null $order_id WC Order ID
+	 * @param  int|null $order_id WC Order ID
 	 * @return int
 	 */
 	public function get_tr_upo_id( $order_id = null ) {
@@ -61,7 +62,7 @@ class Nuvei_Pfw_Helper extends Nuvei_Pfw_Request {
 	/**
 	 * Temp help function until stop using old Order meta fields.
 	 *
-	 * @param int|null $order_id WC Order ID
+	 * @param  int|null $order_id WC Order ID
 	 * @return int
 	 */
 	public function get_payment_method( $order_id = null ) {
@@ -85,7 +86,7 @@ class Nuvei_Pfw_Helper extends Nuvei_Pfw_Request {
 	/**
 	 * Temp help function until stop using old Order meta fields.
 	 *
-	 * @param int|null $order_id WC Order ID
+	 * @param  int|null $order_id WC Order ID
 	 * @return int
 	 */
 	public function get_tr_type( $order_id = null ) {
@@ -115,12 +116,12 @@ class Nuvei_Pfw_Helper extends Nuvei_Pfw_Request {
 	public function get_rebiling_details( $all_data ) {
 		return $this->get_order_rebiling_details( $all_data );
 	}
-    
-    public function helper_is_request_safe() {
-        return $this->is_request_safe();
-    }
-    
-    public function helper_get_web_master_id() {
-        return $this->get_web_master_id();
-    }
+
+	public function helper_is_request_safe() {
+		return $this->is_request_safe();
+	}
+
+	public function helper_get_web_master_id() {
+		return $this->get_web_master_id();
+	}
 }

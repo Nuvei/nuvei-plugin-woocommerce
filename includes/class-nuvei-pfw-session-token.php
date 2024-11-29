@@ -7,6 +7,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Session_Token extends Nuvei_Pfw_Request {
 
+
 	public function process() {
 		return $this->call_rest_api( 'getSessionToken', array() );
 	}

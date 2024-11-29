@@ -8,9 +8,9 @@ defined( 'ABSPATH' ) || exit;
 class Nuvei_Pfw_Logger {
 
 	private static $fields_to_mask = array(
-		'ips'       => array( 'ipAddress' ),
-		'names'     => array( 'firstName', 'lastName', 'first_name', 'last_name', 'shippingFirstName', 'shippingLastName', 'billing_first_name', 'billing_last_name', 'shipping_first_name', 'shipping_last_name', 'shipping_address_1', 'shipping_address_2' ),
-		'emails'    => array(
+		'ips'     => array( 'ipAddress' ),
+		'names'   => array( 'firstName', 'lastName', 'first_name', 'last_name', 'shippingFirstName', 'shippingLastName', 'billing_first_name', 'billing_last_name', 'shipping_first_name', 'shipping_last_name', 'shipping_address_1', 'shipping_address_2' ),
+		'emails'  => array(
 			'userTokenId',
 			'email',
 			'shippingMail', // from the DMN
@@ -18,8 +18,8 @@ class Nuvei_Pfw_Logger {
 			'user_token_id', // from the DMN
 			'billing_email',
 		),
-		'address'   => array( 'address', 'phone', 'zip', 'billing_address_1', 'billing_address_2', 'billing_postcode', 'billing_phone', 'shipping_postcode' ),
-		'others'    => array( 'userAccountDetails', 'userPaymentOption', 'paymentOption' ),
+		'address' => array( 'address', 'phone', 'zip', 'billing_address_1', 'billing_address_2', 'billing_postcode', 'billing_phone', 'shipping_postcode' ),
+		'others'  => array( 'userAccountDetails', 'userPaymentOption', 'paymentOption' ),
 	);
 
 	private static $trace_id;
@@ -27,15 +27,15 @@ class Nuvei_Pfw_Logger {
 	/**
 	 * Save plugin logs.
 	 *
-	 * @param mixed $data The data to save in the log.
+	 * @param mixed  $data The data to save in the log.
 	 * @param string $message Record message.
 	 * @param string $log_level The Log level.
 	 * @param string $span_id Process unique ID.
 	 */
 	public static function write( $data, $message = '', $log_level = 'INFO', $span_id = '' ) {
-		$nuvei_gw           = WC()->payment_gateways->payment_gateways()[ NUVEI_PFW_GATEWAY_NAME ];
-		$save_logs          = $nuvei_gw->get_option( 'save_logs' );
-		$save_single_log    = $nuvei_gw->get_option( 'save_single_log' );
+		$nuvei_gw        = WC()->payment_gateways->payment_gateways()[ NUVEI_PFW_GATEWAY_NAME ];
+		$save_logs       = $nuvei_gw->get_option( 'save_logs' );
+		$save_single_log = $nuvei_gw->get_option( 'save_single_log' );
 
 		if ( ! is_dir( NUVEI_PFW_LOGS_DIR ) ) {
 			return;
@@ -51,11 +51,11 @@ class Nuvei_Pfw_Logger {
 		$beauty_log = ( 'yes' == $test_mode ) ? true : false;
 		$tab        = '    '; // 4 spaces
 
-		# prepare log parts
-		$utimestamp     = microtime( true );
-		$timestamp      = floor( $utimestamp );
-		$milliseconds   = round( ( $utimestamp - $timestamp ) * 1000000 );
-		$record_time    = gmdate( 'Y-m-d' ) . 'T' . gmdate( 'H:i:s' ) . '.' . $milliseconds . gmdate( 'P' );
+		// prepare log parts
+		$utimestamp   = microtime( true );
+		$timestamp    = floor( $utimestamp );
+		$milliseconds = round( ( $utimestamp - $timestamp ) * 1000000 );
+		$record_time  = gmdate( 'Y-m-d' ) . 'T' . gmdate( 'H:i:s' ) . '.' . $milliseconds . gmdate( 'P' );
 
 		if ( ! self::$trace_id ) {
 			self::$trace_id = bin2hex( random_bytes( 16 ) );
@@ -70,13 +70,13 @@ class Nuvei_Pfw_Logger {
 		$source_file_name   = '';
 		$member_name        = '';
 		$source_line_number = '';
-        // We use debug_backtrace to get the file and the line where call the log method.
+		// We use debug_backtrace to get the file and the line where call the log method.
         // phpcs:ignore
 		$backtrace          = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 1 );
 
 		if ( ! empty( $backtrace ) ) {
 			if ( ! empty( $backtrace[0]['file'] ) ) {
-				$file_path_arr  = explode( DIRECTORY_SEPARATOR, $backtrace[0]['file'] );
+				$file_path_arr = explode( DIRECTORY_SEPARATOR, $backtrace[0]['file'] );
 
 				if ( ! empty( $file_path_arr ) ) {
 					$source_file_name = end( $file_path_arr ) . '|';
@@ -97,8 +97,8 @@ class Nuvei_Pfw_Logger {
 				// clean possible objects inside array
 				$data = json_decode( wp_json_encode( $data ), true );
 
-//				array_walk_recursive( $data, 'self::mask_data', self::$fields_to_mask );
-				array_walk_recursive( $data, array(self::class, 'mask_data'), self::$fields_to_mask );
+				// array_walk_recursive( $data, 'self::mask_data', self::$fields_to_mask );
+				array_walk_recursive( $data, array( self::class, 'mask_data' ), self::$fields_to_mask );
 			}
 
 			// paymentMethods can be very big array
@@ -113,11 +113,11 @@ class Nuvei_Pfw_Logger {
 				// clean possible objects inside array
 				$data = json_decode( wp_json_encode( $data ), true );
 
-//				array_walk_recursive( $data, 'self::mask_data', self::$fields_to_mask );
-                array_walk_recursive( $data, array(self::class, 'mask_data'), self::$fields_to_mask );
+				// array_walk_recursive( $data, 'self::mask_data', self::$fields_to_mask );
+				array_walk_recursive( $data, array( self::class, 'mask_data' ), self::$fields_to_mask );
 			}
 
-            // We use print_r to log the data
+			// We use print_r to log the data
             // phpcs:ignore
 			$data_tmp   = print_r( (array) $data, true );
             // phpcs:ignore
@@ -129,7 +129,7 @@ class Nuvei_Pfw_Logger {
 		} else {
 			$exception = $data;
 		}
-		# prepare log parts END
+		// prepare log parts END
 
 		// Content of the log string:
 		$string = $record_time      // timestamp
@@ -139,7 +139,7 @@ class Nuvei_Pfw_Logger {
 			. self::$trace_id       // TraceId
 			. $tab                  // tab
 			. $span_id              // SpanId, if not empty it will include $tab
-		//            . $parent_id            // ParentId, if not empty it will include $tab
+		// . $parent_id            // ParentId, if not empty it will include $tab
 			. $machine_name         // MachineName if not empty it will include a "|"
 			. $service_name         // ServiceName if not empty it will include a "|"
 			// TreadId
@@ -151,9 +151,9 @@ class Nuvei_Pfw_Logger {
 			. $message
 			. $exception;            // the exception, in our case - data to print
 
-		$string             .= "\r\n\r\n";
-		$file_name          = gmdate( 'Y-m-d', time() ) . '-' . md5( $nuvei_gw->get_option( 'secret' ) . gmdate( 'Ymd' ) );
-		$single_file_name   = NUVEI_PFW_GATEWAY_NAME . '-' . md5( $nuvei_gw->get_option( 'secret' ) );
+		$string          .= "\r\n\r\n";
+		$file_name        = gmdate( 'Y-m-d', time() ) . '-' . md5( $nuvei_gw->get_option( 'secret' ) . gmdate( 'Ymd' ) );
+		$single_file_name = NUVEI_PFW_GATEWAY_NAME . '-' . md5( $nuvei_gw->get_option( 'secret' ) );
 
 		if ( 'yes' == $save_logs ) {
             // phpcs:ignore

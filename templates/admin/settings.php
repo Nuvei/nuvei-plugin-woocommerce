@@ -2,12 +2,12 @@
 
 <h2>
 	<?php
-		echo esc_html__( 'Nuvei Checkout', 'nuvei-payments-for-woocommerce' );
-		wc_back_link(
-			__( 'Return to payments', 'nuvei-payments-for-woocommerce' ),
-			admin_url( 'admin.php?page=wc-settings&tab=checkout' )
-		);
-		?>
+	echo esc_html__( 'Nuvei Checkout', 'nuvei-payments-for-woocommerce' );
+	wc_back_link(
+		__( 'Return to payments', 'nuvei-payments-for-woocommerce' ),
+		admin_url( 'admin.php?page=wc-settings&tab=checkout' )
+	);
+	?>
 </h2>
 
 <p><?php echo esc_html__( 'Please check and fill the settings of the plugin.', 'nuvei-payments-for-woocommerce' ); ?></p>
@@ -37,8 +37,8 @@ if ( is_plugin_active( 'woocommerce-subscriptions' . DIRECTORY_SEPARATOR . 'wooc
 <div id="nuvei_base_settings_cont" class="nuvei_checkout_settings_cont" style="display: none;">
 	<table class="form-table">
 		<?php
-			$this->init_form_base_fields();
-			$this->generate_settings_html();
+		$this->init_form_base_fields();
+		$this->generate_settings_html();
 		?>
 	</table>
 </div>
@@ -46,18 +46,18 @@ if ( is_plugin_active( 'woocommerce-subscriptions' . DIRECTORY_SEPARATOR . 'wooc
 <div id="nuvei_advanced_settings_cont" class="nuvei_checkout_settings_cont" style="display: none;">
 	<table class="form-table">
 		<?php
-			$this->init_form_advanced_fields();
-			$this->generate_settings_html();
+		$this->init_form_advanced_fields();
+		$this->generate_settings_html();
 		?>
-		
+		 
 	</table>
 </div>
 
 <div id="nuvei_tools_cont" class="nuvei_checkout_settings_cont" style="display: none;">
 	<table class="form-table">
 		<?php
-			$this->init_form_tools_fields();
-			$this->generate_settings_html();
+		$this->init_form_tools_fields();
+		$this->generate_settings_html();
 		?>
 	</table>
 </div>

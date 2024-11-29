@@ -7,10 +7,11 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Subscription_Cancel extends Nuvei_Pfw_Request {
 
+
 	/**
 	 * Main method
 	 *
-	 * @param array $prod_plan - plan details
+	 * @param  array $prod_plan - plan details
 	 * @return array
 	 */
 	public function process() {
@@ -30,7 +31,7 @@ class Nuvei_Pfw_Subscription_Cancel extends Nuvei_Pfw_Request {
 
 		if ( ! $resp || ! is_array( $resp ) || 'SUCCESS' != $resp['status'] ) {
 			$msg = __( 'Error when try to cancel Subscription #', 'nuvei-payments-for-woocommerce' )
-				. $params['subscriptionId'] . ' ';
+			. $params['subscriptionId'] . ' ';
 
 			if ( ! empty( $resp['reason'] ) ) {
 				$msg .= '<br/><b>' . __( 'Reason', 'nuvei-payments-for-woocommerce' ) . '</b> ' . $resp['reason'];

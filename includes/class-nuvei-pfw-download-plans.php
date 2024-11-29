@@ -7,6 +7,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Download_Plans extends Nuvei_Pfw_Request {
 
+
 	/**
 	 * The main method.
 	 *
@@ -14,8 +15,8 @@ class Nuvei_Pfw_Download_Plans extends Nuvei_Pfw_Request {
 	 */
 	public function process() {
 		$params = array(
-			'planStatus'        => 'ACTIVE',
-			'currency'          => '',
+			'planStatus' => 'ACTIVE',
+			'currency'   => '',
 		);
 
 		return $this->call_rest_api( 'getPlansList', $params );

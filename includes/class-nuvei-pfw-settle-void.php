@@ -7,11 +7,12 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 
+
 	/**
 	 * Main method of the class.
 	 * Expected parameters are:
 	 *
-	 * @param array [order_id, action, method]
+	 * @param  array [order_id, action, method]
 	 * @return array|false
 	 */
 	public function process() {
@@ -40,12 +41,12 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 		}
 
 		$params = array(
-			'clientUniqueId'        => $data['order_id'],
-			'amount'                => $amount,
-			'currency'              => $curr,
-			'relatedTransactionId'  => $last_tr_id,
-			'url'                   => $notify_url,
-			'urlDetails'            => array( 'notificationUrl' => $notify_url ),
+			'clientUniqueId'       => $data['order_id'],
+			'amount'               => $amount,
+			'currency'             => $curr,
+			'relatedTransactionId' => $last_tr_id,
+			'url'                  => $notify_url,
+			'urlDetails'           => array( 'notificationUrl' => $notify_url ),
 		);
 
 		return $this->call_rest_api( $data['method'], $params );
@@ -54,7 +55,7 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 	/**
 	 * Create Settle and Void
 	 *
-	 * @param int $order_id
+	 * @param int    $order_id
 	 * @param string $action
 	 */
 	public function create_settle_void( $order_id, $action ) {
@@ -88,8 +89,8 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 
 		wp_send_json(
 			array(
-				'status'    => $ord_status,
-				'data'      => $resp,
+				'status' => $ord_status,
+				'data'   => $resp,
 			)
 		);
 		exit;

@@ -7,13 +7,13 @@
 			<option value=""  <?php echo esc_html( current( $term_meta['planId'] ) == '' ? 'selected=' : '' ); ?>>
 				<?php echo esc_html__( 'Without Plan', 'nuvei-payments-for-woocommerce' ); ?>
 			</option>
-			
+			 
 			<?php
 			if ( ! empty( $plans_list ) ) :
 				foreach ( $plans_list as $plan ) :
 					?>
 					<option value="<?php echo esc_attr( $plan['planId'] ); ?>" <?php echo esc_html( current( $term_meta['planId'] ) == $plan['planId'] ? 'selected=' : '' ); ?>>
-						<?php echo esc_html( $plan['name'] ); ?>
+					<?php echo esc_html( $plan['name'] ); ?>
 					</option>
 					<?php
 				endforeach;
@@ -27,11 +27,11 @@
 	<th><?php echo esc_html__( 'Recurring Amount', 'nuvei-payments-for-woocommerce' ); ?></th>
 	<td>
 		<input type="number" 
-			   min="0" 
-			   step=".01" 
-			   name="recurringAmount" 
-			   value="<?php echo esc_attr( current( $term_meta['recurringAmount'] ) ); ?>" 
-			   required="" />
+				min="0" 
+				step=".01" 
+				name="recurringAmount" 
+				value="<?php echo esc_attr( current( $term_meta['recurringAmount'] ) ); ?>" 
+				required="" />
 	</td>
 </tr>
 
@@ -42,16 +42,16 @@
 			<option value="day" <?php echo esc_html( current( $term_meta['recurringPeriodUnit'] ) == 'day' ? 'selected=' : '' ); ?>>
 				<?php echo esc_html__( 'Days', 'nuvei-payments-for-woocommerce' ); ?>
 			</option>
-			
+			 
 			<option value="month" <?php echo esc_html( current( $term_meta['recurringPeriodUnit'] ) == 'month' ? 'selected=' : '' ); ?>>
 				<?php echo esc_html__( 'Month', 'nuvei-payments-for-woocommerce' ); ?>
 			</option>
-			
+			 
 			<option value="year"  <?php echo esc_html( current( $term_meta['recurringPeriodUnit'] ) == 'year' ? 'selected=' : '' ); ?>>
 				<?php echo esc_html__( 'Years', 'nuvei-payments-for-woocommerce' ); ?>
 			</option>
 		</select>
-		
+		 
 		<input 
 			type="number" 
 			min="1" 
@@ -70,23 +70,23 @@
 			<option value="day" <?php echo esc_html( current( $term_meta['endAfterUnit'] ) == 'day' ? 'selected=' : '' ); ?>>
 				<?php echo esc_html__( 'Days', 'nuvei-payments-for-woocommerce' ); ?>
 			</option>
-			
+			 
 			<option value="month" <?php echo esc_html( current( $term_meta['endAfterUnit'] ) == 'month' ? 'selected=' : '' ); ?>>
 				<?php echo esc_html__( 'Month', 'nuvei-payments-for-woocommerce' ); ?>
 			</option>
-			
+			 
 			<option value="year" <?php echo esc_html( current( $term_meta['endAfterUnit'] ) == 'year' ? 'selected=' : '' ); ?>>
 				<?php echo esc_html__( 'Years', 'nuvei-payments-for-woocommerce' ); ?>
 			</option>
 		</select>
-		
+		 
 		<input type="number" 
-			   min="1" 
-			   step="1" 
-			   name="endAfterPeriod" 
-			   id="endAfterPeriod" 
-			   value="<?php echo esc_attr( current( $term_meta['endAfterPeriod'] ) ); ?>" 
-			   required="" />
+				min="1" 
+				step="1" 
+				name="endAfterPeriod" 
+				id="endAfterPeriod" 
+				value="<?php echo esc_attr( current( $term_meta['endAfterPeriod'] ) ); ?>" 
+				required="" />
 	</td>
 </tr>
 
@@ -97,23 +97,23 @@
 			<option value="day" <?php echo esc_html( current( $term_meta['startAfterUnit'] ) == 'day' ? 'selected=' : '' ); ?>>
 				<?php echo esc_html__( 'Days', 'nuvei-payments-for-woocommerce' ); ?>
 			</option>
-			
+			 
 			<option value="month" <?php echo esc_html( current( $term_meta['startAfterUnit'] ) == 'month' ? 'selected=' : '' ); ?>>
 				<?php echo esc_html__( 'Month', 'nuvei-payments-for-woocommerce' ); ?>
 			</option>
-			
+			 
 			<option value="year" <?php echo esc_html( current( $term_meta['startAfterUnit'] ) == 'year' ? 'selected=' : '' ); ?>>
 				<?php echo esc_html__( 'Years', 'nuvei-payments-for-woocommerce' ); ?>
 			</option>
 		</select>
-		
+		 
 		<input type="number" 
-			   min="0" 
-			   step="1" 
-			   name="startAfterPeriod" 
-			   id="startAfterPeriod" 
-			   value="<?php echo esc_attr( current( $term_meta['startAfterPeriod'] ) ); ?>" required="" />
-        
-        <input type="hidden" name="nuveiTermNonce" value="<?php echo esc_html(wp_create_nonce( 'nuvei-term-nonce' )); ?>" />
+				min="0" 
+				step="1" 
+				name="startAfterPeriod" 
+				id="startAfterPeriod" 
+				value="<?php echo esc_attr( current( $term_meta['startAfterPeriod'] ) ); ?>" required="" />
+		
+		<input type="hidden" name="nuveiTermNonce" value="<?php echo esc_html( wp_create_nonce( 'nuvei-term-nonce' ) ); ?>" />
 	</td>
 </tr>

@@ -7,12 +7,13 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_String {
 
+
 	/**
 	 * Generate base of the Notify URL.
 	 *
 	 * @param array $plugin_settings
-	 * @param int $order_id
-	 * @param bool $use_default Use default DMN URL or use the one from the settings
+	 * @param int   $order_id
+	 * @param bool  $use_default     Use default DMN URL or use the one from the settings
 	 *
 	 * @return string
 	 */
@@ -21,9 +22,9 @@ class Nuvei_Pfw_String {
 			return $plugin_settings['notify_url'];
 		}
 
-		$url_part   = get_site_url();
-		$url        = $url_part . ( strpos( $url_part, '?' ) !== false ? '&' : '?' )
-			. 'wc-api=nuvei_listener';
+		$url_part = get_site_url();
+		$url      = $url_part . ( strpos( $url_part, '?' ) !== false ? '&' : '?' )
+		. 'wc-api=nuvei_listener';
 
 		// some servers needs / before ?
 		if ( strpos( $url, '?' ) !== false && strpos( $url, '/?' ) === false ) {
@@ -36,7 +37,7 @@ class Nuvei_Pfw_String {
 	/**
 	 * Convert string to a URL frendly slug.
 	 *
-	 * @param string $text
+	 * @param  string $text
 	 * @return string
 	 */
 	public static function get_slug( $text = '' ) {
@@ -46,7 +47,7 @@ class Nuvei_Pfw_String {
 	/**
 	 * Convert 5 letter locale to 2 letter locale.
 	 *
-	 * @param string $locale
+	 * @param  string $locale
 	 * @return string
 	 */
 	public static function format_location( $locale ) {

@@ -1,18 +1,19 @@
-    <?php
+<?php
 
-defined( 'ABSPATH' ) || exit;
+	defined( 'ABSPATH' ) || exit;
 
-/**
- * The base class for requests. The different requests classes inherit this one.
- * Some common methods are also here.
- */
+	/**
+	 * The base class for requests. The different requests classes inherit this one.
+	 * Some common methods are also here.
+	 */
 abstract class Nuvei_Pfw_Request {
+
 
 	protected $rest_params = array();
 	protected $plugin_settings;
 	protected $request_base_params;
 	protected $sc_order;
-    protected $order_id;
+	protected $order_id;
 	protected $nuvei_gw;
 
 	private $device_types = array();
@@ -38,7 +39,7 @@ abstract class Nuvei_Pfw_Request {
 		$this->request_base_params = array(
 			'merchantId'        => trim( (int) $this->nuvei_gw->get_option( 'merchantId' ) ),
 			'merchantSiteId'    => trim( (int) $this->nuvei_gw->get_option( 'merchantSiteId' ) ),
-            'clientRequestId'   => uniqid( '', true ),
+			'clientRequestId'   => uniqid( '', true ),
 			'timeStamp'         => $time,
 			'webMasterId'       => $this->get_web_master_id(),
 			'sourceApplication' => NUVEI_PFW_SOURCE_APPLICATION,
@@ -54,7 +55,7 @@ abstract class Nuvei_Pfw_Request {
 	 * with Nuvei payment module.
 	 *
 	 * @param int|string $order_id
-	 * @param bool $return - return the order
+	 * @param bool       $return   - return the order
 	 *
 	 * @return void
 	 */
@@ -73,7 +74,7 @@ abstract class Nuvei_Pfw_Request {
 		Nuvei_Pfw_Logger::write( 'The Order is valid.' );
 
 		// in case of Subscription states DMNs - stop proccess here. We will save only a message to the Order.
-		if ( 'subscription' == Nuvei_Pfw_Http::get_param('dmnType') ) {
+		if ( 'subscription' == Nuvei_Pfw_Http::get_param( 'dmnType' ) ) {
 			return;
 		}
 
@@ -82,8 +83,8 @@ abstract class Nuvei_Pfw_Request {
 			$msg = 'Error - the order does not belongs to Nuvei.';
 			Nuvei_Pfw_Logger::write(
 				array(
-					'order_id'          => $order_id,
-					'payment_method'    => $this->sc_order->get_payment_method(),
+					'order_id'       => $order_id,
+					'payment_method' => $this->sc_order->get_payment_method(),
 				),
 				$msg
 			);
@@ -103,7 +104,7 @@ abstract class Nuvei_Pfw_Request {
 
 		// do not replace "completed" with "auth" status
 		if ( 'completed' == $ord_status
-			&& 'auth' == strtolower(Nuvei_Pfw_Http::get_param('transactionType') )
+			&& 'auth' == strtolower( Nuvei_Pfw_Http::get_param( 'transactionType' ) )
 		) {
 			$msg = 'Error - can not override status Completed with Auth.';
 			Nuvei_Pfw_Logger::write( $this->sc_order->get_payment_method(), $msg );
@@ -113,16 +114,16 @@ abstract class Nuvei_Pfw_Request {
 		// can we override Order status (state) END
 	}
 
-    /**
-     * A help function to get webMasterId parameter.
-     * 
-     * @return string
-     */
-    protected function get_web_master_id() {
-        return 'WooCommerce ' . WOOCOMMERCE_VERSION . '; Plugin v' . nuvei_pfw_get_plugin_version();
-    }
+	/**
+	 * A help function to get webMasterId parameter.
+	 *
+	 * @return string
+	 */
+	protected function get_web_master_id() {
+		return 'WooCommerce ' . WOOCOMMERCE_VERSION . '; Plugin v' . nuvei_pfw_get_plugin_version();
+	}
 
-    /**
+	/**
 	 * Help function to generate Billing and Shipping details.
 	 *
 	 * @global Woocommerce $woocommerce
@@ -130,8 +131,8 @@ abstract class Nuvei_Pfw_Request {
 	 * @return array
 	 */
 	protected function get_order_addresses() {
-        Nuvei_Pfw_Logger::write('get_order_addresses()');
-        
+			Nuvei_Pfw_Logger::write( 'get_order_addresses()' );
+
 		// REST API flow
 		if ( ! empty( $this->rest_params ) ) {
 			$addresses = array();
@@ -174,49 +175,47 @@ abstract class Nuvei_Pfw_Request {
 			return $addresses;
 		}
 
-		#################################
-
 		// default plugin flow
 		global $woocommerce;
 
-		$billing_address        = array();
-		$cart                   = $woocommerce->cart;
-        $existing_order_data    = [];
-        
-        if (!empty($this->sc_order)) {
-            $existing_order_data = $this->sc_order->get_data();
-        }
-        
-		# Set billing params.
-		// billing_first_name
-        $bfn = $this->get_scformdata_address_parts('first_name');
-        
-        if (!empty($existing_order_data['billing']['first_name'])) {
-            $bfn = trim((string) $existing_order_data['billing']['first_name']);
-        }
-		if ( empty( $bfn ) ) {
-			$bfn = trim((string) $cart->get_customer()->get_billing_first_name());
+		$billing_address         = array();
+		$cart                    = $woocommerce->cart;
+			$existing_order_data = array();
+
+		if ( ! empty( $this->sc_order ) ) {
+			$existing_order_data = $this->sc_order->get_data();
 		}
-        
+
+		// Set billing params.
+		// billing_first_name
+		$bfn = $this->get_scformdata_address_parts( 'first_name' );
+
+		if ( ! empty( $existing_order_data['billing']['first_name'] ) ) {
+			$bfn = trim( (string) $existing_order_data['billing']['first_name'] );
+		}
+		if ( empty( $bfn ) ) {
+			$bfn = trim( (string) $cart->get_customer()->get_billing_first_name() );
+		}
+
 		$billing_address['firstName'] = ! empty( $bfn ) ? $bfn : 'Missing parameter';
 
 		// billing_last_name
-        $bln = $this->get_scformdata_address_parts('last_name');
-        
-        if (!empty($existing_order_data['billing']['last_name'])) {
-            $bln = trim((string) $existing_order_data['billing']['last_name']);
-        }
-		if ( empty( $bln ) ) {
-			$bln = trim((string) $cart->get_customer()->get_billing_last_name());
+		$bln = $this->get_scformdata_address_parts( 'last_name' );
+
+		if ( ! empty( $existing_order_data['billing']['last_name'] ) ) {
+			$bln = trim( (string) $existing_order_data['billing']['last_name'] );
 		}
-        
+		if ( empty( $bln ) ) {
+			$bln = trim( (string) $cart->get_customer()->get_billing_last_name() );
+		}
+
 		$billing_address['lastName'] = ! empty( $bln ) ? $bln : 'Missing parameter';
 
 		// address
 		$ba     = '';
-        $ba_ln1 = $this->get_scformdata_address_parts('address_1');
-        $ba_ln2 = $this->get_scformdata_address_parts('address_2');
-        
+		$ba_ln1 = $this->get_scformdata_address_parts( 'address_1' );
+		$ba_ln2 = $this->get_scformdata_address_parts( 'address_2' );
+
 		if ( ! empty( $ba_ln1 ) ) {
 			$ba = $ba_ln1;
 
@@ -225,18 +224,18 @@ abstract class Nuvei_Pfw_Request {
 			}
 		}
 
-		if (!empty($existing_order_data['billing']['address_1'])) {
-            $ba_ln1 = trim((string) $existing_order_data['billing']['address_1']);
-            
-            if ( ! empty( $ba_ln1 ) ) {
+		if ( ! empty( $existing_order_data['billing']['address_1'] ) ) {
+			$ba_ln1 = trim( (string) $existing_order_data['billing']['address_1'] );
+
+			if ( ! empty( $ba_ln1 ) ) {
 				$ba = $ba_ln1;
 
 				if ( ! empty( $existing_order_data['billing']['address_2'] ) ) {
 					$ba .= ' ' . $existing_order_data['billing']['address_2'];
 				}
 			}
-        }
-		if ( empty($ba) ) {
+		}
+		if ( empty( $ba ) ) {
 			$ba_ln1 = trim( (string) $cart->get_customer()->get_billing_address() );
 			$ba_ln2 = trim( (string) $cart->get_customer()->get_billing_address_2() );
 
@@ -244,157 +243,159 @@ abstract class Nuvei_Pfw_Request {
 				$ba = $ba_ln1;
 
 				if ( ! empty( $ba_ln2 ) ) {
-					$ba .= ' ' . $ba_ln2;
+						$ba .= ' ' . $ba_ln2;
 				}
 			}
 		}
-        
+
 		$billing_address['address'] = ! empty( $ba ) ? $ba : 'Missing parameter';
 
 		// billing_phone
-        $bp = $this->get_scformdata_address_parts('phone');
-        
-        if (!empty($existing_order_data['billing']['phone'])) {
-            $bp = trim((string) $existing_order_data['billing']['phone']);
-        }
-        if ( empty( $bp ) ) {
-			$bp = trim((string) $cart->get_customer()->get_billing_phone());
+		$bp = $this->get_scformdata_address_parts( 'phone' );
+
+		if ( ! empty( $existing_order_data['billing']['phone'] ) ) {
+			$bp = trim( (string) $existing_order_data['billing']['phone'] );
 		}
-        
+		if ( empty( $bp ) ) {
+			$bp = trim( (string) $cart->get_customer()->get_billing_phone() );
+		}
+
 		$billing_address['phone'] = ! empty( $bp ) ? $bp : 'Missing parameter';
 
 		// billing_postcode
-        $bz = $this->get_scformdata_address_parts('postcode');
-        
-        if (!empty($existing_order_data['billing']['postcode'])) {
-            $bz = trim((string) $existing_order_data['billing']['postcode']);
-        }
-		if ( empty( $bz ) ) {
-			$bz = trim((string) $cart->get_customer()->get_billing_postcode());
+		$bz = $this->get_scformdata_address_parts( 'postcode' );
+
+		if ( ! empty( $existing_order_data['billing']['postcode'] ) ) {
+			$bz = trim( (string) $existing_order_data['billing']['postcode'] );
 		}
-        
+		if ( empty( $bz ) ) {
+			$bz = trim( (string) $cart->get_customer()->get_billing_postcode() );
+		}
+
 		$billing_address['zip'] = ! empty( $bz ) ? $bz : 'Missing parameter';
 
 		// billing_city
-        $bc = $this->get_scformdata_address_parts('city');
-        
-        if (!empty($existing_order_data['billing']['city'])) {
-            $bc = trim((string) $existing_order_data['billing']['city']);
-        }
-        if ( empty( $bc ) ) {
-			$bc = trim((string) $cart->get_customer()->get_billing_city());
+		$bc = $this->get_scformdata_address_parts( 'city' );
+
+		if ( ! empty( $existing_order_data['billing']['city'] ) ) {
+			$bc = trim( (string) $existing_order_data['billing']['city'] );
 		}
-        
+		if ( empty( $bc ) ) {
+			$bc = trim( (string) $cart->get_customer()->get_billing_city() );
+		}
+
 		$billing_address['city'] = ! empty( $bc ) ? $bc : 'Missing parameter';
 
 		// billing_country
-        $bcn = $this->get_scformdata_address_parts('country');
-        
-        if (!empty($existing_order_data['billing']['country'])) {
-            $bcn = trim((string) $existing_order_data['billing']['country']);
-        }
-        if ( empty( $bcn ) ) {
-			$bcn = trim((string) $cart->get_customer()->get_billing_country());
+		$bcn = $this->get_scformdata_address_parts( 'country' );
+
+		if ( ! empty( $existing_order_data['billing']['country'] ) ) {
+			$bcn = trim( (string) $existing_order_data['billing']['country'] );
 		}
-        
+		if ( empty( $bcn ) ) {
+			$bcn = trim( (string) $cart->get_customer()->get_billing_country() );
+		}
+
 		$billing_address['country'] = $bcn;
 
-		//billing state
-        $bst = $this->get_scformdata_address_parts('state');
-        
-        if (!empty($existing_order_data['billing']['state'])) {
-            $bst = trim((string) $existing_order_data['billing']['state']);
-        }
-        if ( empty( $bst ) ) {
-			$bst = trim((string) $cart->get_customer()->get_billing_state());
+		// billing state
+		$bst = $this->get_scformdata_address_parts( 'state' );
+
+		if ( ! empty( $existing_order_data['billing']['state'] ) ) {
+			$bst = trim( (string) $existing_order_data['billing']['state'] );
 		}
-        
+		if ( empty( $bst ) ) {
+			$bst = trim( (string) $cart->get_customer()->get_billing_state() );
+		}
+
 		$billing_address['state'] = $bst;
 
 		// billing_email
-        $be = $this->get_scformdata_address_parts('email');
-        
-        if (!empty($existing_order_data['billing']['email'])) {
-            $be = trim((string) $existing_order_data['billing']['email']);
-        }
-        if ( empty( $be ) ) {
-			$be = trim((string) $cart->get_customer()->get_billing_email());
+		$be = $this->get_scformdata_address_parts( 'email' );
+
+		if ( ! empty( $existing_order_data['billing']['email'] ) ) {
+			$be = trim( (string) $existing_order_data['billing']['email'] );
 		}
-        
+		if ( empty( $be ) ) {
+				$be = trim( (string) $cart->get_customer()->get_billing_email() );
+		}
+
 		$billing_address['email'] = $be;
-		# set billing params END
+		// set billing params END
 
-        # set shipping params
-        // shipping first name
-        $sfn = $this->get_scformdata_address_parts('first_name', 'shipping');
-        
-        if (!empty($existing_order_data['shipping']['first_name'])) {
-            $sfn = trim((string) $existing_order_data['shipping']['first_name']);
-        }
+		// set shipping params
+		// shipping first name
+		$sfn = $this->get_scformdata_address_parts( 'first_name', 'shipping' );
+
+		if ( ! empty( $existing_order_data['shipping']['first_name'] ) ) {
+			$sfn = trim( (string) $existing_order_data['shipping']['first_name'] );
+		}
 		if ( empty( $sfn ) ) {
-			$sfn = trim((string) $cart->get_customer()->get_shipping_first_name());
+			$sfn = trim( (string) $cart->get_customer()->get_shipping_first_name() );
 		}
 
-        // shippinh last name
-        $sln = $this->get_scformdata_address_parts('last_name', 'shipping');
-        
-        if (!empty($existing_order_data['shipping']['last_name'])) {
-            $sln = trim((string) $existing_order_data['shipping']['last_name']);
-        }
+		// shippinh last name
+		$sln = $this->get_scformdata_address_parts( 'last_name', 'shipping' );
+
+		if ( ! empty( $existing_order_data['shipping']['last_name'] ) ) {
+			$sln = trim( (string) $existing_order_data['shipping']['last_name'] );
+		}
 		if ( empty( $sln ) ) {
-			$sln = trim((string) $cart->get_customer()->get_shipping_last_name());
+			$sln = trim( (string) $cart->get_customer()->get_shipping_last_name() );
 		}
 
-        // shipping address
-        $sa_l1  = $this->get_scformdata_address_parts('address_1', 'shipping');
-        $sa_l2  = $this->get_scformdata_address_parts('address_2', 'shipping');
-        $sa     = trim((string) $sa_l1 . ' ' . (string) $sa_l2);
-        
-        if (!empty($existing_order_data['shipping']['address_1'])) {
-            $sa = trim((string) $existing_order_data['shipping']['address_1']);
-            
-            if (empty($existing_order_data['shipping']['address_2'])) {
-                $sa .= ' ' . trim((string) $existing_order_data['shipping']['address_2']);
-            }
-        }
+		// shipping address
+		$sa_l1 = $this->get_scformdata_address_parts( 'address_1', 'shipping' );
+		$sa_l2 = $this->get_scformdata_address_parts( 'address_2', 'shipping' );
+		$sa    = trim( (string) $sa_l1 . ' ' . (string) $sa_l2 );
+
+		if ( ! empty( $existing_order_data['shipping']['address_1'] ) ) {
+			$sa = trim( (string) $existing_order_data['shipping']['address_1'] );
+
+			if ( empty( $existing_order_data['shipping']['address_2'] ) ) {
+				$sa .= ' ' . trim( (string) $existing_order_data['shipping']['address_2'] );
+			}
+		}
 		if ( empty( $sa ) ) {
-			$sa = trim((string) $cart->get_customer()->get_shipping_address() . ' '
-				. (string) $cart->get_customer()->get_shipping_address_2());
+			$sa = trim(
+				(string) $cart->get_customer()->get_shipping_address() . ' '
+				. (string) $cart->get_customer()->get_shipping_address_2()
+			);
 		}
 
-        // shipping zip
-        $sz = $this->get_scformdata_address_parts('postcode', 'shipping');
-        
-        if (!empty($existing_order_data['shipping']['postcode'])) {
-            $sz = trim((string) $existing_order_data['shipping']['postcode']);
-        }
+		// shipping zip
+		$sz = $this->get_scformdata_address_parts( 'postcode', 'shipping' );
+
+		if ( ! empty( $existing_order_data['shipping']['postcode'] ) ) {
+			$sz = trim( (string) $existing_order_data['shipping']['postcode'] );
+		}
 		if ( empty( $sz ) ) {
-			$sz = trim((string) $cart->get_customer()->get_shipping_postcode());
+			$sz = trim( (string) $cart->get_customer()->get_shipping_postcode() );
 		}
 
-        // shipping city
-        $sc = $this->get_scformdata_address_parts('city', 'shipping');
-        
-        if (!empty($existing_order_data['shipping']['city'])) {
-            $sc = trim((string) $existing_order_data['shipping']['city']);
-        }
+		// shipping city
+		$sc = $this->get_scformdata_address_parts( 'city', 'shipping' );
+
+		if ( ! empty( $existing_order_data['shipping']['city'] ) ) {
+			$sc = trim( (string) $existing_order_data['shipping']['city'] );
+		}
 		if ( empty( $sc ) ) {
-			$sc = trim((string) $cart->get_customer()->get_shipping_city());
+			$sc = trim( (string) $cart->get_customer()->get_shipping_city() );
 		}
 
-        // shipping country
-        $scn = $this->get_scformdata_address_parts('country', 'shipping');
-        
-        if (!empty($existing_order_data['shipping']['country'])) {
-            $scn = trim((string) $existing_order_data['shipping']['country']);
-        }
+		// shipping country
+		$scn = $this->get_scformdata_address_parts( 'country', 'shipping' );
+
+		if ( ! empty( $existing_order_data['shipping']['country'] ) ) {
+			$scn = trim( (string) $existing_order_data['shipping']['country'] );
+		}
 		if ( empty( $scn ) ) {
-			$scn = trim((string) $cart->get_customer()->get_shipping_country());
+			$scn = trim( (string) $cart->get_customer()->get_shipping_country() );
 		}
 
 		return array(
-			'billingAddress'    => $billing_address,
-			'shippingAddress'   => array(
+			'billingAddress'  => $billing_address,
+			'shippingAddress' => array(
 				'firstName' => $sfn,
 				'lastName'  => $sln,
 				'address'   => $sa,
@@ -404,76 +405,76 @@ abstract class Nuvei_Pfw_Request {
 			),
 		);
 	}
-    
-    /**
-     * Check incoming data for valid nonce.
-     * 
-     * @return boolean
-     */
-    protected function is_request_safe() {
-        $request_safe = false;
-        
-        if (false !== check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false )) {
-            return true;
-        }
-        if (isset($_POST['woocommerce-process-checkout-nonce']) 
-            && false !== wp_verify_nonce( sanitize_text_field( wp_unslash($_POST['woocommerce-process-checkout-nonce']) ), 'woocommerce-process_checkout' )
-        ) {
-            return true;
-        }
-        
-        return false;
-    }
-    
-    /**
-     * A helper function to safty check for, and get address parameters from the store request.
-     * 
-     * @param string $field The field we are looking for.
-     * @param string $group The address group - shipping or billing.
-     * 
-     * @return string
-     */
-    private function get_scformdata_address_parts($field, $group = 'billing') {
-        // here we check for Nuvei nonce or WC Checkout nonce
-        if ( ! $this->is_request_safe() ) {
-            Nuvei_Pfw_Logger::write($field, 'Securtity parameter is missing or nonce is not valid');
-            return '';
-        }
 
-        // shortcode
-        if (!empty($_REQUEST['scFormData'][$group . '_' . $field])) {
-            return trim(sanitize_text_field(wp_unslash($_REQUEST['scFormData'][$group . '_' . $field])));
-        }
-        // blocks
-        elseif (!empty($_REQUEST['scFormData'][$group . '-' . $field])) {
-            return trim(sanitize_text_field(wp_unslash($_REQUEST['scFormData'][$group . '-' . $field])));
-        }
-        
-        // additional check for the email
-        if ('email' == $field && !empty($_REQUEST['scFormData']['email'])) {
-            $be = trim(sanitize_email(wp_unslash($_REQUEST['scFormData']['email'])));
-        }
-        
-        return '';
-    }
+	/**
+	 * Check incoming data for valid nonce.
+	 *
+	 * @return boolean
+	 */
+	protected function is_request_safe() {
+		$request_safe = false;
+
+		if ( false !== check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false ) ) {
+			return true;
+		}
+		if ( isset( $_POST['woocommerce-process-checkout-nonce'] )
+			&& false !== wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['woocommerce-process-checkout-nonce'] ) ), 'woocommerce-process_checkout' )
+		) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * A helper function to safty check for, and get address parameters from the store request.
+	 *
+	 * @param string $field The field we are looking for.
+	 * @param string $group The address group - shipping or billing.
+	 *
+	 * @return string
+	 */
+	private function get_scformdata_address_parts( $field, $group = 'billing' ) {
+		// here we check for Nuvei nonce or WC Checkout nonce
+		if ( ! $this->is_request_safe() ) {
+			Nuvei_Pfw_Logger::write( $field, 'Securtity parameter is missing or nonce is not valid' );
+			return '';
+		}
+
+		// shortcode
+		if ( ! empty( $_REQUEST['scFormData'][ $group . '_' . $field ] ) ) {
+			return trim( sanitize_text_field( wp_unslash( $_REQUEST['scFormData'][ $group . '_' . $field ] ) ) );
+		}
+		// blocks
+		elseif ( ! empty( $_REQUEST['scFormData'][ $group . '-' . $field ] ) ) {
+			return trim( sanitize_text_field( wp_unslash( $_REQUEST['scFormData'][ $group . '-' . $field ] ) ) );
+		}
+
+		// additional check for the email
+		if ( 'email' == $field && ! empty( $_REQUEST['scFormData']['email'] ) ) {
+			$be = trim( sanitize_email( wp_unslash( $_REQUEST['scFormData']['email'] ) ) );
+		}
+
+		return '';
+	}
 
 	/**
 	 * Call REST API with cURL post and get response.
 	 * The URL depends from the case.
 	 *
-	 * @param type $method - API method
+	 * @param type  $method - API method
 	 * @param array $params - parameters
 	 *
 	 * @return mixed
 	 */
 	protected function call_rest_api( $method, $params ) {
-		$merchant_hash      = $this->nuvei_gw->get_option( 'hash_type' );
-		$merchant_secret    = trim( (string) $this->nuvei_gw->get_option( 'secret' ) );
+		$merchant_hash   = $this->nuvei_gw->get_option( 'hash_type' );
+		$merchant_secret = trim( (string) $this->nuvei_gw->get_option( 'secret' ) );
 
 		if ( empty( $merchant_hash ) || empty( $merchant_secret ) ) {
 			return array(
-				'status'    => 'ERROR',
-				'message'   => 'Missing Plugin hash_type and secret params.',
+				'status'  => 'ERROR',
+				'message' => 'Missing Plugin hash_type and secret params.',
 			);
 		}
 
@@ -488,12 +489,12 @@ abstract class Nuvei_Pfw_Request {
 		$all_params = array_merge_recursive( $this->request_base_params, $params );
 		// validate all params
 		$all_params = $this->validate_parameters( $all_params );
-        
-        // Error. if there is validation error and Satus was set to Error return the response.
-        if (isset($all_params['status']) && 'error' == strtolower($all_params['status'])) {
-            Nuvei_Pfw_Logger::write($all_params, 'Error before call the REST API during the validation');
-            return $all_params;
-        }
+
+			// Error. if there is validation error and Satus was set to Error return the response.
+		if ( isset( $all_params['status'] ) && 'error' == strtolower( $all_params['status'] ) ) {
+			Nuvei_Pfw_Logger::write( $all_params, 'Error before call the REST API during the validation' );
+			return $all_params;
+		}
 
 		// use incoming clientRequestId instead of auto generated one
 		if ( ! empty( $params['clientRequestId'] ) ) {
@@ -520,8 +521,8 @@ abstract class Nuvei_Pfw_Request {
 		try {
 			Nuvei_Pfw_Logger::write(
 				array(
-					'Request URL'                   => $url,
-					NUVEI_PFW_LOG_REQUEST_PARAMS    => $all_params,
+					'Request URL'                => $url,
+					NUVEI_PFW_LOG_REQUEST_PARAMS => $all_params,
 				),
 				'Nuvei Request data'
 			);
@@ -537,21 +538,21 @@ abstract class Nuvei_Pfw_Request {
 					'body'      => wp_json_encode( $all_params ),
 				)
 			);
-            
-            Nuvei_Pfw_Logger::write( $resp, 'Response info' );
+
+				Nuvei_Pfw_Logger::write( $resp, 'Response info' );
 
 			if ( false === $resp || ! is_array( $resp ) || empty( $resp['body'] ) ) {
 				return array(
-					'status'    => 'ERROR',
-					'message'   => 'REST API ERROR: response is false',
+					'status'  => 'ERROR',
+					'message' => 'REST API ERROR: response is false',
 				);
 			}
 
 			return json_decode( $resp['body'], true );
 		} catch ( Exception $e ) {
 			return array(
-				'status'    => 'ERROR',
-				'message'   => 'Exception ERROR when call REST API: ' . $e->getMessage(),
+				'status'  => 'ERROR',
+				'message' => 'Exception ERROR when call REST API: ' . $e->getMessage(),
 			);
 		}
 	}
@@ -566,11 +567,11 @@ abstract class Nuvei_Pfw_Request {
 	 */
 	protected function get_device_details() {
 		$device_details = array(
-			'deviceType'    => 'UNKNOWN', // DESKTOP, SMARTPHONE, TABLET, TV, and UNKNOWN
-			'deviceName'    => 'UNKNOWN',
-			'deviceOS'      => 'UNKNOWN',
-			'browser'       => 'UNKNOWN',
-			'ipAddress'     => '0.0.0.0',
+			'deviceType' => 'UNKNOWN', // DESKTOP, SMARTPHONE, TABLET, TV, and UNKNOWN
+			'deviceName' => 'UNKNOWN',
+			'deviceOS'   => 'UNKNOWN',
+			'browser'    => 'UNKNOWN',
+			'ipAddress'  => '0.0.0.0',
 		);
 
 		if ( empty( $_SERVER['HTTP_USER_AGENT'] ) ) {
@@ -579,7 +580,7 @@ abstract class Nuvei_Pfw_Request {
 			return $device_details;
 		}
 
-		$user_agent = strtolower(sanitize_text_field( wp_unslash($_SERVER['HTTP_USER_AGENT']) ) );
+		$user_agent = strtolower( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) );
 
 		if ( empty( $user_agent ) ) {
 			$device_details['Warning'] = 'Probably the merchant Server has problems with PHP filter_var function!';
@@ -592,7 +593,7 @@ abstract class Nuvei_Pfw_Request {
 		foreach ( NUVEI_PFW_DEVICES_TYPES_LIST as $d ) {
 			if ( strstr( $user_agent, $d ) !== false ) {
 				if ( in_array( $d, array( 'linux', 'windows', 'macintosh' ), true ) ) {
-					$device_details['deviceType'] = 'DESKTOP';
+						$device_details['deviceType'] = 'DESKTOP';
 				} elseif ( 'mobile' === $d ) {
 					$device_details['deviceType'] = 'SMARTPHONE';
 				} elseif ( 'tablet' === $d ) {
@@ -621,24 +622,24 @@ abstract class Nuvei_Pfw_Request {
 
 		// get ip
 		if ( ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
-			$ip_address = filter_var( wp_unslash($_SERVER['REMOTE_ADDR']), FILTER_VALIDATE_IP );
+			$ip_address = filter_var( wp_unslash( $_SERVER['REMOTE_ADDR'] ), FILTER_VALIDATE_IP );
 		}
 		if ( empty( $ip_address ) && ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-			$ip_address = filter_var( wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR']), FILTER_VALIDATE_IP );
+			$ip_address = filter_var( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ), FILTER_VALIDATE_IP );
 		}
 		if ( empty( $ip_address ) && ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
-			$ip_address = filter_var( wp_unslash($_SERVER['HTTP_CLIENT_IP']), FILTER_VALIDATE_IP );
+			$ip_address = filter_var( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ), FILTER_VALIDATE_IP );
 		}
 		if ( ! empty( $ip_address ) ) {
 			$device_details['ipAddress'] = (string) $ip_address;
 		} else {
 			$device_details['Warning'] = array(
-				'REMOTE_ADDR'           => empty( $_SERVER['REMOTE_ADDR'] )
-					? '' : filter_var( wp_unslash($_SERVER['REMOTE_ADDR']), FILTER_VALIDATE_IP ),
-				'HTTP_X_FORWARDED_FOR'  => empty( $_SERVER['HTTP_X_FORWARDED_FOR'] )
-					? '' : filter_var( wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR']), FILTER_VALIDATE_IP ),
-				'HTTP_CLIENT_IP'        => empty( $_SERVER['HTTP_CLIENT_IP'] )
-					? '' : filter_var( wp_unslash($_SERVER['HTTP_CLIENT_IP']), FILTER_VALIDATE_IP ),
+				'REMOTE_ADDR'          => empty( $_SERVER['REMOTE_ADDR'] )
+				? '' : filter_var( wp_unslash( $_SERVER['REMOTE_ADDR'] ), FILTER_VALIDATE_IP ),
+				'HTTP_X_FORWARDED_FOR' => empty( $_SERVER['HTTP_X_FORWARDED_FOR'] )
+				? '' : filter_var( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ), FILTER_VALIDATE_IP ),
+				'HTTP_CLIENT_IP'       => empty( $_SERVER['HTTP_CLIENT_IP'] )
+				? '' : filter_var( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ), FILTER_VALIDATE_IP ),
 			);
 		}
 
@@ -651,65 +652,65 @@ abstract class Nuvei_Pfw_Request {
 	 * @return array $data
 	 */
 	protected function get_products_data() {
-        // we expect this method to be used on the Store only
-//        if (is_admin()) {
-//            return [];
-//        }
-        
+			// we expect this method to be used on the Store only
+		// if (is_admin()) {
+		// return [];
+		// }
+
 		// main variable to fill
-		$data  = array(
+		$data = array(
 			'wc_subscr'     => false,
 			'subscr_data'   => array(),
 			'products_data' => array(),
 			'totals'        => 0,
 		);
 
-		$nuvei_taxonomy_name    = wc_attribute_taxonomy_name( Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) );
-		$nuvei_plan_variation   = 'attribute_' . $nuvei_taxonomy_name;
+		$nuvei_taxonomy_name  = wc_attribute_taxonomy_name( Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) );
+		$nuvei_plan_variation = 'attribute_' . $nuvei_taxonomy_name;
 
 		// default plugin flow
 		if ( empty( $this->rest_params ) ) {
 			global $woocommerce;
 
-            // get the data from the Cart
-            if (empty($this->sc_order)) {
-                $items = $woocommerce->cart->get_cart();
-                
-                if (!empty($items)) {
-                    $data['totals'] = $woocommerce->cart->get_totals();
-                }
-            } else { // get the data from the existing Order
-                $items = $this->sc_order->get_items();
-                
-                if (!empty($items)) {
-                    $data['totals'] = ['total' => $this->sc_order->get_total()];
-                }
-            }
-            
-            Nuvei_Pfw_Logger::write( $items, 'get_products_data() items' );
-            
-            if (empty($items)) {
-                return $data;
-            }
+				// get the data from the Cart
+			if ( empty( $this->sc_order ) ) {
+				$items = $woocommerce->cart->get_cart();
+
+				if ( ! empty( $items ) ) {
+					$data['totals'] = $woocommerce->cart->get_totals();
+				}
+			} else { // get the data from the existing Order
+				$items = $this->sc_order->get_items();
+
+				if ( ! empty( $items ) ) {
+					$data['totals'] = array( 'total' => $this->sc_order->get_total() );
+				}
+			}
+
+				Nuvei_Pfw_Logger::write( $items, 'get_products_data() items' );
+
+			if ( empty( $items ) ) {
+				return $data;
+			}
 
 			foreach ( $items as $item_id => $item ) {
-				$cart_product           = wc_get_product( $item['product_id'] );
-				$cart_prod_attr         = $cart_product->get_attributes();
+				$cart_product   = wc_get_product( $item['product_id'] );
+				$cart_prod_attr = $cart_product->get_attributes();
 
 				// get short items data, we use it for Cashier url
 				$data['products_data'][] = array(
-					'product_id'    => $item['product_id'],
-					'quantity'      => $item['quantity'],
-					'price'         => get_post_meta( $item['product_id'], '_price', true ),
-					'name'          => $cart_product->get_title(),
-					'in_stock'      => $cart_product->is_in_stock(),
-					'item_id'       => $item_id,
+					'product_id' => $item['product_id'],
+					'quantity'   => $item['quantity'],
+					'price'      => get_post_meta( $item['product_id'], '_price', true ),
+					'name'       => $cart_product->get_title(),
+					'in_stock'   => $cart_product->is_in_stock(),
+					'item_id'    => $item_id,
 				);
 
-				//                Nuvei_Pfw_Logger::write([
-				//                    'nuvei taxonomy name'   => $nuvei_taxonomy_name,
-				//                    'product attributes'    => $cart_prod_attr
-				//                ]);
+				// Nuvei_Pfw_Logger::write([
+				// 'nuvei taxonomy name'   => $nuvei_taxonomy_name,
+				// 'product attributes'    => $cart_prod_attr
+				// ]);
 
 				// check for WCS
 				if ( false !== strpos( $cart_product->get_type(), 'subscription' ) ) {
@@ -717,7 +718,7 @@ abstract class Nuvei_Pfw_Request {
 					continue;
 				}
 
-				# check for product with Nuvei Payment Plan variation
+				// check for product with Nuvei Payment Plan variation
 				// We will not add the products with "empty plan" into subscr_data array!
 				if ( ! empty( $item['variation'] )
 					&& 0 != $item['variation_id']
@@ -738,33 +739,33 @@ abstract class Nuvei_Pfw_Request {
 
 					$term_meta = get_term_meta( $term->term_id );
 
-					//                    Nuvei_Pfw_Logger::write($term_meta, '$term_meta');
+					// Nuvei_Pfw_Logger::write($term_meta, '$term_meta');
 
 					if ( empty( $term_meta['planId'][0] ) ) {
 						continue;
 					}
 
 					$data['subscr_data'][] = array(
-						'variation_id'      => $item['variation_id'],
-						'planId'            => $term_meta['planId'][0],
-						'recurringAmount'   => number_format( $term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', '' ),
-						'recurringPeriod'   => array(
+						'variation_id'    => $item['variation_id'],
+						'planId'          => $term_meta['planId'][0],
+						'recurringAmount' => number_format( $term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', '' ),
+						'recurringPeriod' => array(
 							$term_meta['recurringPeriodUnit'][0] => $term_meta['recurringPeriodPeriod'][0],
 						),
-						'startAfter'        => array(
+						'startAfter'      => array(
 							$term_meta['startAfterUnit'][0] => $term_meta['startAfterPeriod'][0],
 						),
-						'endAfter'          => array(
+						'endAfter'        => array(
 							$term_meta['endAfterUnit'][0] => $term_meta['endAfterPeriod'][0],
 						),
-						'item_id'           => $item_id,
+						'item_id'         => $item_id,
 					);
 
 					continue;
 				}
-				# /check for product with Nuvei Payment Plan variation
+				// /check for product with Nuvei Payment Plan variation
 
-				# check if product has only Nuvei Payment Plan Attribute
+				// check if product has only Nuvei Payment Plan Attribute
 				foreach ( $cart_prod_attr as $attr ) {
 					Nuvei_Pfw_Logger::write( (array) $attr, '$attr' );
 
@@ -779,15 +780,15 @@ abstract class Nuvei_Pfw_Request {
 					$attr_option = current( $attr->get_options() );
 
 					// get all terms for this product ID
-					//                $terms = wp_get_post_terms( $item['product_id'], $name, 'all' );
+					// $terms = wp_get_post_terms( $item['product_id'], $name, 'all' );
 					$terms = wp_get_post_terms( $item['product_id'], $name, array( 'term_id' => $attr_option ) );
 
 					if ( is_wp_error( $terms ) ) {
 						continue;
 					}
 
-					$nuvei_plan_term    = current( $terms );
-					$term_meta          = get_term_meta( $nuvei_plan_term->term_id );
+					$nuvei_plan_term = current( $terms );
+					$term_meta       = get_term_meta( $nuvei_plan_term->term_id );
 
 					// in case of missing Nuvei Plan ID
 					if ( empty( $term_meta['planId'][0] ) ) {
@@ -797,30 +798,28 @@ abstract class Nuvei_Pfw_Request {
 
 					// in this case we do not have variation_id, only product_id
 					$data['subscr_data'][] = array(
-						'product_id'        => $item['product_id'],
-						'planId'            => $term_meta['planId'][0],
-						'recurringAmount'   => number_format( $term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', '' ),
-						'recurringPeriod'   => array(
+						'product_id'      => $item['product_id'],
+						'planId'          => $term_meta['planId'][0],
+						'recurringAmount' => number_format( $term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', '' ),
+						'recurringPeriod' => array(
 							$term_meta['recurringPeriodUnit'][0] => $term_meta['recurringPeriodPeriod'][0],
 						),
-						'startAfter'        => array(
+						'startAfter'      => array(
 							$term_meta['startAfterUnit'][0] => $term_meta['startAfterPeriod'][0],
 						),
-						'endAfter'          => array(
+						'endAfter'        => array(
 							$term_meta['endAfterUnit'][0] => $term_meta['endAfterPeriod'][0],
 						),
-						'item_id'           => $item_id,
+						'item_id'         => $item_id,
 					);
 				}
-				# /check if product has only Nuvei Payment Plan Attribute
+				// /check if product has only Nuvei Payment Plan Attribute
 			}
 
 			Nuvei_Pfw_Logger::write( $data, 'get_products_data() data' );
 
 			return $data;
 		}
-
-		#################################
 
 		// REST API flow
 		$items          = $this->rest_params['items'] ?? array();
@@ -833,18 +832,18 @@ abstract class Nuvei_Pfw_Request {
 
 			// get short items data
 			$data['products_data'][] = array(
-				'product_id'    => $product_id,
-				'quantity'      => $item['quantity'],
-				'price'         => get_post_meta( $product_id, '_price', true ),
-				'name'          => $cart_product->get_title(),
-				'in_stock'      => $cart_product->is_in_stock(),
-				'item_id'       => $item['key'] ?? '',
+				'product_id' => $product_id,
+				'quantity'   => $item['quantity'],
+				'price'      => get_post_meta( $product_id, '_price', true ),
+				'name'       => $cart_product->get_title(),
+				'in_stock'   => $cart_product->is_in_stock(),
+				'item_id'    => $item['key'] ?? '',
 			);
 
 			Nuvei_Pfw_Logger::write(
 				array(
-					'nuvei taxonomy name'   => $nuvei_taxonomy_name,
-					'product attributes'    => $cart_prod_attr,
+					'nuvei taxonomy name' => $nuvei_taxonomy_name,
+					'product attributes'  => $cart_prod_attr,
 				)
 			);
 
@@ -854,7 +853,7 @@ abstract class Nuvei_Pfw_Request {
 				continue;
 			}
 
-			# check for product with Nuvei Payment Plan variation
+			// check for product with Nuvei Payment Plan variation
 			if ( ! empty( $item['variation'] )
 				&& 0 != $item['id']
 				&& array_key_exists( $nuvei_taxonomy_name, $cart_prod_attr )
@@ -873,7 +872,7 @@ abstract class Nuvei_Pfw_Request {
 						'Error when try to get Term by Slug'
 					);
 
-					continue;
+							continue;
 				}
 
 				$term_meta = get_term_meta( $term->term_id );
@@ -885,27 +884,27 @@ abstract class Nuvei_Pfw_Request {
 				}
 
 				$data['subscr_data'][] = array(
-					//                    'variation_id'      => $item['variation_id'],
-						'variation_id'      => $item['id'],
-					'planId'            => $term_meta['planId'][0],
-					'recurringAmount'   => number_format( $term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', '' ),
-					'recurringPeriod'   => array(
+					// 'variation_id'      => $item['variation_id'],
+					'variation_id'    => $item['id'],
+					'planId'          => $term_meta['planId'][0],
+					'recurringAmount' => number_format( $term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', '' ),
+					'recurringPeriod' => array(
 						$term_meta['recurringPeriodUnit'][0] => $term_meta['recurringPeriodPeriod'][0],
 					),
-					'startAfter'        => array(
+					'startAfter'      => array(
 						$term_meta['startAfterUnit'][0] => $term_meta['startAfterPeriod'][0],
 					),
-					'endAfter'          => array(
+					'endAfter'        => array(
 						$term_meta['endAfterUnit'][0] => $term_meta['endAfterPeriod'][0],
 					),
-					'item_id'           => $item['key'] ?? '',
+					'item_id'         => $item['key'] ?? '',
 				);
 
 				continue;
 			}
-			# /check for product with Nuvei Payment Plan variation
+			// /check for product with Nuvei Payment Plan variation
 
-			# check if product has only Nuvei Payment Plan Attribute
+			// check if product has only Nuvei Payment Plan Attribute
 			foreach ( $cart_prod_attr as $attr ) {
 				Nuvei_Pfw_Logger::write( (array) $attr, '$attr' );
 
@@ -913,8 +912,8 @@ abstract class Nuvei_Pfw_Request {
 
 				// if the attribute name is not nuvei taxonomy name go to next attribute
 				if ( $name != $nuvei_taxonomy_name ) {
-					Nuvei_Pfw_Logger::write( $name, 'Not Nuvei attribute, check the next one.' );
-					continue;
+						Nuvei_Pfw_Logger::write( $name, 'Not Nuvei attribute, check the next one.' );
+						continue;
 				}
 
 				$attr_option = current( $attr->get_options() );
@@ -926,8 +925,8 @@ abstract class Nuvei_Pfw_Request {
 					continue;
 				}
 
-				$nuvei_plan_term    = current( $terms );
-				$term_meta          = get_term_meta( $nuvei_plan_term->term_id );
+				$nuvei_plan_term = current( $terms );
+				$term_meta       = get_term_meta( $nuvei_plan_term->term_id );
 
 				// in case of missing Nuvei Plan ID
 				if ( empty( $term_meta['planId'][0] ) ) {
@@ -937,22 +936,22 @@ abstract class Nuvei_Pfw_Request {
 
 				// in this case we do not have variation_id, only product_id
 				$data['subscr_data'][] = array(
-					'product_id'        => $item['id'],
-					'planId'            => $term_meta['planId'][0],
-					'recurringAmount'   => number_format( $term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', '' ),
-					'recurringPeriod'   => array(
+					'product_id'      => $item['id'],
+					'planId'          => $term_meta['planId'][0],
+					'recurringAmount' => number_format( $term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', '' ),
+					'recurringPeriod' => array(
 						$term_meta['recurringPeriodUnit'][0] => $term_meta['recurringPeriodPeriod'][0],
 					),
-					'startAfter'        => array(
+					'startAfter'      => array(
 						$term_meta['startAfterUnit'][0] => $term_meta['startAfterPeriod'][0],
 					),
-					'endAfter'          => array(
+					'endAfter'        => array(
 						$term_meta['endAfterUnit'][0] => $term_meta['endAfterPeriod'][0],
 					),
-					'item_id'           => $item['key'] ?? '',
+					'item_id'         => $item['key'] ?? '',
 				);
 			}
-			# /check if product has only Nuvei Payment Plan Attribute
+			// /check if product has only Nuvei Payment Plan Attribute
 		}
 
 		Nuvei_Pfw_Logger::write( $data, 'get_products_data() final data' );
@@ -963,17 +962,14 @@ abstract class Nuvei_Pfw_Request {
 	/**
 	 * A help function to extract the total from Cart passed with REST API request.
 	 *
-	 * @param array $rest_params
+	 * @param  array $rest_params
 	 * @return string
 	 */
 	protected function get_total_from_rest_params() {
-		if ( isset(
-			$this->rest_params['totals']['total_price'],
-			$this->rest_params['totals']['currency_minor_unit']
-		)
+		if ( isset( $this->rest_params['totals']['total_price'], $this->rest_params['totals']['currency_minor_unit'] )
 		) {
-			$min_unit   = $this->rest_params['totals']['currency_minor_unit'];
-			$delimeter  = 1;
+			$min_unit  = $this->rest_params['totals']['currency_minor_unit'];
+			$delimeter = 1;
 
 			for ( $cnt = 0; $cnt < $min_unit; $cnt++ ) {
 				$delimeter *= 10;
@@ -992,27 +988,27 @@ abstract class Nuvei_Pfw_Request {
 	 * A common function to set some data into the session.
 	 *
 	 * @param string $session_token
-	 * @param array $last_req_details   Some details from last open/update order request.
-	 * @param array $product_data       Short product and subscription data.
+	 * @param array  $last_req_details Some details from last open/update order request.
+	 * @param array  $product_data     Short product and subscription data.
 	 */
 	protected function set_nuvei_session_data( $session_token, $last_req_details, $product_data ) {
-        Nuvei_Pfw_Logger::write(
-            [
-                '$session_token'    => $session_token,
-                '$last_req_details' => $last_req_details,
-                '$product_data'     => $product_data,
-            ],
-            'set_nuvei_session_data'
-        );
-        
+		Nuvei_Pfw_Logger::write(
+			array(
+				'$session_token'    => $session_token,
+				'$last_req_details' => $last_req_details,
+				'$product_data'     => $product_data,
+			),
+			'set_nuvei_session_data'
+		);
+
 		WC()->session->set( NUVEI_PFW_SESSION_OO_DETAILS, $last_req_details );
 		WC()->session->set(
 			NUVEI_PFW_SESSION_PROD_DETAILS,
 			array(
 				$session_token => array(
-					'wc_subscr'             => $product_data['wc_subscr'],
-					'subscr_data'           => $product_data['subscr_data'],
-                    'products_data_hash'    => md5( serialize( $product_data ) ),
+					'wc_subscr'          => $product_data['wc_subscr'],
+					'subscr_data'        => $product_data['subscr_data'],
+					'products_data_hash' => md5( serialize( $product_data ) ),
 				),
 			)
 		);
@@ -1024,7 +1020,7 @@ abstract class Nuvei_Pfw_Request {
 	 * be returned.
 	 *
 	 * @param array $transactions List with all transactions
-	 * @param array $types Search for specific type/s.
+	 * @param array $types        Search for specific type/s.
 	 *
 	 * @return array
 	 */
@@ -1062,7 +1058,7 @@ abstract class Nuvei_Pfw_Request {
 	 * Temp help function until stop using old Order meta fields.
 	 *
 	 * @param int|null $order_id WC Order ID
-	 * @param array $types Search for specific type/s.
+	 * @param array    $types    Search for specific type/s.
 	 *
 	 * @return int
 	 */
@@ -1098,7 +1094,7 @@ abstract class Nuvei_Pfw_Request {
 	/**
 	 * Temp help function until stop using old Order meta fields.
 	 *
-	 * @param int|null $order_id WC Order ID
+	 * @param  int|null $order_id WC Order ID
 	 * @return int
 	 */
 	protected function get_tr_status( $order_id = null ) {
@@ -1126,15 +1122,15 @@ abstract class Nuvei_Pfw_Request {
 		if ( empty( $this->sc_order ) ) {
 			return wc_get_order( $order_id );
 		}
-			
-        return $this->sc_order;
+
+			return $this->sc_order;
 	}
 
 	/**
 	 * Save main transaction data into a block as private meta field.
 	 *
-	 * @param array $params     Optional list of parameters to search in.
-	 * @param int $wc_refund_id
+	 * @param  array $params       Optional list of parameters to search in.
+	 * @param  int   $wc_refund_id
 	 * @return void
 	 */
 	protected function save_transaction_data( $params = array(), $wc_refund_id = null ) {
@@ -1157,8 +1153,8 @@ abstract class Nuvei_Pfw_Request {
 			$transactions_data = array();
 		}
 
-		$transaction_type   = Nuvei_Pfw_Http::get_param( 'transactionType', 'string', '', $params );
-		$status             = Nuvei_Pfw_Http::get_request_status();
+		$transaction_type = Nuvei_Pfw_Http::get_param( 'transactionType', 'string', '', $params );
+		$status           = Nuvei_Pfw_Http::get_request_status();
 
 		// check for already existing data
 		if ( ! empty( $transactions_data[ $transaction_id ] )
@@ -1169,17 +1165,17 @@ abstract class Nuvei_Pfw_Request {
 			return;
 		}
 
-		$transactions_data[ $transaction_id ]  = array(
-			'authCode'              => Nuvei_Pfw_Http::get_param( 'AuthCode', 'string', '', $params ),
-			'paymentMethod'         => Nuvei_Pfw_Http::get_param( 'payment_method', 'string', '', $params ),
-			'transactionType'       => $transaction_type,
-			'transactionId'         => $transaction_id,
-			'relatedTransactionId'  => Nuvei_Pfw_Http::get_param( 'relatedTransactionId', 'int', 0, $params ),
-			'totalAmount'           => Nuvei_Pfw_Http::get_param( 'totalAmount', 'float', 0, $params ),
-			'currency'              => Nuvei_Pfw_Http::get_param( 'currency', 'string', '', $params ),
-			'status'                => $status,
-			'userPaymentOptionId'   => Nuvei_Pfw_Http::get_param( 'userPaymentOptionId', 'int' ),
-			'wcsRenewal'            => 'renewal_order' == Nuvei_Pfw_Http::get_param( 'customField4', 'string', '', $params )
+		$transactions_data[ $transaction_id ] = array(
+			'authCode'             => Nuvei_Pfw_Http::get_param( 'AuthCode', 'string', '', $params ),
+			'paymentMethod'        => Nuvei_Pfw_Http::get_param( 'payment_method', 'string', '', $params ),
+			'transactionType'      => $transaction_type,
+			'transactionId'        => $transaction_id,
+			'relatedTransactionId' => Nuvei_Pfw_Http::get_param( 'relatedTransactionId', 'int', 0, $params ),
+			'totalAmount'          => Nuvei_Pfw_Http::get_param( 'totalAmount', 'float', 0, $params ),
+			'currency'             => Nuvei_Pfw_Http::get_param( 'currency', 'string', '', $params ),
+			'status'               => $status,
+			'userPaymentOptionId'  => Nuvei_Pfw_Http::get_param( 'userPaymentOptionId', 'int' ),
+			'wcsRenewal'           => 'renewal_order' == Nuvei_Pfw_Http::get_param( 'customField4', 'string', '', $params )
 				? true : false,
 		);
 
@@ -1198,20 +1194,20 @@ abstract class Nuvei_Pfw_Request {
 			$this->sc_order->update_meta_data( NUVEI_PFW_WC_RENEWAL, true );
 		}
 
-		//        $this->sc_order->save();
+		// $this->sc_order->save();
 	}
 
 	/**
 	 * Single place to generate the client unique id parameter.
 	 *
 	 * @param string $billing_email
-	 * @param array $products_data  Optional for the Auto-Void.
+	 * @param array  $products_data Optional for the Auto-Void.
 	 *
 	 * @return string $client_unique_id
 	 */
 	protected function get_client_unique_id( $billing_email, $products_data = array() ) {
-		$order_string       = $billing_email . '_' . serialize( $products_data );
-		$client_unique_id   = hash( 'crc32b', $order_string ) . '_' . uniqid( '', true );
+		$order_string     = $billing_email . '_' . serialize( $products_data );
+		$client_unique_id = hash( 'crc32b', $order_string ) . '_' . uniqid( '', true );
 
 		return $client_unique_id;
 	}
@@ -1219,7 +1215,7 @@ abstract class Nuvei_Pfw_Request {
 	/**
 	 * A common method to get get rebilling details from the Order meta.
 	 *
-	 * @param array $all_data All meta data for some Order.
+	 * @param  array $all_data All meta data for some Order.
 	 * @return array $subscr_list
 	 */
 	protected function get_order_rebiling_details( $all_data ) {
@@ -1233,10 +1229,10 @@ abstract class Nuvei_Pfw_Request {
 		foreach ( $all_data as $key => $data ) {
 			// legacy
 			if ( ! is_numeric( $key ) ) {
-				//                Nuvei_Pfw_Logger::write($data);
+				// Nuvei_Pfw_Logger::write($data);
 
 				if ( false === strpos( $key, NUVEI_PFW_ORDER_SUBSCR ) ) {
-					continue;
+						continue;
 				}
 
 				$subscr_list[] = array(
@@ -1246,12 +1242,12 @@ abstract class Nuvei_Pfw_Request {
 			} else { // for HPOS
 				$meta_data = $data->get_data();
 
-				//                Nuvei_Pfw_Logger::write($meta_data);
+				// Nuvei_Pfw_Logger::write($meta_data);
 
 				if ( empty( $meta_data['key'] )
 					|| false === strpos( $meta_data['key'], NUVEI_PFW_ORDER_SUBSCR )
 				) {
-					continue;
+						continue;
 				}
 
 				$subscr_list[] = array(
@@ -1263,38 +1259,38 @@ abstract class Nuvei_Pfw_Request {
 
 		return $subscr_list;
 	}
-    
-    /**
-     * Common function to sanitize an associative array.
-     * If no array was passed use $_REQUEST variable.
-     * 
-     * @param array $arr
-     * @return array
-     */
-//    protected function sanitize_assoc_array($arr = array()) {
-//        if ( !is_array($arr) ) {
-//            return array();
-//        }
-//        
-//        if ( empty($arr) ) {
-//            $arr = $_REQUEST;
-//        }
-//        
-//        $keys   = array_keys($arr);
-//        $values = array_values($arr);
-//        
-//        $san_keys = array_map(function($val) {
-//            return sanitize_text_field($val);
-//        }, $keys);
-//        
-//        $san_values = array_map(function($val) {
-//            return sanitize_text_field($val);
-//        }, $values);
-//        
-//        return array_combine($san_keys, $san_values);
-//    }
 
-    /**
+	/**
+	 * Common function to sanitize an associative array.
+	 * If no array was passed use $_REQUEST variable.
+	 *
+	 * @param  array $arr
+	 * @return array
+	 */
+	// protected function sanitize_assoc_array($arr = array()) {
+	// if ( !is_array($arr) ) {
+	// return array();
+	// }
+	//
+	// if ( empty($arr) ) {
+	// $arr = $_REQUEST;
+	// }
+	//
+	// $keys   = array_keys($arr);
+	// $values = array_values($arr);
+	//
+	// $san_keys = array_map(function($val) {
+	// return sanitize_text_field($val);
+	// }, $keys);
+	//
+	// $san_values = array_map(function($val) {
+	// return sanitize_text_field($val);
+	// }, $values);
+	//
+	// return array_combine($san_keys, $san_values);
+	// }
+
+	/**
 	 * Get the request endpoint - sandbox or production.
 	 *
 	 * @return string
@@ -1310,7 +1306,7 @@ abstract class Nuvei_Pfw_Request {
 	/**
 	 * Validate some of the parameters in the request by predefined criteria.
 	 *
-	 * @param array $params
+	 * @param  array $params
 	 * @return array
 	 */
 	private function validate_parameters( $params ) {
@@ -1320,17 +1316,17 @@ abstract class Nuvei_Pfw_Request {
 		if ( isset( $params['billingAddress']['email'] ) ) {
 			if ( ! filter_var( $params['billingAddress']['email'], NUVEI_PFW_PARAMS_VALIDATION_EMAIL['flag'] ) ) {
 				return array(
-					'status'    => 'ERROR',
-					'message'   => 'The parameter Billing Address Email is not valid.',
-					'email'     => $params['billingAddress']['email'],
+					'status'  => 'ERROR',
+					'message' => 'The parameter Billing Address Email is not valid.',
+					'email'   => $params['billingAddress']['email'],
 				);
 			}
 
 			if ( strlen( $params['billingAddress']['email'] ) > NUVEI_PFW_PARAMS_VALIDATION_EMAIL['length'] ) {
 				return array(
-					'status'    => 'ERROR',
-					'message'   => 'The parameter Billing Address Email is too long.',
-                    'email'     => $params['billingAddress']['email'],
+					'status'  => 'ERROR',
+					'message' => 'The parameter Billing Address Email is too long.',
+					'email'   => $params['billingAddress']['email'],
 				);
 			}
 		}
@@ -1338,17 +1334,17 @@ abstract class Nuvei_Pfw_Request {
 		if ( isset( $params['shippingAddress']['email'] ) ) {
 			if ( ! filter_var( $params['shippingAddress']['email'], NUVEI_PFW_PARAMS_VALIDATION_EMAIL['flag'] ) ) {
 				return array(
-					'status'    => 'ERROR',
-					'message'   => 'The parameter Shipping Address Email is not valid.',
-                    'email'     => $params['shippingAddress']['email'],
+					'status'  => 'ERROR',
+					'message' => 'The parameter Shipping Address Email is not valid.',
+					'email'   => $params['shippingAddress']['email'],
 				);
 			}
 
 			if ( strlen( $params['shippingAddress']['email'] ) > NUVEI_PFW_PARAMS_VALIDATION_EMAIL['length'] ) {
 				return array(
-					'status'    => 'ERROR',
-					'message'   => 'The parameter Shipping Address Email is too long.',
-                    'email'     => $params['shippingAddress']['email'],
+					'status'  => 'ERROR',
+					'message' => 'The parameter Shipping Address Email is too long.',
+					'email'   => $params['shippingAddress']['email'],
 				);
 			}
 		}
@@ -1359,7 +1355,7 @@ abstract class Nuvei_Pfw_Request {
 				$new_val = $val1;
 
 				if ( mb_strlen( $val1 ) > NUVEI_PFW_PARAMS_VALIDATION[ $key1 ]['length'] ) {
-					$new_val = mb_substr( $val1, 0, NUVEI_PFW_PARAMS_VALIDATION[ $key1 ]['length'] );
+						$new_val = mb_substr( $val1, 0, NUVEI_PFW_PARAMS_VALIDATION[ $key1 ]['length'] );
 				}
 
 				$params[ $key1 ] = filter_var( $new_val, NUVEI_PFW_PARAMS_VALIDATION[ $key1 ]['flag'] );
@@ -1373,7 +1369,7 @@ abstract class Nuvei_Pfw_Request {
 						$new_val = $val2;
 
 						if ( mb_strlen( $val2 ) > NUVEI_PFW_PARAMS_VALIDATION[ $key2 ]['length'] ) {
-							$new_val = mb_substr( $val2, 0, NUVEI_PFW_PARAMS_VALIDATION[ $key2 ]['length'] );
+								$new_val = mb_substr( $val2, 0, NUVEI_PFW_PARAMS_VALIDATION[ $key2 ]['length'] );
 						}
 
 						$params[ $key1 ][ $key2 ] = filter_var( $new_val, NUVEI_PFW_PARAMS_VALIDATION[ $key2 ]['flag'] );

@@ -9,6 +9,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Payment extends Nuvei_Pfw_Request {
 
+
 	public function process() {
 		/**
 		 * expected keys: sessionToken, userTokenId, clientRequestId, currency,
@@ -20,15 +21,15 @@ class Nuvei_Pfw_Payment extends Nuvei_Pfw_Request {
 
 		$params = array_merge(
 			array(
-				'sessionToken'          => @$data['sessionToken'],
-				'userTokenId'           => @$data['userTokenId'],
-				'clientRequestId'       => @$data['clientRequestId'],
-				'currency'              => @$data['currency'],
-				'amount'                => @$data['amount'],
-				'transactionType'       => 'Sale',
-				'urlDetails'            => array( 'notificationUrl' => Nuvei_Pfw_String::get_notify_url( $this->plugin_settings ) ),
-				'merchantDetails'   => array(
-					'customField4'      => 'renewal_order',
+				'sessionToken'    => @$data['sessionToken'],
+				'userTokenId'     => @$data['userTokenId'],
+				'clientRequestId' => @$data['clientRequestId'],
+				'currency'        => @$data['currency'],
+				'amount'          => @$data['amount'],
+				'transactionType' => 'Sale',
+				'urlDetails'      => array( 'notificationUrl' => Nuvei_Pfw_String::get_notify_url( $this->plugin_settings ) ),
+				'merchantDetails' => array(
+					'customField4' => 'renewal_order',
 				),
 			),
 			$data

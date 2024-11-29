@@ -29,7 +29,7 @@ $field = $this->plugin_id . $this->id . '_' . $key;
 			</button>
 
 			<span class="dashicons dashicons-yes-alt" style="display: none;"></span>
-			
+			 
 			<p class="description"><?php echo wp_kses_post( $data['description'] ); ?></p>
 		</fieldset>
 
