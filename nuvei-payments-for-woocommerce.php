@@ -112,17 +112,6 @@ function nuvei_pfw_plugin_activate() {
 		WP_Filesystem();
 	}
 
-	// $log_dir_rights     = false;
-	// $log_files_rights   = false;
-
-	// in case permissions constants are missing
-	// if (!defined('FS_CHMOD_DIR')) {
-	// $log_dir_rights = ( fileperms( ABSPATH ) & 0777 | 0755 );
-	// }
-	// if (!defined('FS_CHMOD_FILE')) {
-	// $log_files_rights = ( fileperms( ABSPATH . 'index.php' ) & 0777 | 0644 );
-	// }
-
 	if ( ! is_dir( NUVEI_PFW_LOGS_DIR ) ) {
 		$wp_fs_direct->mkdir( NUVEI_PFW_LOGS_DIR );
 	}
