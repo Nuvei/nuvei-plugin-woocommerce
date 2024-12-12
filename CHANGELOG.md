@@ -4,6 +4,7 @@
 ```
     * For testing purpose, to the Simply Connect was added parameter "webSdkEnv".
     * From the readme.txt was removed Contributor parameter.
+    * Tested with WC 9.4.3.
 ```
 
 # 3.3.1
