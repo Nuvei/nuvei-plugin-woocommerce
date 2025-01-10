@@ -113,62 +113,97 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	}
 
 	/**
+	 * Generate Button HTML.
+	 * Custom function to generate beautiful button in admin settings.
+	 * Thanks to https://gist.github.com/BFTrick/31de2d2235b924e853b0
+	 *
+	 * This function catch the type of the settings element we want
+	 * to create. Example - element type button1 -> generate_button1_html
+	 *
+	 * @param mixed $key
+	 * @param mixed $data
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string
+	 */
+	public function generate_payment_custom_msg_html( $key, $data ) {
+		$defaults = array(
+			'class'             => 'button-secondary',
+			'css'               => '',
+			'custom_attributes' => array(),
+			'desc_tip'          => false,
+			'description'       => '',
+			'title'             => '',
+		);
+
+		ob_start();
+
+		$data = wp_parse_args( $data, $defaults );
+		include_once dirname( NUVEI_PFW_PLUGIN_FILE ) . '/templates/admin/load-nuvei-custom-msgs-btn.php';
+
+		return ob_get_clean();
+	}
+
+	/**
 	 * Generate custom multi select for the plugin settings.
 	 *
 	 * @param $key
 	 * @param array $data
 	 *
 	 * @return string
+	 *
+	 * @deprecated since version 3.2.3
 	 */
 	public function generate_nuvei_multiselect_html( $key, $data ) {
 		// prepare the list with Payment methods
-		$get_st_obj    = new Nuvei_Pfw_Session_Token();
-		$resp          = $get_st_obj->process();
-		$session_token = ! empty( $resp['sessionToken'] ) ? $resp['sessionToken'] : '';
-
-		$nuvei_blocked_pms_visible = array();
-		$nuvei_blocked_pms         = explode( ',', $this->get_option( 'pm_black_list', '' ) );
-		$pms                       = array(
-			'' => __( 'Select payment methods...', 'nuvei-payments-for-woocommerce' ),
-		);
-
-		$get_apms_obj = new Nuvei_Pfw_Get_Apms( $this->settings );
-		$resp         = $get_apms_obj->process( array( 'sessionToken' => $session_token ) );
-
-		if ( ! empty( $resp['paymentMethods'] ) && is_array( $resp['paymentMethods'] ) ) {
-			foreach ( $resp['paymentMethods'] as $data ) {
-				// the array for the select menu
-				if ( ! empty( $data['paymentMethodDisplayName'][0]['message'] ) ) {
-					$pms[ $data['paymentMethod'] ] = $data['paymentMethodDisplayName'][0]['message'];
-				} else {
-					$pms[ $data['paymentMethod'] ] = $data['paymentMethod'];
-				}
-
-				// generate visible list
-				if ( in_array( $data['paymentMethod'], $nuvei_blocked_pms ) ) {
-					$nuvei_blocked_pms_visible[] = $pms[ $data['paymentMethod'] ];
-				}
-			}
-		}
+		// $get_st_obj    = new Nuvei_Pfw_Session_Token();
+		// $resp          = $get_st_obj->process();
+		// $session_token = ! empty( $resp['sessionToken'] ) ? $resp['sessionToken'] : '';
+		//
+		// $nuvei_blocked_pms_visible = array();
+		// $nuvei_blocked_pms         = explode( ',', $this->get_option( 'pm_black_list', '' ) );
+		// $pms                       = array(
+		// '' => __( 'Select payment methods...', 'nuvei-payments-for-woocommerce' ),
+		// );
+		//
+		// $get_apms_obj = new Nuvei_Pfw_Get_Apms( $this->settings );
+		// $resp         = $get_apms_obj->process( array( 'sessionToken' => $session_token ) );
+		//
+		// if ( ! empty( $resp['paymentMethods'] ) && is_array( $resp['paymentMethods'] ) ) {
+		// foreach ( $resp['paymentMethods'] as $data ) {
+		// the array for the select menu
+		// if ( ! empty( $data['paymentMethodDisplayName'][0]['message'] ) ) {
+		// $pms[ $data['paymentMethod'] ] = $data['paymentMethodDisplayName'][0]['message'];
+		// } else {
+		// $pms[ $data['paymentMethod'] ] = $data['paymentMethod'];
+		// }
+		//
+		// generate visible list
+		// if ( in_array( $data['paymentMethod'], $nuvei_blocked_pms ) ) {
+		// $nuvei_blocked_pms_visible[] = $pms[ $data['paymentMethod'] ];
+		// }
+		// }
+		// }
 		// prepare the list with Payment methods END
-
-		$defaults = array(
-			'title'                     => __( 'Block Payment Methods', 'nuvei-payments-for-woocommerce' ),
-			'class'                     => 'nuvei_checkout_setting',
-			'css'                       => '',
-			'custom_attributes'         => array(),
-			'desc_tip'                  => false,
-			'merchant_pms'              => $pms,
-			'nuvei_blocked_pms'         => $nuvei_blocked_pms,
-			'nuvei_blocked_pms_visible' => implode( ', ', $nuvei_blocked_pms_visible ),
-		);
-
-		ob_start();
-
-		$data = wp_parse_args( $data, $defaults );
-		include_once dirname( NUVEI_PFW_PLUGIN_FILE ) . '/templates/admin/block-pms-select.php';
-
-		return ob_get_clean();
+		//
+		// $defaults = array(
+		// 'title'                     => __( 'Block Payment Methods', 'nuvei-payments-for-woocommerce' ),
+		// 'class'                     => 'nuvei_checkout_setting',
+		// 'css'                       => '',
+		// 'custom_attributes'         => array(),
+		// 'desc_tip'                  => false,
+		// 'merchant_pms'              => $pms,
+		// 'nuvei_blocked_pms'         => $nuvei_blocked_pms,
+		// 'nuvei_blocked_pms_visible' => implode( ', ', $nuvei_blocked_pms_visible ),
+		// );
+		//
+		// ob_start();
+		//
+		// $data = wp_parse_args( $data, $defaults );
+		// include_once dirname( NUVEI_PFW_PLUGIN_FILE ) . '/templates/admin/block-pms-select.php';
+		//
+		// return ob_get_clean();
 	}
 
 	// Generate the HTML For the settings form.
@@ -1498,6 +1533,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'class'       => 'nuvei_checkout_setting',
 				'description' => __( 'This option is for Nuvei Checkout SDK.', 'nuvei-payments-for-woocommerce' ),
 			),
+			'allow_auto_void'   => array(
+				'title'   => __( 'Allow Auto Void', 'nuvei-payments-for-woocommerce' ),
+				'type'    => 'checkbox',
+				'label'   => __( 'Allow plugin to initiate auto Void request in case there is Payment (transaction), but there is no Order for this transaction in the Store. This logic is based on incoming DMNs. Event the auto Void is disabled, a message will be saved. The last read messages can be view in the Help Tools.', 'nuvei-payments-for-woocommerce' ),
+				'default' => 'no',
+			),
 			'save_logs'         => array(
 				'title'   => __( 'Save Daily Logs', 'nuvei-payments-for-woocommerce' ),
 				'type'    => 'checkbox',
@@ -1788,6 +1829,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'title'       => __( 'Notify URL', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'hidden',
 				'description' => Nuvei_Pfw_String::get_notify_url( $this->settings, true ),
+			),
+			'read_msgs'     => array(
+				'title' => __( 'Read Payment messages', 'nuvei-payments-for-woocommerce' ),
+				'type'  => 'payment_custom_msg',
+		// 'type'        => 'hidden',
+		// 'description' => $msgs_html,
 			),
 		);
 

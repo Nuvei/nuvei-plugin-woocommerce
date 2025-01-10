@@ -3,17 +3,17 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.3.2
+ * Version: 3.3.3
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
  * Text Domain: nuvei-payments-for-woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.7
+ * Tested up to: 6.7.1
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 9.4.3
+ * WC tested up to: 9.5.2
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -258,6 +258,9 @@ function nuvei_pfw_init() {
 			Nuvei_Pfw_Logger::write( 'nuvei_pfwc_after_rebilling_payment do some action here' );
 		}
 	);
+
+	// hook to show unreaded Nuvei' system messages
+	add_action( 'admin_notices', 'nuvei_pfw_display_messages' );
 }
 
 /**
@@ -346,11 +349,6 @@ function nuvei_pfw_ajax_action() {
 		$wc_nuvei->checkout_prepayment_check();
 	}
 
-	// when Reorder
-	// if ( Nuvei_Pfw_Http::get_param( 'sc_request' ) == 'scReorder' ) {
-	// $wc_nuvei->reorder();
-	// }
-
 	// download Subscriptions Plans
 	if ( Nuvei_Pfw_Http::get_param( 'downloadPlans', 'int' ) == 1 ) {
 		$wc_nuvei->download_subscr_pans();
@@ -364,6 +362,64 @@ function nuvei_pfw_ajax_action() {
 		$params = $wc_nuvei->call_checkout( false, true, Nuvei_Pfw_Http::get_param( 'orderId', 'int' ) );
 
 		wp_send_json( $params );
+		wp_die();
+	}
+
+	// dismiss Nuvei system message
+	if ( Nuvei_Pfw_Http::get_param( 'msgId', 'int', -1 ) >= 0 ) {
+		$messages = get_option( 'custom_system_messages', array() );
+
+		$msg_id = Nuvei_Pfw_Http::get_param( 'msgId', 'int' );
+
+		if ( isset( $messages[ $msg_id ] ) ) {
+			// remove the message
+			if ( $messages[ $msg_id ]['read'] ) {
+				unset( $messages[ $msg_id ] );
+
+				// Re-index the array to maintain sequential keys (optional)
+				// $messages = array_values($messages);
+			}
+			// mark the message as read
+			else {
+				$messages[ $msg_id ]['read'] = true;
+			}
+
+			update_option( 'custom_system_messages', $messages );
+			wp_send_json_success();
+		}
+
+		wp_send_json_error();
+	}
+
+	// get custom Payment messages
+	if ( Nuvei_Pfw_Http::get_param( 'getPaymentCustomMsgs', 'int' ) == 1 ) {
+		$all_msgs  = get_option( 'custom_system_messages', array() );
+		$last_msgs = array();
+		$cnt       = 1;
+
+		if ( empty( $all_msgs ) ) {
+			wp_send_json( $last_msgs );
+			wp_die();
+		}
+
+		foreach ( array_reverse( $all_msgs, true ) as $index => $msg ) {
+			if ( empty( $msg['created_by'] )
+				|| 'nuvei_payments' != $msg['created_by']
+				|| ! isset( $msg['read'] )
+				|| true === $msg['read']
+			) {
+				continue;
+			}
+
+			if ( $cnt >= 50 ) {
+				break;
+			}
+
+			$last_msgs[ $index ] = $msg;
+			++$cnt;
+		}
+
+		wp_send_json( $last_msgs );
 		wp_die();
 	}
 
@@ -851,49 +907,6 @@ function nuvei_pfw_mod_thank_you_page( $order_id ) {
 }
 
 /**
- * @return string
- *
- * @deprecated since version 3.1.1
- */
-function nuvei_pfw_edit_order_buttons() {
-	$chosen_payment_method = WC()->session->get( 'chosen_payment_method' );
-
-	// save default text into button attribute
-	wp_add_inline_script(
-		'nuvei_js_public',
-		'jQuery("#place_order").attr("data-default-text", "'
-			. esc_html__( 'Place order', 'nuvei-payments-for-woocommerce' ) . '").attr("data-sc-text", "'
-			. esc_html__( 'Continue', 'nuvei-payments-for-woocommerce' ) . '"); });'
-	);
-
-	// check for 'sc' also, because of the older Orders
-	if ( in_array( $chosen_payment_method, array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) ) ) {
-		return __( 'Continue', 'nuvei-payments-for-woocommerce' );
-	}
-
-	return __( 'Place order', 'nuvei-payments-for-woocommerce' );
-}
-
-/**
- *
- * @param  string $title
- * @param  int    $id
- * @return string
- *
- * @deprecated since version 3.2.0 This function is not used.
- */
-function nuvei_pfw_change_title_order_received( $title, $id ) {
-	if ( function_exists( 'is_order_received_page' )
-		&& is_order_received_page()
-		&& get_the_ID() === $id
-	) {
-		$title = esc_html__( 'Order error', 'nuvei-payments-for-woocommerce' );
-	}
-
-	return $title;
-}
-
-/**
  * When the client click Pay button on the Order from My Account -> Orders menu.
  * This Order was created in the store admin, from some of the admins (merchants).
  *
@@ -1325,4 +1338,28 @@ function nuvei_pfw_rest_method( $request_data ) {
 	$res->set_status( 405 );
 
 	return $rest_resp;
+}
+
+/**
+ * Display Nuvei message in the admin.
+ * At the moment we will use them only for auto-void warnings.
+ */
+function nuvei_pfw_display_messages() {
+	$messages = get_option( 'custom_system_messages', array() );
+
+	if ( ! empty( $messages ) ) {
+		foreach ( $messages as $index => $msg ) {
+			if ( empty( $msg['created_by'] )
+				|| 'nuvei_payments' != $msg['created_by']
+				|| ! isset( $msg['read'] )
+				|| $msg['read']
+			) {
+				continue;
+			}
+
+			echo '<div class="notice notice-info is-dismissible nuvei_payments_msg" data-index="' . esc_attr( $index ) . '">'
+				. '<p>' . wp_kses_post( $msg['message'] ) . '</p>'
+				. '</div>';
+		}
+	}
 }

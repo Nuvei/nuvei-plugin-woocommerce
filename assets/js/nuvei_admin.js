@@ -224,7 +224,7 @@ function nuveiSyncPaymentPlans() {
 		data: {
 			action: 'sc-ajax-action',
 			downloadPlans: 1,
-			nuveiSecurity: scTrans.nuveiSecurity,
+			nuveiSecurity: scTrans.nuveiSecurity
 		},
 		dataType: 'json'
 	})
@@ -254,38 +254,90 @@ function nuveiSyncPaymentPlans() {
 	});
 }
 
+function nuveiGetCustomSystemMsgs() {
+    var butonTd = jQuery('#woocommerce_nuvei_read_msgs').closest('td');
+	
+	butonTd.find('.custom_loader').show();
+			
+	jQuery.ajax({
+		type: "POST",
+		url: scTrans.ajaxurl,
+		data: {
+			action: 'sc-ajax-action',
+			getPaymentCustomMsgs: 1,
+			nuveiSecurity: scTrans.nuveiSecurity
+		},
+		dataType: 'json'
+	})
+	.fail(function(jqXHR, textStatus, errorThrown){
+		alert(scTrans.RequestFail);
+
+		console.error(textStatus);
+		console.error(errorThrown);
+
+		butonTd.find('.custom_loader').hide();
+	})
+	.done(function(resp) {
+		console.log(resp);
+
+        let msgsHtml = '';
+
+        try {
+            for (let i in resp) {
+                msgsHtml += `<span style="display: block;" class="notice is-dismissible nuvei_payments_msg" data-index="${i}">`
+                    + `<span>${resp[i].message}</span>`
+                    + '<span class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></span>'
+                    + '</span>'; 
+            }
+            
+            console.log(msgsHtml);
+//            console.log(butonTd.find('.description'));
+            
+            butonTd.find('.description').html(msgsHtml);
+            
+            
+        } catch(ex) {
+            console.log('Error with the response.', resp);
+            
+            butonTd.closest('fieldset').find('.description').html(msgsHtml);
+        }
+
+		butonTd.find('.custom_loader').hide();
+	});
+}
+
 /**
  * @deprecated since v3.2.3
  */
 function nuveiDisablePm(_value) {
-    console.log('nuveiDisablePm', _value);
-    
-    var selectedOptionId    = '#nuvei_block_pm_' + _value;
-	var selectedPMs			= jQuery('#woocommerce_nuvei_pm_black_list').val();
-	var selectedPMsVisible	= jQuery('#woocommerce_nuvei_pm_black_list_visible').val();
-    
-    jQuery(selectedOptionId).hide();
-    
-	// fill the hidden input
-	if('' == selectedPMs) {
-		selectedPMs += _value;
-	}
-	else {
-		selectedPMs += ',' + _value;
-	}
-	
-	// fill the visible input
-	if('' == selectedPMsVisible) {
-		selectedPMsVisible += jQuery(selectedOptionId).text();
-	}
-	else {
-		selectedPMsVisible += ', ' + jQuery(selectedOptionId).text();
-	}
-	
-	document.getElementById('nuvei_block_pms_multiselect').selectedIndex  = 0;
-	
-	jQuery('#woocommerce_nuvei_pm_black_list').val(selectedPMs);
-	jQuery('#woocommerce_nuvei_pm_black_list_visible').val(selectedPMsVisible);
+//    console.log('nuveiDisablePm', _value);
+//    
+//    var selectedOptionId    = '#nuvei_block_pm_' + _value;
+//	var selectedPMs			= jQuery('#woocommerce_nuvei_pm_black_list').val();
+//	var selectedPMsVisible	= jQuery('#woocommerce_nuvei_pm_black_list_visible').val();
+//    
+//    jQuery(selectedOptionId).hide();
+//    
+//	// fill the hidden input
+//	if('' == selectedPMs) {
+//		selectedPMs += _value;
+//	}
+//	else {
+//		selectedPMs += ',' + _value;
+//	}
+//	
+//	// fill the visible input
+//	if('' == selectedPMsVisible) {
+//		selectedPMsVisible += jQuery(selectedOptionId).text();
+//	}
+//	else {
+//		selectedPMsVisible += ', ' + jQuery(selectedOptionId).text();
+//	}
+//	
+//	document.getElementById('nuvei_block_pms_multiselect').selectedIndex  = 0;
+//	
+//	jQuery('#woocommerce_nuvei_pm_black_list').val(selectedPMs);
+//	jQuery('#woocommerce_nuvei_pm_black_list_visible').val(selectedPMsVisible);
 }
 
 function nuveiCleanBlockedPMs() {
@@ -416,6 +468,41 @@ jQuery(function() {
 	jQuery('#woocommerce_nuvei_integration_type').on('change', function() {
 		nuvei_show_hide_rest_settings();
 	});
+    
+    // dismiss/remove nuvei custom system message
+    jQuery(document).on('click', '.nuvei_payments_msg .notice-dismiss', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (window.location.hash === '#nuvei_tools'
+            && !confirm('Are you sure you want to delete this message?')
+        ) {
+            return false;
+        }
+        
+        let button      = jQuery(this);
+        let container   = button.closest('.nuvei_payments_msg');
+        let index       = container.attr('data-index');
+        
+        jQuery.ajax({
+            type: "POST",
+            url: scTrans.ajaxurl,
+            data: {
+                action: 'sc-ajax-action',
+                msgId: index,
+                nuveiSecurity: scTrans.nuveiSecurity
+            },
+            dataType: 'json'
+        })
+        .fail(function( jqXHR, textStatus, errorThrown){
+            console.error(textStatus);
+            console.error(errorThrown);
+        })
+        .done(function(resp) {
+            console.log(resp);
+            container.remove();
+        });
+    });
     
 });
 // document ready function END

@@ -294,6 +294,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	private function create_auto_void( $transaction_type ) {
 		$order_request_time = Nuvei_Pfw_Http::get_param( 'customField3', 'int' ); // time of create/update order
 		$curr_time          = time();
+		$dmn_tr_id          = Nuvei_Pfw_Http::get_param( 'TransactionID', 'int' );
 
 		Nuvei_Pfw_Logger::write(
 			array(
@@ -318,6 +319,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		// not allowed transaction type error
 		$req_status = Nuvei_Pfw_Http::get_request_status();
 
+		// not allowed type of transactions
 		if ( ! in_array( $transaction_type, array( 'Auth', 'Sale' ), true )
 			|| 'approved' != strtolower( $req_status )
 		) {
@@ -338,7 +340,44 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		}
 		// /break Auto-Void process
 
-		$nuvei_gw   = WC()->payment_gateways->payment_gateways()[ NUVEI_PFW_GATEWAY_NAME ];
+		$nuvei_gw = WC()->payment_gateways->payment_gateways()[ NUVEI_PFW_GATEWAY_NAME ];
+		$messages = get_option( 'custom_system_messages', array() );
+
+		// system message
+		$msg_txt = '<b>' . __( 'Nuvei Payments notification.', 'nuvei-payments-for-woocommerce' ) . '</b> '
+			. __( 'The plugin cannot find corresponding Order for Nuvei Transaction ', 'nuvei-payments-for-woocommerce' ) . $dmn_tr_id . '. '
+			. __( 'Please, check it in the Nuvei Control Panel!', 'nuvei-payments-for-woocommerce' );
+
+		// if the auto-void is disabled
+		if ( 'no' == $nuvei_gw->get_option( 'allow_auto_void' ) ) {
+			$msg_txt .= ' ' . __( 'You can enable the "Auto Void" from the plugin settings.', 'nuvei-payments-for-woocommerce' );
+
+			$messages[] = array(
+				'message'    => $msg_txt,
+				'read'       => false,
+				'created_by' => 'nuvei_payments',
+				'timestamp'  => current_time( 'mysql' ),
+			);
+
+			update_option( 'custom_system_messages', $messages );
+
+			// log and response message
+			$msg = __( 'Auto Void logic - the auto void is disabled, but a system message was saved.', 'nuvei-payments-for-woocommerce' );
+
+			Nuvei_Pfw_Logger::write( $msg );
+			wp_send_json_success( $msg );
+		}
+
+		// in case the auto-void is enabled
+		$messages[] = array(
+			'message'    => $msg_txt,
+			'read'       => false,
+			'created_by' => 'nuvei_payments',
+			'timestamp'  => current_time( 'mysql' ),
+		);
+
+		update_option( 'custom_system_messages', $messages );
+
 		$notify_url = Nuvei_Pfw_String::get_notify_url(
 			array(
 				'notify_url' => $nuvei_gw->get_option( 'notify_url' ),
@@ -349,16 +388,11 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 			'clientUniqueId'       => $this->get_client_unique_id( Nuvei_Pfw_Http::get_param( 'email' ) ),
 			'amount'               => (string) Nuvei_Pfw_Http::get_param( 'totalAmount', 'float' ),
 			'currency'             => Nuvei_Pfw_Http::get_param( 'currency' ),
-			'relatedTransactionId' => Nuvei_Pfw_Http::get_param( 'TransactionID', 'int' ),
+			'relatedTransactionId' => $dmn_tr_id,
 			'url'                  => $notify_url,
 			'urlDetails'           => array( 'notificationUrl' => $notify_url ),
 			'customData'           => 'This is Auto-Void transaction',
 		);
-
-		// Nuvei_Pfw_Logger::write(
-		// [$this->request_base_params, $void_params],
-		// 'Try to Void a transaction by not existing WC Order.'
-		// );
 
 		$resp = $this->call_rest_api( 'voidTransaction', $void_params );
 
@@ -368,14 +402,22 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 			&& ! empty( $resp['transactionId'] )
 		) {
 			Nuvei_Pfw_Logger::write( 'Auto-Void request approved.' );
-
-			http_response_code( 200 );
-			exit( 'The searched Order does not exists, a Void request was made for this Transacrion.' );
+			wp_send_json_success( 'The searched Order does not exists, a Void request was made for this Transacrion.' );
 		}
+
+		// Void fail
+		$messages[] = array(
+			'message'    => __( 'The searched Order does not exists, and the Auto Void request was not successfu! Please, check the following transaction ID in the Nuvei Control Panel: ', 'nuvei-payments-for-woocommerce' ) . $dmn_tr_id,
+			'read'       => false,
+			'created_by' => 'nuvei_payments',
+			'timestamp'  => current_time( 'mysql' ),
+		);
+
+		update_option( 'custom_system_messages', $messages );
 
 		Nuvei_Pfw_Logger::write( $resp, 'Problem with Auto-Void request.' );
 
-		return 200; // the next time the request will be same, we do not expect for approve
+		wp_send_json_success();
 	}
 
 	/**

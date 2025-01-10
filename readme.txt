@@ -1,8 +1,8 @@
 === Nuvei Payments for Woocommerce ===
 
 Requires at least: 4.7
-Tested up to: 6.7
-Stable tag: 3.3.2
+Tested up to: 6.7.1
+Stable tag: 3.3.3
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -17,11 +17,11 @@ A wide selection of region-specific payment methods can help your business grow 
 
 The correct payment methods at the checkout page can bring you global reach, help you increase conversions, and create a seamless experience for your customers.
 
-Our plugin enables customers to accept payments by credit,  debit cards, and other methods. For this purpose, our plugin uses Nuvei’s own Simply Connect SDK. Since we are a top-tier payment provider, we hold the highest data security standard (Level 1) and we take payment data security seriously. Our Simply Connect platform is hosted on our own Nuvei servers, which are audited every year for PCI compliance.
+Our plugin enables customers to accept payments by credit and debit cards, as well as other methods. For this purpose, our plugin uses Nuvei’s own Simply Connect SDK. Since we are a top-tier payment provider, we hold the highest data security standard (Level 1) and we take payment data security seriously. Our Simply Connect platform is hosted on our own Nuvei servers, which are audited every year for PCI compliance.
 
 For more information about Simply Connect, please press [here](https://docs.nuvei.com/documentation/accept-payment/simply-connect/).
 
-To work properly, our plugin relays additional services to send order and client data, and receive information about the transactions. All of these services (including the current plugin) belong to Nuvei, formerly known as SafeCharge. The services we are using are listed below:
+To work properly, our plugin relays additional services to send order and client data, and receives information about the transactions. All of these services (including the current plugin) belong to Nuvei, formerly known as SafeCharge. The services we use are listed below:
 
 * https://ppp-test.nuvei.com/ppp/api/v1/... - Nuvei' Sandbox REST API path;
 * https://secure.safecharge.com/ppp/api/v1/... - Nuvei's Production REST API path;
@@ -31,9 +31,9 @@ To work properly, our plugin relays additional services to send order and client
 * https://ppp-test.safecharge.com/ppp/purchase.do - Nuvei' Sandbox Redirect payment page;
 * https://secure.safecharge.com/ppp/purchase.do - Nuvei's Production Redirect payment page;
 * Links to Nuvei documentation:
-  * https://docs.nuvei.com/documentation/accept-payment/simply-connect/payment-customization/#dynamic-currency-conversion
-  * https://docs.nuvei.com/documentation/accept-payment/checkout-2/payment-customization/#card-processing
-  * https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation
+  * [https://docs.nuvei.com/documentation/accept-payment/simply-connect/payment-customization/#dynamic-currency-conversion](https://docs.nuvei.com/documentation/accept-payment/simply-connect/payment-customization/#dynamic-currency-conversion)
+  * [https://docs.nuvei.com/documentation/accept-payment/checkout-2/payment-customization/#card-processing](https://docs.nuvei.com/documentation/accept-payment/checkout-2/payment-customization/#card-processing)
+  * [https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation](https://docs.nuvei.com/documentation/accept-payment/simply-connect/ui-customization/#text-and-translation)
 
 == System Requirements ==
 
@@ -43,16 +43,16 @@ To work properly, our plugin relays additional services to send order and client
 == Nuvei Requirements ==
 
 In the Merchant configuration:
-  * Enabled DMNs.
-  * On SiteID level "DMN  timeout" setting is recommended to be not less than 20 seconds, 30 seconds is better.
+  * DMNs enabled.
+  * On the Site ID level, “DMN timeout” setting should be not less than 20 seconds; 30 seconds is better.
 
 == Notes ==
 
-If you have installed a plugin version earlier than v1.3.0 and you are upgrading for the first time, then you should deactivate and activate plugin again after the upgrade, so new logs directory be created!
+If you have installed a plugin version earlier than v1.3.0 and you are upgrading for the first time, then you should deactivate and activate hte plugin again after the upgrade, so new logs directory be created!
 
-If you are used our plugin before v3.2.0, please change plugin setting "Status Authorized" in "Advanced Settings" tab to "On-hold"!
+If you are using a plugin version earlier than v3.2.0, please change the “Status Authorized” plugin setting in the “Advanced Settings” tab to “On-hold”!
 
-If you plan to install this plugin form WP store, but use a version downloaded from Nuvei's GIT repo, please remove the old plugin first!
+If you plan to install this plugin form the WordPress store, but use a version downloaded from Nuvei’s GIT repo, please remove the old plugin first!
 
 == Screenshots ==
 
@@ -62,6 +62,11 @@ If you plan to install this plugin form WP store, but use a version downloaded f
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.3.3 =
+* Added option to turn on/off the auto-void logic - plugin settings > General Settings > Allow Auto Void.
+* Added a custom system message when the plugin cannot find corresponding Order for some Sale/Auth DMN. At the beginning the message will be visible in the admin. If the user dismiss it, it will be visible only in plugin settings > Help Tools > Read Payment messages. The plugin will load the last 50 messages. From here you can permanently delete the messages.
+* The old README.md file was reduced and pointing to the current file.
 
 = 3.3.2 =
 * For testing purpose, to the Simply Connect was added parameter "webSdkEnv".

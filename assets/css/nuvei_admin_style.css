@@ -70,3 +70,22 @@ th {
     text-align: left;
 }
 /* the styles for edit terms form ::END */
+
+/* For the messages in the Help Tools */
+.description .nuvei_payments_msg {
+    display: grid !important;
+    grid-template-columns: auto auto; /* Two columns: one for the child span and one for the button */
+    align-items: center; /* Aligns children vertically in the center */
+    column-gap: 10px;
+    padding-right: 0px !important;
+    margin-top: 0px !important;
+}
+
+.description .nuvei_payments_msg span:first-child {
+    text-align: left;
+}
+
+.description .nuvei_payments_msg .notice-dismiss {
+    justify-self: end;
+    position: relative !important;
+}
