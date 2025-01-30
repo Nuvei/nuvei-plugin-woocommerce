@@ -1833,8 +1833,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'read_msgs'     => array(
 				'title' => __( 'Read Payment messages', 'nuvei-payments-for-woocommerce' ),
 				'type'  => 'payment_custom_msg',
-		// 'type'        => 'hidden',
-		// 'description' => $msgs_html,
 			),
 		);
 

@@ -369,11 +369,16 @@ function nuvei_pfw_ajax_action() {
 	if ( Nuvei_Pfw_Http::get_param( 'msgId', 'int', -1 ) >= 0 ) {
 		$messages = get_option( 'custom_system_messages', array() );
 
+        Nuvei_Pfw_Logger::write($messages);
+        
 		$msg_id = Nuvei_Pfw_Http::get_param( 'msgId', 'int' );
 
-		if ( isset( $messages[ $msg_id ] ) ) {
-			// remove the message
-			if ( $messages[ $msg_id ]['read'] ) {
+		if ( isset( $messages[ $msg_id ]['read'] ) ) {
+            // remove the message
+            if ( true === $messages[ $msg_id ]['read'] ) {
+                
+//            }
+//			if ( $messages[ $msg_id ]['read'] ) {
 				unset( $messages[ $msg_id ] );
 
 				// Re-index the array to maintain sequential keys (optional)
@@ -393,25 +398,24 @@ function nuvei_pfw_ajax_action() {
 
 	// get custom Payment messages
 	if ( Nuvei_Pfw_Http::get_param( 'getPaymentCustomMsgs', 'int' ) == 1 ) {
-		$all_msgs  = get_option( 'custom_system_messages', array() );
-		$last_msgs = array();
-		$cnt       = 1;
+		$all_msgs   = get_option( 'custom_system_messages', array() );
+		$last_msgs  = array();
+		$cnt        = 1;
+        $msgs_cnt   = 50;
 
+        Nuvei_Pfw_Logger::write($all_msgs);
+        
 		if ( empty( $all_msgs ) ) {
 			wp_send_json( $last_msgs );
 			wp_die();
 		}
 
 		foreach ( array_reverse( $all_msgs, true ) as $index => $msg ) {
-			if ( empty( $msg['created_by'] )
-				|| 'nuvei_payments' != $msg['created_by']
-				|| ! isset( $msg['read'] )
-				|| true === $msg['read']
-			) {
+			if ( empty( $msg['created_by'] ) || 'nuvei_payments' != $msg['created_by'] ) {
 				continue;
 			}
 
-			if ( $cnt >= 50 ) {
+			if ( $cnt >= $msgs_cnt ) {
 				break;
 			}
 
