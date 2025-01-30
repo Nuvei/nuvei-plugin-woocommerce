@@ -338,10 +338,10 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		}
 
 		// it is too early for Auto-Void
-//		if ( $curr_time - $order_request_time <= 1800 ) {
-//			Nuvei_Pfw_Logger::write( "Let's wait one more DMN try." );
-//			return 400; // lets wait more
-//		}
+		if ( $curr_time - $order_request_time <= 1800 ) {
+			Nuvei_Pfw_Logger::write( "Let's wait one more DMN try." );
+			return 400; // lets wait more
+		}
 		// /break Auto-Void process
 
 		$nuvei_gw = WC()->payment_gateways->payment_gateways()[ NUVEI_PFW_GATEWAY_NAME ];
