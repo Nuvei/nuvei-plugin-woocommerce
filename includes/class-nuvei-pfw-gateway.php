@@ -152,58 +152,56 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	 * @param array $data
 	 *
 	 * @return string
-	 *
-	 * @deprecated since version 3.2.3
 	 */
 	public function generate_nuvei_multiselect_html( $key, $data ) {
-		// prepare the list with Payment methods
-		// $get_st_obj    = new Nuvei_Pfw_Session_Token();
-		// $resp          = $get_st_obj->process();
-		// $session_token = ! empty( $resp['sessionToken'] ) ? $resp['sessionToken'] : '';
-		//
-		// $nuvei_blocked_pms_visible = array();
-		// $nuvei_blocked_pms         = explode( ',', $this->get_option( 'pm_black_list', '' ) );
-		// $pms                       = array(
-		// '' => __( 'Select payment methods...', 'nuvei-payments-for-woocommerce' ),
-		// );
-		//
-		// $get_apms_obj = new Nuvei_Pfw_Get_Apms( $this->settings );
-		// $resp         = $get_apms_obj->process( array( 'sessionToken' => $session_token ) );
-		//
-		// if ( ! empty( $resp['paymentMethods'] ) && is_array( $resp['paymentMethods'] ) ) {
-		// foreach ( $resp['paymentMethods'] as $data ) {
-		// the array for the select menu
-		// if ( ! empty( $data['paymentMethodDisplayName'][0]['message'] ) ) {
-		// $pms[ $data['paymentMethod'] ] = $data['paymentMethodDisplayName'][0]['message'];
-		// } else {
-		// $pms[ $data['paymentMethod'] ] = $data['paymentMethod'];
-		// }
-		//
-		// generate visible list
-		// if ( in_array( $data['paymentMethod'], $nuvei_blocked_pms ) ) {
-		// $nuvei_blocked_pms_visible[] = $pms[ $data['paymentMethod'] ];
-		// }
-		// }
-		// }
-		// prepare the list with Payment methods END
-		//
-		// $defaults = array(
-		// 'title'                     => __( 'Block Payment Methods', 'nuvei-payments-for-woocommerce' ),
-		// 'class'                     => 'nuvei_checkout_setting',
-		// 'css'                       => '',
-		// 'custom_attributes'         => array(),
-		// 'desc_tip'                  => false,
-		// 'merchant_pms'              => $pms,
-		// 'nuvei_blocked_pms'         => $nuvei_blocked_pms,
-		// 'nuvei_blocked_pms_visible' => implode( ', ', $nuvei_blocked_pms_visible ),
-		// );
-		//
-		// ob_start();
-		//
-		// $data = wp_parse_args( $data, $defaults );
-		// include_once dirname( NUVEI_PFW_PLUGIN_FILE ) . '/templates/admin/block-pms-select.php';
-		//
-		// return ob_get_clean();
+		# prepare the list with Payment methods
+		$get_st_obj    = new Nuvei_Pfw_Session_Token();
+		$resp          = $get_st_obj->process();
+		$session_token = ! empty( $resp['sessionToken'] ) ? $resp['sessionToken'] : '';
+
+		$nuvei_blocked_pms_visible = array();
+		$nuvei_blocked_pms         = explode( ',', $this->get_option( 'pm_black_list', '' ) );
+		$pms                       = array(
+			'' => __( 'Select payment methods...', 'nuvei-payments-for-woocommerce' ),
+		);
+
+		$get_apms_obj = new Nuvei_Pfw_Get_Apms( $this->settings );
+		$resp         = $get_apms_obj->process( array( 'sessionToken' => $session_token ) );
+
+		if ( ! empty( $resp['paymentMethods'] ) && is_array( $resp['paymentMethods'] ) ) {
+			foreach ( $resp['paymentMethods'] as $data ) {
+				// the array for the select menu
+				if ( ! empty( $data['paymentMethodDisplayName'][0]['message'] ) ) {
+					$pms[ $data['paymentMethod'] ] = $data['paymentMethodDisplayName'][0]['message'];
+				} else {
+					$pms[ $data['paymentMethod'] ] = $data['paymentMethod'];
+				}
+
+				// generate visible list
+				if ( in_array( $data['paymentMethod'], $nuvei_blocked_pms ) ) {
+					$nuvei_blocked_pms_visible[] = $pms[ $data['paymentMethod'] ];
+				}
+			}
+		}
+		# prepare the list with Payment methods END
+
+		$defaults = array(
+			'title'                     => __( 'Block Payment Methods', 'nuvei-payments-for-woocommerce' ),
+			'class'                     => 'nuvei_checkout_setting',
+			'css'                       => '',
+			'custom_attributes'         => array(),
+			'desc_tip'                  => false,
+			'merchant_pms'              => $pms,
+			'nuvei_blocked_pms'         => $nuvei_blocked_pms,
+			'nuvei_blocked_pms_visible' => implode( ', ', $nuvei_blocked_pms_visible ),
+		);
+
+		ob_start();
+
+		$data = wp_parse_args( $data, $defaults );
+		require_once dirname( NUVEI_PFW_PLUGIN_FILE ) . '/templates/admin/block-pms-select.php';
+
+		return ob_get_clean();
 	}
 
 	// Generate the HTML For the settings form.

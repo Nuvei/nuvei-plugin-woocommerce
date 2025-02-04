@@ -306,38 +306,35 @@ function nuveiGetCustomSystemMsgs() {
 	});
 }
 
-/**
- * @deprecated since v3.2.3
- */
 function nuveiDisablePm(_value) {
-//    console.log('nuveiDisablePm', _value);
-//    
-//    var selectedOptionId    = '#nuvei_block_pm_' + _value;
-//	var selectedPMs			= jQuery('#woocommerce_nuvei_pm_black_list').val();
-//	var selectedPMsVisible	= jQuery('#woocommerce_nuvei_pm_black_list_visible').val();
-//    
-//    jQuery(selectedOptionId).hide();
-//    
-//	// fill the hidden input
-//	if('' == selectedPMs) {
-//		selectedPMs += _value;
-//	}
-//	else {
-//		selectedPMs += ',' + _value;
-//	}
-//	
-//	// fill the visible input
-//	if('' == selectedPMsVisible) {
-//		selectedPMsVisible += jQuery(selectedOptionId).text();
-//	}
-//	else {
-//		selectedPMsVisible += ', ' + jQuery(selectedOptionId).text();
-//	}
-//	
-//	document.getElementById('nuvei_block_pms_multiselect').selectedIndex  = 0;
-//	
-//	jQuery('#woocommerce_nuvei_pm_black_list').val(selectedPMs);
-//	jQuery('#woocommerce_nuvei_pm_black_list_visible').val(selectedPMsVisible);
+    console.log('nuveiDisablePm', _value);
+    
+    let selectedOptionId    = '#nuvei_block_pm_' + _value;
+	let selectedPMs			= jQuery('#woocommerce_nuvei_pm_black_list').val();
+	let selectedPMsVisible	= jQuery('#woocommerce_nuvei_pm_black_list_visible').val();
+    
+    jQuery(selectedOptionId).hide();
+    
+	// fill the hidden input
+	if('' == selectedPMs) {
+		selectedPMs += _value;
+	}
+	else {
+		selectedPMs += ',' + _value;
+	}
+	
+	// fill the visible input
+	if('' == selectedPMsVisible) {
+		selectedPMsVisible += jQuery(selectedOptionId).text();
+	}
+	else {
+		selectedPMsVisible += ', ' + jQuery(selectedOptionId).text();
+	}
+	
+	document.getElementById('nuvei_block_pms_multiselect').selectedIndex  = 0;
+	
+	jQuery('#woocommerce_nuvei_pm_black_list').val(selectedPMs);
+	jQuery('#woocommerce_nuvei_pm_black_list_visible').val(selectedPMsVisible);
 }
 
 function nuveiCleanBlockedPMs() {
