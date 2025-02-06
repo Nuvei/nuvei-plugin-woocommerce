@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.7.1
-Stable tag: 3.3.3
+Stable tag: 3.4.0
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -63,12 +63,10 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 == Changelog ==
 
-= 3.3.3 =
+= 3.4.0 =
 * Added option to turn on/off the auto-void logic - plugin settings > General Settings > Allow Auto Void.
 * Added a custom system message when the plugin cannot find corresponding Order for some Sale/Auth DMN. At the beginning the message will be visible in the admin. If the user dismiss it, it will be visible only in plugin settings > Help Tools > Read Payment messages. The plugin will load the last 50 messages. From here you can permanently delete the messages.
 * The old README.md file was reduced and pointing to the current file.
-
-= 3.3.2 =
 * For testing purpose, to the Simply Connect was added parameter "webSdkEnv".
 * From the readme.txt was removed Contributor parameter.
 * Tested with WC 9.4.3.
