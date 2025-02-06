@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.7.1
-Stable tag: 3.4.0
+Stable tag: 3.4.1
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,10 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.4.1 =
+* Most of the plugin's hooks were moved into init callback method. In the plugin_loaded callback we will load only the text domain. The idea is to prevent using of translated texts before the domain is loaded.
+* All translated texts in the config file were moved in the main file.
 
 = 3.4.0 =
 * Added option to turn on/off the auto-void logic - plugin settings > General Settings > Allow Auto Void.
