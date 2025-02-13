@@ -36,8 +36,6 @@ const NUVEI_PFW_SESSION_OO_DETAILS   = 'nuvei_last_open_order_details'; // a ses
 const NUVEI_PFW_SESSION_PROD_DETAILS = 'nuvei_order_details'; // products details
 const NUVEI_PFW_LOG_REQUEST_PARAMS   = 'Request params';
 
-// define('NUVEI_PFW_SIMPLY_CONNECT_PATH', plugin_dir_url( __FILE__ ) . 'assets/js/nuveiSimplyConnect/');
-
 define(
 	'NUVEI_PFW_LOGS_DIR',
 	dirname( __DIR__, 2 ) . DIRECTORY_SEPARATOR

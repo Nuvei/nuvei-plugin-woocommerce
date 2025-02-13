@@ -124,4 +124,8 @@ class Nuvei_Pfw_Helper extends Nuvei_Pfw_Request {
 	public function helper_get_web_master_id() {
 		return $this->get_web_master_id();
 	}
+	
+	public function helper_get_plugin_version() {
+		return $this->get_plugin_version();
+	}
 }
