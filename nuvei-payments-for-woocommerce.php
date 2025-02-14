@@ -161,7 +161,7 @@ class Nuvei_Payments_For_Woocommerce
 
         // next actions are valid only when the plugin is enabled
         if (! isset( $wc_nuvei->settings['enabled'] ) || 'no' == $wc_nuvei->settings['enabled']) {
-            wp_die('The plugin is not enabled.');
+            return;
         }
         
         // for the thank-you page
