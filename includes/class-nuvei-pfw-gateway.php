@@ -865,7 +865,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 					'locale' => $locale,
 				),
 			),
-			'sourceApplication'      => NUVEI_PFW_SOURCE_APPLICATION,
+			'sourceApplication'		=> NUVEI_PFW_SOURCE_APPLICATION,
+			'fieldStyle'			=> json_decode( $this->get_option( 'simply_connect_style', '' ), true ),
 		);
 
 		// For the QA site only
@@ -1750,16 +1751,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'default' => 1,
 				'class'   => 'nuvei_checkout_setting',
 			),
-			// 'close_popup' => array(
-			// 'title'         => __( 'Auto-close APM Pop-Up', 'nuvei-payments-for-woocommerce' ),
-			// 'type'          => 'select',
-			// 'options'       => array(
-			// 1   => __( 'Yes (Recommended)', 'nuvei-payments-for-woocommerce' ),
-			// 0   => __( 'No', 'nuvei-payments-for-woocommerce' ),
-			// ),
-			// 'default'       => 1,
-			// 'class'         => 'nuvei_checkout_setting',
-			// ),
+			
 			'mask_user_data'           => array(
 				'title'       => __( 'Mask User Data into the Log', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'select',
@@ -1771,6 +1763,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'class'       => 'nuvei_checkout_setting',
 				'description' => __( 'If you disable this option, the user data will be completly exposed in the log records.', 'nuvei-payments-for-woocommerce' ),
 			),
+			
 			'log_level'                => array(
 				'title'       => __( 'Checkout Log level', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'select',
@@ -1787,6 +1780,27 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'description' => '0 ' . __( 'for "No logging".', 'nuvei-payments-for-woocommerce' ),
 				'class'       => 'nuvei_checkout_setting',
 			),
+			
+			'simply_connect_style'	=> array(
+				'title'       => __( 'Simply Connect Styling', 'nuvei-payments-for-woocommerce' ),
+				'description' => sprintf(
+					__( 'You can manipulate Simply Connect style from this filed. Please use valid JSON syntax as the example in the placeholder! For examples', 'nuvei-payments-for-woocommerce' )
+								. ' <a href="%s" class="class" target="_blank">%s</a>',
+					esc_html( 'https://docs.nuvei.com/documentation/accept-payment/web-sdk/nuvei-fields/nuvei-fields-styling/#example-javascript' ),
+					__( 'check the Documentation.', 'nuvei-payments-for-woocommerce' )
+				),
+				'type'        => 'textarea',
+				'class'       => 'nuvei_checkout_setting',
+				'placeholder' => '{
+	"base": {
+		"color": "#6b778c"
+	},
+	"invalid": {
+		"iconColor": "#FFC7EE"
+	}
+ }',
+			),
+			
 			'translation'              => array(
 				'title'       => __( 'Translations', 'nuvei-payments-for-woocommerce' ),
 				'description' => sprintf(

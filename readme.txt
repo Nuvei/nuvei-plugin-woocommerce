@@ -63,6 +63,11 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 == Changelog ==
 
+= 3.5.0 =
+* In the plugin_loaded callback we will load only the text domain. The idea is to prevent using of translated texts before the domain is loaded.
+* All translated texts from the config file were moved in the main file.
+* Added a possibility to modify Simply Connect style from the plugin settings.
+
 = 3.4.1 =
 * Most of the plugin's hooks were moved into init callback method. In the plugin_loaded callback we will load only the text domain. The idea is to prevent using of translated texts before the domain is loaded.
 * All translated texts in the config file were moved in the main file.
