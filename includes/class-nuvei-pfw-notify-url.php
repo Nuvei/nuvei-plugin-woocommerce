@@ -7,7 +7,8 @@ defined( 'ABSPATH' ) || exit;
  * Here we expect outside requests. Validating with nonce is not needed, because we validate by another specific parameter.
  */
 class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
-
+	
+	private $msg;
 
 	public function process() {
 		$logged_params = array(
