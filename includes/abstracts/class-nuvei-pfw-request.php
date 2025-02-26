@@ -120,7 +120,18 @@ abstract class Nuvei_Pfw_Request {
 	 * @return string
 	 */
 	protected function get_web_master_id() {
-		return 'WooCommerce ' . WOOCOMMERCE_VERSION . '; Plugin v' . nuvei_pfw_get_plugin_version();
+		return 'WooCommerce ' . WOOCOMMERCE_VERSION . '; Plugin v' . $this->get_plugin_version();
+	}
+	
+	/**
+	 * A helper function to get the plugin version.
+	 * 
+	 * @return string
+	 */
+	protected function get_plugin_version() {
+		$plugin_data = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
+		
+		return $plugin_data['Version'];
 	}
 
 	/**
