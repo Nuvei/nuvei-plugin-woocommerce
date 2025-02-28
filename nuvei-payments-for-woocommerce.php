@@ -10,10 +10,10 @@
  * Text Domain: nuvei-payments-for-woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.7.1
+ * Tested up to: 6.7.2
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 9.6.0
+ * WC tested up to: 9.7.0
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
