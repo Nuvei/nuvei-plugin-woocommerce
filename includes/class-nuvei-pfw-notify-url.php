@@ -405,6 +405,16 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 			&& ! empty( $resp['transactionId'] )
 		) {
 			Nuvei_Pfw_Logger::write( 'Auto-Void request approved.' );
+			
+			/**
+			 * Add custom hook after Approved Auto Void so other developers can use it.
+			 * The whole name is nuvei_payments_for_woocommerce_after_auto_void.
+			 * 
+			 * @param string $dmn_tr_id	The transacion ID by the DMN.
+			 * @param string			The client email by the DMN.
+			 */
+			do_action( 'nuvei_pfwc_after_auto_void', $dmn_tr_id, Nuvei_Pfw_Http::get_param( 'email', 'email' ) );
+			
 			wp_send_json_success( 'The searched Order does not exists, a Void request was made for this Transacrion.' );
 		}
 

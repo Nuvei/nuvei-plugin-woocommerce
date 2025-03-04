@@ -68,6 +68,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 * All translated texts from the config file were moved into the main file.
 * Added a possibility to modify Simply Connect style from the plugin settings.
 * Added a missing private msg variable in notify url class.
+* Added custom plugin hook - 'nuvei_pfwc_after_auto_void'. It will be available after approved auto void transaction. Two parameter will be passed in it - the transaction ID of the Sale/Auth and the client email, both parameters a based on the Sale/Auth DMN.
 
 = 3.4.1 =
 * Most of the plugin's hooks were moved into init callback method. In the plugin_loaded callback we will load only the text domain. The idea is to prevent using of translated texts before the domain is loaded.
