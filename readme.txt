@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.7.1
-Stable tag: 3.5.0
+Stable tag: 3.5.1
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,11 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.5.1 =
+* Decalare support of WordPress 6.8 and WooCommerce 9.8.1.
+* Fixed the type of few variables in the methods comments.
+* With previouse upload (v3.5.0) to the WordPress store, some of the changes were not uploaded. We appoligies for that! With this version we will upload all of the missing changes.
 
 = 3.5.0 =
 * In the plugin_loaded callback we will load only the text domain. The idea is to prevent using of translated texts before the domain is loaded.

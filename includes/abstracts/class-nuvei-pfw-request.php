@@ -473,8 +473,8 @@ abstract class Nuvei_Pfw_Request {
 	 * Call REST API with cURL post and get response.
 	 * The URL depends from the case.
 	 *
-	 * @param type  $method - API method
-	 * @param array $params - parameters
+	 * @param string $method   API method.
+	 * @param array $params    Parameters.
 	 *
 	 * @return mixed
 	 */
