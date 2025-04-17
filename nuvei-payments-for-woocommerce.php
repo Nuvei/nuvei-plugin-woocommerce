@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.5.0
+ * Version: 3.5.1
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
@@ -350,7 +350,7 @@ class Nuvei_Payments_For_Woocommerce
 	* @global Nuvei_Pfw_Gateway $wc_nuvei
 	* @global type $wpdb
 	*
-	* @param type $styles
+	* @param array $styles
 	*
 	* @return void
 	*/
@@ -445,7 +445,7 @@ class Nuvei_Payments_For_Woocommerce
 	/**
 	 * Add buttons for the Nuvei Order actions in Order details page.
 	 *
-	 * @param Order $order
+	 * @param WC_Order $order
 	 * @param bool  $return_html In WCFM context we need html parts to be returned in array.
 	 *
 	 * @return bool|array
@@ -641,7 +641,7 @@ class Nuvei_Payments_For_Woocommerce
 	 * Add buttons for the Nuvei Order actions in WCFM Order details page.
 	 *
 	 * @param int   $order_id
-	 * @param Order $order
+	 * @param WC_Order $order
 	 * @param array $line_items
 	 *
 	 * @return void
@@ -1178,9 +1178,9 @@ class Nuvei_Payments_For_Woocommerce
 	/**
 	 * Show custom data into order details, product data.
 	 *
-	 * @param type   $item_id
-	 * @param object $item
-	 * @param type   $_product
+	 * @param int          $item_id
+	 * @param object       $item
+	 * @param WC_Product   $_product
 	 *
 	 * @return void
 	 */
