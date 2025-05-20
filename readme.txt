@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.8
-Stable tag: 3.5.1
+Stable tag: 3.5.2
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.5.2 =
+* Replace "window.load" with "window.addEventListener('load'..." in nuvei_public.js. This will prevent some problems with other WP/WC plugins.
 
 = 3.5.1 =
 * Decalare support of WordPress 6.8 and WooCommerce 9.8.1.

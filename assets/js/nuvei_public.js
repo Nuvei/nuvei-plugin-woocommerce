@@ -516,7 +516,7 @@ jQuery(function() {
 });
 // document ready function END
 
-window.onload = function() {
+window.addEventListener('load', function() {
     // search for WC Shortcode form
     if (jQuery('form.woocommerce-checkout').length > 0) {
         nuveiCheckoutImplementation.name = 'shortcode';
@@ -536,4 +536,4 @@ window.onload = function() {
        console.log('No Checkout container found or page still loading.');
     }
     
-}
+});
