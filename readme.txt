@@ -64,7 +64,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 == Changelog ==
 
 = 3.5.3 =
-* Lowering the priority when call the hooks "woocommerce_after_checkout_validation" and "init" to handle the errors added from some additional plugins who modify the Checkout page.
+* Lowering the priority when call the hooks "woocommerce_after_checkout_validation" and "init" to handle the errors added from some third party plugins who modify the Checkout page.
 
 = 3.5.2 =
 * Replace "window.load" with "window.addEventListener('load'..." in nuvei_public.js. This will prevent some problems with other WP/WC plugins.
