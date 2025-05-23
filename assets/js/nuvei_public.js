@@ -363,15 +363,6 @@ function nuveiWcShortcode() {
             .append('<input id="nuvei_transaction_id" type="hidden" name="nuvei_transaction_id" value="" />');
     }
 
-    // clone the default Place Order button
-    jQuery('#place_order').clone().attr({
-        id: 'nuvei_place_order',
-        type: 'button',
-        onClick: 'someFunction()'
-    })
-        .insertAfter('#place_order');
-
-    jQuery('#place_order').html('Continue');
 }
 
 /**
@@ -505,8 +496,7 @@ jQuery(function() {
         }
     });
     
-    // When the client is on accout -> orders page and to pay an order
-    // created from the merchant.
+    // When the client is on accout -> orders page and pay an order created from the merchant.
     if (jQuery('#nuveiPayForExistingOrder').length > 0
         && ! isNaN(jQuery('#nuveiPayForExistingOrder').val())
         && jQuery('#nuveiPayForExistingOrder').val() > 0

@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.8
-Stable tag: 3.5.2
+Stable tag: 3.5.3
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.5.3 =
+* Lowering the priority when call the hooks "woocommerce_after_checkout_validation" and "init" to handle the errors added from some additional plugins who modify the Checkout page.
 
 = 3.5.2 =
 * Replace "window.load" with "window.addEventListener('load'..." in nuvei_public.js. This will prevent some problems with other WP/WC plugins.

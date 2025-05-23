@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.5.2
+ * Version: 3.5.3
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
@@ -34,7 +34,7 @@ add_action( 'plugins_loaded', function() {
 
 add_action( 'init', function() {
     Nuvei_Payments_For_Woocommerce::init();
-});
+}, 20 );
 
 class Nuvei_Payments_For_Woocommerce
 {
@@ -133,7 +133,7 @@ class Nuvei_Payments_For_Woocommerce
         add_action(
             'woocommerce_after_checkout_validation',
             array (__CLASS__, 'after_checkout_validation'),
-            9999,
+            PHP_INT_MAX, // set it on max, just to be sure we will catch all additional validation errors
             2
         );
 
@@ -862,20 +862,36 @@ class Nuvei_Payments_For_Woocommerce
 		wp_die();
 	}
 	
+	/**
+	 * We call this function after the user click the Place Order button.
+	 * Here we know if there are any errors in the checkout form.
+	 * 
+	 * @param array $data
+	 * @param array $errors
+	 */
 	public static function after_checkout_validation ( $data, $errors ) {
-		Nuvei_Pfw_Logger::write( array( $data, $errors ), 'action woocommerce_after_checkout_validation 1' );
-
-		if ( empty( $errors->errors )
-			&& NUVEI_PFW_GATEWAY_NAME == $data['payment_method']
-			&& empty( Nuvei_Pfw_Http::get_param( 'nuvei_transaction_id', 'int', 0, array(), true ) )
+	    Nuvei_Pfw_Logger::write( array( $data, $errors ), 'action woocommerce_after_checkout_validation start' );
+		
+		if ( $errors->has_errors() 
+		    || wc_notice_count( 'error' ) > 0 
+		    || ! empty( $errors->get_error_messages() ) 
+		    || ! empty( $errors->errors ) 
 		) {
-			if ( isset( self::$wc_nuvei->settings['integration_type'] )
-				&& 'cashier' != self::$wc_nuvei->settings['integration_type']
-			) {
-				Nuvei_Pfw_Logger::write( 'action woocommerce_after_checkout_validation' );
-
-				self::$wc_nuvei->call_checkout();
-			}
+		    Nuvei_Pfw_Logger::write('There are errors in the checkout form.');
+		    return;
+		}
+		
+		// Only proceed for your gateway
+		if ( NUVEI_PFW_GATEWAY_NAME !== $data['payment_method'] ) {
+		    return;
+		}
+		
+		if ( empty( Nuvei_Pfw_Http::get_param( 'nuvei_transaction_id', 'int', 0, array(), true ) ) 
+		    && isset( self::$wc_nuvei->settings['integration_type'] )
+		    && 'cashier' != self::$wc_nuvei->settings['integration_type']
+	    ) {
+			Nuvei_Pfw_Logger::write( 'action woocommerce_after_checkout_validation nuvei logic' );
+			self::$wc_nuvei->call_checkout();
 		}
 	}
 	
