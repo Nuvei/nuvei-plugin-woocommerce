@@ -34,23 +34,11 @@ function nuveiBlockIntegration() {
         canMakePayment: () => true,
         supports: {
             features: nuveiSettings.supports
-        },
-        submitPayment: ({billingData, shippingData, paymentData}) => {
-            console.log('Submitting payment with data:');
-            
-            return {
-                status: 'failure',
-                message: 'Payment failed. Please check your details and try again.'
-            };
-            
-            return Promise.reject( new Error( 'Sorry, your payment method failed – please try again.' ) );
         }
     };
 
     window.wc.wcBlocksRegistry.registerPaymentMethod(nuveiBlocksOptions);
     window.nuveiCheckoutSdkParams = nuveiSettings.checkoutParams;
-    
-    console.log('is there a button', jQuery('button.wc-block-components-checkout-place-order-button').length);
 }
 
 nuveiBlockIntegration();
