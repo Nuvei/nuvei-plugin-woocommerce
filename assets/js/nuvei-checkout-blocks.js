@@ -1,70 +1,56 @@
-//import React from 'react';
-//import { useSelect } from "rooks";
-
 function nuveiBlockIntegration() {
-//    const { VALIDATION_STORE_KEY } = window.wc.wcBlocksData;
-//    const store = select( VALIDATION_STORE_KEY );
-//    const hasValidationErrors = store.hasValidationErrors();
-//
-//const { validationError, validationErrorId } = useSelect( ( select ) => {
-//		const store = select( VALIDATION_STORE_KEY );
-//		return {
-//			validationError: store.getValidationError( propertyName ),
-//			validationErrorId: store.getValidationErrorId( elementId ),
-//		};
-//	} );
-//    
-    
-    var nuveiSettings   = window.wc.wcSettings.getSetting( 'nuvei_data', {} );
-    var nuveiLabel      = window.wp.htmlEntities.decodeEntities( nuveiSettings.title )
+    const nuveiSettings = window.wc.wcSettings.getSetting('nuvei_data', {});
+    const nuveiLabel = window.wp.htmlEntities.decodeEntities(nuveiSettings.title)
         || window.wp.i18n.__('Nuvei', 'nuvei-payments-for-woocommerce');
-    var label           = nuveiLabel;
-    
-    // eventualy add an icon
-    if (nuveiSettings.icon) {
-        label = wp.element.createElement(() =>
-            wp.element.createElement(
+
+    // Label component with optional icon
+    const NuveiLabel = () => (
+        nuveiSettings.icon
+            ? window.wp.element.createElement(
                 "span",
-                {
-                    style: {
-                        display: 'flex'
-                    }
-                },
-                wp.element.createElement(
+                { style: { display: 'flex', alignItems: 'center' } },
+                window.wp.element.createElement(
                     "img",
                     {
                         src: nuveiSettings.icon,
                         alt: nuveiLabel,
-                        style: {
-                            marginRight: 5
-                        }
+                        style: { marginRight: 5 }
                     }
                 ),
-                "  " + nuveiLabel
+                nuveiLabel
             )
-        );
-    }
-    
-    var Content = () => {
-        return window.wp.htmlEntities.decodeEntities( nuveiSettings.description || '' );
-    };
+            : nuveiLabel
+    );
+
+    const Content = () => window.wp.htmlEntities.decodeEntities(nuveiSettings.description || '');
 
     const nuveiBlocksOptions = {
-        name: 'nuvei', // the gateway ID
-        label: label,
-        content: Object( window.wp.element.createElement )( Content, null ),
-        edit: Object( window.wp.element.createElement )( Content, null ),
-        canMakePayment: () => true,
+        name: 'nuvei',
+        label: window.wp.element.createElement(NuveiLabel),
+        content: window.wp.element.createElement(Content),
+        edit: window.wp.element.createElement(Content),
         ariaLabel: nuveiLabel,
         placeOrderButtonLabel: window.wp.i18n.__('Continue', 'nuvei-payments-for-woocommerce'),
+        canMakePayment: () => true,
         supports: {
             features: nuveiSettings.supports
+        },
+        submitPayment: ({billingData, shippingData, paymentData}) => {
+            console.log('Submitting payment with data:');
+            
+            return {
+                status: 'failure',
+                message: 'Payment failed. Please check your details and try again.'
+            };
+            
+            return Promise.reject( new Error( 'Sorry, your payment method failed – please try again.' ) );
         }
     };
 
-    window.wc.wcBlocksRegistry.registerPaymentMethod( nuveiBlocksOptions );
+    window.wc.wcBlocksRegistry.registerPaymentMethod(nuveiBlocksOptions);
+    window.nuveiCheckoutSdkParams = nuveiSettings.checkoutParams;
     
-    window.nuveiCheckoutSdkParams = nuveiSettings.checkoutParams; // set SDK params
+    console.log('is there a button', jQuery('button.wc-block-components-checkout-place-order-button').length);
 }
 
 nuveiBlockIntegration();

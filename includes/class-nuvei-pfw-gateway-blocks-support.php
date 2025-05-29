@@ -38,20 +38,18 @@ final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 				'wp-html-entities',
 				'wp-i18n',
 			),
-			1,
-			true
+			'2025-05-29',
+		    true
 		);
 
 		return array( 'nuvei-checkout-blocks' );
 	}
 
 	public function get_payment_method_data() {
-		$settings = array(
-			'title'       => $this->settings['title'],
-			'description' => $this->settings['description'],
-			'icon'        => $this->plugin_dir_url . 'assets/icons/nuvei.png',
-		);
-
-		return $settings;
+	    return array(
+	        'title'       => $this->settings['title'],
+	        'description' => $this->settings['description'],
+	        'icon'        => $this->plugin_dir_url . 'assets/icons/nuvei.png',
+	    );
 	}
 }

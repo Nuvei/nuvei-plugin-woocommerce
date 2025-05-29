@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.8
-Stable tag: 3.5.3
+Stable tag: 3.5.4
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.5.4 =
+* Fix for the inconsistent load of Simply Connect with the Blocks Checkout.
 
 = 3.5.3 =
 * Lowering the priority when call the hooks "woocommerce_after_checkout_validation" and "init" to handle the errors added from some third party plugins who modify the Checkout page.

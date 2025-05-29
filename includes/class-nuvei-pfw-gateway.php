@@ -336,8 +336,13 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		}
 
 		// Success
-		$order->update_meta_data( NUVEI_PFW_ORDER_ID, $nuvei_oo_details['orderId'] );
-		$order->update_meta_data( NUVEI_PFW_CLIENT_UNIQUE_ID, $nuvei_oo_details['clientUniqueId'] );
+        if (!empty($nuvei_oo_details['orderId'])) {
+            $order->update_meta_data( NUVEI_PFW_ORDER_ID, $nuvei_oo_details['orderId'] );
+        }
+        if (!empty($nuvei_oo_details['clientUniqueId'])) {
+            $order->update_meta_data( NUVEI_PFW_CLIENT_UNIQUE_ID, $nuvei_oo_details['clientUniqueId'] );
+        }
+        
 		$order->update_status( $this->settings['status_auth'] );
 		$order->save();
 
