@@ -126,7 +126,7 @@ var nuveiCheckoutBlocks = {
             return true;
         }
         
-        if (jQuery('#nuvei_transaction_id')
+        if (jQuery('#nuvei_transaction_id').length > 0
             && jQuery('#nuvei_transaction_id').val() !== ''
         ) {
             console.log('We have nuvei_transaction_id. Submit the form.');
