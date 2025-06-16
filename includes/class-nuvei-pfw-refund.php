@@ -36,10 +36,7 @@ class Nuvei_Pfw_Refund extends Nuvei_Pfw_Request {
 			wp_send_json(
 				array(
 					'status' => 0,
-					'msg'    => __(
-						'The Order missing Transaction ID.',
-						'nuvei-payments-for-woocommerce'
-					),
+					'msg'    => __( 'The Order missing Transaction ID.', 'nuvei-payments-for-woocommerce' ),
 				)
 			);
 			exit;

@@ -63,6 +63,10 @@
     max-width: 25px !important;
 }
 
+#nuvei_checkout_container, #nuvei_go_back {
+    display: none;
+}
+
 #nuvei_checkout_container .nuvei_loader {
     max-width: 30px;
     margin-left: calc(50% - 15px);

@@ -6,8 +6,8 @@ defined( 'ABSPATH' ) || exit;
  * Put all Constants here.
  */
 
-const NUVEI_PFW_GATEWAY_TITLE = 'Nuvei';
-const NUVEI_PFW_GATEWAY_NAME  = 'nuvei'; // the name by WC recognize this Gateway
+const NUVEI_PFW_GATEWAY_TITLE   = 'Nuvei';
+const NUVEI_PFW_GATEWAY_NAME    = 'nuvei'; // the name by WC recognize this Gateway
 
 // keys for order metadata, we make them hiden when starts with underscore
 const NUVEI_PFW_TR_ID             = '_nuveiTrId'; // we will keep this data for fast search in Orders
@@ -35,8 +35,6 @@ const NUVEI_PFW_POPUP_AUTOCLOSE_URL = 'https://cdn.safecharge.com/safecharge_res
 const NUVEI_PFW_SESSION_OO_DETAILS   = 'nuvei_last_open_order_details'; // a session key
 const NUVEI_PFW_SESSION_PROD_DETAILS = 'nuvei_order_details'; // products details
 const NUVEI_PFW_LOG_REQUEST_PARAMS   = 'Request params';
-
-// define('NUVEI_PFW_SIMPLY_CONNECT_PATH', plugin_dir_url( __FILE__ ) . 'assets/js/nuveiSimplyConnect/');
 
 define(
 	'NUVEI_PFW_LOGS_DIR',
@@ -153,8 +151,43 @@ define(
 	)
 );
 
-define( 'NUVEI_PFW_BROWSERS_LIST', array( 'ucbrowser', 'firefox', 'chrome', 'opera', 'msie', 'edge', 'safari', 'blackberry', 'trident' ) );
+define( 'NUVEI_PFW_BROWSERS_LIST', array( 
+    'ucbrowser', 
+    'firefox', 
+    'chrome', 
+    'opera', 
+    'msie', 
+    'edge', 
+    'safari', 
+    'blackberry', 
+    'trident' 
+) );
 
-define( 'NUVEI_PFW_DEVICES_LIST', array( 'iphone', 'ipad', 'android', 'silk', 'blackberry', 'touch', 'linux', 'windows', 'mac' ) );
+define( 'NUVEI_PFW_DEVICES_LIST', array( 
+    'iphone', 
+    'ipad', 
+    'android', 
+    'silk', 
+    'blackberry', 
+    'touch', 
+    'linux', 
+    'windows', 
+    'mac' 
+) );
 
-define( 'NUVEI_PFW_DEVICES_TYPES_LIST', array( 'macintosh', 'tablet', 'mobile', 'tv', 'windows', 'linux', 'tv', 'smarttv', 'googletv', 'appletv', 'hbbtv', 'pov_tv', 'netcast.tv', 'bluray' ) );
+define( 'NUVEI_PFW_DEVICES_TYPES_LIST', array( 
+    'macintosh', 
+    'tablet', 
+    'mobile', 
+    'tv', 
+    'windows', 
+    'linux', 
+    'tv', 
+    'smarttv', 
+    'googletv', 
+    'appletv', 
+    'hbbtv', 
+    'pov_tv', 
+    'netcast.tv', 
+    'bluray' 
+) );

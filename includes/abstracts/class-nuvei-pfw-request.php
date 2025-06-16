@@ -585,6 +585,7 @@ abstract class Nuvei_Pfw_Request {
 			'ipAddress'  => '0.0.0.0',
 		);
 
+        // error
 		if ( empty( $_SERVER['HTTP_USER_AGENT'] ) ) {
 			$device_details['Warning'] = 'User Agent is empty.';
 
@@ -593,6 +594,7 @@ abstract class Nuvei_Pfw_Request {
 
 		$user_agent = strtolower( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) );
 
+        // error
 		if ( empty( $user_agent ) ) {
 			$device_details['Warning'] = 'Probably the merchant Server has problems with PHP filter_var function!';
 
