@@ -342,9 +342,11 @@ function showNuveiCheckout(_params) {
 	}
     
     // hide all possible coupon containers
-    nuveiCouponsContainers.each(function() {
-        jQuery(this).hide();
-    });
+    if (Object.keys(nuveiCouponsContainers).length > 0) {
+        nuveiCouponsContainers.each(function() {
+            jQuery(this).hide();
+        });
+    }
     
     jQuery('#nuvei_session_token').val(nuveiCheckoutSdkParams.sessionToken);
 	
@@ -510,6 +512,7 @@ function nuveiPayForExistingOrder(_orderId) {
     // add nuvei_checkout_container
     if(jQuery('form#order_review #nuvei_checkout_container').length == 0) {
         jQuery('form#order_review').before(nuveiCheckoutErrorCont);
+        jQuery('form#order_review .payment_box.payment_method_nuvei p').hide();
         jQuery('form#order_review .payment_box.payment_method_nuvei').append(nuveiCheckoutContainer);
     }
 
@@ -605,7 +608,6 @@ jQuery(function() {
 			jQuery("form.woocommerce-checkout .wpmc-step-payment *:not(.payment_box, form.woocommerce-checkout, #nuvei_checkout_container, script), .woocommerce-form-coupon-toggle").show();
 		}
 	});
-	// when on multistep checkout -> Checkout SDK view, someone click on previous/next button END
     
     // Wait for nuveiParams in the response.
     jQuery( document ).on( "ajaxComplete", function( event, xhr, settings ) {
