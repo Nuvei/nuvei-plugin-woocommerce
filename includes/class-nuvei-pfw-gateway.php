@@ -57,7 +57,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		// parent method to save Plugin Settings
 		add_action(
 			'woocommerce_update_options_payment_gateways_' . $this->id,
-			array( $this, 'process_admin_options' )
+// 			array( $this, 'process_admin_options' )
+			array( $this, 'validate_settings' )
 		);
 
 		/**
@@ -71,6 +72,75 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	public function is_available() {
 		return parent::is_available();
 	}
+    
+    /**
+     * Get the badge "Action needed". It is available only when the plugin is not enabled.
+     */
+	public function needs_setup() {
+	    return empty($this->get_option['test']) 
+            || empty($this->get_option['merchantId'])
+            || empty($this->get_option['merchantSiteId'])
+            || empty($this->get_option['secret'])
+            || empty($this->get_option['hash_type'])
+            || empty($this->get_option['payment_action'])
+        ;
+	}
+    
+	/**
+	 * A method to check if the plugin is in test mode.
+	 * 
+	 * @return boolean
+	 */
+    public function is_in_test_mode() {
+        return $this->get_option('test') === 'yes';
+    }
+    
+    /**
+     * Save the settings and validate them.
+     * 
+     * @return boolean
+     */
+    public function validate_settings() {
+        static $notice_shown = false;
+        
+        // first save the settings
+        parent::process_admin_options();
+        // then load them
+        $this->init_settings();
+        
+        $title = '';
+        
+        foreach ($this->form_fields as $field => $data) {
+            if ( !empty($data['required']) && empty($this->get_option($field, '')) ) {
+                $title = isset($data['title']) ? trim($data['title'], ' *') : $field;
+                break;
+            }
+        }
+        
+        if ( ! empty( $title ) ) {
+            // Disable gateway
+            $settings               = get_option( "woocommerce_{$this->id}_settings", [] );
+            $settings['enabled']    = 'no';
+            
+            update_option( "woocommerce_{$this->id}_settings", $settings );
+            
+            // Add admin notice only once
+            if ( ! $notice_shown ) {
+                $notice_shown = true;
+                
+                add_action( 'admin_notices', function() use ( $title ) {
+                    echo '<div class="notice notice-error"><p>';
+                    echo esc_html( sprintf( 
+                        __( 'Please fill the "%s" field to enable the payment gateway.', 'your-text-domain' ), $title ) );
+                    echo '</p></div>';
+                } );
+            }
+            
+            return false;
+        }
+        
+        return true;
+    }
 
 	/**
 	 * Generate Button HTML.
@@ -1485,7 +1555,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'test'              => array(
 				'title'    => __( 'Site Mode', 'nuvei-payments-for-woocommerce' ) . ' *',
 				'type'     => 'select',
-				'required' => 'required',
+				'required' => true,
 				'options'  => array(
 					''    => __( 'Select an option...', 'nuvei-payments-for-woocommerce' ),
 					'yes' => 'Sandbox',
@@ -1859,4 +1929,5 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			$this->form_fields = $fields;
 		}
 	}
+	
 }

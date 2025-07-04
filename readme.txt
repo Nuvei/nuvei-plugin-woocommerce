@@ -1,8 +1,8 @@
 === Nuvei Payments for Woocommerce ===
 
 Requires at least: 4.7
-Tested up to: 6.8
-Stable tag: 3.6.0
+Tested up to: 6.8.1
+Stable tag: 3.7.0
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,10 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.7.0 =
+* Implemented WC methods to visualise plugin status as "Action needed" when the plugin is not configured and "Test mode" when the plugin works on Sandbox.
+* Added validation of the plugin required settings.
 
 = 3.6.0 =
 * Added "Go Back" button on the Simply Connect page.
