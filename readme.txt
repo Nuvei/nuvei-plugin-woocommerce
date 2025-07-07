@@ -64,7 +64,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 == Changelog ==
 
 = 3.7.0 =
-* Implemented WC methods to visualise plugin status as "Action needed" when the plugin is not configured and "Test mode" when the plugin works on Sandbox.
+* Implemented WC methods to visualize plugin status as "Action needed" when the plugin is not configured and "Test mode" when the plugin works on Sandbox.
 * Added validation of the plugin required settings.
 
 = 3.6.0 =
