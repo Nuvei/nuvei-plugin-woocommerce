@@ -1,8 +1,8 @@
 const nuveiCheckoutContainer    = '<div id="nuvei_checkout_container">Loading...</div>';
 const nuveiCheckoutGoBackBtn    = `<p id="nuvei_go_back"><a href="#" onclick="nuveiCheckoutGoBack()">${scTrans.goBack}</a></p>`;
 const nuveiCheckoutErrorCont    = '<div id="nuvei_checkout_errors"></div>';
-const nuveiTrIdInput            = '<input id="nuvei_transaction_id" type="hidden" name="nuvei_transaction_id" value="" />';
-const nuveiSesTokenInput        = '<input id="nuvei_session_token" type="hidden" name="nuvei_session_token" value="" />';
+//const nuveiTrIdInput            = '<input id="nuvei_transaction_id" type="hidden" name="nuvei_transaction_id" value="" />';
+//const nuveiSesTokenInput        = '<input id="nuvei_session_token" type="hidden" name="nuvei_session_token" value="" />';
 
 var nuveiCheckoutSdkParams      = {};
 var nuveiCheckoutImplementation = {}; // shortcode, blocks or order-pay
@@ -33,14 +33,14 @@ var nuveiCheckoutBlocks = {
             }
 
             // if nuvei inputs does not exists - create them
-            if(jQuery('form.wc-block-components-form #nuvei_transaction_id').length == 0) {
-                jQuery('form.wc-block-components-form')
-                    .append(nuveiTrIdInput);
-            }
-            
-            if(jQuery('form.wc-block-components-form #nuvei_session_token').length == 0) {
-                jQuery('form.wc-block-components-form').append(nuveiSesTokenInput);
-            }
+//            if(jQuery('form.wc-block-components-form #nuvei_transaction_id').length == 0) {
+//                jQuery('form.wc-block-components-form')
+//                    .append(nuveiTrIdInput);
+//            }
+//            
+//            if(jQuery('form.wc-block-components-form #nuvei_session_token').length == 0) {
+//                jQuery('form.wc-block-components-form').append(nuveiSesTokenInput);
+//            }
         }
         catch(_e) {
             console.log('WC blocks logic fail.');
@@ -55,68 +55,10 @@ var nuveiCheckoutBlocks = {
     changePaymentBtn: function() {
         const blockPlaceOrderBtn = jQuery('button.wc-block-components-checkout-place-order-button');
         
-//        console.log('#nuvei_transaction_id', jQuery('#nuvei_transaction_id').val());
-//        
-//        if (!scTrans 
-//            || !scTrans.hasOwnProperty('checkoutIntegration')
-//            || 'sdk' !== scTrans.checkoutIntegration
-//            || blockPlaceOrderBtn.length === 0
-//        ) {
-//            return;
-//        }
-//        
-//        if (!jQuery('#nuvei_transaction_id')
-//            || jQuery('#nuvei_transaction_id').val() === ''
-//        ) {
-//            return;
-//        }
-        
         console.log('modify Continue button.');
 
         blockPlaceOrderBtn.on('click', function(e) {
             nuveiCheckoutBlocks.onCheckoutButtonClick(e);
-            
-//            e.preventDefault();
-//            e.stopImmediatePropagation();
-//
-//            const nuveiSelectedBlockPm  = jQuery('input[name=radio-control-wc-payment-method-options]:checked').val();
-//            let continueDefaultFlow     = false;
-//
-//            if (scTrans.paymentGatewayName != nuveiSelectedBlockPm) {
-//                blockPlaceOrderBtn.trigger('click');
-//                return true;
-//            }
-//
-//            // Check the form inputs.
-//            jQuery('form.wc-block-components-form').find('input').each(function() {
-//                let self = jQuery(this);
-//
-//                if (typeof self.attr('required') != 'undefined' && '' == self.val()) {
-//                    continueDefaultFlow = true;
-//                    return false;
-//                }
-//            });
-//
-//            // This will trigger default form check and will mark if some fields are missing.
-//            if (continueDefaultFlow) {
-//                console.log('submit 2');
-//
-//                blockPlaceOrderBtn.trigger('click');
-//                return true;
-//            }
-//            
-//            // Run Nuvei methods.
-//            if ( (!jQuery('#nuvei_transaction_id').val()
-//                    || '' != jQuery('#nuvei_transaction_id').val())
-//                && jQuery('.has-error').length == 0
-//            ) {
-//                nuveiCheckoutBlocks.getCheckoutData();
-//                return false;
-//            }
-//
-//            // continue with default flow
-//            blockPlaceOrderBtn.trigger('click');
-//            return true;
         });
     },
     
@@ -241,7 +183,9 @@ function nuveiAfterSdkResponse(resp) {
 		&& typeof resp.transactionId != 'undefined' 
 		&& resp.transactionId != 'undefined'
 	) {
-		jQuery('#nuvei_transaction_id').val(resp.transactionId);
+        nuveiSetTransactionField(resp.transactionId);
+
+//		jQuery('#nuvei_transaction_id').val(resp.transactionId);
         jQuery('#nuvei_checkout_container').html('<img class="nuvei_loader" src="' + scTrans.loaderUrl + '" />');
         
         switch(nuveiCheckoutImplementation.name) {
@@ -491,9 +435,9 @@ function nuveiWcShortcode() {
     jQuery('form.woocommerce-checkout').after(html);
 
     // if nuvei inputs doesnot exists - create them
-    if(jQuery('.woocommerce #nuvei_transaction_id').length == 0) {
-        jQuery('form.woocommerce-checkout').append(nuveiTrIdInput);
-    }
+//    if(jQuery('.woocommerce #nuvei_transaction_id').length == 0) {
+//        jQuery('form.woocommerce-checkout').append(nuveiTrIdInput);
+//    }
 
 }
 
@@ -517,9 +461,9 @@ function nuveiPayForExistingOrder(_orderId) {
     }
 
     // if nuvei inputs does not exists - creat them
-    if(jQuery('form#order_review #nuvei_transaction_id').length == 0) {
-        jQuery('form#order_review').append(nuveiTrIdInput);
-    }
+//    if(jQuery('form#order_review #nuvei_transaction_id').length == 0) {
+//        jQuery('form#order_review').append(nuveiTrIdInput);
+//    }
 
     // TODO - Prepare form - get Simply Connect params
     jQuery.ajax({
@@ -582,6 +526,45 @@ function nuveiPfwChangeThankYouPageMsg(new_title, new_msg, remove_wcs_pay_btn) {
     // if there is pay button on thank you page - hide it!
     if (remove_wcs_pay_btn && jQuery("a.pay").length > 0) {
         jQuery("a.pay").hide();
+    }
+}
+
+/**
+ * Add the transaction id field after we get the transaction result.
+ * 
+ * @param string trId
+ * @param string sessTok
+ */
+function nuveiSetTransactionField(trId, sessTok) {
+    let nuveiTrIdInput      = `<input id="nuvei_transaction_id" type="hidden" name="nuvei_transaction_id" value="${trId}" />`;
+//    let nuveiSesTokenInput  = `<input id="nuvei_session_token" type="hidden" name="nuvei_session_token" value="${sessTok}" />`;
+    
+    switch(nuveiCheckoutImplementation.name) {
+        case 'shortcode':
+            if(jQuery('.woocommerce #nuvei_transaction_id').length == 0) {
+                jQuery('form.woocommerce-checkout').append(nuveiTrIdInput);
+            }
+            
+            break;
+
+        case 'blocks':
+            if(jQuery('form.wc-block-components-form #nuvei_transaction_id').length == 0) {
+                jQuery('form.wc-block-components-form')
+                    .append(nuveiTrIdInput);
+            }
+            
+//            if(jQuery('form.wc-block-components-form #nuvei_session_token').length == 0) {
+//                jQuery('form.wc-block-components-form').append(nuveiSesTokenInput);
+//            }
+            
+            break;
+
+        case 'order-pay':
+            if(jQuery('form#order_review #nuvei_transaction_id').length == 0) {
+                jQuery('form#order_review').append(nuveiTrIdInput);
+            }
+            
+            break;
     }
 }
 
@@ -654,7 +637,6 @@ window.addEventListener('load', function() {
         
         Object.freeze(nuveiCheckoutImplementation);
         nuveiWcShortcode();
-//        nuveiCouponsContainers = nuveiGetTopCouponElements(jQuery("form.woocommerce-checkout"));
     }
     // search for WC Blocks
     else if (jQuery('div.wp-block-woocommerce-checkout').length > 0) {
@@ -664,8 +646,6 @@ window.addEventListener('load', function() {
         
         Object.freeze(nuveiCheckoutImplementation);
         nuveiCheckoutBlocks.prepareNuveiComponents();
-//        nuveiCheckoutBlocks.changePaymentBtn();
-//        nuveiCouponsContainers = nuveiGetTopCouponElements(jQuery(".wc-block-checkout .wc-block-checkout"));
     }
     else {
        console.log('No Checkout container found or page still loading.');
