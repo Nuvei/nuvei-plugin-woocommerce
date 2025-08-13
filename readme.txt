@@ -1,8 +1,8 @@
 === Nuvei Payments for Woocommerce ===
 
 Requires at least: 4.7
-Tested up to: 6.8.1
-Stable tag: 3.7.0
+Tested up to: 6.8.2
+Stable tag: 3.8.0
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.8.0 =
+* Exposed additional settings for Google Pay.
 
 = 3.7.0 =
 * Implemented WC methods to visualize plugin status as "Action needed" when the plugin is not configured and "Test mode" when the plugin works on Sandbox.

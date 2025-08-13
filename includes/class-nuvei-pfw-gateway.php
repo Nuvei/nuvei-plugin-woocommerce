@@ -497,63 +497,63 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	 *
 	 * @deprecated since version 3.1.0
 	 */
-	public function reorder() {
-		global $woocommerce;
-
-		$products_ids = json_decode( Nuvei_Pfw_Http::get_param( 'product_ids' ), true );
-
-		if ( empty( $products_ids ) || ! is_array( $products_ids ) ) {
-			wp_send_json(
-				array(
-					'status' => 0,
-					'msg'    => __( 'Problem with the Products IDs.', 'nuvei-payments-for-woocommerce' ),
-				)
-			);
-			exit;
-		}
-
-		$prod_factory  = new WC_Product_Factory();
-		$msg           = '';
-		$is_prod_added = false;
-
-		foreach ( $products_ids as $id ) {
-			$product = $prod_factory->get_product( $id );
-
-			if ( 'in-stock' != $product->get_availability()['class'] ) {
-				$msg = __( 'Some of the Products are not availavle, and are not added in the new Order.', 'nuvei-payments-for-woocommerce' );
-				continue;
-			}
-
-			$is_prod_added = true;
-			$woocommerce->cart->add_to_cart( $id );
-		}
-
-		if ( ! $is_prod_added ) {
-			wp_send_json(
-				array(
-					'status' => 0,
-					'msg'    => 'There are no added Products to the Cart.',
-				)
-			);
-			exit;
-		}
-
-		$cart_url = wc_get_cart_url();
-
-		if ( ! empty( $msg ) ) {
-			$cart_url .= strpos( $cart_url, '?' ) !== false ? '&sc_msg=' : '?sc_msg=';
-			$cart_url .= urlencode( $msg );
-		}
-
-		wp_send_json(
-			array(
-				'status'       => 1,
-				'msg'          => $msg,
-				'redirect_url' => wc_get_cart_url(),
-			)
-		);
-		exit;
-	}
+//	public function reorder() {
+//		global $woocommerce;
+//
+//		$products_ids = json_decode( Nuvei_Pfw_Http::get_param( 'product_ids' ), true );
+//
+//		if ( empty( $products_ids ) || ! is_array( $products_ids ) ) {
+//			wp_send_json(
+//				array(
+//					'status' => 0,
+//					'msg'    => __( 'Problem with the Products IDs.', 'nuvei-payments-for-woocommerce' ),
+//				)
+//			);
+//			exit;
+//		}
+//
+//		$prod_factory  = new WC_Product_Factory();
+//		$msg           = '';
+//		$is_prod_added = false;
+//
+//		foreach ( $products_ids as $id ) {
+//			$product = $prod_factory->get_product( $id );
+//
+//			if ( 'in-stock' != $product->get_availability()['class'] ) {
+//				$msg = __( 'Some of the Products are not availavle, and are not added in the new Order.', 'nuvei-payments-for-woocommerce' );
+//				continue;
+//			}
+//
+//			$is_prod_added = true;
+//			$woocommerce->cart->add_to_cart( $id );
+//		}
+//
+//		if ( ! $is_prod_added ) {
+//			wp_send_json(
+//				array(
+//					'status' => 0,
+//					'msg'    => 'There are no added Products to the Cart.',
+//				)
+//			);
+//			exit;
+//		}
+//
+//		$cart_url = wc_get_cart_url();
+//
+//		if ( ! empty( $msg ) ) {
+//			$cart_url .= strpos( $cart_url, '?' ) !== false ? '&sc_msg=' : '?sc_msg=';
+//			$cart_url .= urlencode( $msg );
+//		}
+//
+//		wp_send_json(
+//			array(
+//				'status'       => 1,
+//				'msg'          => $msg,
+//				'redirect_url' => wc_get_cart_url(),
+//			)
+//		);
+//		exit;
+//	}
 
 	/**
 	 * Download the Active Payment pPlans and save them to a json file.
@@ -832,7 +832,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		global $woocommerce;
 
-		// OpenOrder
+		// OpenOrder::START
 		$oo_obj  = new Nuvei_Pfw_Open_Order( $this->settings, $this->rest_params );
 		$oo_data = $oo_obj->process( array( 'order_id' => $order_id ) );
 
@@ -867,7 +867,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 			exit;
 		}
-		// /OpenOrder
+		// OpenOrder::END
 
 		$nuvei_helper          = new Nuvei_Pfw_Helper();
 		$ord_details           = $nuvei_helper->get_addresses( $this->rest_params );
@@ -904,7 +904,22 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		if ( 0 == $total ) {
 			$use_dcc = 'false';
 		}
-
+        
+        // add GooglePay settings
+        $google_pay_settings = array(
+            'locale' => $locale,
+        );
+        
+        if (!empty($g_merchat_id = $this->get_option( 'gpay_merchantId' ))) {
+            $google_pay_settings['merchantId'] = $g_merchat_id;
+        }
+        if (!empty($g_button_color = $this->get_option( 'gpay_buttonColor' ))) {
+            $google_pay_settings['buttonColor'] = $g_button_color;
+        }
+        if (!empty($g_button_type = $this->get_option( 'gpay_buttonType' ))) {
+            $google_pay_settings['buttonType'] = $g_button_type;
+        }
+        
 		$checkout_data = array( // use it in the template
 			'sessionToken'           => $oo_data['sessionToken'],
 			'env'                    => 'yes' == $this->get_option( 'test' ) ? 'test' : 'prod',
@@ -922,7 +937,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'pmBlacklist'            => empty( $pm_black_list ) ? null : $pm_black_list,
 			'alwaysCollectCvv'       => true,
 			'fullName'               => $ord_details['billingAddress']['firstName'] . ' '
-			. $oo_data['billingAddress']['lastName'],
+                . $oo_data['billingAddress']['lastName'],
 			'email'                  => $ord_details['billingAddress']['email'],
 			'payButton'              => $this->get_option( 'pay_button', 'amountButton' ),
 			'showResponseMessage'    => false, // shows/hide the response popups
@@ -933,11 +948,9 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'i18n'                   => json_decode( $this->get_option( 'translation', '' ), true ),
 			'theme'                  => $this->get_option( 'sdk_theme', 'accordion' ),
 			'apmConfig'              => array(
-				'googlePay' => array(
-					'locale' => $locale,
-				),
+				'googlePay' => $google_pay_settings,
 				'applePay'  => array(
-					'locale' => $locale,
+					'locale'    => $locale,
 				),
 			),
 			'sourceApplication'		=> NUVEI_PFW_SOURCE_APPLICATION,
@@ -1566,8 +1579,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'title'    => __( 'Merchant ID', 'nuvei-payments-for-woocommerce' ) . ' *',
 				'type'     => 'text',
 				'required' => true,
-					// phpcs:ignore
-		   'description' => __( 'Merchant ID is provided by Nuvei', 'nuvei-payments-for-woocommerce' ),
+                // phpcs:ignore
+                'description' => __( 'Merchant ID is provided by Nuvei', 'nuvei-payments-for-woocommerce' ),
 			),
 			'merchantSiteId'    => array(
 				'title'    => __( 'Merchant Site ID', 'nuvei-payments-for-woocommerce' ) . ' *',
@@ -1662,6 +1675,13 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				),
 				'default' => 0,
 			),
+            
+            # Common settings
+            'advanced_common_settings_title' => array(
+                'title'       => '<i>' . __( 'Common settings', 'nuvei-payments-for-woocommerce' ) . '</i>',
+                'type'        => 'title',
+//                'description' => __( 'Common settings for the Cashier and the Simply Connect', 'nuvei-payments-for-woocommerce' ),
+            ),
 			// pending dmn -> on-hold
 			'status_pending'           => array(
 				'title'       => __( 'Status Pending DMN', 'nuvei-payments-for-woocommerce' ),
@@ -1710,6 +1730,25 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'default'     => 'failed',
 				'description' => __( 'The status for Nuvei Failed transactions.', 'nuvei-payments-for-woocommerce' ),
 			),
+            'mask_user_data'           => array(
+				'title'       => __( 'Mask User Data into the Log', 'nuvei-payments-for-woocommerce' ),
+				'type'        => 'select',
+				'options'     => array(
+					1 => __( 'Yes (Recommended)', 'nuvei-payments-for-woocommerce' ),
+					0 => __( 'No', 'nuvei-payments-for-woocommerce' ),
+				),
+				'default'     => 1,
+//				'class'       => 'nuvei_checkout_setting',
+				'description' => __( 'If you disable this option, the user data will be completly exposed in the log records.', 'nuvei-payments-for-woocommerce' ),
+			),
+            
+            # Cashier settings
+            'advanced_cashier_settings_title' => array(
+                'title'       => '<i>' . __( 'Cashier settings', 'nuvei-payments-for-woocommerce' ) . '</i>',
+                'type'        => 'title',
+//                'description' => __( 'Common settings for the Cashier and the Simply Connect', 'nuvei-payments-for-woocommerce' ),
+                'class'       => 'nuvei_cashier_setting',
+            ),
 			'combine_cashier_products' => array(
 				'title'       => __( 'Combine Cashier Products into One', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'select',
@@ -1721,6 +1760,14 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				),
 				'class'       => 'nuvei_cashier_setting',
 			),
+            
+            # Simply connect settings
+            'advanced_simply_connnect_settings_title' => array(
+                'title'       => '<i>' . __( 'Simply Connect settings', 'nuvei-payments-for-woocommerce' ) . '</i>',
+                'type'        => 'title',
+//                'description' => __( 'Common settings for the Cashier and the Simply Connect', 'nuvei-payments-for-woocommerce' ),
+                'class'       => 'nuvei_checkout_setting',
+            ),
 			'allow_zero_checkout'      => array(
 				'title'       => __( 'Enable Nuvei GW for Zero-total products', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'select',
@@ -1826,19 +1873,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'default' => 1,
 				'class'   => 'nuvei_checkout_setting',
 			),
-			
-			'mask_user_data'           => array(
-				'title'       => __( 'Mask User Data into the Log', 'nuvei-payments-for-woocommerce' ),
-				'type'        => 'select',
-				'options'     => array(
-					1 => __( 'Yes (Recommended)', 'nuvei-payments-for-woocommerce' ),
-					0 => __( 'No', 'nuvei-payments-for-woocommerce' ),
-				),
-				'default'     => 1,
-				'class'       => 'nuvei_checkout_setting',
-				'description' => __( 'If you disable this option, the user data will be completly exposed in the log records.', 'nuvei-payments-for-woocommerce' ),
-			),
-			
 			'log_level'                => array(
 				'title'       => __( 'Checkout Log level', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'select',
@@ -1890,6 +1924,50 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				"doNotHonor":"you dont have enough money",
 				"DECLINE":"declined"
 }',
+			),
+            
+            # GooglePay settings
+            'advanced_gpay_settings_title' => array(
+                'title'       => '<i>' . __( 'Google Pay settings', 'nuvei-payments-for-woocommerce' ) . '</i>',
+                'type'        => 'title',
+                'class'       => 'nuvei_checkout_setting',
+//                'description' => __( 'Common settings for the Cashier and the Simply Connect', 'nuvei-payments-for-woocommerce' ),
+            ),
+            'gpay_merchantId'        => array(
+				'title'         => __( 'Google Merchant ID', 'nuvei-payments-for-woocommerce' ),
+				'type'          => 'text',
+                'description'   => sprintf(
+					__( 'For tests use BCR2DN6TZ6DP7P3X.', 'nuvei-payments-for-woocommerce' )
+                    . ' <a href="%s" class="class" target="_blank">%s</a>',
+					esc_html( 'https://docs.nuvei.com/documentation/global-guides/google-pay/google-pay-integration/google-pay-guide-checkout-sdk/#2-collect-the-card-details' ),
+					__( 'Check the Documentation.', 'nuvei-payments-for-woocommerce' )
+				),
+                'class'       => 'nuvei_checkout_setting',
+			),
+            'gpay_buttonColor'        => array(
+				'title'     => __( 'Google button color', 'nuvei-payments-for-woocommerce' ),
+				'type'      => 'select',
+                'options'   => array(
+					'black'     => __( 'Black', 'nuvei-payments-for-woocommerce' ),
+					'white'     => __( 'White', 'nuvei-payments-for-woocommerce' ),
+				),
+                'default'   => 'black',
+                'class'     => 'nuvei_checkout_setting',
+			),
+            'gpay_buttonType'        => array(
+				'title'     => __( 'Google button type', 'nuvei-payments-for-woocommerce' ),
+				'type'      => 'select',
+                'options'   => array(
+					'buy'       => __( 'Buy', 'nuvei-payments-for-woocommerce' ),
+					'book'      => __( 'Book', 'nuvei-payments-for-woocommerce' ),
+					'checkout'  => __( 'Checkout', 'nuvei-payments-for-woocommerce' ),
+					'order'     => __( 'Order', 'nuvei-payments-for-woocommerce' ),
+					'pay'       => __( 'Pay', 'nuvei-payments-for-woocommerce' ),
+					'plain'     => __( 'Plain', 'nuvei-payments-for-woocommerce' ),
+//					'subscribe' => __( 'Subscribe', 'nuvei-payments-for-woocommerce' ),
+				),
+                'default'   => 'buy',
+                'class'     => 'nuvei_checkout_setting',
 			),
 		);
 

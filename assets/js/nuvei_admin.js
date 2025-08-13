@@ -190,12 +190,12 @@ function scCreateRefund(question, showMsg, isWcfm) {
 
 function nuvei_show_hide_rest_settings() {
     if('sdk' == jQuery('#woocommerce_nuvei_integration_type').val()) {
-		jQuery('.nuvei_cashier_setting').closest('tr').hide();
-        jQuery('.nuvei_checkout_setting').closest('tr').show();
+		jQuery('.nuvei_cashier_setting').closest('tr, h3').hide();
+        jQuery('.nuvei_checkout_setting').closest('tr, h3').show();
 	}
     else {
-        jQuery('.nuvei_checkout_setting').closest('tr').hide();
-        jQuery('.nuvei_cashier_setting').closest('tr').show();
+        jQuery('.nuvei_checkout_setting').closest('tr, h3').hide();
+        jQuery('.nuvei_cashier_setting').closest('tr, h3').show();
     }
 }   
 
