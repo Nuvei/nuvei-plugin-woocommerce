@@ -131,7 +131,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 add_action( 'admin_notices', function() use ( $title ) {
                     echo '<div class="notice notice-error"><p>';
                     echo esc_html( sprintf( 
-                        __( 'Please fill the "%s" field to enable the payment gateway.', 'your-text-domain' ), $title ) );
+                        /* translators: %s: the title of the field */
+                        __( 'Please fill the "%s" field to enable the payment gateway.', 'nuvei-payments-for-woocommerce' ), $title ) );
                     echo '</p></div>';
                 } );
             }

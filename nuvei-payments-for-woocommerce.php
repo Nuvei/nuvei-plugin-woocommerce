@@ -45,11 +45,11 @@ class Nuvei_Payments_For_Woocommerce
             wp_die('Class WC_Payment_Gateway does not exists!');
         }
 
-        load_plugin_textdomain(
-            'nuvei-payments-for-woocommerce',
-            false,
-            dirname( plugin_basename( __FILE__ ) ) . '/languages/'
-        );
+//        load_plugin_textdomain(
+//            'nuvei-payments-for-woocommerce',
+//            false,
+//            dirname( plugin_basename( __FILE__ ) ) . '/languages/'
+//        );
         
         add_filter( 'woocommerce_payment_gateways', function ( $methods ) {
             $methods[] = 'Nuvei_Pfw_Gateway'; // get the name of the Gateway Class
