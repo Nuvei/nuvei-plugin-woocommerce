@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.8.0
+ * Version: 3.8.1
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
@@ -13,7 +13,7 @@
  * Tested up to: 6.8.2
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 10.0.4
+ * WC tested up to: 10.1.0
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -186,8 +186,8 @@ class Nuvei_Payments_For_Woocommerce
         }
         
         // for the thank-you page
-        add_action( 'woocommerce_thankyou', array (__CLASS__, 'thank_you_page_mod'), 100, 1 );
-
+        add_filter( 'woocommerce_thankyou_order_received_text', array (__CLASS__, 'thank_you_page_mod'), 10, 2 );
+        
         # For the custom column in the Order list
         // legacy
         add_action( 'manage_shop_order_posts_custom_column', array (__CLASS__, 'order_list_columns_edit'), 10, 2 );
@@ -292,8 +292,8 @@ class Nuvei_Payments_For_Woocommerce
             return;
         }
 
-//        global $wc_nuvei;
         global $wpdb;
+        global $wp;
 
         $plugin_url	= plugin_dir_url( __FILE__ );
         $sdkUrl     = NUVEI_PFW_SDK_URL_PROD;
@@ -317,7 +317,7 @@ class Nuvei_Payments_For_Woocommerce
             'nuvei_js_public',
             $plugin_url . 'assets/js/nuvei_public.js',
             array( 'jquery' ),
-            '2025-05-29',
+            '2025-08-15',
             false
         );
 
@@ -337,7 +337,33 @@ class Nuvei_Payments_For_Woocommerce
                         . '; Plugin v' . $helper->helper_get_plugin_version(),
             )
         );
-
+        
+        // if we are on the thankyou page set some variables
+        if (!empty($wp->query_vars['order-received']) 
+            && !empty( $order_key = Nuvei_Pfw_Http::get_param( 'key' ) )
+        ) {
+            $request_status     = Nuvei_Pfw_Http::get_request_status();
+            $order_id           = wc_get_order_id_by_order_key( $order_key );
+            $order              = wc_get_order( $order_id );
+            $removeWCSPayBtn    = false;
+            $new_title          = '';
+            
+            if ( $order->get_payment_method() == NUVEI_PFW_GATEWAY_NAME ) {
+                if ( 'error' == $request_status
+                    || 'fail' == strtolower( wc_clean( 'ppp_status' ) )
+                ) {
+                    $localizations['thankYouPageNewTitle'] = esc_html__( 'Order error', 'nuvei-payments-for-woocommerce' );
+                } elseif ( 'canceled' == $request_status ) {
+                    $localizations['thankYouPageNewTitle'] = esc_html__( 'Order canceled', 'nuvei-payments-for-woocommerce' );
+                }
+                
+                // when WCS is turn on, remove Pay button
+                if ( is_plugin_active( 'woocommerce-subscriptions' . DIRECTORY_SEPARATOR . 'woocommerce-subscriptions.php' ) ) {
+                    $localizations['thankYouPageRemovePayBtn'] = true;
+                }
+            }
+        }
+        
         wp_enqueue_script( 'nuvei_checkout_sdk' );
 
         wp_localize_script( 'nuvei_js_public', 'scTrans', $localizations );
@@ -1031,44 +1057,34 @@ class Nuvei_Payments_For_Woocommerce
 		update_term_meta( $term_id, 'endAfterPeriod', Nuvei_Pfw_Http::get_param( 'endAfterPeriod', 'int' ) );
 	}
 	
-	public static function thank_you_page_mod( $order_id ) {
-		$order = wc_get_order( $order_id );
-
+    /**
+     * Modify the text on the thankyou page.
+     * It is impossible to modify the title also. It will be done
+     * in a JS file.
+     * 
+     * @param string $thank_you_text
+     * @param WC_Order $order
+     * @return string
+     */
+	public static function thank_you_page_mod( $thank_you_text, $order ) {
 		if ( $order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME ) {
 			return;
 		}
 
-		// Modify title and the text on errors
-		$output             = '';
-		$new_title          = '';
-		$remove_wcs_pay_btn = false;
-		$request_status     = Nuvei_Pfw_Http::get_request_status();
-		$new_msg            = esc_html__(
-			'Please check your Order status for more information.',
-			'nuvei-payments-for-woocommerce'
-		);
-
-		if ( 'error' == $request_status
+		$request_status = Nuvei_Pfw_Http::get_request_status();
+		
+        if ( 'error' == $request_status
 			|| 'fail' == strtolower( Nuvei_Pfw_Http::get_param( 'ppp_status' ) )
-		) {
-			$new_title = esc_html__( 'Order error', 'nuvei-payments-for-woocommerce' );
-		} elseif ( 'canceled' == $request_status ) {
-			$new_title = esc_html__( 'Order canceled', 'nuvei-payments-for-woocommerce' );
+            || 'canceled' == $request_status
+        ) {
+            // return the new message
+			return esc_html__(
+                'Please check your Order status for more information.',
+                'nuvei-payments-for-woocommerce'
+            );
 		}
-
-		// /Modify title and the text on errors
-
-		// when WCS is turn on, remove Pay button
-		if ( is_plugin_active( 'woocommerce-subscriptions' . DIRECTORY_SEPARATOR . 'woocommerce-subscriptions.php' ) ) {
-			$removeWCSPayBtn = true;
-		}
-
-		wp_add_inline_script(
-			'nuvei_js_public',
-			$output,
-			'nuveiPfwChangeThankYouPageMsg("' . $new_title . '", "' . $new_msg . '", ' . $remove_wcs_pay_btn . ');',
-			'after'
-		);
+        
+        return $thank_you_text;
 	}
 	
 	/**

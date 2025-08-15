@@ -517,16 +517,29 @@ function nuveiPayForExistingOrder(_orderId) {
 }
 
 function nuveiPfwChangeThankYouPageMsg(new_title, new_msg, remove_wcs_pay_btn) {
-    // on error change thank you page title and message
-    if (new_title && '' != new_title) {
-        jQuery(".entry-title").html(new_title);
-        jQuery(".woocommerce-thankyou-order-received").html(new_msg);
-    }
+        alert(jQuery("h1").length);
+        
+        // on error change thank you page title and message
+        if (new_title && '' != new_title) {
+            console.log(jQuery("h1").length);
+            jQuery(".entry-title, h1").html(new_title);
+        }
+
+        // if there is pay button on thank you page - hide it!
+        if (remove_wcs_pay_btn && jQuery("a.pay").length > 0) {
+            jQuery("a.pay").hide();
+        }
     
-    // if there is pay button on thank you page - hide it!
-    if (remove_wcs_pay_btn && jQuery("a.pay").length > 0) {
-        jQuery("a.pay").hide();
-    }
+    // on error change thank you page title and message
+//    if (new_title && '' != new_title) {
+//        jQuery(".entry-title, h1").html(new_title);
+//        jQuery(".woocommerce-thankyou-order-received").html(new_msg);
+//    }
+//    
+//    // if there is pay button on thank you page - hide it!
+//    if (remove_wcs_pay_btn && jQuery("a.pay").length > 0) {
+//        jQuery("a.pay").hide();
+//    }
 }
 
 /**
@@ -624,6 +637,15 @@ jQuery(function() {
         }
     });
     observer.observe(document.body, { childList: true, subtree: true });
+    
+    // thankyou page modifications
+    if (typeof scTrans.thankYouPageNewTitle != 'undefined') {
+        jQuery(".entry-title, h1").html(scTrans.thankYouPageNewTitle);
+    }
+    // if there is pay button on thank you page - hide it!
+    if (scTrans.thankYouPageRemovePayBtn && jQuery("a.pay").length > 0) {
+        jQuery("a.pay").hide();
+    }
     
 });
 // document ready function END
