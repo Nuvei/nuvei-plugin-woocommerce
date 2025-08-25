@@ -35,7 +35,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		// required for the Store
 		$this->title       = $this->get_option( 'title', NUVEI_PFW_GATEWAY_TITLE );
-		$this->description = $this->get_option( 'description', $this->method_description );
+		$this->description = wp_kses_post('<div id="nuvei_checkout_container" data-placeholder="' . __('Please, fill all required fields to continue!', 'nuvei-payments-for-woocommerce') . '"></div>');
 		$this->plugin_data = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
 
 		// $this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page'])
@@ -1560,12 +1560,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'description' => __( 'This is the payment method which the user sees during checkout.', 'nuvei-payments-for-woocommerce' ),
 				'default'     => __( 'Secure Payments with Nuvei', 'nuvei-payments-for-woocommerce' ),
 			),
-			'description'       => array(
-				'title'       => __( 'Description', 'nuvei-payments-for-woocommerce' ),
-				'type'        => 'textarea',
-				'description' => __( 'This controls the description which the user sees during checkout.', 'nuvei-payments-for-woocommerce' ),
-				'default'     => 'Place order to get to our secured payment page to select your payment option',
-			),
+//			'description'       => array(
+//				'title'       => __( 'Description', 'nuvei-payments-for-woocommerce' ),
+//				'type'        => 'textarea',
+//				'description' => __( 'This controls the description which the user sees during checkout.', 'nuvei-payments-for-woocommerce' ),
+//				'default'     => 'Place order to get to our secured payment page to select your payment option',
+//			),
 			'test'              => array(
 				'title'    => __( 'Site Mode', 'nuvei-payments-for-woocommerce' ) . ' *',
 				'type'     => 'select',

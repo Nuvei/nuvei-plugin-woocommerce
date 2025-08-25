@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.8.1
+ * Version: 3.9.0
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
@@ -13,7 +13,7 @@
  * Tested up to: 6.8.2
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 10.1.0
+ * WC tested up to: 10.1.1
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
