@@ -42,7 +42,7 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 
 		$params = array(
 			'clientUniqueId'       => $data['order_id'],
-			'amount'               => 1000,
+			'amount'               => $amount,
 			'currency'             => $curr,
 			'relatedTransactionId' => $last_tr_id,
 			'url'                  => $notify_url,
