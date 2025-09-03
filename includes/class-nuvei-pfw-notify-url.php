@@ -652,18 +652,18 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		$dmn_amount = Nuvei_Pfw_Http::get_param( 'totalAmount', 'float' );
 
         // phpcs:ignore
-     $msg_transaction = '<b>' . $transaction_type . ' </b> ' 
+        $msg_transaction = '<b>' . $transaction_type . ' </b> ' 
 			. __( 'request', 'nuvei-payments-for-woocommerce' ) . '.<br/>';
 
 		$gw_data = $msg_transaction
-		. __( 'Response status: ', 'nuvei-payments-for-woocommerce' ) . '<b>' . $req_status . '</b>.<br/>'
-		. __( 'Payment Method: ', 'nuvei-payments-for-woocommerce' ) . Nuvei_Pfw_Http::get_param( 'payment_method' ) . '.<br/>'
-		. __( 'Transaction ID: ', 'nuvei-payments-for-woocommerce' ) . Nuvei_Pfw_Http::get_param( 'TransactionID', 'int' ) . '.<br/>'
-		. __( 'Related Transaction ID: ', 'nuvei-payments-for-woocommerce' )
-		. Nuvei_Pfw_Http::get_param( 'relatedTransactionId', 'int' ) . '.<br/>'
-		. __( 'Transaction Amount: ', 'nuvei-payments-for-woocommerce' )
-		. number_format( $dmn_amount, 2, '.', '' )
-		. ' ' . Nuvei_Pfw_Http::get_param( 'currency' ) . '.';
+            . __( 'Response status: ', 'nuvei-payments-for-woocommerce' ) . '<b>' . $req_status . '</b>.<br/>'
+            . __( 'Payment Method: ', 'nuvei-payments-for-woocommerce' ) . Nuvei_Pfw_Http::get_param( 'payment_method' ) . '.<br/>'
+            . __( 'Transaction ID: ', 'nuvei-payments-for-woocommerce' ) . Nuvei_Pfw_Http::get_param( 'TransactionID', 'int' ) . '.<br/>'
+            . __( 'Related Transaction ID: ', 'nuvei-payments-for-woocommerce' )
+            . Nuvei_Pfw_Http::get_param( 'relatedTransactionId', 'int' ) . '.<br/>'
+            . __( 'Transaction Amount: ', 'nuvei-payments-for-woocommerce' )
+            . number_format( $dmn_amount, 2, '.', '' )
+            . ' ' . Nuvei_Pfw_Http::get_param( 'currency' ) . '.';
 
 		$message = '';
 		$status  = $this->sc_order->get_status();
@@ -792,14 +792,14 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 				}
 
 				$message = $gw_data . '<br/>'
-				. ( ! empty( $err_code ) ? __( 'Error code: ', 'nuvei-payments-for-woocommerce' ) . $err_code . '<br/>' : '' )
-				. ( ! empty( $reason ) ? __( 'Reason: ', 'nuvei-payments-for-woocommerce' ) . $reason . '<br/>' : '' )
-				. ( ! empty( $message ) ? __( 'Message: ', 'nuvei-payments-for-woocommerce' ) . $message : '' );
+                	. ( ! empty( $err_code ) ? __( 'Error code: ', 'nuvei-payments-for-woocommerce' ) . $err_code . '<br/>' : '' )
+                    . ( ! empty( $reason ) ? __( 'Reason: ', 'nuvei-payments-for-woocommerce' ) . $reason . '<br/>' : '' )
+                    . ( ! empty( $message ) ? __( 'Message: ', 'nuvei-payments-for-woocommerce' ) . $message : '' );
 
 				if ( in_array( $transaction_type, array( 'Auth', 'Settle', 'Sale' ) ) ) {
 					$status = $this->nuvei_gw->get_option( 'status_fail' );
 				}
-				if ( 'Void' == $transaction_type ) {
+				if ( 'Void' == $transaction_type || 'Settle' == $transaction_type ) {
 					$status = $this->sc_order->get_meta( NUVEI_PFW_PREV_TRANS_STATUS );
 				}
 				if ( 'Refund' == $transaction_type ) {
@@ -1071,9 +1071,9 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	 * Method to handle Settle and Void DMN logic.
 	 *
 	 * @param int    $order_id
-	 * @param string $req_status       The DMN status parameter.
-	 * @param string $transaction_id   The Transaction ID.
-	 * @param mixed  $client_unique_id The Transaction ID.
+	 * @param string $req_status        The DMN status parameter.
+	 * @param string $transaction_type  The Transaction type.
+	 * @param mixed  $client_unique_id  The Transaction ID.
 	 *
 	 * @return void
 	 */

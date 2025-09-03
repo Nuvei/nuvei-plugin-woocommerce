@@ -66,6 +66,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 = 3.9.0 =
 * Simply Connect is loaded directly on the Checkout page, under Nuvei option. There is no more "second page".
 * The Description of the plugin was removed.
+* Fixed the logic for Nuvei's Orders action buttons. Now we do not hide buttons if the last action like Void or Settle failed.
 
 = 3.8.1 =
 * Fix for the missing error message on the "Thank you" page, when there is error.

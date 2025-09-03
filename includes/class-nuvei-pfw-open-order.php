@@ -12,7 +12,7 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 	 * Set is_ajax parameter to the Process metohd.
 	 *
 	 * @param array $plugin_settings
-	 * @param bool  $is_ajax
+	 * @param array $rest_params REST call params if any.
 	 */
 	public function __construct( array $plugin_settings, $rest_params = array() ) {
 		parent::__construct();

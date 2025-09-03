@@ -13,7 +13,7 @@
  * Tested up to: 6.8.2
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 10.1.1
+ * WC tested up to: 10.1.2
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -472,7 +472,7 @@ class Nuvei_Payments_For_Woocommerce
 	 * Add buttons for the Nuvei Order actions in Order details page.
 	 *
 	 * @param WC_Order $order
-	 * @param bool  $return_html In WCFM context we need html parts to be returned in array.
+	 * @param bool $return_html In WCFM context we need html parts to be returned in array.
 	 *
 	 * @return bool|array
 	 */
@@ -498,16 +498,17 @@ class Nuvei_Payments_For_Woocommerce
 		}
 
 		// to show Nuvei buttons we must be sure the order is paid via Nuvei Paygate
-		$order_id      = $order->get_id();
-		$helper        = new Nuvei_Pfw_Helper();
-		$ord_tr_id     = $helper->helper_get_tr_id( $order_id );
-		$order_total   = $order->get_total();
-		$order_data    = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
-		$last_tr_data  = array();
-		$order_refunds = array();
-		$ref_amount    = 0;
-		$order_time    = 0;
-		$html_elements = array(
+		$order_id               = $order->get_id();
+		$helper                 = new Nuvei_Pfw_Helper();
+		$ord_tr_id              = $helper->helper_get_tr_id( $order_id );
+		$order_total            = $order->get_total();
+		$order_data             = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
+		$last_tr_data           = array();
+		$last_approved_tr_data  = array();
+		$order_refunds          = array();
+		$ref_amount             = 0;
+		$order_time             = 0;
+		$html_elements          = array(
 			'showRefundBtn' => true,
 		);
 
@@ -533,9 +534,37 @@ class Nuvei_Payments_For_Woocommerce
 
 			return false;
 		}
+        
+        $last_tr_data = end( $order_data );
+        
+        /**
+		 * If the status is missing then DMN is not received or there is some error
+		 * with the transaction.
+		 * In case the Status is Pending this is an APM payment and the plugin still
+		 * wait for approval DMN. Till then no actions are allowed.
+		 * In above check we will hide the Refund button.
+		 */
+		if ( empty( $last_tr_data['status'] )
+//			|| 'approved' != strtolower( $last_tr_data['status'] )
+			|| 'pending' == strtolower( $last_tr_data['status'] )
+		) {
+			Nuvei_Pfw_Logger::write(
+				$last_tr_data,
+				'Last Transaction is not yet approved or the DMN didn\'t come yet.'
+			);
 
-		// get Refund transactions
+			// disable refund button
+			wp_add_inline_script(
+				'nuvei_js_admin',
+				'nuveiPfwDisableRefundBtn()',
+				'after'
+			);
+
+			return false;
+		}
+        
 		foreach ( array_reverse( $order_data ) as $tr ) {
+            // get Refund transactions
 			if ( isset( $tr['transactionType'], $tr['status'] )
 				&& in_array( $tr['transactionType'], array( 'Credit', 'Refund' ) )
 				&& 'approved' == strtolower( $tr['status'] )
@@ -543,10 +572,15 @@ class Nuvei_Payments_For_Woocommerce
 				$order_refunds[] = $tr;
 				$ref_amount     += $tr['totalAmount'];
 			}
+            
+            // get last approved transaction
+            if ('approved' == strtolower( $tr['status'] )) {
+                $last_approved_tr_data = $tr;
+            }
 		}
 
 		$order_payment_method = $helper->get_payment_method( $order_id );
-		$last_tr_data         = end( $order_data );
+		
 
 		if ( ! is_null( $order->get_date_created() ) ) {
 			$order_time = $order->get_date_created()->getTimestamp();
@@ -568,41 +602,23 @@ class Nuvei_Payments_For_Woocommerce
 				'after'
 			);
 
-				$html_elements['showRefundBtn'] = false;
+            $html_elements['showRefundBtn'] = false;
 		}
 
-		/**
-		 * Error. If last transaction is not Approved.
-		 *
-		 * If the status is missing then DMN is not received or there is some error
-		 * with the transaction.
-		 * In case the Status is Pending this is an APM payment and the plugin still
-		 * wait for approval DMN. Till then no actions are allowed.
-		 * In above check we will hide the Refund button if last Transaction is
-		 * Refund/Credit, but without Status.
-		 */
-		if ( empty( $last_tr_data['status'] )
-			|| 'approved' != strtolower( $last_tr_data['status'] )
-		) {
-			Nuvei_Pfw_Logger::write(
-				$last_tr_data,
-				'Last Transaction is not yet approved or the DMN didn\'t come yet.'
-			);
-
-			// disable refund button
-			wp_add_inline_script(
-				'nuvei_js_admin',
-				'nuveiPfwDisableRefundBtn()',
-				'after'
-			);
-
-			return false;
-		}
-
-		// Show VOID button
+        // Show VOID button
+        /**
+         * Show Void button. To do it the follow conditions must pass:
+         * 
+         * the payment must be CC;
+         * there are no refunds on the Order;
+         * the last approved transaction must be Sale, Settle or Auth;
+         * the Total must be greater than 0;
+         * the Void must be triggered no more than 48 hours after the last approved transaction;
+         */
 		if ( 'cc_card' == $order_payment_method
 			&& empty( $order_refunds )
-			&& in_array( $last_tr_data['transactionType'], array( 'Sale', 'Settle', 'Auth' ) )
+//			&& in_array( $last_tr_data['transactionType'], array( 'Sale', 'Settle', 'Auth' ) )
+			&& in_array( $last_approved_tr_data['transactionType'], array( 'Sale', 'Settle', 'Auth' ) )
 			&& (float) $order_total > 0
 			&& time() < $order_time + 172800 // 48 hours
 		) {
@@ -637,7 +653,8 @@ class Nuvei_Payments_For_Woocommerce
 		}
 
 		// show SETTLE button ONLY if transaction type IS Auth and the Total is not 0
-		if ( 'Auth' == $last_tr_data['transactionType']
+//		if ( 'Auth' == $last_tr_data['transactionType']
+		if ( 'Auth' == $last_approved_tr_data['transactionType']
 			&& $order_total > 0
 		) {
 			$question = sprintf(
@@ -1067,7 +1084,7 @@ class Nuvei_Payments_For_Woocommerce
      * @return string
      */
 	public static function thank_you_page_mod( $thank_you_text, $order ) {
-		if ( $order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME ) {
+		if (!$order || $order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME ) {
 			return;
 		}
 

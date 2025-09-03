@@ -1,4 +1,7 @@
-const nuveiCheckoutBlockPayBtn = '.wc-block-components-checkout-place-order-button';
+const nuveiCheckoutBlockFormClass   = 'form.wc-block-components-form';
+const nuveiCheckoutBlockPayBtn      = '.wc-block-components-checkout-place-order-button';
+const nuveiCheckoutBlockPMethodName = 'input[name="radio-control-wc-payment-method-options"]';
+const nuveiCheckoutBlockContText    = window.wp.i18n.__('The Checkout form must be valid to continue.', 'nuvei-payments-for-woocommerce');
 
 /**
  * Checks if the Checkout form is valid.
@@ -8,15 +11,20 @@ const nuveiCheckoutBlockPayBtn = '.wc-block-components-checkout-place-order-butt
 function nuveiIsCheckoutBlocksFormValid() {
    console.log('call nuveiIsCheckoutBlocksFormValid');
 
-   if (!document.querySelector(nuveiCheckoutBlockFormClass)) {
-       console.log('the checkout form does not exists yet.', );
-       return false;
-   }
-
-   if (!document.querySelector(nuveiCheckoutBlockFormClass).checkValidity()) {
-       console.log('checkValidity() returns false.', );
-       return false;
-   }
+    // error
+    if (!document.querySelector(nuveiCheckoutBlockFormClass)
+        || !document.querySelector(nuveiCheckoutBlockFormClass).checkValidity()
+    ) {
+        console.log('The checkout form is not valid.');
+        
+        if (simplyConnect && simplyConnect.hasOwnProperty('destroy')) {
+            simplyConnect.destroy();
+        }
+        
+        jQuery('#nuvei_checkout_container').html(nuveiCheckoutBlockContText);
+        
+        return false;
+    }
 
    let isFormValid = true;
 
@@ -77,7 +85,7 @@ function nuveiIsCheckoutBlocksFormValid() {
         return window.wp.element.createElement(
             'div',
             { id: 'nuvei_checkout_container' },
-            window.wp.i18n.__('The Checkout form must be valid to continue.', 'nuvei-payments-for-woocommerce')
+            nuveiCheckoutBlockContText
         );
     };
 
@@ -98,6 +106,11 @@ function nuveiIsCheckoutBlocksFormValid() {
 })();
 
 jQuery(function() {
+    // when page loaded hide the default payment button if Nuvei is select as payment provider
+    if ('nuvei' === jQuery(nuveiCheckoutBlockPMethodName + ':checked').val()) {
+        jQuery(nuveiCheckoutBlockPayBtn).hide();
+    }
+    
     // try to validate the checkout form on each field change
     jQuery(nuveiCheckoutBlockFormClass).on('change', 'input[id^="billing-"], input[id^="shipping-"], select[id^="billing-"], select[id^="shipping-"]', function() {
         console.log('some of the checkout fileds was changed, check the form');
@@ -107,6 +120,16 @@ jQuery(function() {
                 nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, nuveiCheckoutBlockPayBtn);
             }
         }, 1000);
+    });
+    
+    // Show/Hide the default payment button when change the payment provider
+    jQuery(nuveiCheckoutBlockPMethodName).on('change', function() {
+        if ('nuvei' !== jQuery(nuveiCheckoutBlockPMethodName + ':checked').val()) {
+            jQuery(nuveiCheckoutBlockPayBtn).show();
+        }
+        else {
+            jQuery(nuveiCheckoutBlockPayBtn).hide();
+        }
     });
     
     // WP Blocks subscriber

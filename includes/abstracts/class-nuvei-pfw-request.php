@@ -142,7 +142,7 @@ abstract class Nuvei_Pfw_Request {
 	 * @return array
 	 */
 	protected function get_order_addresses() {
-			Nuvei_Pfw_Logger::write( 'get_order_addresses()' );
+        Nuvei_Pfw_Logger::write( 'get_order_addresses()' );
 
 		// REST API flow
 		if ( ! empty( $this->rest_params ) ) {
@@ -191,13 +191,13 @@ abstract class Nuvei_Pfw_Request {
 
 		$billing_address         = array();
 		$cart                    = $woocommerce->cart;
-			$existing_order_data = array();
+        $existing_order_data    = array();
 
 		if ( ! empty( $this->sc_order ) ) {
 			$existing_order_data = $this->sc_order->get_data();
 		}
 
-		// Set billing params.
+		# Set billing params.
 		// billing_first_name
 		$bfn = $this->get_scformdata_address_parts( 'first_name' );
 
@@ -438,7 +438,7 @@ abstract class Nuvei_Pfw_Request {
 	}
 
 	/**
-	 * A helper function to safty check for, and get address parameters from the store request.
+	 * A helper function to safety check for, and get address parameters from the store request.
 	 *
 	 * @param string $field The field we are looking for.
 	 * @param string $group The address group - shipping or billing.
@@ -463,7 +463,7 @@ abstract class Nuvei_Pfw_Request {
 
 		// additional check for the email
 		if ( 'email' == $field && ! empty( $_REQUEST['scFormData']['email'] ) ) {
-			$be = trim( sanitize_email( wp_unslash( $_REQUEST['scFormData']['email'] ) ) );
+			return trim( sanitize_email( wp_unslash( $_REQUEST['scFormData']['email'] ) ) );
 		}
 
 		return '';
@@ -1323,7 +1323,7 @@ abstract class Nuvei_Pfw_Request {
 	 * @return array
 	 */
 	private function validate_parameters( $params ) {
-		Nuvei_Pfw_Logger::write( 'validate_parameters' );
+		Nuvei_Pfw_Logger::write( $params, 'validate_parameters' );
 
 		// directly check the mails
 		if ( isset( $params['billingAddress']['email'] ) ) {
