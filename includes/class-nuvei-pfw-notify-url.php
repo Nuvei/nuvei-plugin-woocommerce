@@ -645,7 +645,10 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	 */
 	private function change_order_status( $order_id, $req_status, $transaction_type, $refund_id = null ) {
 		Nuvei_Pfw_Logger::write(
-			'Order ' . $order_id . ' was ' . $req_status,
+            [
+                'current order' => $order_id,
+                'DMN status'    => $req_status,
+            ],
 			'Nuvei change_order_status()'
 		);
 
@@ -668,7 +671,15 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		$message = '';
 		$status  = $this->sc_order->get_status();
 
-		Nuvei_Pfw_Logger::write( array( $status, $req_status, $transaction_type ), 'order status' );
+		Nuvei_Pfw_Logger::write( 
+            array( 
+                'Order status, order->get_status()' => $status, 
+                'order PREV_TRANS_STATUS'           => $this->sc_order->get_meta( NUVEI_PFW_PREV_TRANS_STATUS ), 
+                'DMN status'                        => $req_status, 
+                'transaction type'                  => $transaction_type 
+            ), 
+            'order status' 
+        );
 
 		switch ( $req_status ) {
 			case 'CANCELED':
@@ -796,17 +807,23 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
                     . ( ! empty( $reason ) ? __( 'Reason: ', 'nuvei-payments-for-woocommerce' ) . $reason . '<br/>' : '' )
                     . ( ! empty( $message ) ? __( 'Message: ', 'nuvei-payments-for-woocommerce' ) . $message : '' );
 
-				if ( in_array( $transaction_type, array( 'Auth', 'Settle', 'Sale' ) ) ) {
+                $this->msg['class'] = 'woocommerce_message';
+                
+//				if ( in_array( $transaction_type, array( 'Auth', 'Settle', 'Sale' ) ) ) {
+				if ( in_array( $transaction_type, array( 'Auth', 'Sale' ) ) ) {
 					$status = $this->nuvei_gw->get_option( 'status_fail' );
+                    break;
 				}
-				if ( 'Void' == $transaction_type || 'Settle' == $transaction_type ) {
+//				if ( 'Void' == $transaction_type || 'Settle' == $transaction_type ) {
+				if ( in_array( $transaction_type, array( 'Void', 'Settle' ) ) ) {
 					$status = $this->sc_order->get_meta( NUVEI_PFW_PREV_TRANS_STATUS );
+                    break;
 				}
 				if ( 'Refund' == $transaction_type ) {
 					$status = $this->nuvei_gw->get_option( 'status_paid' );
+                    break;
 				}
 
-				$this->msg['class'] = 'woocommerce_message';
 				break;
 
 			case 'PENDING':
@@ -820,16 +837,15 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 			$this->sc_order->add_order_note( $this->msg['message'] );
 		}
 
-		$this->sc_order->update_status( $status );
-
-		Nuvei_Pfw_Logger::write(
+        Nuvei_Pfw_Logger::write(
 			array(
 				'$order_id' => $order_id,
 				'$status'   => $status,
-			// '$message'  => $message,
 			),
-			'Order Status saved.'
+			'Order Status before save.'
 		);
+        
+		$this->sc_order->update_status( $status );
 	}
 
 	private function sum_order_refunds() {

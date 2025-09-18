@@ -73,7 +73,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 = 3.8.0 =
 * Exposed additional settings for Google Pay.
-* Do not load the text domain anymore using load_plugin_textdomain(), buy WordPress recommendation.
+* Do not load the text domain anymore using load_plugin_textdomain(), by WordPress recommendation.
 * Updated the language template file.
 
 = 3.7.0 =

@@ -22,7 +22,11 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 			|| empty( $data['action'] )
 			|| empty( $data['method'] )
 		) {
-			Nuvei_Pfw_Logger::write( $data, 'Nuvei_Pfw_Settle_Void error missing mandatoriy parameters.' );
+			Nuvei_Pfw_Logger::write( 
+                $data, 
+                'Nuvei_Pfw_Settle_Void error missing mandatoriy parameters.', 
+                'TRACE' 
+            );
 			return false;
 		}
 

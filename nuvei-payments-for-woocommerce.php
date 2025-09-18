@@ -514,7 +514,7 @@ class Nuvei_Payments_For_Woocommerce
 
 		// error
 		if ( empty( $ord_tr_id ) ) {
-			Nuvei_Pfw_Logger::write( $ord_tr_id, 'Invalid Transaction ID! We will not add any buttons.' );
+			Nuvei_Pfw_Logger::write( $ord_tr_id, 'Invalid Transaction ID! We will not add any buttons.', 'TRACE' );
 			return false;
 		}
 
@@ -522,7 +522,8 @@ class Nuvei_Payments_For_Woocommerce
 		if ( empty( $order_data ) || ! is_array( $order_data ) ) {
 			Nuvei_Pfw_Logger::write(
 				$order_data,
-				'Missing or wrong Nuvei transactions data for the order. We will not add any buttons.'
+				'Missing or wrong Nuvei transactions data for the order. We will not add any buttons.', 
+                'TRACE'
 			);
 
 			// disable refund button
@@ -550,7 +551,8 @@ class Nuvei_Payments_For_Woocommerce
 		) {
 			Nuvei_Pfw_Logger::write(
 				$last_tr_data,
-				'Last Transaction is not yet approved or the DMN didn\'t come yet.'
+				'Last Transaction is not yet approved or the DMN didn\'t come yet.', 
+                'TRACE'
 			);
 
 			// disable refund button
@@ -563,7 +565,7 @@ class Nuvei_Payments_For_Woocommerce
 			return false;
 		}
         
-		foreach ( array_reverse( $order_data ) as $tr ) {
+		foreach ( array_reverse( $order_data, false ) as $tr ) {
             // get Refund transactions
 			if ( isset( $tr['transactionType'], $tr['status'] )
 				&& in_array( $tr['transactionType'], array( 'Credit', 'Refund' ) )
@@ -574,14 +576,16 @@ class Nuvei_Payments_For_Woocommerce
 			}
             
             // get last approved transaction
-            if ('approved' == strtolower( $tr['status'] )) {
+            if (empty($last_approved_tr_data)
+                && !empty($tr['status']) 
+                && 'approved' == strtolower( $tr['status'] )
+            ) {
                 $last_approved_tr_data = $tr;
             }
 		}
-
+        
 		$order_payment_method = $helper->get_payment_method( $order_id );
 		
-
 		if ( ! is_null( $order->get_date_created() ) ) {
 			$order_time = $order->get_date_created()->getTimestamp();
 		}
@@ -591,8 +595,10 @@ class Nuvei_Payments_For_Woocommerce
 
 		// hide Refund Button, it is visible by default
 		if ( ! in_array( $order_payment_method, NUVEI_PFW_PMS_REFUND_VOID )
-			|| ! in_array( $last_tr_data['transactionType'], array( 'Sale', 'Settle', 'Credit', 'Refund' ) )
-			|| 'approved' != strtolower( $last_tr_data['status'] )
+//			|| ! in_array( $last_tr_data['transactionType'], array( 'Sale', 'Settle', 'Credit', 'Refund' ) )
+			|| ! in_array( $last_approved_tr_data['transactionType'], array( 'Sale', 'Settle', 'Credit', 'Refund' ) )
+//			|| 'approved' != strtolower( $last_tr_data['status'] )
+			|| 'approved' != strtolower( $last_approved_tr_data['status'] )
 			|| 0 == $order_total
 			|| $ref_amount >= $order_total
 		) {
@@ -605,7 +611,6 @@ class Nuvei_Payments_For_Woocommerce
             $html_elements['showRefundBtn'] = false;
 		}
 
-        // Show VOID button
         /**
          * Show Void button. To do it the follow conditions must pass:
          * 

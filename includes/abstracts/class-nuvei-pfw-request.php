@@ -1147,7 +1147,13 @@ abstract class Nuvei_Pfw_Request {
 	 * @return void
 	 */
 	protected function save_transaction_data( $params = array(), $wc_refund_id = null ) {
-		Nuvei_Pfw_Logger::write( array( $params, $wc_refund_id ), 'save_transaction_data()' );
+		Nuvei_Pfw_Logger::write( 
+            array( 
+                '$params'       => $params, 
+                '$wc_refund_id' => $wc_refund_id, 
+            ), 
+            'save_transaction_data() incoming method parameters' 
+        );
 
 		$transaction_id = Nuvei_Pfw_Http::get_param( 'TransactionID', 'int', '', $params );
 
@@ -1168,6 +1174,14 @@ abstract class Nuvei_Pfw_Request {
 
 		$transaction_type = Nuvei_Pfw_Http::get_param( 'transactionType', 'string', '', $params );
 		$status           = Nuvei_Pfw_Http::get_request_status();
+        
+        Nuvei_Pfw_Logger::write( 
+            [
+                '$transaction_type' => $transaction_type,
+                '$status'           => $status,
+            ],
+            'save_transaction_data() paramters from DMN or REST response' 
+        );
 
 		// check for already existing data
 		if ( ! empty( $transactions_data[ $transaction_id ] )
@@ -1198,8 +1212,15 @@ abstract class Nuvei_Pfw_Request {
 
 		$this->sc_order->update_meta_data( NUVEI_PFW_TRANSACTIONS, $transactions_data );
 
-		// update it only for Auth, Settle and Sale. They are base an we will need this TrID
-		if ( in_array( $transaction_type, array( 'Auth', 'Settle', 'Sale' ) ) ) {
+		// Update it only for Auth and Sale. They are base an we will need this TrID
+		if ( in_array( $transaction_type, array( 'Auth', 'Sale' ) ) ) {
+            Nuvei_Pfw_Logger::write( 'save_transaction_data(), Auth or Sale');
+			$this->sc_order->update_meta_data( NUVEI_PFW_TR_ID, $transaction_id );
+		}
+        
+		// Update for Settle only if it was Approved. If it is not, the merchant can try again.
+		if ( 'Settle' == $transaction_type && 'approved' == strtolower($status) ) {
+            Nuvei_Pfw_Logger::write( 'save_transaction_data(), Approved Settle');
 			$this->sc_order->update_meta_data( NUVEI_PFW_TR_ID, $transaction_id );
 		}
 
@@ -1207,6 +1228,7 @@ abstract class Nuvei_Pfw_Request {
 			$this->sc_order->update_meta_data( NUVEI_PFW_WC_RENEWAL, true );
 		}
 
+        Nuvei_Pfw_Logger::write( 'The transaction was added to the Order meta data.' );
 		// $this->sc_order->save();
 	}
 
