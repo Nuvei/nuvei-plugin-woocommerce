@@ -1,7 +1,7 @@
 <?php defined( 'ABSPATH' ) || exit; ?>
 
 <div id="nuvei_plan_attr_terms">
-	<h2><?php esc_html__( 'Nuvei Payment Plan settings', 'nuvei-payments-for-woocommerce' ); ?></h2>
+	<h2><?php echo esc_html__( 'Nuvei Payment Plan settings', 'nuvei-payments-for-woocommerce' ); ?></h2>
 	 
 	<div class="form-field term-group">
 		<label for=""><?php echo esc_html__( 'Plan ID', 'nuvei-payments-for-woocommerce' ); ?></label>
