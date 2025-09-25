@@ -313,7 +313,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 				'curr_time'          => $curr_time,
 			),
 			'create_auto_void()',
-            'WARINING'
+            'WARN'
 		);
 
 		// break Auto-Void process
@@ -322,7 +322,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 			Nuvei_Pfw_Logger::write(
 				null,
 				'There is problem with $order_request_time. End process.',
-				'WARINING'
+				'WARN'
 			);
 			return 200; // is $order_request_time is missing we can't do anything
 		}
@@ -439,7 +439,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 
 		update_option( 'custom_system_messages', $messages );
 
-		Nuvei_Pfw_Logger::write( $resp, 'Problem with Auto-Void request.', "WARINING" );
+		Nuvei_Pfw_Logger::write( $resp, 'Problem with Auto-Void request.', "WARN" );
 
 		wp_send_json_success();
 	}
