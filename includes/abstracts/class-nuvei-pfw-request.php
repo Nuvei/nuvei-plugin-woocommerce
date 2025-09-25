@@ -208,7 +208,8 @@ abstract class Nuvei_Pfw_Request {
 			$bfn = trim( (string) $cart->get_customer()->get_billing_first_name() );
 		}
 
-		$billing_address['firstName'] = ! empty( $bfn ) ? $bfn : 'Missing parameter';
+//		$billing_address['firstName'] = ! empty( $bfn ) ? $bfn : 'Missing parameter';
+		$billing_address['firstName'] = $bfn;
 
 		// billing_last_name
 		$bln = $this->get_scformdata_address_parts( 'last_name' );
@@ -220,7 +221,8 @@ abstract class Nuvei_Pfw_Request {
 			$bln = trim( (string) $cart->get_customer()->get_billing_last_name() );
 		}
 
-		$billing_address['lastName'] = ! empty( $bln ) ? $bln : 'Missing parameter';
+//		$billing_address['lastName'] = ! empty( $bln ) ? $bln : 'Missing parameter';
+		$billing_address['lastName'] = $bln;
 
 		// address
 		$ba     = '';
@@ -259,7 +261,8 @@ abstract class Nuvei_Pfw_Request {
 			}
 		}
 
-		$billing_address['address'] = ! empty( $ba ) ? $ba : 'Missing parameter';
+//		$billing_address['address'] = ! empty( $ba ) ? $ba : 'Missing parameter';
+		$billing_address['address'] = $ba;
 
 		// billing_phone
 		$bp = $this->get_scformdata_address_parts( 'phone' );
@@ -271,7 +274,8 @@ abstract class Nuvei_Pfw_Request {
 			$bp = trim( (string) $cart->get_customer()->get_billing_phone() );
 		}
 
-		$billing_address['phone'] = ! empty( $bp ) ? $bp : 'Missing parameter';
+//		$billing_address['phone'] = ! empty( $bp ) ? $bp : 'Missing parameter';
+		$billing_address['phone'] = $bp;
 
 		// billing_postcode
 		$bz = $this->get_scformdata_address_parts( 'postcode' );
@@ -283,7 +287,8 @@ abstract class Nuvei_Pfw_Request {
 			$bz = trim( (string) $cart->get_customer()->get_billing_postcode() );
 		}
 
-		$billing_address['zip'] = ! empty( $bz ) ? $bz : 'Missing parameter';
+//		$billing_address['zip'] = ! empty( $bz ) ? $bz : 'Missing parameter';
+		$billing_address['zip'] = $bz;
 
 		// billing_city
 		$bc = $this->get_scformdata_address_parts( 'city' );
@@ -296,6 +301,7 @@ abstract class Nuvei_Pfw_Request {
 		}
 
 		$billing_address['city'] = ! empty( $bc ) ? $bc : 'Missing parameter';
+		$billing_address['city'] = $bc;
 
 		// billing_country
 		$bcn = $this->get_scformdata_address_parts( 'country' );

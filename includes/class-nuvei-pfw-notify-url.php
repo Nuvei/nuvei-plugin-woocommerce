@@ -251,7 +251,13 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	 * @return int
 	 */
 	private function search_order_by_dmn_data( $trans_id, $transaction_type = '' ) {
-		Nuvei_Pfw_Logger::write( array( $trans_id, $transaction_type ), 'search_order_by_dmn_data' );
+		Nuvei_Pfw_Logger::write( 
+            array( 
+                '$trans_id'         => $trans_id, 
+                '$transaction_type' => $transaction_type 
+            ), 
+            'search_order_by_dmn_data()' 
+        );
 
 		// try to get Order ID by its meta key
 		$tries     = 0;
@@ -278,7 +284,8 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 					'order data' => $res,
 					'$resp_code' => $resp_code,
 				),
-				'The searched Order does not exists.'
+				'The searched Order does not exists.',
+                'WARN'
 			);
 
 			http_response_code( $resp_code );
@@ -305,7 +312,8 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 				'transactionType'    => $transaction_type,
 				'curr_time'          => $curr_time,
 			),
-			'create_auto_void'
+			'create_auto_void()',
+            'WARINING'
 		);
 
 		// break Auto-Void process
@@ -365,7 +373,10 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 			update_option( 'custom_system_messages', $messages );
 
 			// log and response message
-			$msg = __( 'Auto Void logic - the auto void is disabled, but a system message was saved.', 'nuvei-payments-for-woocommerce' );
+			$msg = __(
+                'Auto Void logic - the auto void is disabled, but a system message was saved.', 
+                'nuvei-payments-for-woocommerce' 
+            );
 
 			Nuvei_Pfw_Logger::write( $msg );
 			wp_send_json_success( $msg );
@@ -428,7 +439,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 
 		update_option( 'custom_system_messages', $messages );
 
-		Nuvei_Pfw_Logger::write( $resp, 'Problem with Auto-Void request.' );
+		Nuvei_Pfw_Logger::write( $resp, 'Problem with Auto-Void request.', "WARINING" );
 
 		wp_send_json_success();
 	}

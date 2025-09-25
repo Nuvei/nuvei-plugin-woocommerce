@@ -68,6 +68,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 * The Description of the plugin was removed.
 * Fixed the logic for Nuvei's Orders action buttons. Now we do not hide buttons if the last action like Void or Settle failed.
 * Fixed the missing echo in add-terms-form template.
+* When some of the address details is missing use empty values.
 
 = 3.8.1 =
 * Fix for the missing error message on the "Thank you" page, when there is error.
