@@ -13,7 +13,7 @@
  * Tested up to: 6.8.2
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 10.1.2
+ * WC tested up to: 10.2.2
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -39,7 +39,7 @@ add_action( 'init', function() {
 class Nuvei_Payments_For_Woocommerce
 {
     private static $wc_nuvei;
-    
+
     public static function plugin_loaded() {
         if ( ! class_exists( 'WC_Payment_Gateway' ) ) {
             wp_die('Class WC_Payment_Gateway does not exists!');
@@ -50,12 +50,12 @@ class Nuvei_Payments_For_Woocommerce
 //            false,
 //            dirname( plugin_basename( __FILE__ ) ) . '/languages/'
 //        );
-        
+
         add_filter( 'woocommerce_payment_gateways', function ( $methods ) {
             $methods[] = 'Nuvei_Pfw_Gateway'; // get the name of the Gateway Class
             return $methods;
         });
-        
+
         // declare compatabilities
         add_action(
             'before_woocommerce_init',
@@ -63,23 +63,23 @@ class Nuvei_Payments_For_Woocommerce
                 // declaration for HPOS compatability
                 if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
                     \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
-						'custom_order_tables', 
-						__FILE__, 
-						true 
+						'custom_order_tables',
+						__FILE__,
+						true
 					);
                 }
 
                 // Declare compatibility for 'cart_checkout_blocks'
                 if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
-                    \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 
-						'cart_checkout_blocks', 
-						__FILE__, 
-						true 
+                    \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+						'cart_checkout_blocks',
+						__FILE__,
+						true
 					);
                 }
             }
         );
-		
+
 		// Hook in Blocks integration.
 		// Check if the required class exists
 		if ( class_exists( 'Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType' ) ) {
@@ -93,11 +93,11 @@ class Nuvei_Payments_For_Woocommerce
 			);
 		}
     }
-    
+
     public static function init() {
         // set global constant with translated texts
         self::set_translated_texts();
-        
+
         add_action( 'wp_loaded', function () {
             if ( in_array( Nuvei_Pfw_Http::get_param( 'wc-api' ), array( 'sc_listener', 'nuvei_listener' ) ) ) {
                 $nuvei_notify_dmn = new Nuvei_Pfw_Notify_Url();
@@ -111,7 +111,7 @@ class Nuvei_Payments_For_Woocommerce
 
         // load front-end scripts
         add_filter( 'wp_enqueue_scripts', array(__CLASS__, 'load_scripts') );
-        
+
 		// load front-end styles
         add_filter( 'woocommerce_enqueue_styles', array(__CLASS__, 'load_styles') );
 
@@ -143,40 +143,40 @@ class Nuvei_Payments_For_Woocommerce
         # Payment Plans taxonomies
         // extend Term form to add meta data
         add_action(
-			'pa_' . Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) . '_add_form_fields', 
-			array (__CLASS__, 'terms_add_fields_form'), 
-			10, 
+			'pa_' . Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) . '_add_form_fields',
+			array (__CLASS__, 'terms_add_fields_form'),
+			10,
 			2
 		);
-		
+
         // update Terms' meta data form
         add_action(
-			'pa_' . Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) . '_edit_form_fields', 
-			array (__CLASS__, 'terms_edit_meta_form'), 
-			10, 
+			'pa_' . Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) . '_edit_form_fields',
+			array (__CLASS__, 'terms_edit_meta_form'),
+			10,
 			2
 		);
-		
+
         // hook to catch our meta data and save it
         add_action(
-			'created_pa_' . Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ), 
-			array (__CLASS__, 'terms_save_meta'), 
-			10, 
-			2 
+			'created_pa_' . Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ),
+			array (__CLASS__, 'terms_save_meta'),
+			10,
+			2
 		);
-		
+
         // edit Term meta data
-        add_action( 
-			'edited_pa_' . Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ), 
-			array (__CLASS__, 'terms_edit_meta'), 
-			10, 
-			2 
+        add_action(
+			'edited_pa_' . Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ),
+			array (__CLASS__, 'terms_edit_meta'),
+			10,
+			2
 		);
         # /
 
 		// before add a product to the cart
         add_filter( 'woocommerce_add_to_cart_validation', array( $wc_nuvei, 'add_to_cart_validation' ), 10, 3 );
-        
+
 		// Hide payment gateways in case of product with Nuvei Payment plan in the Cart
         add_filter( 'woocommerce_available_payment_gateways', array( $wc_nuvei, 'hide_payment_gateways' ), 100, 1 );
 
@@ -184,19 +184,19 @@ class Nuvei_Payments_For_Woocommerce
         if (! isset( $wc_nuvei->settings['enabled'] ) || 'no' == $wc_nuvei->settings['enabled']) {
             return;
         }
-        
+
         // for the thank-you page
         add_filter( 'woocommerce_thankyou_order_received_text', array (__CLASS__, 'thank_you_page_mod'), 10, 2 );
-        
+
         # For the custom column in the Order list
         // legacy
         add_action( 'manage_shop_order_posts_custom_column', array (__CLASS__, 'order_list_columns_edit'), 10, 2 );
         // HPOS
-        add_action( 
-			'woocommerce_shop_order_list_table_custom_column', 
-			array (__CLASS__, 'order_list_columns_edit_hpos'), 
-			10, 
-			2 
+        add_action(
+			'woocommerce_shop_order_list_table_custom_column',
+			array (__CLASS__, 'order_list_columns_edit_hpos'),
+			10,
+			2
 		);
 
         // for the Store > My Account > Orders list
@@ -204,13 +204,13 @@ class Nuvei_Payments_For_Woocommerce
 			'woocommerce_my_account_my_orders_column_order-number',
 			array (__CLASS__, 'my_account_orders_col_edit')
 		);
-		
+
         // show payment methods on checkout when total is 0
         add_filter( 'woocommerce_cart_needs_payment', array (__CLASS__, 'wc_cart_needs_payment'), 10, 2 );
-        
+
 		// show custom data into order details, product data
         add_action( 'woocommerce_after_order_itemmeta', array (__CLASS__, 'after_order_itemmeta'), 10, 3 );
-        
+
 		// listent for the WC Subscription Payment
         add_action(
             'woocommerce_scheduled_subscription_payment_' . NUVEI_PFW_GATEWAY_NAME,
@@ -221,10 +221,11 @@ class Nuvei_Payments_For_Woocommerce
 
         // Add this hook to catch Zero Total Orders in WC Blocks. The others still go through process_payment().
         add_action(
-            'woocommerce_blocks_checkout_order_processed',
+//             'woocommerce_blocks_checkout_order_processed',
+            'woocommerce_store_api_checkout_order_processed',
             array (__CLASS__, 'checkout_order_processed'),
             10,
-			1
+			3
         );
 
         add_action(
@@ -236,14 +237,14 @@ class Nuvei_Payments_For_Woocommerce
 
         // hook to show unreaded Nuvei' system messages
         add_action( 'admin_notices', array (__CLASS__, 'display_messages') );
-        
+
         register_activation_hook( __FILE__, array (__CLASS__, 'on_plugin_activate') );
 
         // register the plugin REST endpoint
         add_action('rest_api_init', array (__CLASS__, 'register_plugin_rest_endpoint') );
-        
+
     }
-    
+
     public static function set_translated_texts() {
         define(
             'NUVEI_PFW_JS_LOCALIZATIONS',
@@ -278,7 +279,7 @@ class Nuvei_Payments_For_Woocommerce
             )
         );
     }
-    
+
     /**
     * Loads public scripts
     *
@@ -337,9 +338,9 @@ class Nuvei_Payments_For_Woocommerce
                         . '; Plugin v' . $helper->helper_get_plugin_version(),
             )
         );
-        
+
         // if we are on the thankyou page set some variables
-        if (!empty($wp->query_vars['order-received']) 
+        if (!empty($wp->query_vars['order-received'])
             && !empty( $order_key = Nuvei_Pfw_Http::get_param( 'key' ) )
         ) {
             $request_status     = Nuvei_Pfw_Http::get_request_status();
@@ -347,7 +348,7 @@ class Nuvei_Payments_For_Woocommerce
             $order              = wc_get_order( $order_id );
             $removeWCSPayBtn    = false;
             $new_title          = '';
-            
+
             if ( $order->get_payment_method() == NUVEI_PFW_GATEWAY_NAME ) {
                 if ( 'error' == $request_status
                     || 'fail' == strtolower( wc_clean( 'ppp_status' ) )
@@ -356,20 +357,20 @@ class Nuvei_Payments_For_Woocommerce
                 } elseif ( 'canceled' == $request_status ) {
                     $localizations['thankYouPageNewTitle'] = esc_html__( 'Order canceled', 'nuvei-payments-for-woocommerce' );
                 }
-                
+
                 // when WCS is turn on, remove Pay button
                 if ( is_plugin_active( 'woocommerce-subscriptions' . DIRECTORY_SEPARATOR . 'woocommerce-subscriptions.php' ) ) {
                     $localizations['thankYouPageRemovePayBtn'] = true;
                 }
             }
         }
-        
+
         wp_enqueue_script( 'nuvei_checkout_sdk' );
 
         wp_localize_script( 'nuvei_js_public', 'scTrans', $localizations );
         wp_enqueue_script( 'nuvei_js_public' );
     }
-    
+
 	/**
 	* Loads public styles
 	*
@@ -411,7 +412,7 @@ class Nuvei_Payments_For_Woocommerce
 
 		return $styles;
 	}
-	
+
 	/**
 	* Loads admin styles and scripts
 	*
@@ -467,7 +468,7 @@ class Nuvei_Payments_For_Woocommerce
 			wp_enqueue_script( 'nuvei_js_admin' );
 		}
 	}
-    
+
 	/**
 	 * Add buttons for the Nuvei Order actions in Order details page.
 	 *
@@ -522,7 +523,7 @@ class Nuvei_Payments_For_Woocommerce
 		if ( empty( $order_data ) || ! is_array( $order_data ) ) {
 			Nuvei_Pfw_Logger::write(
 				$order_data,
-				'Missing or wrong Nuvei transactions data for the order. We will not add any buttons.', 
+				'Missing or wrong Nuvei transactions data for the order. We will not add any buttons.',
                 'TRACE'
 			);
 
@@ -535,9 +536,9 @@ class Nuvei_Payments_For_Woocommerce
 
 			return false;
 		}
-        
+
         $last_tr_data = end( $order_data );
-        
+
         /**
 		 * If the status is missing then DMN is not received or there is some error
 		 * with the transaction.
@@ -551,7 +552,7 @@ class Nuvei_Payments_For_Woocommerce
 		) {
 			Nuvei_Pfw_Logger::write(
 				$last_tr_data,
-				'Last Transaction is not yet approved or the DMN didn\'t come yet.', 
+				'Last Transaction is not yet approved or the DMN didn\'t come yet.',
                 'TRACE'
 			);
 
@@ -564,7 +565,7 @@ class Nuvei_Payments_For_Woocommerce
 
 			return false;
 		}
-        
+
 		foreach ( array_reverse( $order_data, false ) as $tr ) {
             // get Refund transactions
 			if ( isset( $tr['transactionType'], $tr['status'] )
@@ -574,18 +575,18 @@ class Nuvei_Payments_For_Woocommerce
 				$order_refunds[] = $tr;
 				$ref_amount     += $tr['totalAmount'];
 			}
-            
+
             // get last approved transaction
             if (empty($last_approved_tr_data)
-                && !empty($tr['status']) 
+                && !empty($tr['status'])
                 && 'approved' == strtolower( $tr['status'] )
             ) {
                 $last_approved_tr_data = $tr;
             }
 		}
-        
+
 		$order_payment_method = $helper->get_payment_method( $order_id );
-		
+
 		if ( ! is_null( $order->get_date_created() ) ) {
 			$order_time = $order->get_date_created()->getTimestamp();
 		}
@@ -613,7 +614,7 @@ class Nuvei_Payments_For_Woocommerce
 
         /**
          * Show Void button. To do it the follow conditions must pass:
-         * 
+         *
          * the payment must be CC;
          * there are no refunds on the Order;
          * the last approved transaction must be Sale, Settle or Auth;
@@ -684,7 +685,7 @@ class Nuvei_Payments_For_Woocommerce
 
 		echo '<div id="custom_loader" class="blockUI blockOverlay" style="height: 100%; position: absolute; top: 0px; width: 100%; z-index: 10; background-color: rgba(255,255,255,0.5); display: none;"></div>';
 	}
-	
+
 	/**
 	 * Add buttons for the Nuvei Order actions in WCFM Order details page.
 	 *
@@ -722,7 +723,7 @@ class Nuvei_Payments_For_Woocommerce
 
 		ob_end_flush();
 	}
-	
+
 	public static function wcfm_show_notes( $order_id ) {
 		$order = wc_get_order( $order_id );
 
@@ -743,7 +744,7 @@ class Nuvei_Payments_For_Woocommerce
 
 		ob_end_flush();
 	}
-	
+
 	/**
 	 * Main function for the Ajax requests.
 	 */
@@ -909,32 +910,32 @@ class Nuvei_Payments_For_Woocommerce
 		wp_send_json_error( __( 'Not recognized Ajax call.', 'nuvei-payments-for-woocommerce' ) );
 		wp_die();
 	}
-	
+
 	/**
 	 * We call this function after the user click the Place Order button.
 	 * Here we know if there are any errors in the checkout form.
-	 * 
+	 *
 	 * @param array $data
 	 * @param array $errors
 	 */
 	public static function after_checkout_validation ( $data, $errors ) {
 	    Nuvei_Pfw_Logger::write( array( $data, $errors ), 'action woocommerce_after_checkout_validation start' );
-		
-		if ( $errors->has_errors() 
-		    || wc_notice_count( 'error' ) > 0 
-		    || ! empty( $errors->get_error_messages() ) 
-		    || ! empty( $errors->errors ) 
+
+		if ( $errors->has_errors()
+		    || wc_notice_count( 'error' ) > 0
+		    || ! empty( $errors->get_error_messages() )
+		    || ! empty( $errors->errors )
 		) {
 		    Nuvei_Pfw_Logger::write('There are errors in the checkout form.');
 		    return;
 		}
-		
+
 		// Only proceed for your gateway
 		if ( NUVEI_PFW_GATEWAY_NAME !== $data['payment_method'] ) {
 		    return;
 		}
-		
-		if ( empty( Nuvei_Pfw_Http::get_param( 'nuvei_transaction_id', 'int', 0, array(), true ) ) 
+
+		if ( empty( Nuvei_Pfw_Http::get_param( 'nuvei_transaction_id', 'int', 0, array(), true ) )
 		    && isset( self::$wc_nuvei->settings['integration_type'] )
 		    && 'cashier' != self::$wc_nuvei->settings['integration_type']
 	    ) {
@@ -942,7 +943,7 @@ class Nuvei_Payments_For_Woocommerce
 			self::$wc_nuvei->call_checkout();
 		}
 	}
-	
+
 	/**
 	 * When the client click Pay button on the Order from My Account -> Orders menu.
 	 * This Order was created in the store admin, from some of the admins (merchants).
@@ -984,7 +985,7 @@ class Nuvei_Payments_For_Woocommerce
 		// Pass the orderId in custom element, as approve to use Simply Connect logic later.
 		echo '<input type="hidden" id="nuveiPayForExistingOrder" value="' . esc_attr( $order_id ) . '" />';
 	}
-	
+
 	// Attributes, Terms and Meta functions
 	public static function terms_add_fields_form( $taxonomy ) {
 		$nuvei_plans_path = NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE;
@@ -1003,7 +1004,7 @@ class Nuvei_Payments_For_Woocommerce
 
 		ob_end_flush();
 	}
-	
+
 	public static function terms_edit_meta_form( $term, $taxonomy ) {
 		$nuvei_plans_path = NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE;
 
@@ -1026,7 +1027,7 @@ class Nuvei_Payments_For_Woocommerce
 		include_once __DIR__ . DIRECTORY_SEPARATOR . 'templates/admin/edit-term-form.php';
 		ob_end_flush();
 	}
-	
+
 	public static function terms_save_meta( $term_id, $tt_id ) {
 		if ( ! check_admin_referer( 'nuvei-term-nonce', 'nuveiTermNonce' ) ) {
 			Nuvei_Pfw_Logger::write( '', 'Cannot validate admin nonce.', 'WARN' );
@@ -1052,7 +1053,7 @@ class Nuvei_Payments_For_Woocommerce
 		add_term_meta( $term_id, 'endAfterUnit', Nuvei_Pfw_Http::get_param( 'endAfterUnit', 'string' ) );
 		add_term_meta( $term_id, 'endAfterPeriod', Nuvei_Pfw_Http::get_param( 'endAfterPeriod', 'int' ) );
 	}
-	
+
 	public static function terms_edit_meta( $term_id, $tt_id ) {
 		if ( ! check_admin_referer( 'nuvei-term-nonce', 'nuveiTermNonce' ) ) {
 			Nuvei_Pfw_Logger::write( '', 'Cannot validate admin nonce.', 'WARN' );
@@ -1078,23 +1079,23 @@ class Nuvei_Payments_For_Woocommerce
 		update_term_meta( $term_id, 'endAfterUnit', Nuvei_Pfw_Http::get_param( 'endAfterUnit', 'string' ) );
 		update_term_meta( $term_id, 'endAfterPeriod', Nuvei_Pfw_Http::get_param( 'endAfterPeriod', 'int' ) );
 	}
-	
+
     /**
      * Modify the text on the thankyou page.
      * It is impossible to modify the title also. It will be done
      * in a JS file.
-     * 
-     * @param string $thank_you_text
-     * @param WC_Order $order
+     *
+     * @param string    $thank_you_text
+     * @param WC_Order  $order
      * @return string
      */
 	public static function thank_you_page_mod( $thank_you_text, $order ) {
-		if (!$order || $order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME ) {
+	    if ( ! ($order instanceof WC_Order) || $order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME ) {
 			return;
 		}
 
 		$request_status = Nuvei_Pfw_Http::get_request_status();
-		
+
         if ( 'error' == $request_status
 			|| 'fail' == strtolower( Nuvei_Pfw_Http::get_param( 'ppp_status' ) )
             || 'canceled' == $request_status
@@ -1105,10 +1106,10 @@ class Nuvei_Payments_For_Woocommerce
                 'nuvei-payments-for-woocommerce'
             );
 		}
-        
+
         return $thank_you_text;
 	}
-	
+
 	/**
 	 * For the custom baloon in Order column in the Order list.
 	 */
@@ -1145,7 +1146,7 @@ class Nuvei_Payments_For_Woocommerce
 			. esc_html__( 'Please check transaction Total and Currency!', 'nuvei-payments-for-woocommerce' ) . '"><span>!</span></mark>';
 		}
 	}
-	
+
 	/**
 	 * For the custom baloon in Order column in the Order list.
 	 */
@@ -1178,7 +1179,7 @@ class Nuvei_Payments_For_Woocommerce
 			. esc_html__( 'Please check transaction Total and Currency!', 'nuvei-payments-for-woocommerce' ) . '"><span>!</span></mark>';
 		}
 	}
-	
+
 	/**
 	 * In Store > My Account > Orders table, Order column
 	 * add Rebilling icon for the Orders with Nuvei Payment Plan.
@@ -1200,7 +1201,7 @@ class Nuvei_Payments_For_Woocommerce
 
 		echo '>#' . esc_html( $order->get_order_number() ) . '</a>';
 	}
-	
+
 	/**
 	 * Decide to override or not default WC behavior for Zero Total Order.
 	 *
@@ -1228,7 +1229,7 @@ class Nuvei_Payments_For_Woocommerce
 
 		return $needs_payment;
 	}
-	
+
 	/**
 	 * Show custom data into order details, product data.
 	 *
@@ -1325,15 +1326,20 @@ class Nuvei_Payments_For_Woocommerce
 			}
 		}
 	}
-	
-	public static function checkout_order_processed($order) {
-		if ( 0 == (float) $order->get_total() ) {
+
+// 	public static function checkout_order_processed($order) {
+	public static function checkout_order_processed($order, $request, $creating_account) {
+// 		if ( 0 == (float) $order->get_total() ) {
+	    if ( $order instanceof WC_Order
+	        && 0 == (float) $order->get_total()
+	        && $order->get_payment_method() == NUVEI_PFW_GATEWAY_NAME
+        ) {
 			Nuvei_Pfw_Logger::write( 'hook woocommerce_blocks_checkout_order_processed - Zero Total Order.' );
 
 			self::$wc_nuvei->process_payment( $order->get_id() );
 		}
 	}
-	
+
 	/**
 	 * Display Nuvei message in the admin.
 	 * At the moment we will use them only for auto-void warnings.
@@ -1357,7 +1363,7 @@ class Nuvei_Payments_For_Woocommerce
 			}
 		}
 	}
-	
+
 	/**
 	 * On activate.
 	 * Deactivate the old version plugin who use index.php file.
@@ -1396,7 +1402,7 @@ class Nuvei_Payments_For_Woocommerce
 
 		return;
 	}
-	
+
 	public static function register_plugin_rest_endpoint () {
 		register_rest_route(
 			'wc',
@@ -1410,10 +1416,10 @@ class Nuvei_Payments_For_Woocommerce
 			)
 		);
 	}
-	
+
 	/**
 	 * The method who is responsible for REST API requests to the plugin.
-	 * 
+	 *
 	 * @param object $request_data
 	 * @return \WP_REST_Response
 	 */
@@ -1464,5 +1470,5 @@ class Nuvei_Payments_For_Woocommerce
 
 		return $rest_resp;
 	}
-	
+
 }
