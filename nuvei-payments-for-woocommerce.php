@@ -1327,8 +1327,7 @@ class Nuvei_Payments_For_Woocommerce
 		}
 	}
 
-// 	public static function checkout_order_processed($order) {
-	public static function checkout_order_processed($order, $request, $creating_account) {
+ 	public static function checkout_order_processed($order) {
 // 		if ( 0 == (float) $order->get_total() ) {
 	    if ( $order instanceof WC_Order
 	        && 0 == (float) $order->get_total()
