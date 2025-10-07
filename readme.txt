@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.8
-Stable tag: 3.9.0
+Stable tag: 3.9.1
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.9.1 =
+* Fix for the broken Cashier payment flow.
 
 = 3.9.0 =
 * Simply Connect is loaded directly on the Checkout page, under Nuvei option. There is no more "second page".

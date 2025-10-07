@@ -361,6 +361,10 @@ function nuveiSetTransactionField(trId, sessTok) {
  */
 function nuveiGetCheckoutData(formId, payBtnId) {
     console.log('call nuveiGetCheckoutData');
+    
+    if ('sdk' !== scTrans.checkoutIntegration) {
+        return;
+    }
 
     var scFormData = {};
 
@@ -448,7 +452,9 @@ window.addEventListener('load', function() {
 	}
     
     // In case of Classic Checkout, shortcode
-    if (jQuery(nuveiCheckoutClassicFormClass).length > 0) {
+    if (jQuery(nuveiCheckoutClassicFormClass).length > 0
+        && 'sdk' === scTrans.checkoutIntegration
+    ) {
         // add nuvei_checkout_errors
         if(jQuery('.woocommerce #nuvei_checkout_errors').length == 0) {
             jQuery(nuveiCheckoutClassicFormClass).before(nuveiCheckoutErrorCont);

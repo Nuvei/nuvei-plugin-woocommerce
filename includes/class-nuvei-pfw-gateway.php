@@ -35,8 +35,15 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		// required for the Store
 		$this->title       = $this->get_option( 'title', NUVEI_PFW_GATEWAY_TITLE );
-		$this->description = wp_kses_post('<div id="nuvei_checkout_container" data-placeholder="' . __('Please, fill all required fields to continue!', 'nuvei-payments-for-woocommerce') . '"></div>');
-		$this->plugin_data = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
+        
+		$this->description = wp_kses_post('<div id="nuvei_checkout_container" data-placeholder="' . 
+            ( 'cashier' === $this->get_option( 'integration_type' ) ? 
+                __('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce') :
+                    __('The Checkout form must be valid to continue!', 'nuvei-payments-for-woocommerce')
+            )
+             . '"></div>');
+		
+        $this->plugin_data = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
 
 		// $this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page'])
 		// ? $this->settings['use_wpml_thanks_page'] : 'no';

@@ -1,7 +1,9 @@
 const nuveiCheckoutBlockFormClass   = 'form.wc-block-components-form';
 const nuveiCheckoutBlockPayBtn      = '.wc-block-components-checkout-place-order-button';
 const nuveiCheckoutBlockPMethodName = 'input[name="radio-control-wc-payment-method-options"]';
-const nuveiCheckoutBlockContText    = window.wp.i18n.__('The Checkout form must be valid to continue.', 'nuvei-payments-for-woocommerce');
+const nuveiCheckoutBlockContText    = 'sdk' === scTrans.checkoutIntegration ? 
+    window.wp.i18n.__('The Checkout form must be valid to continue!', 'nuvei-payments-for-woocommerce') :
+        window.wp.i18n.__('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce');
 
 /**
  * Checks if the Checkout form is valid.
