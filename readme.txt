@@ -65,6 +65,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 = 3.9.1 =
 * Fix for the broken Cashier payment flow.
+* Added sourceApplication parameter to the Cashier URL.
 
 = 3.9.0 =
 * Simply Connect is loaded directly on the Checkout page, under Nuvei option. There is no more "second page".
