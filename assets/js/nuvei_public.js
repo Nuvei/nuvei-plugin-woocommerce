@@ -39,6 +39,11 @@ function nuveiIsCheckoutClassicFormValid() {
 
     let isFormValid             = true;
     let shipToDifferentAddress  = jQuery('#ship-to-different-address-checkbox').is(':checked');
+    
+    // check for terms and conditions
+    if (jQuery('#terms').length > 0 && !jQuery('#terms').is(':checked')) {
+        return false;
+    }
 
     jQuery(nuveiCheckoutClassicFormClass).find('input, select, textarea').each( function() {
         let self = jQuery(this);
@@ -478,6 +483,18 @@ window.addEventListener('load', function() {
                 }, 1000);
             }, 1000 )
         );
+
+        // listent for Terms checkbox
+        jQuery(document).on('change', '#terms', function() {
+            if (jQuery(this).is(':checked')) {
+                if (nuveiIsCheckoutClassicFormValid()) {
+                    nuveiGetCheckoutData(nuveiCheckoutClassicFormClass, nuveiCheckoutClassicPayBtn);
+                }
+            }
+            else {
+                nuveiDestroySimplyConnect();
+            }
+        });
 
         // when change the payment method
         jQuery(document.body).on('change', nuveiCheckoutClassicPMethodName, function() {
