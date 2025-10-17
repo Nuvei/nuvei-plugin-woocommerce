@@ -65,6 +65,10 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 = 3.9.2 =
 * Fixed the problem when the default WC Pay button is visible, when Nuvei is selected as payment provider, and Simply Connect is used.
+* Added few more JS checks.
+* Fixed the problem with Classic Checkout where Simply Connect does not load.
+* Fixed the problem when the client try to change the Shipping address.
+* Fixed the problem with the duplicate CC fields after change of the Payment Provider.
 
 = 3.9.1 =
 * Fix for the broken Cashier payment flow.

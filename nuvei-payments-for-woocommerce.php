@@ -318,7 +318,7 @@ class Nuvei_Payments_For_Woocommerce
             'nuvei_js_public',
             $plugin_url . 'assets/js/nuvei_public.js',
             array( 'jquery' ),
-            '2025-08-15',
+            '2025-10-17',
             false
         );
 
@@ -366,7 +366,7 @@ class Nuvei_Payments_For_Woocommerce
         }
 
         wp_enqueue_script( 'nuvei_checkout_sdk' );
-
+        
         wp_localize_script( 'nuvei_js_public', 'scTrans', $localizations );
         wp_enqueue_script( 'nuvei_js_public' );
     }
