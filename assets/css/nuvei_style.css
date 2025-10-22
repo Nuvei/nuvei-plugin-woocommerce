@@ -81,3 +81,22 @@ button#nuvei_place_order {
     float: right;
     display: none;
 }
+
+#nuvei_blocker {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255,255,255,0.7);
+    z-index: 9999;
+}
+
+#nuvei_blocker img.nuvei_loader {
+    left: 50%;
+    top: 50%;
+    position: absolute;
+    margin-top: -32px;
+    margin-left: -32px;
+}
