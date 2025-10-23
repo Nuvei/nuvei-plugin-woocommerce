@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.9.2
+ * Version: 3.9.3
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
@@ -35,6 +35,8 @@ add_action( 'plugins_loaded', function() {
 add_action( 'init', function() {
     Nuvei_Payments_For_Woocommerce::init();
 }, 20 );
+
+register_activation_hook( __FILE__, array ('Nuvei_Payments_For_Woocommerce', 'on_plugin_activate') );
 
 class Nuvei_Payments_For_Woocommerce
 {
@@ -104,7 +106,6 @@ class Nuvei_Payments_For_Woocommerce
                 $nuvei_notify_dmn->process();
             }
         });
-        //
 
         // I need and local variable so I can pass it in the callbacks
         self::$wc_nuvei = $wc_nuvei = new Nuvei_Pfw_Gateway();
@@ -238,7 +239,7 @@ class Nuvei_Payments_For_Woocommerce
         // hook to show unreaded Nuvei' system messages
         add_action( 'admin_notices', array (__CLASS__, 'display_messages') );
 
-        register_activation_hook( __FILE__, array (__CLASS__, 'on_plugin_activate') );
+        
 
         // register the plugin REST endpoint
         add_action('rest_api_init', array (__CLASS__, 'register_plugin_rest_endpoint') );
@@ -367,7 +368,7 @@ class Nuvei_Payments_For_Woocommerce
         }
 
         wp_enqueue_script( 'nuvei_checkout_sdk' );
-        
+
         wp_localize_script( 'nuvei_js_public', 'scTrans', $localizations );
         wp_enqueue_script( 'nuvei_js_public' );
     }
@@ -1345,7 +1346,10 @@ class Nuvei_Payments_For_Woocommerce
 	 * At the moment we will use them only for auto-void warnings.
 	 */
 	public static function display_messages() {
-		$messages = get_option( 'custom_system_messages', array() );
+        Nuvei_Pfw_Logger::write('display_messages');
+
+		$messages           = get_option( 'custom_system_messages', array() );
+        $permission_error   = get_option('nuvei_logs_permission_error', 0);
 
 		if ( ! empty( $messages ) ) {
 			foreach ( $messages as $index => $msg ) {
@@ -1362,12 +1366,20 @@ class Nuvei_Payments_For_Woocommerce
 					. '</div>';
 			}
 		}
+
+		if ( 1 == $permission_error ) {
+	       echo '<div class="notice notice-error is-dismissible"><p>'
+	           . esc_html__('Nuvei Payments for WooCommerce: Could not create the log directory or .htaccess or index.html file in wp-content/uploads/nuvei-logs. Please check your permissions. Logging may not work properly.', 'nuvei-payments-for-woocommerce')
+		      . '</p></div>';
+		}
 	}
 
 	/**
 	 * On activate.
 	 * Deactivate the old version plugin who use index.php file.
 	 * Try to create custom logs directory and few files.
+     * 
+     * We cannot log in this method!
 	 */
 	public static function on_plugin_activate() {
 		// try to deactivate the version with index.php
@@ -1377,30 +1389,49 @@ class Nuvei_Payments_For_Woocommerce
 			// if fail then this plugin not exists
 		}
 
-		$htaccess_file = NUVEI_PFW_LOGS_DIR . '.htaccess';
-		$index_file    = NUVEI_PFW_LOGS_DIR . 'index.html';
-		$wp_fs_direct  = new WP_Filesystem_Direct( null );
+		$htaccess_file    = NUVEI_PFW_LOGS_DIR . '.htaccess';
+		$index_file       = NUVEI_PFW_LOGS_DIR . 'index.html';
+		$wp_fs_direct     = new WP_Filesystem_Direct( null );
+		$error            = false;
 
 		if ( ! defined( 'FS_CHMOD_DIR' ) || ! defined( 'FS_CHMOD_FILE' ) ) {
 			include_once ABSPATH . 'wp-admin/includes/file.php';
 			WP_Filesystem();
 		}
 
+		// if there is no logs directory try to create it.
 		if ( ! is_dir( NUVEI_PFW_LOGS_DIR ) ) {
-			$wp_fs_direct->mkdir( NUVEI_PFW_LOGS_DIR );
+		    if ( ! $wp_fs_direct->mkdir( NUVEI_PFW_LOGS_DIR ) ) {
+		        $error = true;
+		    }
 		}
 
-		if ( is_dir( NUVEI_PFW_LOGS_DIR ) ) {
+		// if the directory exists
+		if ( ! $error && is_dir( NUVEI_PFW_LOGS_DIR ) ) {
+		    // try to create .htaccess file
 			if ( ! file_exists( $htaccess_file ) ) {
-				$wp_fs_direct->put_contents( $htaccess_file, 'deny from all' );
+ 			    if ( ! $wp_fs_direct->put_contents( $htaccess_file, 'deny from all' ) ) {
+			        $error = true;
+			    }
 			}
 
+			// try to create index.html file
 			if ( ! file_exists( $index_file ) ) {
-				$wp_fs_direct->put_contents( $index_file, '' );
+			    if ( ! $wp_fs_direct->put_contents( $index_file, '' ) ) {
+			        $error = true;
+			    }
 			}
 		}
 
-		return;
+		// set flag, as plugin option, to show error message in the admin
+		if ( $error ) {
+		    update_option('nuvei_logs_permission_error', 1);
+		}
+		else {
+		    delete_option('nuvei_logs_permission_error');
+		}
+
+        return;
 	}
 
 	public static function register_plugin_rest_endpoint () {
