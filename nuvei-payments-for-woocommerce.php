@@ -13,7 +13,7 @@
  * Tested up to: 6.8.2
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 10.2.2
+ * WC tested up to: 10.3.0
  */
 
 defined( 'ABSPATH' ) || die( 'die' );

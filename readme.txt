@@ -64,7 +64,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 == Changelog ==
 
 = 3.9.3 =
-* Fixed the check for the logs directory when plugin is activated.
+* Fixed the check for the logs directory when plugin is activated. In case of error, return better message to the user.
 
 = 3.9.2 =
 * Fixed the problem when the default WC Pay button is visible, when Nuvei is selected as payment provider, and Simply Connect is used.

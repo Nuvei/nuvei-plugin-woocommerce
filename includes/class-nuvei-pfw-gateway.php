@@ -582,9 +582,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$resp    = $ndp_obj->process();
 
 		if ( empty( $resp ) || ! is_array( $resp ) || 'SUCCESS' != $resp['status'] ) {
-			Nuvei_Pfw_Logger::write( 'Get Plans response error.' );
+			Nuvei_Pfw_Logger::write( 'Unexpected error, when try to download the plans.' );
 
-			wp_send_json( array( 'status' => 0 ) );
+			wp_send_json( array( 
+                'status'    => 0,
+                'message'   => __( 'Unexpected error, when try to download the plans.', 'nuvei-payments-for-woocommerce')
+            ) );
 			exit;
 		}
 
@@ -606,8 +609,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE,
 			wp_json_encode( $resp['plans'] ),
 			0644
-		)
-		) {
+		) ) {
 			$this->create_nuvei_global_attribute();
 
 			wp_send_json(
@@ -624,7 +626,10 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'Plans list was not saved.'
 		);
 
-		wp_send_json( array( 'status' => 0 ) );
+		wp_send_json( array( 
+            'status'    => 0,
+            'message'   => __( 'Unexpected error, when try to save the file with the plans.', 'nuvei-payments-for-woocommerce')
+        ) );
 		exit;
 	}
 
