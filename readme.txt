@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.8
-Stable tag: 3.9.3
+Stable tag: 3.9.4
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,10 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.9.4 =
+* Fixed a problem with the Classic Checkout when some of the fields are populated with wrong values.
+* Added few comments and changed few variables names because of "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound" requirement.
 
 = 3.9.3 =
 * Fixed the check for the logs directory when plugin is activated. In case of error, return better message to the user.

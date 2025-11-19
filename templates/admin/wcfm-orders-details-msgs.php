@@ -6,7 +6,9 @@
 <div class="wcfm-container">
 	<div class="wcfm-content">
 		<table cellpadding="0" cellspacing="0" class="woocommerce_order_items">
-			<?php foreach ( $notes as $note ) : ?>
+			<?php 
+            // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- false positive, $note is not global
+            foreach ( $notes as $note ) : ?>
 			<tr>
 				<td>
 					<?php echo wp_kses_post( $note->content ); ?>

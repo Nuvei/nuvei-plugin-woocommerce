@@ -2,13 +2,13 @@
 
 defined( 'ABSPATH' ) || exit;
 
-$field = $this->plugin_id . $this->id . '_' . $key;
+$nuvei_pfw_field = $this->plugin_id . $this->id . '_' . $key;
 
 ?>
 
 <tr valign="top">
 	<th scope="row" class="titledesc">
-		<label for="<?php echo esc_attr( $field ); ?>"><?php echo esc_html( $data['title'] ); ?></label>
+		<label for="<?php echo esc_attr( $nuvei_pfw_field ); ?>"><?php echo esc_html( $data['title'] ); ?></label>
 		<?php echo esc_html( $this->get_tooltip_html( $data ) ); ?>
 	</th>
 
@@ -20,7 +20,7 @@ $field = $this->plugin_id . $this->id . '_' . $key;
 
 			<button class="<?php echo esc_attr( $data['class'] ); ?>" 
 					type="button" 
-					id="<?php echo esc_attr( $field ); ?>" 
+					id="<?php echo esc_attr( $nuvei_pfw_field ); ?>" 
 					style="<?php echo esc_attr( $data['css'] ); ?>" 
 					onclick="nuveiSyncPaymentPlans()" 
 					<?php echo esc_attr( $this->get_custom_attribute_html( $data ) ); ?>

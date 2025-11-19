@@ -3,17 +3,17 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.9.3
+ * Version: 3.9.4
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
  * Text Domain: nuvei-payments-for-woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.8.2
+ * Tested up to: 6.8.3
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 10.3.0
+ * WC tested up to: 10.3.5
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -130,7 +130,7 @@ class Nuvei_Payments_For_Woocommerce
         add_action( 'wp_ajax_sc-ajax-action', array(__CLASS__, 'ajax_action') );
         add_action( 'wp_ajax_nopriv_sc-ajax-action', array(__CLASS__, 'ajax_action') );
 
-        // On checkout form validation success get order details. Works on Classic Checkout only!
+        // On checkout form validation. Works on Classic Checkout only!
         add_action(
             'woocommerce_after_checkout_validation',
             array (__CLASS__, 'after_checkout_validation'),
@@ -914,36 +914,63 @@ class Nuvei_Payments_For_Woocommerce
 	}
 
 	/**
-	 * We call this function after the user click the Place Order button.
-	 * Here we know if there are any errors in the checkout form.
+	 * // We call this function after the user click the Place Order button.
+	 * // Here we know if there are any errors in the checkout form.
+     * 
+     * We manually validate the form calling WC checout method from our JS file.
+     * Here we will check for our custom flag. In case there is flag, and no
+     * errors, we will return 'result' => 'failure', to prevent the checkout
+     * to submit the form before create a payment with Simply Connect.
 	 *
 	 * @param array $data
 	 * @param array $errors
 	 */
 	public static function after_checkout_validation ( $data, $errors ) {
-	    Nuvei_Pfw_Logger::write( array( $data, $errors ), 'action woocommerce_after_checkout_validation start' );
+	    Nuvei_Pfw_Logger::write( 
+            array( 
+                $data, 
+                $errors,
+                Nuvei_Pfw_Http::get_param( 'nuveiFormValidation', 'int', 0, array(), true )
+            ),
+            'action woocommerce_after_checkout_validation start' 
+        );
 
 		if ( $errors->has_errors()
 		    || wc_notice_count( 'error' ) > 0
 		    || ! empty( $errors->get_error_messages() )
 		    || ! empty( $errors->errors )
+            || NUVEI_PFW_GATEWAY_NAME !== $data['payment_method']
 		) {
 		    Nuvei_Pfw_Logger::write('There are errors in the checkout form.');
 		    return;
 		}
 
 		// Only proceed for your gateway
-		if ( NUVEI_PFW_GATEWAY_NAME !== $data['payment_method'] ) {
-		    return;
-		}
+//		if ( NUVEI_PFW_GATEWAY_NAME !== $data['payment_method'] ) {
+//		    return;
+//		}
 
-		if ( empty( Nuvei_Pfw_Http::get_param( 'nuvei_transaction_id', 'int', 0, array(), true ) )
-		    && isset( self::$wc_nuvei->settings['integration_type'] )
-		    && 'cashier' != self::$wc_nuvei->settings['integration_type']
-	    ) {
-			Nuvei_Pfw_Logger::write( 'action woocommerce_after_checkout_validation nuvei logic' );
-			self::$wc_nuvei->call_checkout();
-		}
+//		if ( empty( Nuvei_Pfw_Http::get_param( 'nuvei_transaction_id', 'int', 0, array(), true ) )
+//		    && isset( self::$wc_nuvei->settings['integration_type'] )
+//		    && 'cashier' != self::$wc_nuvei->settings['integration_type']
+//	    ) {
+//			Nuvei_Pfw_Logger::write( 'action woocommerce_after_checkout_validation nuvei logic' );
+//			self::$wc_nuvei->call_checkout();
+//		}
+        
+        // search for custom nuvei flag - validation only
+        $nuvei_form_validation = Nuvei_Pfw_Http::get_param( 'nuveiFormValidation', 'int', 0, array(), true );
+        
+        if (1 == $nuvei_form_validation) {
+            wp_send_json(
+                array(
+                    'result'        => 'failure', // this is just to stop WC send the form
+                    'refresh'       => false,
+                    'reload'        => false,
+                    'isFormValid'   => true,
+                )
+            );
+        }
 	}
 
 	/**

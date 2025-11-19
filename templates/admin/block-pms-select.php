@@ -2,13 +2,13 @@
 
 defined( 'ABSPATH' ) || exit;
 
-$field = $this->plugin_id . $this->id . '_' . $key;
-
 ?>
 
 <tr valign="top">
 	<th scope="row" class="titledesc">
-		<label for="<?php echo esc_attr( $field ); ?>"><?php echo esc_html( $data['title'] ); ?></label>
+		<label for="<?php echo esc_attr( $this->plugin_id . $this->id . '_' . $key ); ?>">
+            <?php echo esc_html( $data['title'] ); ?>
+        </label>
 		<?php echo esc_html( $this->get_tooltip_html( $data ) ); ?>
 	</th>
 
@@ -22,7 +22,9 @@ $field = $this->plugin_id . $this->id . '_' . $key;
 					id="nuvei_block_pms_multiselect" 
 					onchange="nuveiDisablePm(this.value)"
 			>
-				<?php foreach ( $data['merchant_pms'] as $val => $name ) : ?>
+				<?php 
+                // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- false positive, $val and $name are not global
+                foreach ( $data['merchant_pms'] as $val => $name ) : ?>
 					<option value="<?php echo esc_attr( $val ); ?>" 
 							id="nuvei_block_pm_<?php echo esc_attr( $val ); ?>" 
 					<?php

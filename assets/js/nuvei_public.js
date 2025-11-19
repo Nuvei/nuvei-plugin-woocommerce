@@ -40,8 +40,10 @@ function nuveiIsCheckoutClassicFormValid() {
     let shipToDifferentAddress  = jQuery('#ship-to-different-address-checkbox').is(':checked');
 
     jQuery(nuveiCheckoutClassicFormClass).find('input, select, textarea').each( function() {
+//    jQuery(document.body).find('input, select, textarea').each( function() {
         let self = jQuery(this);
 
+        // skip this element
         if (!self.attr('id')) {
             return true;
         }
@@ -55,6 +57,7 @@ function nuveiIsCheckoutClassicFormValid() {
             || ( 'true' ==  self.attr('aria-required') && '' == self.val() )
             || self.parent().hasClass('woocommerce-invalid')
             || jQuery(nuveiCheckoutClassicFormClass).find('div.is-error').length > 0
+//            || jQuery(document.body).find('div.is-error').length > 0
         ) {
             console.log('the element is not valid', self.attr('id'), typeof simplyConnect);
 
@@ -110,6 +113,7 @@ function nuveiAfterSdkResponse(resp) {
         // in case of Classic Checkout or when the client will pay for an Order
         // created from the admin
         if ( jQuery(nuveiCheckoutClassicFormClass).length > 0 || nuveiIsPayForExistingOrderPage) {
+            console.log('before click on the payment button');
             jQuery(nuveiCheckoutClassicPayBtn).trigger('click');
             return;
         }
@@ -229,41 +233,94 @@ function nuveiShowErrorMsg(text) {
 function nuveiPrePayment(paymentDetails) {
 	console.log('nuveiPrePayment');
 
-    var postData    = {
-        action: 'sc-ajax-action',
-        nuveiSecurity: scTrans.nuveiSecurity,
-        prePayment: 1
-    };
-
 	return new Promise((resolve, reject) => {
-        // check for terms and conditions
+        // step 1 - check for terms and conditions
         if (jQuery('#terms').length > 0 && !jQuery('#terms').is(':checked')) {
             nuveiShowErrorMsg(scTrans.TermsError);
             reject();
         }
+        
+        // For the Classic Checkout
+        if ( jQuery(nuveiCheckoutClassicFormClass).length > 0) {
+            // step 2 - validate the form
+            let data    = jQuery('form.checkout').serialize();
+            data        += '&nuveiFormValidation=1';
 
-		jQuery.ajax({
-            type: "POST",
-            url: scTrans.ajaxurl,
-            data: postData,
-            dataType: 'json'
-        })
-            .fail(function(){
-                reject();
+            jQuery.ajax({
+                type: "POST",
+                url: wc_checkout_params.wc_ajax_url.toString().replace("%%endpoint%%", "checkout" ),
+                data: data,
             })
-            .done(function(resp) {
-                console.log(resp);
-
-                if (!resp.hasOwnProperty('success') || 0 == resp.success) {
+                .fail(function(){
+                    console.log('Checking form failed.');
                     reject();
-                    window.location.reload();
-                    return;
-                }
+                })
+                .done(function(resp) {
+                    console.log(resp);
 
-                resolve();
-                return;
-            });
+                    if (resp.isFormValid === true) {
+                        console.log("Checkout is valid.");
+
+                        // step 3 - update the Order
+                        nuveiUpdateOrder(resolve, reject);
+                        return;
+                    }
+                    else {
+                        console.log("Checkout has errors");
+
+                        if (resp.messages) {
+                            jQuery('.woocommerce-notices-wrapper').first().html(resp.messages);
+                        }
+
+                        reject();
+                        return;
+                    }
+                });
+                
+            return;
+        }
+        
+        // For the Blocks Checkout
+        // step 2 - update the Order
+        nuveiUpdateOrder(resolve, reject);
+        return;
 	});
+}
+
+/**
+ * We update Nuvei Order here.
+ * 
+ * @returns {bool}
+ */
+function nuveiUpdateOrder(resolve, reject) {
+    jQuery.ajax({
+        type: "POST",
+        url: scTrans.ajaxurl,
+        data: {
+            action: 'sc-ajax-action',
+            nuveiSecurity: scTrans.nuveiSecurity,
+            prePayment: 1
+        },
+        dataType: 'json'
+    })
+        .fail(function(){
+            reject();
+            return;
+        })
+        .done(function(resp) {
+            console.log(resp);
+
+            if (!resp.hasOwnProperty('success') || 0 == resp.success) {
+                reject();
+                window.location.reload();
+                return;
+            }
+
+            console.log('prepayment resolved.')
+
+            resolve();
+            return;
+        });
 }
 
 /**
@@ -479,6 +536,7 @@ window.addEventListener('load', function() {
 
         // try to validate the form on text inputs on changes
         jQuery(nuveiCheckoutClassicFormClass).on(
+//        jQuery(document.body).on(
             'input',
             'input[id^="billing_"], input[id^="shipping_"]',
             nuveiDebounce( function() {
