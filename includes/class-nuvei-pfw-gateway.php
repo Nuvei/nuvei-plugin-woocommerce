@@ -1165,37 +1165,26 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	public function create_wc_subscr_order( $amount_to_charge, $renewal_order ) {
 		$renewal_order_id = $renewal_order->get_id();
 		$order_all_meta   = $renewal_order->get_meta_data();
-		$subscription_id  = null;
-		$billing_mail     = null;
-		$billing_country  = null;
-
-		foreach ( $order_all_meta as $data ) {
-			if ( isset( $data->key )
-				&& '_subscription_renewal' == $data->key
-				&& isset( $data->value )
-			) {
-				$subscription_id = $data->value;
-			}
-
-			if ( isset( $data->key )
-				&& '_billing_email' == $data->key
-				&& isset( $data->value )
-			) {
-				$billing_mail = $data->value;
-			}
-
-			if ( isset( $data->key )
-				&& '_billing_country' == $data->key
-				&& isset( $data->value )
-			) {
-				$billing_country = $data->value;
-			}
-		}
+		$subscription_id  = $renewal_order->get_meta( '_subscription_renewal', true );;
+        // we need them for the payment.do request
+		$billing_mail     = $renewal_order->get_billing_email();
+		$billing_country  = $renewal_order->get_billing_country();
+        
+        Nuvei_Pfw_Logger::write(
+			[
+                '$subscription_id'  => $subscription_id,
+                '$billing_mail'     => $billing_mail,
+                '$billing_country'  => $billing_country,
+            ],
+			'some params',
+            'TRACE'
+		);
 
 		// $subscription   = wc_get_order( $renewal_order->get_meta( '_subscription_renewal' ) );
 		$subscription = wc_get_order( $subscription_id );
 		$helper       = new Nuvei_Pfw_Helper();
 
+        // error
 		if ( ! is_object( $subscription ) ) {
 			Nuvei_Pfw_Logger::write(
 				array(
@@ -1225,6 +1214,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'create_wc_subscr_order'
 		);
 
+        // error
 		if ( empty( $parent_tr_upo_id ) || empty( $parent_tr_id ) ) {
 			Nuvei_Pfw_Logger::write(
 				$parent_order->get_meta_data(),
@@ -1239,12 +1229,15 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$st_obj  = new Nuvei_Pfw_Session_Token( $this->settings );
 		$st_resp = $st_obj->process();
 
+        // error
 		if ( empty( $st_resp['sessionToken'] ) ) {
 			Nuvei_Pfw_Logger::write( 'Error when try to get Session Token' );
 			WC_Subscriptions_Manager::process_subscription_payment_failure_on_order( $parent_order );
 			return;
 		}
 
+        Nuvei_Pfw_Logger::write( $this->settings, 'Before call Nuvei_Pfw_Payment.' );
+        
 		// $billing_mail   = $renewal_order->get_meta( '_billing_email' );
 		$payment_obj = new Nuvei_Pfw_Payment( $this->settings );
 		$params      = array(

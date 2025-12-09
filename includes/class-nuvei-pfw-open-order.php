@@ -53,7 +53,9 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 			$addresses          = $this->get_order_addresses();
 			$transaction_type   = $this->get_total_from_rest_params() == 0
 			? 'Auth' : $this->plugin_settings['payment_action'];
-		} else { // default flow
+		}
+        // default flow
+        else {
 			$open_order_details = $woocommerce->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
 			$products_data      = $this->get_products_data();
 			$cart_total         = (float) $products_data['totals']['total'];

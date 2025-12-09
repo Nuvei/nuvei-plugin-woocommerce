@@ -334,7 +334,7 @@ abstract class Nuvei_Pfw_Request {
 			$be = trim( (string) $existing_order_data['billing']['email'] );
 		}
 		if ( empty( $be ) ) {
-				$be = trim( (string) $cart->get_customer()->get_billing_email() );
+            $be = trim( (string) $cart->get_customer()->get_billing_email() );
 		}
 
 		$billing_address['email'] = $be;

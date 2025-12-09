@@ -3,17 +3,17 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.9.4
+ * Version: 3.9.5
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
  * Text Domain: nuvei-payments-for-woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.8.3
+ * Tested up to: 6.9
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 10.3.5
+ * WC tested up to: 10.3.6
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -320,7 +320,7 @@ class Nuvei_Payments_For_Woocommerce
             'nuvei_js_public',
             $plugin_url . 'assets/js/nuvei_public.js',
             array( 'jquery' ),
-            '2025-10-17',
+            '2025-12-08',
             false
         );
 
@@ -329,6 +329,7 @@ class Nuvei_Payments_For_Woocommerce
             NUVEI_PFW_JS_LOCALIZATIONS,
             array(
                 'nuveiSecurity'       => wp_create_nonce( 'nuvei-security-nonce' ),
+//                'wcStoreApiSec'       => wp_create_nonce( 'wc_store_api' ),
                 'wcThSep'             => get_option( 'woocommerce_price_thousand_sep' ),
                 'wcDecSep'            => get_option( 'woocommerce_price_decimal_sep' ),
                 'useUpos'             => self::$wc_nuvei->can_use_upos(),
@@ -337,7 +338,7 @@ class Nuvei_Payments_For_Woocommerce
                 'loaderUrl'           => plugin_dir_url( __FILE__ ) . 'assets/icons/loader.gif',
                 'checkoutIntegration' => self::$wc_nuvei->settings['integration_type'],
                 'webMasterId'         => 'WooCommerce ' . WOOCOMMERCE_VERSION
-                        . '; Plugin v' . $helper->helper_get_plugin_version(),
+                    . '; Plugin v' . $helper->helper_get_plugin_version(),
             )
         );
 

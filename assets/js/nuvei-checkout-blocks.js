@@ -28,14 +28,20 @@ function nuveiIsCheckoutBlocksFormValid() {
         return false;
     }
 
-    const regex     = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // check the email
     let isFormValid = true;
 
     jQuery(nuveiCheckoutBlockFormClass).find('input, select, textarea').each( function() {
         let self = jQuery(this);
+        
+        if (!self.prop('required')) {
+            // continue with the next field
+            return true;
+        }
 
         // email check
         if ('email' == self.prop('id') || 'email' == self.prop('type')) {
+            let regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // check the email
+            
             if (!regex.test(self.val())) {
                 console.log('the element is not valid', self.attr('id'));
                 
@@ -45,15 +51,47 @@ function nuveiIsCheckoutBlocksFormValid() {
                 jQuery('#nuvei_blocker').hide();
 
                 isFormValid = false;
+                // break the loop
                 return false;
             }
+            
+            return true;
+        }
+        
+        // phone check
+        if ('shipping-phone' == self.prop('id') || 'tel' == self.prop('type')) {
+            console.log('check the phone');
+            let regex = /^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s\./0-9]*$/g;
+
+
+            if (!regex.test(self.val())) {
+                console.log('the element is not valid', self.attr('id'));
+                
+                nuveiDestroySimplyConnect();
+
+                jQuery('#nuvei_checkout_container').html(nuveiCheckoutBlockContText);
+                jQuery('#nuvei_blocker').hide();
+
+                isFormValid = false;
+                // break the loop
+                return false;
+            }
+            
+            return true;
         }
 
         if (self.attr('aria-errormessage')
+            || 'true' == self.attr('aria-invalid')
             || self.closest('div').hasClass('has-error')
-            || jQuery(nuveiCheckoutBlockFormClass).find('.wc-block-store-notice.is-error').length > 0
+//            || jQuery(nuveiCheckoutBlockFormClass).find('.wc-block-store-notice.is-error').length > 0
         ) {
             console.log('the element is not valid', self.attr('id'));
+            
+            console.log(
+                self.attr('aria-errormessage'), 
+                self.closest('div').hasClass('has-error'), 
+                jQuery(nuveiCheckoutBlockFormClass).find('.wc-block-store-notice.is-error').length
+            );
             
             nuveiDestroySimplyConnect();
 
@@ -61,6 +99,7 @@ function nuveiIsCheckoutBlocksFormValid() {
             jQuery('#nuvei_blocker').hide();
 
             isFormValid = false;
+            // break the loop
             return false;
         }
     });
@@ -118,7 +157,8 @@ function nuveiIsCheckoutBlocksFormValid() {
 
                 // try to validate the form on checkout page load
                 if (nuveiIsCheckoutBlocksFormValid()) {
-                    nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, nuveiCheckoutBlockPayBtn);
+//                    nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, nuveiCheckoutBlockPayBtn);
+                    nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
                 }
             }
 
@@ -177,11 +217,15 @@ jQuery(function() {
     }
 
     // WP Blocks subscriber
-    const store = wp.data.select('wc/store/cart');
+    const store             = wp.data.select('wc/store/cart');
+//    const validationStore   = window.wc.wcBlocksData.validationStore;
+    const validationStore   = wp.data.select('wc/store/validation');
+//    const select            = wp.data.select;
 
     let lastTotal       = store.getCartTotals().total_price;
     let lastBilling     = JSON.stringify(store.getCartData().billingAddress);
 //    let lastShipping    = JSON.stringify(store.getCartData().shippingAddress);
+//    let previousErrorCount = 0;
 
     // subscribe to change events
     if (typeof nuveiDebounce != 'undefined') {
@@ -193,6 +237,10 @@ jQuery(function() {
             const currentTotals     = store.getCartTotals ? store.getCartTotals().total_price : null;
             const currentBilling    = JSON.stringify(store.getCartData().billingAddress);
 //            const currentShipping   = JSON.stringify(store.getCartData().shippingAddress);
+//            const currentErrors = select(validationStore).getValidationErrors();
+//            const currentErrorCount = Object.keys(currentErrors).length;
+            
+            console.log(validationStore.getValidationErrors());
 
             // Totals have changed
             if (currentTotals != lastTotal) {
@@ -202,7 +250,8 @@ jQuery(function() {
 
                 nuveiDestroySimplyConnect();
                 jQuery('#nuvei_checkout_container').html(window.wp.i18n.__('Loading...', 'nuvei-payments-for-woocommerce'));
-                nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, nuveiCheckoutBlockPayBtn);
+//                nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, nuveiCheckoutBlockPayBtn);
+                nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
             }
 
             // Billing address changed
@@ -211,7 +260,8 @@ jQuery(function() {
                 console.log('Billing address changed');
 
                 if (nuveiIsCheckoutBlocksFormValid()) {
-                    nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, nuveiCheckoutBlockPayBtn);
+//                    nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, nuveiCheckoutBlockPayBtn);
+                    nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
                     return;
                 }
             }
@@ -225,6 +275,15 @@ jQuery(function() {
 //                    nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, nuveiCheckoutBlockPayBtn);
 //                    return;
 //                }
+//            }
+
+//            if (currentErrorCount !== previousErrorCount) {
+//                if (currentErrorCount > 0) {
+//                    console.log('Checkout validation failed! Total errors:', currentErrorCount);
+//                } else if (previousErrorCount > 0) {
+//                    console.log('Checkout validation passed!');
+//                }
+//                previousErrorCount = currentErrorCount;
 //            }
         }, 1000);
 
