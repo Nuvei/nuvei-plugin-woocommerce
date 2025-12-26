@@ -246,7 +246,11 @@ function nuveiSyncPaymentPlans() {
 			});
 
 			butonTd.find('fieldset p.description').html(scTrans.LastDownload +': '+ resp.time);
-		} else {
+		}
+        else if (resp.hasOwnProperty('message') && '' != resp.message) {
+            alert(resp.message);
+        }
+        else {
 			alert('Response error.');
 		}
 

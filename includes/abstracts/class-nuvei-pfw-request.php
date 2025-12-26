@@ -142,7 +142,7 @@ abstract class Nuvei_Pfw_Request {
 	 * @return array
 	 */
 	protected function get_order_addresses() {
-			Nuvei_Pfw_Logger::write( 'get_order_addresses()' );
+        Nuvei_Pfw_Logger::write( 'get_order_addresses()' );
 
 		// REST API flow
 		if ( ! empty( $this->rest_params ) ) {
@@ -191,13 +191,13 @@ abstract class Nuvei_Pfw_Request {
 
 		$billing_address         = array();
 		$cart                    = $woocommerce->cart;
-			$existing_order_data = array();
+        $existing_order_data    = array();
 
 		if ( ! empty( $this->sc_order ) ) {
 			$existing_order_data = $this->sc_order->get_data();
 		}
 
-		// Set billing params.
+		# Set billing params.
 		// billing_first_name
 		$bfn = $this->get_scformdata_address_parts( 'first_name' );
 
@@ -208,7 +208,8 @@ abstract class Nuvei_Pfw_Request {
 			$bfn = trim( (string) $cart->get_customer()->get_billing_first_name() );
 		}
 
-		$billing_address['firstName'] = ! empty( $bfn ) ? $bfn : 'Missing parameter';
+//		$billing_address['firstName'] = ! empty( $bfn ) ? $bfn : 'Missing parameter';
+		$billing_address['firstName'] = $bfn;
 
 		// billing_last_name
 		$bln = $this->get_scformdata_address_parts( 'last_name' );
@@ -220,7 +221,8 @@ abstract class Nuvei_Pfw_Request {
 			$bln = trim( (string) $cart->get_customer()->get_billing_last_name() );
 		}
 
-		$billing_address['lastName'] = ! empty( $bln ) ? $bln : 'Missing parameter';
+//		$billing_address['lastName'] = ! empty( $bln ) ? $bln : 'Missing parameter';
+		$billing_address['lastName'] = $bln;
 
 		// address
 		$ba     = '';
@@ -259,7 +261,8 @@ abstract class Nuvei_Pfw_Request {
 			}
 		}
 
-		$billing_address['address'] = ! empty( $ba ) ? $ba : 'Missing parameter';
+//		$billing_address['address'] = ! empty( $ba ) ? $ba : 'Missing parameter';
+		$billing_address['address'] = $ba;
 
 		// billing_phone
 		$bp = $this->get_scformdata_address_parts( 'phone' );
@@ -271,7 +274,8 @@ abstract class Nuvei_Pfw_Request {
 			$bp = trim( (string) $cart->get_customer()->get_billing_phone() );
 		}
 
-		$billing_address['phone'] = ! empty( $bp ) ? $bp : 'Missing parameter';
+//		$billing_address['phone'] = ! empty( $bp ) ? $bp : 'Missing parameter';
+		$billing_address['phone'] = $bp;
 
 		// billing_postcode
 		$bz = $this->get_scformdata_address_parts( 'postcode' );
@@ -283,7 +287,8 @@ abstract class Nuvei_Pfw_Request {
 			$bz = trim( (string) $cart->get_customer()->get_billing_postcode() );
 		}
 
-		$billing_address['zip'] = ! empty( $bz ) ? $bz : 'Missing parameter';
+//		$billing_address['zip'] = ! empty( $bz ) ? $bz : 'Missing parameter';
+		$billing_address['zip'] = $bz;
 
 		// billing_city
 		$bc = $this->get_scformdata_address_parts( 'city' );
@@ -296,6 +301,7 @@ abstract class Nuvei_Pfw_Request {
 		}
 
 		$billing_address['city'] = ! empty( $bc ) ? $bc : 'Missing parameter';
+		$billing_address['city'] = $bc;
 
 		// billing_country
 		$bcn = $this->get_scformdata_address_parts( 'country' );
@@ -328,7 +334,7 @@ abstract class Nuvei_Pfw_Request {
 			$be = trim( (string) $existing_order_data['billing']['email'] );
 		}
 		if ( empty( $be ) ) {
-				$be = trim( (string) $cart->get_customer()->get_billing_email() );
+            $be = trim( (string) $cart->get_customer()->get_billing_email() );
 		}
 
 		$billing_address['email'] = $be;
@@ -438,7 +444,7 @@ abstract class Nuvei_Pfw_Request {
 	}
 
 	/**
-	 * A helper function to safty check for, and get address parameters from the store request.
+	 * A helper function to safety check for, and get address parameters from the store request.
 	 *
 	 * @param string $field The field we are looking for.
 	 * @param string $group The address group - shipping or billing.
@@ -463,7 +469,7 @@ abstract class Nuvei_Pfw_Request {
 
 		// additional check for the email
 		if ( 'email' == $field && ! empty( $_REQUEST['scFormData']['email'] ) ) {
-			$be = trim( sanitize_email( wp_unslash( $_REQUEST['scFormData']['email'] ) ) );
+			return trim( sanitize_email( wp_unslash( $_REQUEST['scFormData']['email'] ) ) );
 		}
 
 		return '';
@@ -1147,7 +1153,13 @@ abstract class Nuvei_Pfw_Request {
 	 * @return void
 	 */
 	protected function save_transaction_data( $params = array(), $wc_refund_id = null ) {
-		Nuvei_Pfw_Logger::write( array( $params, $wc_refund_id ), 'save_transaction_data()' );
+		Nuvei_Pfw_Logger::write( 
+            array( 
+                '$params'       => $params, 
+                '$wc_refund_id' => $wc_refund_id, 
+            ), 
+            'save_transaction_data() incoming method parameters' 
+        );
 
 		$transaction_id = Nuvei_Pfw_Http::get_param( 'TransactionID', 'int', '', $params );
 
@@ -1168,6 +1180,14 @@ abstract class Nuvei_Pfw_Request {
 
 		$transaction_type = Nuvei_Pfw_Http::get_param( 'transactionType', 'string', '', $params );
 		$status           = Nuvei_Pfw_Http::get_request_status();
+        
+        Nuvei_Pfw_Logger::write( 
+            [
+                '$transaction_type' => $transaction_type,
+                '$status'           => $status,
+            ],
+            'save_transaction_data() paramters from DMN or REST response' 
+        );
 
 		// check for already existing data
 		if ( ! empty( $transactions_data[ $transaction_id ] )
@@ -1198,8 +1218,15 @@ abstract class Nuvei_Pfw_Request {
 
 		$this->sc_order->update_meta_data( NUVEI_PFW_TRANSACTIONS, $transactions_data );
 
-		// update it only for Auth, Settle and Sale. They are base an we will need this TrID
-		if ( in_array( $transaction_type, array( 'Auth', 'Settle', 'Sale' ) ) ) {
+		// Update it only for Auth and Sale. They are base an we will need this TrID
+		if ( in_array( $transaction_type, array( 'Auth', 'Sale' ) ) ) {
+            Nuvei_Pfw_Logger::write( 'save_transaction_data(), Auth or Sale');
+			$this->sc_order->update_meta_data( NUVEI_PFW_TR_ID, $transaction_id );
+		}
+        
+		// Update for Settle only if it was Approved. If it is not, the merchant can try again.
+		if ( 'Settle' == $transaction_type && 'approved' == strtolower($status) ) {
+            Nuvei_Pfw_Logger::write( 'save_transaction_data(), Approved Settle');
 			$this->sc_order->update_meta_data( NUVEI_PFW_TR_ID, $transaction_id );
 		}
 
@@ -1207,6 +1234,7 @@ abstract class Nuvei_Pfw_Request {
 			$this->sc_order->update_meta_data( NUVEI_PFW_WC_RENEWAL, true );
 		}
 
+        Nuvei_Pfw_Logger::write( 'The transaction was added to the Order meta data.' );
 		// $this->sc_order->save();
 	}
 
@@ -1323,7 +1351,7 @@ abstract class Nuvei_Pfw_Request {
 	 * @return array
 	 */
 	private function validate_parameters( $params ) {
-		Nuvei_Pfw_Logger::write( 'validate_parameters' );
+		Nuvei_Pfw_Logger::write( $params, 'validate_parameters' );
 
 		// directly check the mails
 		if ( isset( $params['billingAddress']['email'] ) ) {

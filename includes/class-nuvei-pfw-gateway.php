@@ -35,8 +35,15 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		// required for the Store
 		$this->title       = $this->get_option( 'title', NUVEI_PFW_GATEWAY_TITLE );
-		$this->description = $this->get_option( 'description', $this->method_description );
-		$this->plugin_data = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
+        
+		$this->description = wp_kses_post('<div id="nuvei_checkout_container" data-placeholder="' . 
+            ( 'cashier' === $this->get_option( 'integration_type' ) ? 
+                __('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce') :
+                    __('The Checkout form must be valid to continue!', 'nuvei-payments-for-woocommerce')
+            )
+             . '"></div>');
+		
+        $this->plugin_data = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
 
 		// $this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page'])
 		// ? $this->settings['use_wpml_thanks_page'] : 'no';
@@ -575,9 +582,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$resp    = $ndp_obj->process();
 
 		if ( empty( $resp ) || ! is_array( $resp ) || 'SUCCESS' != $resp['status'] ) {
-			Nuvei_Pfw_Logger::write( 'Get Plans response error.' );
+			Nuvei_Pfw_Logger::write( 'Unexpected error, when try to download the plans.' );
 
-			wp_send_json( array( 'status' => 0 ) );
+			wp_send_json( array( 
+                'status'    => 0,
+                'message'   => __( 'Unexpected error, when try to download the plans.', 'nuvei-payments-for-woocommerce')
+            ) );
 			exit;
 		}
 
@@ -599,8 +609,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			NUVEI_PFW_LOGS_DIR . NUVEI_PFW_PLANS_FILE,
 			wp_json_encode( $resp['plans'] ),
 			0644
-		)
-		) {
+		) ) {
 			$this->create_nuvei_global_attribute();
 
 			wp_send_json(
@@ -617,7 +626,10 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'Plans list was not saved.'
 		);
 
-		wp_send_json( array( 'status' => 0 ) );
+		wp_send_json( array( 
+            'status'    => 0,
+            'message'   => __( 'Unexpected error, when try to save the file with the plans.', 'nuvei-payments-for-woocommerce')
+        ) );
 		exit;
 	}
 
@@ -1153,37 +1165,26 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	public function create_wc_subscr_order( $amount_to_charge, $renewal_order ) {
 		$renewal_order_id = $renewal_order->get_id();
 		$order_all_meta   = $renewal_order->get_meta_data();
-		$subscription_id  = null;
-		$billing_mail     = null;
-		$billing_country  = null;
-
-		foreach ( $order_all_meta as $data ) {
-			if ( isset( $data->key )
-				&& '_subscription_renewal' == $data->key
-				&& isset( $data->value )
-			) {
-				$subscription_id = $data->value;
-			}
-
-			if ( isset( $data->key )
-				&& '_billing_email' == $data->key
-				&& isset( $data->value )
-			) {
-				$billing_mail = $data->value;
-			}
-
-			if ( isset( $data->key )
-				&& '_billing_country' == $data->key
-				&& isset( $data->value )
-			) {
-				$billing_country = $data->value;
-			}
-		}
+		$subscription_id  = $renewal_order->get_meta( '_subscription_renewal', true );;
+        // we need them for the payment.do request
+		$billing_mail     = $renewal_order->get_billing_email();
+		$billing_country  = $renewal_order->get_billing_country();
+        
+        Nuvei_Pfw_Logger::write(
+			[
+                '$subscription_id'  => $subscription_id,
+                '$billing_mail'     => $billing_mail,
+                '$billing_country'  => $billing_country,
+            ],
+			'some params',
+            'TRACE'
+		);
 
 		// $subscription   = wc_get_order( $renewal_order->get_meta( '_subscription_renewal' ) );
 		$subscription = wc_get_order( $subscription_id );
 		$helper       = new Nuvei_Pfw_Helper();
 
+        // error
 		if ( ! is_object( $subscription ) ) {
 			Nuvei_Pfw_Logger::write(
 				array(
@@ -1213,6 +1214,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'create_wc_subscr_order'
 		);
 
+        // error
 		if ( empty( $parent_tr_upo_id ) || empty( $parent_tr_id ) ) {
 			Nuvei_Pfw_Logger::write(
 				$parent_order->get_meta_data(),
@@ -1227,12 +1229,15 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$st_obj  = new Nuvei_Pfw_Session_Token( $this->settings );
 		$st_resp = $st_obj->process();
 
+        // error
 		if ( empty( $st_resp['sessionToken'] ) ) {
 			Nuvei_Pfw_Logger::write( 'Error when try to get Session Token' );
 			WC_Subscriptions_Manager::process_subscription_payment_failure_on_order( $parent_order );
 			return;
 		}
 
+        Nuvei_Pfw_Logger::write( $this->settings, 'Before call Nuvei_Pfw_Payment.' );
+        
 		// $billing_mail   = $renewal_order->get_meta( '_billing_email' );
 		$payment_obj = new Nuvei_Pfw_Payment( $this->settings );
 		$params      = array(
@@ -1463,6 +1468,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'total_amount'       => $total_amount,
 			'encoding'           => 'UTF-8',
 			'webMasterId'        => $nuvei_helper->helper_get_web_master_id(),
+			'sourceApplication'  => NUVEI_PFW_SOURCE_APPLICATION,
 		);
 
 		if ( 1 == $this->settings['use_upos'] ) {
@@ -1560,12 +1566,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'description' => __( 'This is the payment method which the user sees during checkout.', 'nuvei-payments-for-woocommerce' ),
 				'default'     => __( 'Secure Payments with Nuvei', 'nuvei-payments-for-woocommerce' ),
 			),
-			'description'       => array(
-				'title'       => __( 'Description', 'nuvei-payments-for-woocommerce' ),
-				'type'        => 'textarea',
-				'description' => __( 'This controls the description which the user sees during checkout.', 'nuvei-payments-for-woocommerce' ),
-				'default'     => 'Place order to get to our secured payment page to select your payment option',
-			),
+//			'description'       => array(
+//				'title'       => __( 'Description', 'nuvei-payments-for-woocommerce' ),
+//				'type'        => 'textarea',
+//				'description' => __( 'This controls the description which the user sees during checkout.', 'nuvei-payments-for-woocommerce' ),
+//				'default'     => 'Place order to get to our secured payment page to select your payment option',
+//			),
 			'test'              => array(
 				'title'    => __( 'Site Mode', 'nuvei-payments-for-woocommerce' ) . ' *',
 				'type'     => 'select',

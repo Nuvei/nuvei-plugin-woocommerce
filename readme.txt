@@ -1,8 +1,8 @@
 === Nuvei Payments for Woocommerce ===
 
 Requires at least: 4.7
-Tested up to: 6.8
-Stable tag: 3.8.1
+Tested up to: 6.9
+Stable tag: 3.9.5
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -63,12 +63,43 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 == Changelog ==
 
+= 3.9.5 =
+* Fixed compatibility with Divi Theme.
+* Fixed some problems with Blocks Checkout form validations.
+* Fixed the problem with WC Subscriptions, Renewal Orders.
+
+= 3.9.4 =
+* Fixed a problem with the Classic Checkout when some of the fields are populated with wrong values.
+* Added few comments and changed few variables names because of "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound" requirement.
+
+= 3.9.3 =
+* Fixed the check for the logs directory when plugin is activated. In case of error, return better message to the user.
+
+= 3.9.2 =
+* Fixed the problem when the default WC Pay button is visible, when Nuvei is selected as payment provider, and Simply Connect is used.
+* Added few more JS checks.
+* Fixed the problem with Classic Checkout where Simply Connect does not load.
+* Fixed the problem when the client try to change the Shipping address.
+* Fixed the problem with the duplicate CC fields after change of the Payment Provider.
+
+= 3.9.1 =
+* Fix for the broken Cashier payment flow.
+* Added sourceApplication parameter to the Cashier URL.
+
+= 3.9.0 =
+* Simply Connect is loaded directly on the Checkout page, under Nuvei option. There is no more "second page".
+* The Description of the plugin was removed.
+* Fixed the logic for Nuvei's Orders action buttons. Now we do not hide buttons if the last action like Void or Settle failed.
+* Fixed the missing echo in add-terms-form template.
+* When some of the address details is missing use empty values.
+* Replaced woocommerce_blocks_checkout_order_processed hook with woocommerce_store_api_checkout_order_processed.
+
 = 3.8.1 =
 * Fix for the missing error message on the "Thank you" page, when there is error.
 
 = 3.8.0 =
 * Exposed additional settings for Google Pay.
-* Do not load the text domain anymore using load_plugin_textdomain(), buy WordPress recommendation.
+* Do not load the text domain anymore using load_plugin_textdomain(), by WordPress recommendation.
 * Updated the language template file.
 
 = 3.7.0 =

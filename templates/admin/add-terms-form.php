@@ -13,6 +13,7 @@
 			 
 			<?php
 			if ( ! empty( $plans_list ) ) :
+                // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- false positive, $plan is not global
 				foreach ( $plans_list as $plan ) :
 					?>
 						<option value="<?php echo esc_attr( $plan['planId'] ); ?>">

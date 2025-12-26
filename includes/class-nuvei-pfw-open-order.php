@@ -12,7 +12,7 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 	 * Set is_ajax parameter to the Process metohd.
 	 *
 	 * @param array $plugin_settings
-	 * @param bool  $is_ajax
+	 * @param array $rest_params REST call params if any.
 	 */
 	public function __construct( array $plugin_settings, $rest_params = array() ) {
 		parent::__construct();
@@ -53,7 +53,9 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 			$addresses          = $this->get_order_addresses();
 			$transaction_type   = $this->get_total_from_rest_params() == 0
 			? 'Auth' : $this->plugin_settings['payment_action'];
-		} else { // default flow
+		}
+        // default flow
+        else {
 			$open_order_details = $woocommerce->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
 			$products_data      = $this->get_products_data();
 			$cart_total         = (float) $products_data['totals']['total'];
