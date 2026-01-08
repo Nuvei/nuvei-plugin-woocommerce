@@ -9,7 +9,6 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Payment extends Nuvei_Pfw_Request {
 
-
 	public function process() {
 		/**
 		 * expected keys: sessionToken, userTokenId, clientRequestId, currency,

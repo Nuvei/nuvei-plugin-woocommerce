@@ -969,7 +969,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'sourceApplication'		=> NUVEI_PFW_SOURCE_APPLICATION,
 			'fieldStyle'			=> json_decode( $this->get_option( 'simply_connect_style', '' ), true ),
 		);
-
+        
 		// For the QA site only
 		if ( $this->is_qa_site() ) {
 			$checkout_data['webSdkEnv'] = 'devmobile';
@@ -1176,7 +1176,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 '$billing_mail'     => $billing_mail,
                 '$billing_country'  => $billing_country,
             ],
-			'some params',
+			'create_wc_subscr_order',
             'TRACE'
 		);
 
@@ -1210,8 +1210,11 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			array(
 				'$renewal_order_id' => $renewal_order_id,
 				'$parent_order_id'  => $parent_order_id,
+				'$parent_tr_id'     => $parent_tr_id,
+				'$parent_tr_upo_id' => $parent_tr_upo_id,
 			),
-			'create_wc_subscr_order'
+			'create_wc_subscr_order',
+            'TRACE'
 		);
 
         // error

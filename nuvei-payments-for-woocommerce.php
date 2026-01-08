@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.9.5
+ * Version: 3.10.0
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
@@ -13,7 +13,7 @@
  * Tested up to: 6.9
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 10.3.6
+ * WC tested up to: 10.4.3
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -188,6 +188,15 @@ class Nuvei_Payments_For_Woocommerce
 
         // for the thank-you page
         add_filter( 'woocommerce_thankyou_order_received_text', array (__CLASS__, 'thank_you_page_mod'), 10, 2 );
+        // for the thank-you page. 
+        // in case something decide to automaticaly complete the order with auto_complete_paid_order, try to disable it.
+        add_action( 'woocommerce_thankyou', function($order_id) {
+            $order = wc_get_order( $order_id );
+            
+            if ( $order && $order->get_payment_method() == NUVEI_PFW_GATEWAY_NAME ) {
+                remove_action( 'woocommerce_thankyou', 'auto_complete_paid_order' );
+            }
+        }, 1 );
 
         # For the custom column in the Order list
         // legacy

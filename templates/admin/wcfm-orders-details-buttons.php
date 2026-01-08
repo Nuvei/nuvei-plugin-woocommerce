@@ -1,3 +1,5 @@
+<?php defined( 'ABSPATH' ) || exit; ?>
+
 <hr />
 
 <div id="custom_loader" class="blockUI blockOverlay" style="height: 100%; position: absolute; top: 0px; width: 100%; z-index: 10; background-color: rgba(255,255,255,0.5); display: none;"></div>

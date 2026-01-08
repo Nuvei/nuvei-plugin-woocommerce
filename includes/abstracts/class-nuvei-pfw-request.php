@@ -8,7 +8,6 @@
 	 */
 abstract class Nuvei_Pfw_Request {
 
-
 	protected $rest_params = array();
 	protected $plugin_settings;
 	protected $request_base_params;

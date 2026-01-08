@@ -1,3 +1,5 @@
+<?php defined( 'ABSPATH' ) || exit; ?>
+
 <br />
 <div class="page_collapsible orders_details_items">
 	<?php echo esc_html__( 'Nuvei Order Notes', 'nuvei-payments-for-woocommerce' ); ?><span></span>

@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.9
-Stable tag: 3.9.5
+Stable tag: 3.10.0
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,11 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.10.0 =
+* Remove auto_complete_paid_order method from woocommerce_thankyou hook. The plugin changes the Order's Status based on DMNs.
+* Small changes in few logs records.
+* Prevent direct access to few template files.
 
 = 3.9.5 =
 * Fixed compatibility with Divi Theme.
