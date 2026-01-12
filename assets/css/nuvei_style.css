@@ -100,3 +100,10 @@ button#nuvei_place_order {
     margin-top: -32px;
     margin-left: -32px;
 }
+
+/* blocks style */
+.wc-block-components-form #nuvei_checkout_container {
+  font-size: var(--wp--preset--font-size--small,14px);
+  line-height: 20px;
+  padding: 0 16px 16px;
+}

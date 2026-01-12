@@ -34,16 +34,23 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$this->init_form_tools_fields( true );
 
 		// required for the Store
-		$this->title       = $this->get_option( 'title', NUVEI_PFW_GATEWAY_TITLE );
+		$this->title        = $this->get_option( 'title', NUVEI_PFW_GATEWAY_TITLE );
+        $this->description  = wp_kses_post(
+            '<div id="nuvei_checkout_container" data-placeholder="' . 
+                ( 'cashier' === $this->get_option( 'integration_type' ) ? 
+                    __( 
+                        'You will be redirected to Nuvei secure payment page.', 
+                        'nuvei-payments-for-woocommerce' 
+                    ) 
+                        : __(
+                            'Please fill all required fields to continue!', 
+                            'nuvei-payments-for-woocommerce' 
+                        )
+                )
+             . '"></div>'
+        );
         
-		$this->description = wp_kses_post('<div id="nuvei_checkout_container" data-placeholder="' . 
-            ( 'cashier' === $this->get_option( 'integration_type' ) ? 
-                __('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce') :
-                    __('The Checkout form must be valid to continue!', 'nuvei-payments-for-woocommerce')
-            )
-             . '"></div>');
-		
-        $this->plugin_data = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
+        $this->plugin_data  = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
 
 		// $this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page'])
 		// ? $this->settings['use_wpml_thanks_page'] : 'no';
@@ -150,6 +157,14 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
         return true;
     }
 
+    public function set_simply_warn_msg($simply_msg, $cashier_msg) {
+		$this->description = wp_kses_post(
+            '<div id="nuvei_checkout_container" data-placeholder="' . 
+                ( 'cashier' === $this->get_option( 'integration_type' ) ? $cashier_msg : $simply_msg )
+             . '"></div>'
+        );
+    }
+    
 	/**
 	 * Generate Button HTML.
 	 * Custom function to generate beautiful button in admin settings.
@@ -952,7 +967,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'fullName'               => $ord_details['billingAddress']['firstName'] . ' '
                 . $oo_data['billingAddress']['lastName'],
 			'email'                  => $ord_details['billingAddress']['email'],
-			'payButton'              => $this->get_option( 'pay_button', 'amountButton' ),
+//			'payButton'              => $this->get_option( 'pay_button', 'amountButton' ),
+			'payButton'              => 'noButton',
 			'showResponseMessage'    => false, // shows/hide the response popups
 			'locale'                 => $locale,
 			'autoOpenPM'             => (bool) $this->get_option( 'auto_open_pm', 1 ),

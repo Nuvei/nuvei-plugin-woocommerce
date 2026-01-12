@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Nuvei Payments for Woocommerce\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-20 08:37+0000\n"
+"POT-Creation-Date: 2026-01-12 13:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -13,7 +13,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Loco https://localise.biz/\n"
-"X-Loco-Version: 2.8.0; wp-6.8.3; php-8.2.29\n"
+"X-Loco-Version: 2.8.0; wp-6.9; php-8.2.29\n"
 "X-Domain: nuvei-payments-for-woocommerce"
 
 #. %3$s: the status of the Payment
@@ -26,7 +26,7 @@ msgstr ""
 msgid "A Refund request was send. Please, wait for response!"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1828
+#: includes/class-nuvei-pfw-gateway.php:1845
 msgid "Accordion"
 msgstr ""
 
@@ -34,15 +34,15 @@ msgstr ""
 msgid "Advanced Settings"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1633
+#: includes/class-nuvei-pfw-gateway.php:1650
 msgid "Allow Auto Void"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1792
+#: includes/class-nuvei-pfw-gateway.php:1809
 msgid "Allow Client to Use UPOs"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1635
+#: includes/class-nuvei-pfw-gateway.php:1652
 msgid ""
 "Allow plugin to initiate auto Void request in case there is Payment "
 "(transaction), but there is no Order for this transaction in the Store. This "
@@ -50,7 +50,7 @@ msgid ""
 "will be saved. The last read messages can be view in the Help Tools."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1814
+#: includes/class-nuvei-pfw-gateway.php:1831
 msgid "Allow Rebilling with PayPal"
 msgstr ""
 
@@ -58,28 +58,28 @@ msgstr ""
 msgid "Amount:"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:272
-#: templates/admin/wcfm-orders-details-buttons.php:66
+#: nuvei-payments-for-woocommerce.php:274
+#: templates/admin/wcfm-orders-details-buttons.php:68
 msgid "Are you sure about this Refund?"
 msgstr ""
 
 #. %d is replaced with "decimal"
-#: nuvei-payments-for-woocommerce.php:634
+#: nuvei-payments-for-woocommerce.php:636
 msgid "Are you sure, you want to Cancel Order #%d?"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:646
+#: nuvei-payments-for-woocommerce.php:648
 msgid ""
 "Are you sure, you want to Cancel this Order? This will also deactivate all "
 "Active Subscriptions."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:1320
+#: nuvei-payments-for-woocommerce.php:1349
 msgid "Are you sure, you want to cancel this subscription?"
 msgstr ""
 
 #. %d is replaced with "decimal"
-#: nuvei-payments-for-woocommerce.php:669
+#: nuvei-payments-for-woocommerce.php:671
 msgid "Are you sure, you want to Settle Order #%d?"
 msgstr ""
 
@@ -88,136 +88,136 @@ msgid ""
 "Auto Void logic - the auto void is disabled, but a system message was saved."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1876
+#: includes/class-nuvei-pfw-gateway.php:1893
 msgid "Auto-expand PMs"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1960
+#: includes/class-nuvei-pfw-gateway.php:1977
 msgid "Black"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1853
+#: includes/class-nuvei-pfw-gateway.php:1870
 msgid "Block Cards"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:267
+#: includes/class-nuvei-pfw-gateway.php:282
 msgid "Block Payment Methods"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1971
+#: includes/class-nuvei-pfw-gateway.php:1988
 msgid "Book"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1970
+#: includes/class-nuvei-pfw-gateway.php:1987
 msgid "Buy"
 msgstr ""
 
-#: templates/admin/wcfm-orders-details-buttons.php:63
+#: templates/admin/wcfm-orders-details-buttons.php:65
 msgid "Cancel"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:1322
+#: nuvei-payments-for-woocommerce.php:1351
 msgid "Cancel Subscription"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1756
+#: includes/class-nuvei-pfw-gateway.php:1773
 msgid "Cashier settings"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1653
+#: includes/class-nuvei-pfw-gateway.php:1670
 msgid "Check it to hide WCS waringn permanent."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1847
-#: includes/class-nuvei-pfw-gateway.php:1858
-#: includes/class-nuvei-pfw-gateway.php:1952
+#: includes/class-nuvei-pfw-gateway.php:1864
+#: includes/class-nuvei-pfw-gateway.php:1875
+#: includes/class-nuvei-pfw-gateway.php:1969
 msgid "Check the Documentation."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1908
-#: includes/class-nuvei-pfw-gateway.php:1928
+#: includes/class-nuvei-pfw-gateway.php:1925
+#: includes/class-nuvei-pfw-gateway.php:1945
 msgid "check the Documentation."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1972
+#: includes/class-nuvei-pfw-gateway.php:1989
 msgid "Checkout"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:276
+#: nuvei-payments-for-woocommerce.php:278
 msgid "Checkout form class error, please contact the site administrator!"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1886
+#: includes/class-nuvei-pfw-gateway.php:1903
 msgid "Checkout Log level"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1613
+#: includes/class-nuvei-pfw-gateway.php:1630
 msgid "Choose Hash type provided by Nuvei"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1866
+#: includes/class-nuvei-pfw-gateway.php:1883
 msgid "Choose the Text on the Pay Button"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1764
+#: includes/class-nuvei-pfw-gateway.php:1781
 msgid ""
 "Cobine the products into one, to avoid eventual problems with, taxes, "
 "discounts, coupons, etc."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1762
+#: includes/class-nuvei-pfw-gateway.php:1779
 msgid "Combine Cashier Products into One"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1690
+#: includes/class-nuvei-pfw-gateway.php:1707
 msgid "Common settings"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:271
+#: nuvei-payments-for-woocommerce.php:273
 msgid "Continue"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1641
+#: includes/class-nuvei-pfw-gateway.php:1658
 msgid ""
 "Create and save daily log files. This can help for debugging and catching "
 "bugs."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1647
+#: includes/class-nuvei-pfw-gateway.php:1664
 msgid "Create and save the logs into single file."
 msgstr ""
 
-#: templates/admin/add-terms-form.php:37 templates/admin/add-terms-form.php:49
-#: templates/admin/add-terms-form.php:61 templates/admin/edit-term-form.php:43
-#: templates/admin/edit-term-form.php:71 templates/admin/edit-term-form.php:98
+#: templates/admin/add-terms-form.php:38 templates/admin/add-terms-form.php:50
+#: templates/admin/add-terms-form.php:62 templates/admin/edit-term-form.php:44
+#: templates/admin/edit-term-form.php:72 templates/admin/edit-term-form.php:99
 msgid "Days"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1566
+#: includes/class-nuvei-pfw-gateway.php:1583
 msgid "Default Title"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1841
+#: includes/class-nuvei-pfw-gateway.php:1858
 msgid "Disabled"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1562
+#: includes/class-nuvei-pfw-gateway.php:1579
 msgid "Enable Nuvei Checkout Plugin."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1781
+#: includes/class-nuvei-pfw-gateway.php:1798
 msgid "Enable Nuvei GW for Zero-total products"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1560
+#: includes/class-nuvei-pfw-gateway.php:1577
 msgid "Enable/Disable"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1839
+#: includes/class-nuvei-pfw-gateway.php:1856
 msgid "Enabled"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1840
+#: includes/class-nuvei-pfw-gateway.php:1857
 msgid "Enabled and expanded"
 msgstr ""
 
@@ -225,7 +225,7 @@ msgstr ""
 msgid "Error code: "
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1346
+#: includes/class-nuvei-pfw-gateway.php:1363
 msgid "Error empty Cashier URL."
 msgstr ""
 
@@ -237,11 +237,11 @@ msgstr ""
 msgid "Error when try to get the Order."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:263
+#: nuvei-payments-for-woocommerce.php:265
 msgid "Error when try to get the Session Token."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:260
+#: nuvei-payments-for-woocommerce.php:262
 msgid "Error with your Payment."
 msgstr ""
 
@@ -251,11 +251,11 @@ msgstr ""
 msgid "Error%s when try to start a Subscription by the Order."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1898
+#: includes/class-nuvei-pfw-gateway.php:1915
 msgid "for \"No logging\"."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1949
+#: includes/class-nuvei-pfw-gateway.php:1966
 msgid "For tests use BCR2DN6TZ6DP7P3X."
 msgstr ""
 
@@ -263,31 +263,31 @@ msgstr ""
 msgid "General Settings"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:275
+#: nuvei-payments-for-woocommerce.php:277
 msgid "Getting log faild, please check the console for more information!"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:264
+#: nuvei-payments-for-woocommerce.php:266
 msgid "Go back"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1957
+#: includes/class-nuvei-pfw-gateway.php:1974
 msgid "Google button color"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1967
+#: includes/class-nuvei-pfw-gateway.php:1984
 msgid "Google button type"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1946
+#: includes/class-nuvei-pfw-gateway.php:1963
 msgid "Google Merchant ID"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1940
+#: includes/class-nuvei-pfw-gateway.php:1957
 msgid "Google Pay settings"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1609
+#: includes/class-nuvei-pfw-gateway.php:1626
 msgid "Hash Type"
 msgstr ""
 
@@ -295,11 +295,11 @@ msgstr ""
 msgid "Help Tools"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1651
+#: includes/class-nuvei-pfw-gateway.php:1668
 msgid "Hide WCS Warning"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1830
+#: includes/class-nuvei-pfw-gateway.php:1847
 msgid "Horizontal"
 msgstr ""
 
@@ -307,20 +307,20 @@ msgstr ""
 msgid "https://github.com/Nuvei/nuvei-plugin-woocommerce"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1789
+#: includes/class-nuvei-pfw-gateway.php:1806
 msgid ""
 "If enalbe this option, only Nuvei GW will be listed as payment option. This "
 "option can be used for Card authentication.<br/>Zero-total checkout for "
 "rebilling products is enable by default."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1751
+#: includes/class-nuvei-pfw-gateway.php:1768
 msgid ""
 "If you disable this option, the user data will be completly exposed in the "
 "log records."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1679
+#: includes/class-nuvei-pfw-gateway.php:1696
 msgid "Integration Type"
 msgstr ""
 
@@ -332,23 +332,23 @@ msgstr ""
 msgid "Invalid Refund amount."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:754
+#: nuvei-payments-for-woocommerce.php:756
 msgid "Invalid security token sent."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:759
+#: nuvei-payments-for-woocommerce.php:761
 msgid "Invalid site mode."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:273
+#: nuvei-payments-for-woocommerce.php:275
 msgid "Last Download"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:181
+#: includes/class-nuvei-pfw-gateway.php:196
 msgid "Last download: "
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1800
+#: includes/class-nuvei-pfw-gateway.php:1817
 msgid "Logged users will see their UPOs, and will have option to save UPOs."
 msgstr ""
 
@@ -358,23 +358,23 @@ msgid ""
 "Subscription and products with Nuvei Subscription in same site!!!"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1743
+#: includes/class-nuvei-pfw-gateway.php:1760
 msgid "Mask User Data into the Log"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1588
+#: includes/class-nuvei-pfw-gateway.php:1605
 msgid "Merchant ID"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1592
+#: includes/class-nuvei-pfw-gateway.php:1609
 msgid "Merchant ID is provided by Nuvei"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1595
+#: includes/class-nuvei-pfw-gateway.php:1612
 msgid "Merchant Site ID"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1599
+#: includes/class-nuvei-pfw-gateway.php:1616
 msgid "Merchant Site ID is provided by Nuvei"
 msgstr ""
 
@@ -382,27 +382,27 @@ msgstr ""
 msgid "Message: "
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1298
+#: includes/class-nuvei-pfw-gateway.php:1315
 msgid "Missing incoming parameters."
 msgstr ""
 
-#: templates/admin/add-terms-form.php:38 templates/admin/add-terms-form.php:50
-#: templates/admin/add-terms-form.php:62 templates/admin/edit-term-form.php:47
-#: templates/admin/edit-term-form.php:75 templates/admin/edit-term-form.php:102
+#: templates/admin/add-terms-form.php:39 templates/admin/add-terms-form.php:51
+#: templates/admin/add-terms-form.php:63 templates/admin/edit-term-form.php:48
+#: templates/admin/edit-term-form.php:76 templates/admin/edit-term-form.php:103
 msgid "Month"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1747
-#: includes/class-nuvei-pfw-gateway.php:1768
-#: includes/class-nuvei-pfw-gateway.php:1880
+#: includes/class-nuvei-pfw-gateway.php:1764
+#: includes/class-nuvei-pfw-gateway.php:1785
+#: includes/class-nuvei-pfw-gateway.php:1897
 msgid "No"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:911
+#: nuvei-payments-for-woocommerce.php:913
 msgid "Not recognized Ajax call."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:2003
+#: includes/class-nuvei-pfw-gateway.php:2020
 msgid "Notify URL"
 msgstr ""
 
@@ -418,11 +418,11 @@ msgstr ""
 msgid "Nuvei Gateway for WooCommerce"
 msgstr ""
 
-#: templates/admin/wcfm-orders-details-msgs.php:3
+#: templates/admin/wcfm-orders-details-msgs.php:5
 msgid "Nuvei Order Notes"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:1200
+#: nuvei-payments-for-woocommerce.php:1229
 msgid "Nuvei Payment Plan Order"
 msgstr ""
 
@@ -434,37 +434,44 @@ msgstr ""
 msgid "Nuvei Payments for Woocommerce"
 msgstr ""
 
+#: nuvei-payments-for-woocommerce.php:1400
+msgid ""
+"Nuvei Payments for WooCommerce: Could not create the log directory or ."
+"htaccess or index.html file in wp-content/uploads/nuvei-logs. Please check "
+"your permissions. Logging may not work properly."
+msgstr ""
+
 #: includes/class-nuvei-pfw-notify-url.php:358
 msgid "Nuvei Payments notification."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:1139
-#: nuvei-payments-for-woocommerce.php:1172
+#: nuvei-payments-for-woocommerce.php:1168
+#: nuvei-payments-for-woocommerce.php:1201
 msgid "Nuvei Subscription"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:1313
+#: nuvei-payments-for-woocommerce.php:1342
 msgid "Nuvei Subscription ID:"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1973
+#: includes/class-nuvei-pfw-gateway.php:1990
 msgid "Order"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:359
+#: nuvei-payments-for-woocommerce.php:362
 msgid "Order canceled"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:357
+#: nuvei-payments-for-woocommerce.php:360
 msgid "Order error"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1313
+#: includes/class-nuvei-pfw-gateway.php:1330
 msgid "Order is false for order id "
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:269
-#: includes/class-nuvei-pfw-gateway.php:1974
+#: nuvei-payments-for-woocommerce.php:271
+#: includes/class-nuvei-pfw-gateway.php:1991
 msgid "Pay"
 msgstr ""
 
@@ -472,7 +479,7 @@ msgstr ""
 msgid "Pay with "
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1621
+#: includes/class-nuvei-pfw-gateway.php:1638
 msgid "Payment Action"
 msgstr ""
 
@@ -480,21 +487,21 @@ msgstr ""
 msgid "Payment Method: "
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1683
+#: includes/class-nuvei-pfw-gateway.php:1700
 msgid "Payment page - Cashier"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1822
+#: includes/class-nuvei-pfw-gateway.php:1839
 msgid ""
 "PayPal is available only for WCS. Using PayPal for rebilling will disable "
 "the UPOs."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:270
+#: nuvei-payments-for-woocommerce.php:272
 msgid "Place order"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1975
+#: includes/class-nuvei-pfw-gateway.php:1992
 msgid "Plain"
 msgstr ""
 
@@ -508,7 +515,7 @@ msgstr ""
 msgid "Plan ID:"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:695
+#: includes/class-nuvei-pfw-gateway.php:715
 msgid "Plans json is not readable."
 msgstr ""
 
@@ -516,35 +523,39 @@ msgstr ""
 msgid "Please check and fill the settings of the plugin."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:1147
-#: nuvei-payments-for-woocommerce.php:1180
+#: nuvei-payments-for-woocommerce.php:1176
+#: nuvei-payments-for-woocommerce.php:1209
 msgid "Please check transaction Total and Currency!"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:1105
+#: nuvei-payments-for-woocommerce.php:1134
 msgid "Please check your Order status for more information."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:788
-#: includes/class-nuvei-pfw-gateway.php:797
+#: includes/class-nuvei-pfw-gateway.php:808
+#: includes/class-nuvei-pfw-gateway.php:817
 msgid "Please create an account or login to subscribe."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:262
+#: nuvei-payments-for-woocommerce.php:264
 msgid "Please fill all mandatory fileds!"
 msgstr ""
 
+#: includes/class-nuvei-pfw-gateway.php:45
+msgid "Please fill all required fields to continue!"
+msgstr ""
+
 #. %s: the title of the field
-#: includes/class-nuvei-pfw-gateway.php:142
+#: includes/class-nuvei-pfw-gateway.php:149
 #, php-format
 msgid "Please fill the \"%s\" field to enable the payment gateway."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:267
+#: nuvei-payments-for-woocommerce.php:269
 msgid "Please try again later!"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:268
+#: nuvei-payments-for-woocommerce.php:270
 msgid "Please try another payment method!"
 msgstr ""
 
@@ -552,7 +563,7 @@ msgstr ""
 msgid "Please, check it in the Nuvei Control Panel!"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:278
+#: nuvei-payments-for-woocommerce.php:280
 msgid "Please, check requested Refund amount!"
 msgstr ""
 
@@ -560,15 +571,15 @@ msgstr ""
 msgid "Post parameter is less than 1."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1325
+#: includes/class-nuvei-pfw-gateway.php:1342
 msgid "Process payment Error - Order payment does not belongs to "
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:274
+#: nuvei-payments-for-woocommerce.php:276
 msgid "Read Log"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:2008
+#: includes/class-nuvei-pfw-gateway.php:2025
 msgid "Read Payment messages"
 msgstr ""
 
@@ -576,7 +587,7 @@ msgstr ""
 msgid "Reason"
 msgstr ""
 
-#: templates/admin/wcfm-orders-details-buttons.php:48
+#: templates/admin/wcfm-orders-details-buttons.php:50
 msgid "Reason for refund (optional)"
 msgstr ""
 
@@ -585,7 +596,7 @@ msgstr ""
 msgid "Reason: "
 msgstr ""
 
-#: templates/admin/add-terms-form.php:29 templates/admin/edit-term-form.php:27
+#: templates/admin/add-terms-form.php:30 templates/admin/edit-term-form.php:28
 msgid "Recurring Amount"
 msgstr ""
 
@@ -593,19 +604,19 @@ msgstr ""
 msgid "Recurring amount: "
 msgstr ""
 
-#: templates/admin/add-terms-form.php:46 templates/admin/edit-term-form.php:67
+#: templates/admin/add-terms-form.php:47 templates/admin/edit-term-form.php:68
 msgid "Recurring End After"
 msgstr ""
 
-#: templates/admin/add-terms-form.php:34 templates/admin/edit-term-form.php:39
+#: templates/admin/add-terms-form.php:35 templates/admin/edit-term-form.php:40
 msgid "Recurring Period"
 msgstr ""
 
-#: templates/admin/wcfm-orders-details-buttons.php:9
+#: templates/admin/wcfm-orders-details-buttons.php:11
 msgid "Refund"
 msgstr ""
 
-#: templates/admin/wcfm-orders-details-buttons.php:36
+#: templates/admin/wcfm-orders-details-buttons.php:38
 msgid "Refund amount"
 msgstr ""
 
@@ -613,7 +624,7 @@ msgstr ""
 msgid "Refund request problem: "
 msgstr ""
 
-#: templates/admin/wcfm-orders-details-buttons.php:67
+#: templates/admin/wcfm-orders-details-buttons.php:69
 msgid "Refund via Nuvei Checkout"
 msgstr ""
 
@@ -633,7 +644,7 @@ msgstr ""
 msgid "Request ERROR: "
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:265
+#: nuvei-payments-for-woocommerce.php:267
 msgid "Request fail."
 msgstr ""
 
@@ -645,94 +656,94 @@ msgstr ""
 msgid "Return to payments"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1639
+#: includes/class-nuvei-pfw-gateway.php:1656
 msgid "Save Daily Logs"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1645
+#: includes/class-nuvei-pfw-gateway.php:1662
 msgid "Save Single Log file"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1803
+#: includes/class-nuvei-pfw-gateway.php:1820
 msgid "Save UPOs for Guest Users"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1602
+#: includes/class-nuvei-pfw-gateway.php:1619
 msgid "Secret Key"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1606
+#: includes/class-nuvei-pfw-gateway.php:1623
 msgid "Secret key is provided by Nuvei"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1569
+#: includes/class-nuvei-pfw-gateway.php:1586
 msgid "Secure Payments with Nuvei"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1582
-#: includes/class-nuvei-pfw-gateway.php:1615
-#: includes/class-nuvei-pfw-gateway.php:1625
+#: includes/class-nuvei-pfw-gateway.php:1599
+#: includes/class-nuvei-pfw-gateway.php:1632
+#: includes/class-nuvei-pfw-gateway.php:1642
 msgid "Select an option..."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:243
+#: includes/class-nuvei-pfw-gateway.php:258
 msgid "Select payment methods..."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:679
-#: templates/admin/wcfm-orders-details-buttons.php:21
+#: nuvei-payments-for-woocommerce.php:681
+#: templates/admin/wcfm-orders-details-buttons.php:23
 msgid "Settle"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1869
+#: includes/class-nuvei-pfw-gateway.php:1886
 msgid "Shows the amount"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1870
+#: includes/class-nuvei-pfw-gateway.php:1887
 msgid "Shows the payment method"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1682
+#: includes/class-nuvei-pfw-gateway.php:1699
 msgid "Simply Connect"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1775
+#: includes/class-nuvei-pfw-gateway.php:1792
 msgid "Simply Connect settings"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1903
+#: includes/class-nuvei-pfw-gateway.php:1920
 msgid "Simply Connect Styling"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1825
+#: includes/class-nuvei-pfw-gateway.php:1842
 msgid "Simply Connect Theme"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1578
+#: includes/class-nuvei-pfw-gateway.php:1595
 msgid "Site Mode"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1704
+#: includes/class-nuvei-pfw-gateway.php:1721
 msgid "Status Authorized"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1736
+#: includes/class-nuvei-pfw-gateway.php:1753
 msgid "Status Failed"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1712
+#: includes/class-nuvei-pfw-gateway.php:1729
 msgid "Status Paid"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1696
+#: includes/class-nuvei-pfw-gateway.php:1713
 msgid "Status Pending DMN"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1720
+#: includes/class-nuvei-pfw-gateway.php:1737
 msgid "Status Refunded"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1728
+#: includes/class-nuvei-pfw-gateway.php:1745
 msgid "Status Voided"
 msgstr ""
 
@@ -765,24 +776,20 @@ msgstr ""
 msgid "Subscription%s was canceled."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1999
+#: includes/class-nuvei-pfw-gateway.php:2016
 msgid "Sync Payment Plans"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:1437
-#: nuvei-payments-for-woocommerce.php:1465
+#: nuvei-payments-for-woocommerce.php:1496
+#: nuvei-payments-for-woocommerce.php:1524
 msgid "The action you require is unknown."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:42
-msgid "The Checkout form must be valid to continue!"
-msgstr ""
-
-#: includes/class-nuvei-pfw-gateway.php:648
+#: includes/class-nuvei-pfw-gateway.php:668
 msgid "The Log file is not readable."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:638
+#: includes/class-nuvei-pfw-gateway.php:658
 msgid "The Log file not exists."
 msgstr ""
 
@@ -809,29 +816,29 @@ msgid ""
 "Panel: "
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1708
+#: includes/class-nuvei-pfw-gateway.php:1725
 msgid "The status for Nuvei Authorized transactions."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1740
+#: includes/class-nuvei-pfw-gateway.php:1757
 msgid "The status for Nuvei Failed transactions."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1724
+#: includes/class-nuvei-pfw-gateway.php:1741
 msgid "The status for Nuvei Refunded transactions."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1700
+#: includes/class-nuvei-pfw-gateway.php:1717
 msgid ""
 "The status for Nuvei transactions who still wait for a DMN. This change is "
 "triggered after Settle, Refund and Void."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1732
+#: includes/class-nuvei-pfw-gateway.php:1749
 msgid "The status for Nuvei Voided transactions."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1716
+#: includes/class-nuvei-pfw-gateway.php:1733
 msgid ""
 "The status for Settle and Sale flow is same. It shows the Order is Paid."
 msgstr ""
@@ -840,38 +847,38 @@ msgstr ""
 msgid "The status of Refund request is UNKONOWN."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:277
+#: nuvei-payments-for-woocommerce.php:279
 msgid "The transaction was approved."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1811
+#: includes/class-nuvei-pfw-gateway.php:1828
 msgid "The UPO will be save only when the Guest user buy Subscription product."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1925
+#: includes/class-nuvei-pfw-gateway.php:1942
 msgid ""
 "This filed is the only way to translate Checkout SDK strings. Put the "
 "translations for all desired languages as shown in the placeholder. For "
 "examples"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1568
+#: includes/class-nuvei-pfw-gateway.php:1585
 msgid "This is the payment method which the user sees during checkout."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1630
+#: includes/class-nuvei-pfw-gateway.php:1647
 msgid "This option is for Nuvei Checkout SDK."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1829
+#: includes/class-nuvei-pfw-gateway.php:1846
 msgid "Tiles"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:279
+#: nuvei-payments-for-woocommerce.php:281
 msgid "To continue, please accept the Terms!"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1843
+#: includes/class-nuvei-pfw-gateway.php:1860
 msgid "To work DCC, it must be enabled on merchant level also."
 msgstr ""
 
@@ -891,40 +898,48 @@ msgstr ""
 msgid "TransactionId:"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1923
+#: includes/class-nuvei-pfw-gateway.php:1940
 msgid "Translations"
 msgstr ""
 
-#: templates/admin/add-terms-form.php:58 templates/admin/edit-term-form.php:94
+#: templates/admin/add-terms-form.php:59 templates/admin/edit-term-form.php:95
 msgid "Trial Period"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:848
+#: includes/class-nuvei-pfw-gateway.php:868
 msgid "Unexpected error, please try again later!"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:261
+#: includes/class-nuvei-pfw-gateway.php:604
+msgid "Unexpected error, when try to download the plans."
+msgstr ""
+
+#: includes/class-nuvei-pfw-gateway.php:646
+msgid "Unexpected error, when try to save the file with the plans."
+msgstr ""
+
+#: nuvei-payments-for-woocommerce.php:263
 msgid "Unexpected error. Please, try another payment option!"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:713
+#: includes/class-nuvei-pfw-gateway.php:733
 msgid "Unexpected problem with the Plans list."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:266
+#: nuvei-payments-for-woocommerce.php:268
 msgid "Unexpected session error."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1836
+#: includes/class-nuvei-pfw-gateway.php:1853
 msgid "Use Currency Conversion"
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:658
-#: templates/admin/wcfm-orders-details-buttons.php:15
+#: nuvei-payments-for-woocommerce.php:660
+#: templates/admin/wcfm-orders-details-buttons.php:17
 msgid "Void"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1961
+#: includes/class-nuvei-pfw-gateway.php:1978
 msgid "White"
 msgstr ""
 
@@ -932,18 +947,18 @@ msgstr ""
 msgid "Without Plan"
 msgstr ""
 
-#: templates/admin/add-terms-form.php:39 templates/admin/add-terms-form.php:51
-#: templates/admin/add-terms-form.php:63 templates/admin/edit-term-form.php:51
-#: templates/admin/edit-term-form.php:79 templates/admin/edit-term-form.php:106
+#: templates/admin/add-terms-form.php:40 templates/admin/add-terms-form.php:52
+#: templates/admin/add-terms-form.php:64 templates/admin/edit-term-form.php:52
+#: templates/admin/edit-term-form.php:80 templates/admin/edit-term-form.php:107
 msgid "Years"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1767
-#: includes/class-nuvei-pfw-gateway.php:1879
+#: includes/class-nuvei-pfw-gateway.php:1784
+#: includes/class-nuvei-pfw-gateway.php:1896
 msgid "Yes"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1746
+#: includes/class-nuvei-pfw-gateway.php:1763
 msgid "Yes (Recommended)"
 msgstr ""
 
@@ -951,17 +966,17 @@ msgstr ""
 msgid "You can enable the \"Auto Void\" from the plugin settings."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1905
+#: includes/class-nuvei-pfw-gateway.php:1922
 msgid ""
 "You can manipulate Simply Connect style from this filed. Please use valid "
 "JSON syntax as the example in the placeholder! For examples"
 msgstr ""
 
-#: includes/class-nuvei-pfw-open-order.php:74
+#: includes/class-nuvei-pfw-open-order.php:76
 msgid "You cannot combine those products in same Order."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:258
+#: nuvei-payments-for-woocommerce.php:260
 msgid ""
 "You have Insufficient funds, please go back and remove some of the items in "
 "your shopping cart, or use another card."
@@ -971,6 +986,6 @@ msgstr ""
 msgid "You will be redirected to Nuvei secure payment page."
 msgstr ""
 
-#: nuvei-payments-for-woocommerce.php:259
+#: nuvei-payments-for-woocommerce.php:261
 msgid "Your Payment was DECLINED. Please, try another payment option!"
 msgstr ""

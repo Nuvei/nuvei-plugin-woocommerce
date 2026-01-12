@@ -47,12 +47,6 @@ class Nuvei_Payments_For_Woocommerce
             wp_die('Class WC_Payment_Gateway does not exists!');
         }
 
-//        load_plugin_textdomain(
-//            'nuvei-payments-for-woocommerce',
-//            false,
-//            dirname( plugin_basename( __FILE__ ) ) . '/languages/'
-//        );
-
         add_filter( 'woocommerce_payment_gateways', function ( $methods ) {
             $methods[] = 'Nuvei_Pfw_Gateway'; // get the name of the Gateway Class
             return $methods;
@@ -248,8 +242,6 @@ class Nuvei_Payments_For_Woocommerce
         // hook to show unreaded Nuvei' system messages
         add_action( 'admin_notices', array (__CLASS__, 'display_messages') );
 
-        
-
         // register the plugin REST endpoint
         add_action('rest_api_init', array (__CLASS__, 'register_plugin_rest_endpoint') );
 
@@ -265,28 +257,28 @@ class Nuvei_Payments_For_Woocommerce
                 'paymentGatewayName' => NUVEI_PFW_GATEWAY_NAME,
 
                 // translations
-                'insuffFunds'        => __( 'You have Insufficient funds, please go back and remove some of the items in your shopping cart, or use another card.', 'nuvei-payments-for-woocommerce' ),
-                'paymentDeclined'    => __( 'Your Payment was DECLINED. Please, try another payment option!', 'nuvei-payments-for-woocommerce' ),
-                'paymentError'       => __( 'Error with your Payment.', 'nuvei-payments-for-woocommerce' ),
-                'unexpectedError'    => __( 'Unexpected error. Please, try another payment option!', 'nuvei-payments-for-woocommerce' ),
-                'fillFields'         => __( 'Please fill all mandatory fileds!', 'nuvei-payments-for-woocommerce' ),
-                'errorWithSToken'    => __( 'Error when try to get the Session Token.', 'nuvei-payments-for-woocommerce' ),
-                'goBack'             => __( 'Go back', 'nuvei-payments-for-woocommerce' ),
-                'RequestFail'        => __( 'Request fail.', 'nuvei-payments-for-woocommerce' ),
-                'ApplePayError'      => __( 'Unexpected session error.', 'nuvei-payments-for-woocommerce' ),
-                'TryAgainLater'      => __( 'Please try again later!', 'nuvei-payments-for-woocommerce' ),
-                'TryAnotherPM'       => __( 'Please try another payment method!', 'nuvei-payments-for-woocommerce' ),
-                'Pay'                => __( 'Pay', 'nuvei-payments-for-woocommerce' ),
-                'PlaceOrder'         => __( 'Place order', 'nuvei-payments-for-woocommerce' ),
-                'Continue'           => __( 'Continue', 'nuvei-payments-for-woocommerce' ),
-                'refundQuestion'     => __( 'Are you sure about this Refund?', 'nuvei-payments-for-woocommerce' ),
-                'LastDownload'       => __( 'Last Download', 'nuvei-payments-for-woocommerce' ),
-                'ReadLog'            => __( 'Read Log', 'nuvei-payments-for-woocommerce' ),
-                'RefreshLogError'    => __( 'Getting log faild, please check the console for more information!', 'nuvei-payments-for-woocommerce' ),
-                'CheckoutFormError'  => __( 'Checkout form class error, please contact the site administrator!', 'nuvei-payments-for-woocommerce' ),
-                'TransactionAppr'    => __( 'The transaction was approved.', 'nuvei-payments-for-woocommerce' ),
-                'RefundAmountError'  => __( 'Please, check requested Refund amount!', 'nuvei-payments-for-woocommerce' ),
-                'TermsError'        => __( 'To continue, please accept the Terms!', 'nuvei-payments-for-woocommerce' ),
+                'insuffFunds'       => __( 'You have Insufficient funds, please go back and remove some of the items in your shopping cart, or use another card.', 'nuvei-payments-for-woocommerce' ),
+                'paymentDeclined'   => __( 'Your Payment was DECLINED. Please, try another payment option!', 'nuvei-payments-for-woocommerce' ),
+                'paymentError'      => __( 'Error with your Payment.', 'nuvei-payments-for-woocommerce' ),
+                'unexpectedError'   => __( 'Unexpected error. Please, try another payment option!', 'nuvei-payments-for-woocommerce' ),
+                'fillFields'        => __( 'Please fill all mandatory fileds!', 'nuvei-payments-for-woocommerce' ),
+                'errorWithSToken'   => __( 'Error when try to get the Session Token.', 'nuvei-payments-for-woocommerce' ),
+                'goBack'            => __( 'Go back', 'nuvei-payments-for-woocommerce' ),
+                'RequestFail'       => __( 'Request fail.', 'nuvei-payments-for-woocommerce' ),
+                'ApplePayError'     => __( 'Unexpected session error.', 'nuvei-payments-for-woocommerce' ),
+                'TryAgainLater'     => __( 'Please try again later!', 'nuvei-payments-for-woocommerce' ),
+                'TryAnotherPM'      => __( 'Please try another payment method!', 'nuvei-payments-for-woocommerce' ),
+                'Pay'               => __( 'Pay', 'nuvei-payments-for-woocommerce' ),
+                'PlaceOrder'        => __( 'Place order', 'nuvei-payments-for-woocommerce' ),
+                'Continue'          => __( 'Continue', 'nuvei-payments-for-woocommerce' ),
+                'refundQuestion'    => __( 'Are you sure about this Refund?', 'nuvei-payments-for-woocommerce' ),
+                'LastDownload'      => __( 'Last Download', 'nuvei-payments-for-woocommerce' ),
+                'ReadLog'           => __( 'Read Log', 'nuvei-payments-for-woocommerce' ),
+                'RefreshLogError'   => __( 'Getting log faild, please check the console for more information!', 'nuvei-payments-for-woocommerce' ),
+                'CheckoutFormError' => __( 'Checkout form class error, please contact the site administrator!', 'nuvei-payments-for-woocommerce' ),
+                'TransactionAppr'   => __( 'The transaction was approved.', 'nuvei-payments-for-woocommerce' ),
+                'RefundAmountError' => __( 'Please, check requested Refund amount!', 'nuvei-payments-for-woocommerce' ),
+                'TermsError'            => __( 'To continue, please accept the Terms!', 'nuvei-payments-for-woocommerce' ),
             )
         );
     }
@@ -398,7 +390,6 @@ class Nuvei_Payments_For_Woocommerce
 			return $styles;
 		}
 
-//		global $wc_nuvei;
 		global $wpdb;
 
 		$plugin_url = plugin_dir_url( __FILE__ );
@@ -1538,5 +1529,5 @@ class Nuvei_Payments_For_Woocommerce
 
 		return $rest_resp;
 	}
-
+    
 }
