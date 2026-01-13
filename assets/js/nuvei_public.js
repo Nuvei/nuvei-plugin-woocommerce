@@ -195,8 +195,9 @@ function showNuveiCheckout(_params) {
         nuveiCheckoutSdkParams.prePayment = nuveiPrePayment;
     }
 
-    nuveiCheckoutSdkParams.onResult = nuveiAfterSdkResponse;
-    nuveiCheckoutSdkParams.onReady  = nuveiOnSimplyReady;
+    nuveiCheckoutSdkParams.onResult                 = nuveiAfterSdkResponse;
+    nuveiCheckoutSdkParams.onReady                  = nuveiOnSimplyReady;
+    nuveiCheckoutSdkParams.onSelectPaymentMethod    = nuveiPmChange;
 
 	simplyConnect(nuveiCheckoutSdkParams);
 
@@ -205,6 +206,18 @@ function showNuveiCheckout(_params) {
 
 function nuveiOnSimplyReady() {
     jQuery('#nuvei_blocker').hide();
+}
+
+function nuveiPmChange(params) {
+    console.log(params);
+    let wallets = ['ppp_ApplePay', 'ppp_GooglePay', 'ppp_Paze'];
+    
+    if (params.paymentMethodName && wallets.indexOf(params.paymentMethodName) >= 0) {
+        jQuery(nuveiCheckoutCustomPayBtn).hide();
+    }
+    else {
+        jQuery(nuveiCheckoutCustomPayBtn).show();
+    }
 }
 
 function nuveiShowErrorMsg(text) {
@@ -458,6 +471,7 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
         .fail(function() {
             console.log('Nuvei request failed.');
             nuveiShowErrorMsg();
+            jQuery('#nuvei_blocker').hide();
             return;
         })
         .done(function(resp) {

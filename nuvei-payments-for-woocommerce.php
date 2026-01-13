@@ -112,7 +112,7 @@ class Nuvei_Payments_For_Woocommerce
 
         // add admin style
         add_filter( 'admin_enqueue_scripts', array(__CLASS__, 'load_admin_styles_scripts') );
-
+        
         // add void and/or settle buttons to completed orders
         add_action( 'woocommerce_order_item_add_action_buttons', array(__CLASS__, 'add_buttons'), 10, 1 );
         add_action( 'after_wcfm_orders_details_items', array(__CLASS__, 'add_buttons_wcfm'), 10, 3 );
@@ -321,7 +321,7 @@ class Nuvei_Payments_For_Woocommerce
             'nuvei_js_public',
             $plugin_url . 'assets/js/nuvei_public.js',
             array( 'jquery' ),
-            '2025-12-08',
+            '2026-01-13',
             false
         );
 
