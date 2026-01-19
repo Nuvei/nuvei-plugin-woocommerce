@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Nuvei Payments for Woocommerce\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-12 13:09+0000\n"
+"POT-Creation-Date: 2026-01-19 08:53+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -13,7 +13,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Loco https://localise.biz/\n"
-"X-Loco-Version: 2.8.0; wp-6.9; php-8.2.29\n"
+"X-Loco-Version: 2.8.1; wp-6.9; php-8.2.30\n"
 "X-Domain: nuvei-payments-for-woocommerce"
 
 #. %3$s: the status of the Payment
@@ -26,7 +26,7 @@ msgstr ""
 msgid "A Refund request was send. Please, wait for response!"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1845
+#: includes/class-nuvei-pfw-gateway.php:1850
 msgid "Accordion"
 msgstr ""
 
@@ -34,15 +34,15 @@ msgstr ""
 msgid "Advanced Settings"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1650
+#: includes/class-nuvei-pfw-gateway.php:1655
 msgid "Allow Auto Void"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1809
+#: includes/class-nuvei-pfw-gateway.php:1814
 msgid "Allow Client to Use UPOs"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1652
+#: includes/class-nuvei-pfw-gateway.php:1657
 msgid ""
 "Allow plugin to initiate auto Void request in case there is Payment "
 "(transaction), but there is no Order for this transaction in the Store. This "
@@ -50,7 +50,7 @@ msgid ""
 "will be saved. The last read messages can be view in the Help Tools."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1831
+#: includes/class-nuvei-pfw-gateway.php:1836
 msgid "Allow Rebilling with PayPal"
 msgstr ""
 
@@ -88,15 +88,15 @@ msgid ""
 "Auto Void logic - the auto void is disabled, but a system message was saved."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1893
+#: includes/class-nuvei-pfw-gateway.php:1898
 msgid "Auto-expand PMs"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1977
+#: includes/class-nuvei-pfw-gateway.php:1982
 msgid "Black"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1870
+#: includes/class-nuvei-pfw-gateway.php:1875
 msgid "Block Cards"
 msgstr ""
 
@@ -104,11 +104,11 @@ msgstr ""
 msgid "Block Payment Methods"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1988
+#: includes/class-nuvei-pfw-gateway.php:1993
 msgid "Book"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1987
+#: includes/class-nuvei-pfw-gateway.php:1992
 msgid "Buy"
 msgstr ""
 
@@ -120,26 +120,26 @@ msgstr ""
 msgid "Cancel Subscription"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1773
+#: includes/class-nuvei-pfw-gateway.php:1778
 msgid "Cashier settings"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1670
+#: includes/class-nuvei-pfw-gateway.php:1675
 msgid "Check it to hide WCS waringn permanent."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1864
-#: includes/class-nuvei-pfw-gateway.php:1875
-#: includes/class-nuvei-pfw-gateway.php:1969
+#: includes/class-nuvei-pfw-gateway.php:1869
+#: includes/class-nuvei-pfw-gateway.php:1880
+#: includes/class-nuvei-pfw-gateway.php:1974
 msgid "Check the Documentation."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1925
-#: includes/class-nuvei-pfw-gateway.php:1945
+#: includes/class-nuvei-pfw-gateway.php:1930
+#: includes/class-nuvei-pfw-gateway.php:1950
 msgid "check the Documentation."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1989
+#: includes/class-nuvei-pfw-gateway.php:1994
 msgid "Checkout"
 msgstr ""
 
@@ -147,29 +147,29 @@ msgstr ""
 msgid "Checkout form class error, please contact the site administrator!"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1903
+#: includes/class-nuvei-pfw-gateway.php:1908
 msgid "Checkout Log level"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1630
+#: includes/class-nuvei-pfw-gateway.php:1635
 msgid "Choose Hash type provided by Nuvei"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1883
+#: includes/class-nuvei-pfw-gateway.php:1888
 msgid "Choose the Text on the Pay Button"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1781
+#: includes/class-nuvei-pfw-gateway.php:1786
 msgid ""
 "Cobine the products into one, to avoid eventual problems with, taxes, "
 "discounts, coupons, etc."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1779
+#: includes/class-nuvei-pfw-gateway.php:1784
 msgid "Combine Cashier Products into One"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1707
+#: includes/class-nuvei-pfw-gateway.php:1712
 msgid "Common settings"
 msgstr ""
 
@@ -177,13 +177,13 @@ msgstr ""
 msgid "Continue"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1658
+#: includes/class-nuvei-pfw-gateway.php:1663
 msgid ""
 "Create and save daily log files. This can help for debugging and catching "
 "bugs."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1664
+#: includes/class-nuvei-pfw-gateway.php:1669
 msgid "Create and save the logs into single file."
 msgstr ""
 
@@ -193,31 +193,31 @@ msgstr ""
 msgid "Days"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1583
+#: includes/class-nuvei-pfw-gateway.php:1588
 msgid "Default Title"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1858
+#: includes/class-nuvei-pfw-gateway.php:1863
 msgid "Disabled"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1579
+#: includes/class-nuvei-pfw-gateway.php:1584
 msgid "Enable Nuvei Checkout Plugin."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1798
+#: includes/class-nuvei-pfw-gateway.php:1803
 msgid "Enable Nuvei GW for Zero-total products"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1577
+#: includes/class-nuvei-pfw-gateway.php:1582
 msgid "Enable/Disable"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1856
+#: includes/class-nuvei-pfw-gateway.php:1861
 msgid "Enabled"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1857
+#: includes/class-nuvei-pfw-gateway.php:1862
 msgid "Enabled and expanded"
 msgstr ""
 
@@ -225,7 +225,7 @@ msgstr ""
 msgid "Error code: "
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1363
+#: includes/class-nuvei-pfw-gateway.php:1368
 msgid "Error empty Cashier URL."
 msgstr ""
 
@@ -251,11 +251,11 @@ msgstr ""
 msgid "Error%s when try to start a Subscription by the Order."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1915
+#: includes/class-nuvei-pfw-gateway.php:1920
 msgid "for \"No logging\"."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1966
+#: includes/class-nuvei-pfw-gateway.php:1971
 msgid "For tests use BCR2DN6TZ6DP7P3X."
 msgstr ""
 
@@ -271,23 +271,23 @@ msgstr ""
 msgid "Go back"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1974
+#: includes/class-nuvei-pfw-gateway.php:1979
 msgid "Google button color"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1984
+#: includes/class-nuvei-pfw-gateway.php:1989
 msgid "Google button type"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1963
+#: includes/class-nuvei-pfw-gateway.php:1968
 msgid "Google Merchant ID"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1957
+#: includes/class-nuvei-pfw-gateway.php:1962
 msgid "Google Pay settings"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1626
+#: includes/class-nuvei-pfw-gateway.php:1631
 msgid "Hash Type"
 msgstr ""
 
@@ -295,11 +295,11 @@ msgstr ""
 msgid "Help Tools"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1668
+#: includes/class-nuvei-pfw-gateway.php:1673
 msgid "Hide WCS Warning"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1847
+#: includes/class-nuvei-pfw-gateway.php:1852
 msgid "Horizontal"
 msgstr ""
 
@@ -307,20 +307,20 @@ msgstr ""
 msgid "https://github.com/Nuvei/nuvei-plugin-woocommerce"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1806
+#: includes/class-nuvei-pfw-gateway.php:1811
 msgid ""
 "If enalbe this option, only Nuvei GW will be listed as payment option. This "
 "option can be used for Card authentication.<br/>Zero-total checkout for "
 "rebilling products is enable by default."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1768
+#: includes/class-nuvei-pfw-gateway.php:1773
 msgid ""
 "If you disable this option, the user data will be completly exposed in the "
 "log records."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1696
+#: includes/class-nuvei-pfw-gateway.php:1701
 msgid "Integration Type"
 msgstr ""
 
@@ -348,7 +348,7 @@ msgstr ""
 msgid "Last download: "
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1817
+#: includes/class-nuvei-pfw-gateway.php:1822
 msgid "Logged users will see their UPOs, and will have option to save UPOs."
 msgstr ""
 
@@ -358,23 +358,23 @@ msgid ""
 "Subscription and products with Nuvei Subscription in same site!!!"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1760
+#: includes/class-nuvei-pfw-gateway.php:1765
 msgid "Mask User Data into the Log"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1605
+#: includes/class-nuvei-pfw-gateway.php:1610
 msgid "Merchant ID"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1609
+#: includes/class-nuvei-pfw-gateway.php:1614
 msgid "Merchant ID is provided by Nuvei"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1612
+#: includes/class-nuvei-pfw-gateway.php:1617
 msgid "Merchant Site ID"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1616
+#: includes/class-nuvei-pfw-gateway.php:1621
 msgid "Merchant Site ID is provided by Nuvei"
 msgstr ""
 
@@ -382,7 +382,7 @@ msgstr ""
 msgid "Message: "
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1315
+#: includes/class-nuvei-pfw-gateway.php:1320
 msgid "Missing incoming parameters."
 msgstr ""
 
@@ -392,9 +392,9 @@ msgstr ""
 msgid "Month"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1764
-#: includes/class-nuvei-pfw-gateway.php:1785
-#: includes/class-nuvei-pfw-gateway.php:1897
+#: includes/class-nuvei-pfw-gateway.php:1769
+#: includes/class-nuvei-pfw-gateway.php:1790
+#: includes/class-nuvei-pfw-gateway.php:1902
 msgid "No"
 msgstr ""
 
@@ -402,7 +402,7 @@ msgstr ""
 msgid "Not recognized Ajax call."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:2020
+#: includes/class-nuvei-pfw-gateway.php:2025
 msgid "Notify URL"
 msgstr ""
 
@@ -454,7 +454,7 @@ msgstr ""
 msgid "Nuvei Subscription ID:"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1990
+#: includes/class-nuvei-pfw-gateway.php:1995
 msgid "Order"
 msgstr ""
 
@@ -466,12 +466,12 @@ msgstr ""
 msgid "Order error"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1330
+#: includes/class-nuvei-pfw-gateway.php:1335
 msgid "Order is false for order id "
 msgstr ""
 
 #: nuvei-payments-for-woocommerce.php:271
-#: includes/class-nuvei-pfw-gateway.php:1991
+#: includes/class-nuvei-pfw-gateway.php:1996
 msgid "Pay"
 msgstr ""
 
@@ -479,7 +479,7 @@ msgstr ""
 msgid "Pay with "
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1638
+#: includes/class-nuvei-pfw-gateway.php:1643
 msgid "Payment Action"
 msgstr ""
 
@@ -487,11 +487,11 @@ msgstr ""
 msgid "Payment Method: "
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1700
+#: includes/class-nuvei-pfw-gateway.php:1705
 msgid "Payment page - Cashier"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1839
+#: includes/class-nuvei-pfw-gateway.php:1844
 msgid ""
 "PayPal is available only for WCS. Using PayPal for rebilling will disable "
 "the UPOs."
@@ -501,7 +501,7 @@ msgstr ""
 msgid "Place order"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1992
+#: includes/class-nuvei-pfw-gateway.php:1997
 msgid "Plain"
 msgstr ""
 
@@ -542,7 +542,7 @@ msgid "Please fill all mandatory fileds!"
 msgstr ""
 
 #: includes/class-nuvei-pfw-gateway.php:45
-msgid "Please fill all required fields to continue!"
+msgid "Please fill email and country fields to continue with payment."
 msgstr ""
 
 #. %s: the title of the field
@@ -571,7 +571,7 @@ msgstr ""
 msgid "Post parameter is less than 1."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1342
+#: includes/class-nuvei-pfw-gateway.php:1347
 msgid "Process payment Error - Order payment does not belongs to "
 msgstr ""
 
@@ -579,7 +579,7 @@ msgstr ""
 msgid "Read Log"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:2025
+#: includes/class-nuvei-pfw-gateway.php:2030
 msgid "Read Payment messages"
 msgstr ""
 
@@ -656,33 +656,33 @@ msgstr ""
 msgid "Return to payments"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1656
+#: includes/class-nuvei-pfw-gateway.php:1661
 msgid "Save Daily Logs"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1662
+#: includes/class-nuvei-pfw-gateway.php:1667
 msgid "Save Single Log file"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1820
+#: includes/class-nuvei-pfw-gateway.php:1825
 msgid "Save UPOs for Guest Users"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1619
+#: includes/class-nuvei-pfw-gateway.php:1624
 msgid "Secret Key"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1623
+#: includes/class-nuvei-pfw-gateway.php:1628
 msgid "Secret key is provided by Nuvei"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1586
+#: includes/class-nuvei-pfw-gateway.php:1591
 msgid "Secure Payments with Nuvei"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1599
-#: includes/class-nuvei-pfw-gateway.php:1632
-#: includes/class-nuvei-pfw-gateway.php:1642
+#: includes/class-nuvei-pfw-gateway.php:1604
+#: includes/class-nuvei-pfw-gateway.php:1637
+#: includes/class-nuvei-pfw-gateway.php:1647
 msgid "Select an option..."
 msgstr ""
 
@@ -695,55 +695,55 @@ msgstr ""
 msgid "Settle"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1886
+#: includes/class-nuvei-pfw-gateway.php:1891
 msgid "Shows the amount"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1887
+#: includes/class-nuvei-pfw-gateway.php:1892
 msgid "Shows the payment method"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1699
+#: includes/class-nuvei-pfw-gateway.php:1704
 msgid "Simply Connect"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1792
+#: includes/class-nuvei-pfw-gateway.php:1797
 msgid "Simply Connect settings"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1920
+#: includes/class-nuvei-pfw-gateway.php:1925
 msgid "Simply Connect Styling"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1842
+#: includes/class-nuvei-pfw-gateway.php:1847
 msgid "Simply Connect Theme"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1595
+#: includes/class-nuvei-pfw-gateway.php:1600
 msgid "Site Mode"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1721
+#: includes/class-nuvei-pfw-gateway.php:1726
 msgid "Status Authorized"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1753
+#: includes/class-nuvei-pfw-gateway.php:1758
 msgid "Status Failed"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1729
+#: includes/class-nuvei-pfw-gateway.php:1734
 msgid "Status Paid"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1713
+#: includes/class-nuvei-pfw-gateway.php:1718
 msgid "Status Pending DMN"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1737
+#: includes/class-nuvei-pfw-gateway.php:1742
 msgid "Status Refunded"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1745
+#: includes/class-nuvei-pfw-gateway.php:1750
 msgid "Status Voided"
 msgstr ""
 
@@ -776,7 +776,7 @@ msgstr ""
 msgid "Subscription%s was canceled."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:2016
+#: includes/class-nuvei-pfw-gateway.php:2021
 msgid "Sync Payment Plans"
 msgstr ""
 
@@ -816,29 +816,29 @@ msgid ""
 "Panel: "
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1725
+#: includes/class-nuvei-pfw-gateway.php:1730
 msgid "The status for Nuvei Authorized transactions."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1757
+#: includes/class-nuvei-pfw-gateway.php:1762
 msgid "The status for Nuvei Failed transactions."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1741
+#: includes/class-nuvei-pfw-gateway.php:1746
 msgid "The status for Nuvei Refunded transactions."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1717
+#: includes/class-nuvei-pfw-gateway.php:1722
 msgid ""
 "The status for Nuvei transactions who still wait for a DMN. This change is "
 "triggered after Settle, Refund and Void."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1749
+#: includes/class-nuvei-pfw-gateway.php:1754
 msgid "The status for Nuvei Voided transactions."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1733
+#: includes/class-nuvei-pfw-gateway.php:1738
 msgid ""
 "The status for Settle and Sale flow is same. It shows the Order is Paid."
 msgstr ""
@@ -851,26 +851,26 @@ msgstr ""
 msgid "The transaction was approved."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1828
+#: includes/class-nuvei-pfw-gateway.php:1833
 msgid "The UPO will be save only when the Guest user buy Subscription product."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1942
+#: includes/class-nuvei-pfw-gateway.php:1947
 msgid ""
 "This filed is the only way to translate Checkout SDK strings. Put the "
 "translations for all desired languages as shown in the placeholder. For "
 "examples"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1585
+#: includes/class-nuvei-pfw-gateway.php:1590
 msgid "This is the payment method which the user sees during checkout."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1647
+#: includes/class-nuvei-pfw-gateway.php:1652
 msgid "This option is for Nuvei Checkout SDK."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1846
+#: includes/class-nuvei-pfw-gateway.php:1851
 msgid "Tiles"
 msgstr ""
 
@@ -878,7 +878,7 @@ msgstr ""
 msgid "To continue, please accept the Terms!"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1860
+#: includes/class-nuvei-pfw-gateway.php:1865
 msgid "To work DCC, it must be enabled on merchant level also."
 msgstr ""
 
@@ -898,7 +898,7 @@ msgstr ""
 msgid "TransactionId:"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1940
+#: includes/class-nuvei-pfw-gateway.php:1945
 msgid "Translations"
 msgstr ""
 
@@ -930,7 +930,7 @@ msgstr ""
 msgid "Unexpected session error."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1853
+#: includes/class-nuvei-pfw-gateway.php:1858
 msgid "Use Currency Conversion"
 msgstr ""
 
@@ -939,7 +939,7 @@ msgstr ""
 msgid "Void"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1978
+#: includes/class-nuvei-pfw-gateway.php:1983
 msgid "White"
 msgstr ""
 
@@ -953,12 +953,12 @@ msgstr ""
 msgid "Years"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1784
-#: includes/class-nuvei-pfw-gateway.php:1896
+#: includes/class-nuvei-pfw-gateway.php:1789
+#: includes/class-nuvei-pfw-gateway.php:1901
 msgid "Yes"
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1763
+#: includes/class-nuvei-pfw-gateway.php:1768
 msgid "Yes (Recommended)"
 msgstr ""
 
@@ -966,7 +966,7 @@ msgstr ""
 msgid "You can enable the \"Auto Void\" from the plugin settings."
 msgstr ""
 
-#: includes/class-nuvei-pfw-gateway.php:1922
+#: includes/class-nuvei-pfw-gateway.php:1927
 msgid ""
 "You can manipulate Simply Connect style from this filed. Please use valid "
 "JSON syntax as the example in the placeholder! For examples"

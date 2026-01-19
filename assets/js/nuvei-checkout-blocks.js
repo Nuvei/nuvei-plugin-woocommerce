@@ -1,136 +1,259 @@
-const { validationStore }           = window.wc.wcBlocksData;
 const nuveiCheckoutBlockFormClass   = 'form.wc-block-components-form';
 const nuveiCheckoutBlockPayBtn      = '.wc-block-components-checkout-place-order-button';
 const nuveiCheckoutBlockPMethodName = 'input[name="radio-control-wc-payment-method-options"]';
+
+const nuveiFormNotInvalidTxt = window.wp.i18n.__(
+    'Please fill email and country fields to continue with payment.', 
+    'nuvei-payments-for-woocommerce'
+);
+
 const nuveiCheckoutBlockContText    = (typeof scTrans == 'object'
     && scTrans.hasOwnProperty('checkoutIntegration')
     && 'sdk' === scTrans.checkoutIntegration) ?
-        window.wp.i18n.__('The Checkout form must be valid to continue!', 'nuvei-payments-for-woocommerce') :
+        nuveiFormNotInvalidTxt :
             window.wp.i18n.__('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce');
-    
-const nuveiInvalidField = window.wp.i18n.__('The field is not valid.', 'nuvei-payments-for-woocommerce');
+
+//const nuveiInvalidField = window.wp.i18n.__('The field is not valid.', 'nuvei-payments-for-woocommerce');
 
 /**
  * Checks if the Checkout form is valid.
  *
+ * @params {Boolean} justLoadSimply When is set to true we will check only for country and email.
  * @returns {Boolean}
  */
-function nuveiIsCheckoutBlocksFormValid() {
+function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
     console.log('call nuveiIsCheckoutBlocksFormValid');
-
-    // error
-    if (!document.querySelector(nuveiCheckoutBlockFormClass)
-        || !document.querySelector(nuveiCheckoutBlockFormClass).checkValidity()
-    ) {
-        console.log('The checkout form is not valid.');
-
-        nuveiDestroySimplyConnect();
-
-        jQuery('#nuvei_checkout_container').html('');
-        jQuery('#nuvei_blocker').hide();
-        return false;
+    
+    const { validationStore }   = window.wc.wcBlocksData;
+    const noticesStore          = window.wc.wcBlocksData.STORE_NOTICES_STORE_KEY;
+    const { dispatch }          = wp.data;
+    const validationErrors      = wp.data.select( 'wc/store/validation' ).getValidationErrors();
+    
+    let isFormValid     = true;
+    
+    // no errors
+    if (Object.keys( validationErrors ).length == 0) {
+        return isFormValid;
     }
     
-    const errors    = {};
-    let isFormValid = true;
-
-    jQuery(nuveiCheckoutBlockFormClass).find('input, select, textarea').each( function() {
-        let self = jQuery(this);
-        let _key = self.prop('id').replace('-', '_');
+    // Minimal check, when need only the country and the email.
+    if ( justLoadSimply ) {
+        Object.keys( validationErrors ).forEach( ( id ) => {
+            if (id == 'billing_email' || id == 'billing_country') {
+                isFormValid = false;
+                
+                dispatch( 'wc/store/validation' ).setValidationErrors( {
+                    [ id ]: {
+                        ...validationErrors[ id ],
+                        hidden: false // This makes the error visible to the user
+                    }
+                });
+                
+                nuveiDestroySimplyConnect();
+                
+//                wp.data.dispatch( 'core/notices' ).createErrorNotice( 
+//                    validationErrors[id].message,
+//                    {
+//                        id: 'nuvei-form-invalid', // Use a unique ID to prevent duplicates
+//                        context: 'wc/checkout',  // Important: This tells Woo to show it in the checkout area
+//                        isDismissible: true,
+//                    } 
+//                );
+                
+                return true;
+            }
+        });
         
-        if (!self.prop('required')) {
-            // continue with the next field
-            return true;
-        }
-
-        // email check
-        if ('email' == self.prop('id') || 'email' == self.prop('type')) {
-            let regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // check the email
-
-            if (!regex.test(self.val())) {
-                console.log('the element is not valid', self.attr('id'));
-
-                nuveiDestroySimplyConnect();
-
-                jQuery('#nuvei_checkout_container').html('');
-                jQuery('#nuvei_blocker').hide();
-
-                isFormValid = false;
-
-                errors.billing_email = {
-                    message: nuveiInvalidField,
-                };
-
-                // break the loop
-                return false;
-            }
-
-            return true;
-        }
-
-        // phone check
-        if ('shipping-phone' == self.prop('id') || 'tel' == self.prop('type')) {
-            console.log('check the phone');
-            let regex = /^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s\./0-9]*$/g;
-
-
-            if (!regex.test(self.val())) {
-                console.log('the element is not valid', self.attr('id'));
-
-                nuveiDestroySimplyConnect();
-
-                jQuery('#nuvei_checkout_container').html('');
-                jQuery('#nuvei_blocker').hide();
-
-                errors.billing_phone = {
-                    message: nuveiInvalidField,
-                };
-
-                isFormValid = false;
-                // break the loop
-                return false;
-            }
-
-            return true;
-        }
-
-        // other errors
-        if (self.attr('aria-errormessage')
-            || 'true' == self.attr('aria-invalid')
-            || self.closest('div').hasClass('has-error')
-        ) {
-            console.log('the element is not valid', self.attr('id'));
-
-            console.log(
-                self.attr('aria-errormessage'),
-                self.closest('div').hasClass('has-error'),
-                jQuery(nuveiCheckoutBlockFormClass).find('.wc-block-store-notice.is-error').length
-            );
-
-            nuveiDestroySimplyConnect();
-
-            jQuery('#nuvei_checkout_container').html('');
-            jQuery('#nuvei_blocker').hide();
-
-            isFormValid = false;
-            // break the loop
+        if (!isFormValid) {
             return false;
         }
-        // in case the field is not marked as invalid but it is required and empty.
-        else if ('' == self.val()) {
-            errors[_key] = {
-                message: nuveiInvalidField,
-            };
-            
-            isFormValid = false;
-            return false;
-        }
-    });
-
-    // Set errors in WooCommerce Blocks
-    wp.data.dispatch(validationStore).setValidationErrors(errors);
+        
+        return true;
+    }
     
-    return isFormValid;
+    // show all errors
+    Object.keys( validationErrors ).forEach( ( id ) => {
+        dispatch( 'wc/store/validation' ).setValidationErrors( {
+            [ id ]: {
+                ...validationErrors[ id ],
+                hidden: false // This makes the error visible to the user
+            }
+        });
+    });
+    
+    // and display and generl error message
+//    wp.data.dispatch( 'core/notices' ).createErrorNotice( 
+//        nuveiFormNotInvalidTxt,
+//        {
+//            id: 'nuvei-form-invalid', // Use a unique ID to prevent duplicates
+//            context: 'wc/checkout',  // Important: This tells Woo to show it in the checkout area
+//            isDismissible: true,
+//        } 
+//    );
+    
+    console.log('scroll to the msg')
+    
+    // and scroll to the message
+    setTimeout( () => {
+        const noticeElement = document.querySelector( '.has-error' );
+        
+        if ( noticeElement ) {
+            const elementPosition = noticeElement.getBoundingClientRect().top + window.pageYOffset;
+
+            window.scrollTo( {
+                top: elementPosition - 50,
+                behavior: 'smooth'
+            } );
+        }
+    }, 100 ); // Short delay ensures the notice has rendered in the DOM
+    
+    return false;
+    
+    
+//    const errors                = {};
+//    let isMailValid     = false;
+//    let isCountryValid  = false;
+//    
+//    // error
+//    if ( !document.querySelector(nuveiCheckoutBlockFormClass) ) {
+//        console.log('There is no element', nuveiCheckoutBlockFormClass);
+//        return false;
+//    }
+//
+//    jQuery(nuveiCheckoutBlockFormClass).find('input, select, textarea').each( function() {
+//        let self = jQuery(this);
+//        let _key = self.prop('id').replace('-', '_');
+//
+//        if (!self.prop('required')) {
+//            // continue with the next field
+//            return true;
+//        }
+//
+//        // country check
+//        if ( 'billing-country' == self.prop('id') && self.val() != '') {
+//            isCountryValid = true;
+//        }
+//
+//        // email check
+//        if ('email' == self.prop('id') || 'email' == self.prop('type')) {
+//            let regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // check the email
+//
+//            if (!regex.test(self.val())) {
+//                console.log('the element is not valid', self.attr('id'));
+//
+//                nuveiDestroySimplyConnect();
+//
+//                jQuery('#nuvei_checkout_container').html('');
+//                jQuery('#nuvei_blocker').hide();
+//
+//                isFormValid = false;
+//
+////                errors.billing_email = {
+////                    message: nuveiInvalidField,
+////                };
+//
+//                // break the loop
+//                return false;
+//            }
+//            else {
+//                isMailValid = true;
+//            }
+//
+//            return true;
+//        }
+//
+//        // To load Simply Connect we need at least the country and the email.
+//        if ( useMin && isMailValid && isCountryValid ) {
+//            isFormValid = true;
+//            return false;
+//        }
+//
+//        // phone check
+//        if ('shipping-phone' == self.prop('id') || 'tel' == self.prop('type')) {
+//            console.log('check the phone');
+//            let regex = /^[+]*[(]{0,1}[0-9]{1,3}[)]{0,1}[-\s\./0-9]*$/g;
+//
+//
+//            if (!regex.test(self.val())) {
+//                console.log('the element is not valid', self.attr('id'));
+//
+//                nuveiDestroySimplyConnect();
+//
+//                jQuery('#nuvei_checkout_container').html('');
+//                jQuery('#nuvei_blocker').hide();
+//
+////                errors.billing_phone = {
+////                    message: nuveiInvalidField,
+////                };
+//
+//                isFormValid = false;
+//                // break the loop
+//                return false;
+//            }
+//
+//            return true;
+//        }
+//
+//        // other errors
+//        if (self.attr('aria-errormessage')
+//            || 'true' == self.attr('aria-invalid')
+//            || self.closest('div').hasClass('has-error')
+//        ) {
+//            console.log('the element is not valid', self.attr('id'));
+//
+//            console.log(
+//                self.attr('aria-errormessage'),
+//                self.closest('div').hasClass('has-error'),
+//                jQuery(nuveiCheckoutBlockFormClass).find('.wc-block-store-notice.is-error').length
+//            );
+//
+//            nuveiDestroySimplyConnect();
+//
+//            jQuery('#nuvei_checkout_container').html('');
+//            jQuery('#nuvei_blocker').hide();
+//
+//            isFormValid = false;
+//            // break the loop
+//            return false;
+//        }
+//        // in case the field is not marked as invalid but it is required and empty.
+//        else if ('' == self.val()) {
+////            errors[_key] = {
+////                message: nuveiInvalidField,
+////            };
+//
+//            isFormValid = false;
+//            return false;
+//        }
+//    });
+//    
+//    // error
+//    if ( !useMin && !document.querySelector(nuveiCheckoutBlockFormClass).checkValidity() ) {
+//        console.log('The checkout form is not valid.');
+//
+//        nuveiDestroySimplyConnect();
+//
+//        jQuery('#nuvei_checkout_container').html('');
+//        jQuery('#nuvei_blocker').hide();
+//        
+//        dispatch( 'core/notices' ).createErrorNotice( 
+//            nuveiFormNotInvalidTxt,
+//            {
+//                id: 'nuvei-form-invalid', // Use a unique ID to prevent duplicates
+//                context: 'wc/checkout',  // Important: This tells Woo to show it in the checkout area
+//                isDismissible: true,
+//            } 
+//        ); 
+//        
+//        isFormValid = false;
+//    }
+//
+//    // Set errors in WooCommerce Blocks
+//    if (errors) {
+//        dispatch(validationStore).setValidationErrors(errors);
+//    }
+//
+//    return isFormValid;
 }
 
 /**
@@ -139,15 +262,15 @@ function nuveiIsCheckoutBlocksFormValid() {
 function secondSubscriber() {
     const currentpaymentMethod = wp.data.select( 'wc/store/payment' ).getActivePaymentMethod();
 
+//    console.log(currentpaymentMethod);
+//    
     // Catch changed Payment Method and Show/Hide the default payment button.
-    console.log(currentpaymentMethod);
-
     try {
         // in case Nuvei is selected
         if (scTrans && scTrans.paymentGatewayName == currentpaymentMethod) {
             jQuery(nuveiCheckoutBlockPayBtn).not(nuveiCheckoutCustomPayBtn).hide();
-            jQuery(nuveiCheckoutCustomPayBtn).show();
             jQuery('#nuvei_checkout_container').show();
+            nuveiShowCustomPayBtn();
         }
         else {
             nuveiDestroySimplyConnect();
@@ -207,7 +330,7 @@ function secondSubscriber() {
                 }
 
                 // try to validate the form on checkout page load
-                if (nuveiIsCheckoutBlocksFormValid()) {
+                if (nuveiIsCheckoutBlocksFormValid(true)) {
                     nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
                 }
             }
@@ -235,10 +358,20 @@ function secondSubscriber() {
     window.wc.wcBlocksRegistry.registerPaymentMethod(nuveiBlocksOptions);
     window.nuveiCheckoutSdkParams = nuveiSettings.checkoutParams;
 
-    console.log('nuveiBlocksOptions was registered');
+    console.log('nuveiBlocksOptions was registered', scTrans.checkoutIntegration);
 })();
 
 jQuery(function() {
+    // Prevent running in WP admin area
+    if (typeof window.wp !== 'undefined' 
+        && window.wp.data 
+        && window.location 
+        && window.location.pathname.indexOf('/wp-admin/') !== -1
+    ) {
+        // In admin, do not run checkout JS
+        return;
+    }
+
     console.log('document ready blocks checkout');
 
     if (typeof scTrans == 'object'
@@ -258,8 +391,9 @@ jQuery(function() {
     // WP Blocks subscriber
     const store = wp.data.select( 'wc/store/cart' );
 
-    let lastTotal       = store.getCartTotals().total_price;
-    let lastBilling     = JSON.stringify(store.getCartData().billingAddress);
+    let lastTotal           = store.getCartTotals().total_price;
+    let lastBillingEmail    = store.getCartData().billingAddress.email;
+    let lastBillingCountry  = store.getCartData().billingAddress.country;
 
     // subscribe to change events for the totals and the billing address
     if (typeof nuveiDebounce != 'undefined') {
@@ -276,11 +410,13 @@ jQuery(function() {
                 return;
             }
 
-            const currentTotals     = store.getCartTotals ? store.getCartTotals().total_price : null;
-            const currentBilling    = JSON.stringify(store.getCartData().billingAddress);
+            const currentTotals         = store.getCartTotals ? store.getCartTotals().total_price : null;
+//            const currentBilling        = JSON.stringify(store.getCartData().billingAddress);
+            const currentBillingEmail   = store.getCartData().billingAddress.email;
+            const currentBillingCountry = store.getCartData().billingAddress.country;
 
             // Totals have changed
-            if (currentTotals != lastTotal) {
+            if (!nuveiIsPayForExistingOrderPage && currentTotals != lastTotal) {
                 lastTotal = currentTotals;
 
                 console.log('Cart totals changed:', currentTotals);
@@ -291,13 +427,22 @@ jQuery(function() {
             }
 
             // Billing address changed
-            if (currentBilling !== lastBilling) {
-                lastBilling = currentBilling;
-                console.log('Billing address changed');
+//            if (!nuveiIsPayForExistingOrderPage && currentBilling !== lastBilling) {
+            if (!nuveiIsPayForExistingOrderPage) {
+                if (currentBillingEmail !== lastBillingEmail
+                    || currentBillingCountry !== lastBillingCountry
+                ) {
+                    lastBillingEmail = currentBillingEmail;
+                    lastBillingCountry = currentBillingCountry;
+                    
+                    console.log('Billing address changed');
+                    
+                    nuveiDestroySimplyConnect();
 
-                if (nuveiIsCheckoutBlocksFormValid()) {
-                    nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
-                    return;
+                    if (nuveiIsCheckoutBlocksFormValid(true)) {
+                        nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
+                        return;
+                    }
                 }
             }
 

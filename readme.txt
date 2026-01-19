@@ -67,7 +67,8 @@ If you plan to install this plugin form the WordPress store, but use a version d
 * Remove auto_complete_paid_order method from woocommerce_thankyou hook. The plugin changes the Order's Status based on DMNs.
 * Small changes in few logs records.
 * Prevent direct access to few template files.
-* When the plugin detects missing/wrong mandatory fields on the Checkout page, try to submit the Order, so WC can detect and mark the wrong fields.
+* For better visibility the plugin will use the default checkout "Place Order" button. The only exception will be GPay, ApplePay and Paze.
+* We tried to optimize the checkout. The plugin will need only the billing country and email to load. Still all mandatory fields will be required to complete the order.
 
 = 3.9.5 =
 * Fixed compatibility with Divi Theme.

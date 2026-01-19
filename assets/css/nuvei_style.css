@@ -66,11 +66,12 @@
 /* Show a text in case the container is empty by some reason. */
 #nuvei_checkout_container:empty::before {
     content: attr(data-placeholder);
+    color: red;
 }
 
-#nuvei_checkout_container {
-    padding: 0 1em 1em;
-}
+/*#nuvei_checkout_container {
+    padding: 0 1em;
+}*/
     
 #nuvei_checkout_container .nuvei_loader {
     max-width: 30px;

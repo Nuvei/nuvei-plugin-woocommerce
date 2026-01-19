@@ -43,7 +43,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                         'nuvei-payments-for-woocommerce' 
                     ) 
                         : __(
-                            'Please fill all required fields to continue!', 
+                            'Please fill email and country fields to continue with payment.', 
                             'nuvei-payments-for-woocommerce' 
                         )
                 )
@@ -948,6 +948,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             $google_pay_settings['buttonType'] = $g_button_type;
         }
         
+        $fullName = trim(
+            $ord_details['billingAddress']['firstName'] ?? '' 
+            . ' '
+            . $oo_data['billingAddress']['lastName'] ?? ''
+        );
+        
 		$checkout_data = array( // use it in the template
 			'sessionToken'           => $oo_data['sessionToken'],
 			'env'                    => 'yes' == $this->get_option( 'test' ) ? 'test' : 'prod',
@@ -964,8 +970,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'pmWhitelist'            => null,
 			'pmBlacklist'            => empty( $pm_black_list ) ? null : $pm_black_list,
 			'alwaysCollectCvv'       => true,
-			'fullName'               => $ord_details['billingAddress']['firstName'] . ' '
-                . $oo_data['billingAddress']['lastName'],
+			'fullName'               => $fullName,
 			'email'                  => $ord_details['billingAddress']['email'],
 //			'payButton'              => $this->get_option( 'pay_button', 'amountButton' ),
 			'payButton'              => 'noButton',
