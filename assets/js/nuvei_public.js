@@ -1,3 +1,4 @@
+const nuveiCheckoutBlockFormClass       = 'form.wc-block-components-form';
 const nuveiCheckoutClassicFormClass     = 'form.checkout.woocommerce-checkout';
 const nuveiCheckoutClassicPayBtn        = '#place_order';
 const nuveiCheckoutCustomPayBtn         = '#nuvei_place_order';
@@ -29,15 +30,10 @@ function nuveiDebounce(func, wait) {
 function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
     console.log('nuveiIsCheckoutClassicFormValid()');
     
-    if (!document.querySelector(nuveiCheckoutClassicFormClass)) {
+    if (!nuveiIsPayForExistingOrderPage && !document.querySelector(nuveiCheckoutClassicFormClass)) {
         console.log('The classic checkout form is missing', nuveiCheckoutClassicFormClass);
         return false;
     }
-    
-//    if (jQuery(nuveiCheckoutClassicPMethodName + ':checked').val() != scTrans.paymentGatewayName) {
-//        console.log('Nuvei is not selected as GW');
-//        return false;
-//    }
     
     let isFormValid = true;
     let regex       = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // check the email
@@ -84,6 +80,7 @@ function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
     
     // check the Terms
     if (jQuery('#terms').length > 0 && !jQuery('#terms').is(':checked')) {
+        console.log(scTrans.TermsError);
         nuveiShowErrorMsg(scTrans.TermsError);
         return false;
     }
@@ -178,9 +175,7 @@ function nuveiAfterSdkResponse(resp) {
         }
 
         // in case of Blocks Checkout
-        if (typeof nuveiCheckoutBlockFormClass != 'undefined'
-            && jQuery(nuveiCheckoutBlockFormClass).length > 0
-        ) {
+        if (jQuery(nuveiCheckoutBlockFormClass).length > 0) {
             jQuery(nuveiCheckoutBlockPayBtn).trigger('click');
             return;
         }
@@ -238,8 +233,7 @@ function showNuveiCheckout(_params) {
         nuveiCheckoutSdkParams.pmWhitelist  = ['cc_card'];
     }
 
-    if ( ( typeof nuveiCheckoutBlockFormClass != 'undefined'
-            && jQuery(nuveiCheckoutBlockFormClass).length > 0 )
+    if ( jQuery(nuveiCheckoutBlockFormClass).length > 0
         || jQuery(nuveiCheckoutClassicFormClass).length > 0
     ) {
         nuveiCheckoutSdkParams.prePayment = nuveiPrePayment;
@@ -290,7 +284,7 @@ function nuveiShowErrorMsg(text) {
 	}
 
 	// short-code checkout
-    if (jQuery(nuveiCheckoutClassicFormClass).length) {
+    if (jQuery(nuveiCheckoutClassicFormClass).length || nuveiIsPayForExistingOrderPage) {
         jQuery('.woocommerce-notices-wrapper').first().html(
             '<div class="woocommerce-error nuvei_error" role="alert">'
                +'<strong>'+ text +'</strong>'
@@ -430,7 +424,6 @@ function nuveiPayForExistingOrder() {
     // hide Place order button if need to
     if (jQuery(nuveiCheckoutClassicPMethodName).val() == scTrans.paymentGatewayName) {
         jQuery(nuveiCheckoutClassicPayBtn).hide();
-//        jQuery(nuveiCheckoutCustomPayBtn).show();
         nuveiShowCustomPayBtn();
     }
 
@@ -438,7 +431,6 @@ function nuveiPayForExistingOrder() {
     jQuery(nuveiCheckoutClassicPMethodName).on('change', function() {
         if(jQuery(nuveiCheckoutClassicPMethodName + ':checked').val() == scTrans.paymentGatewayName) {
             jQuery(nuveiCheckoutClassicPayBtn).hide();
-//            jQuery(nuveiCheckoutCustomPayBtn).show();
             nuveiShowCustomPayBtn();
         }
         else {
@@ -452,7 +444,6 @@ function nuveiPayForExistingOrder() {
         }
         else {
             console.log('show button');
-//            jQuery(nuveiCheckoutCustomPayBtn).show();
             nuveiShowCustomPayBtn();
         }
     });
@@ -505,8 +496,7 @@ function nuveiSetTransactionField(trId, sessTok) {
     }
 
     // in case of Blocks Checkout
-    if ( typeof nuveiCheckoutBlockFormClass != 'undefined'
-        && jQuery(nuveiCheckoutBlockFormClass).length > 0
+    if ( jQuery(nuveiCheckoutBlockFormClass).length > 0
         && jQuery(nuveiCheckoutBlockFormClass + ' #nuvei_transaction_id').length == 0
     ) {
         jQuery(nuveiCheckoutBlockFormClass).append(nuveiTrIdInput);
@@ -699,7 +689,6 @@ jQuery(function($) {
                     }
 
                     jQuery(nuveiCheckoutClassicPayBtn).hide();
-//                    jQuery(nuveiCheckoutCustomPayBtn).show();
                     nuveiShowCustomPayBtn();
                 }
                 else {
