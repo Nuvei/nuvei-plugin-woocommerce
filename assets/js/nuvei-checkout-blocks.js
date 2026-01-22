@@ -71,7 +71,13 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
     }
     
     // show all errors
+    let firsError = '';
+    
     Object.keys( validationErrors ).forEach( ( id ) => {
+        if ('' == firsError) {
+            firsError = validationErrors[id].message;
+        }
+        
         dispatch( 'wc/store/validation' ).setValidationErrors( {
             [ id ]: {
                 ...validationErrors[ id ],
@@ -80,13 +86,25 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
         });
     });
     
-    console.log('scroll to the msg');
+//    console.log('scroll to the msg');
     
     // and scroll to the message
-    setTimeout( () => {
+    setTimeout( (msg) => {
         const noticeElement = document.querySelector( '.has-error' );
+//        const noticeElement = document.querySelector( '.wc-block-components-notices' );
         
         if ( noticeElement ) {
+//            if ('' != msg) {
+//                dispatch( 'core/notices' ).createErrorNotice( 
+//                    msg,
+//                    {
+//                        id: 'nuvei-form-invalid', // Use a unique ID to prevent duplicates
+//                        context: 'wc/checkout',  // Important: This tells Woo to show it in the checkout area
+//                        isDismissible: true,
+//                    } 
+//                );
+//            }
+            
             const elementPosition = noticeElement.getBoundingClientRect().top + window.pageYOffset;
 
             window.scrollTo( {
@@ -94,7 +112,7 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
                 behavior: 'smooth'
             } );
         }
-    }, 100 ); // Short delay ensures the notice has rendered in the DOM
+    }, 100, firsError ); // Short delay ensures the notice has rendered in the DOM
     
     return false;
 }

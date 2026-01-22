@@ -3,7 +3,7 @@ const nuveiCheckoutClassicFormClass     = 'form.checkout.woocommerce-checkout';
 const nuveiCheckoutClassicPayBtn        = '#place_order';
 const nuveiCheckoutCustomPayBtn         = '#nuvei_place_order';
 const nuveiCheckoutClassicPMethodName   = 'input[name="payment_method"]';
-const nuveiCheckoutContainer            = '<p id="nuvei_checkout_container">Loading...</p>';
+//const nuveiCheckoutContainer            = `<p id="nuvei_checkout_container">${scTrans.Loading}</p>`;
 const nuveiCheckoutGoBackBtn            = `<p id="nuvei_go_back"><a href="#" onclick="nuveiCheckoutGoBack()">${scTrans.goBack}</a></p>`;
 const nuveiWallets                      = ['ppp_ApplePay', 'ppp_GooglePay', 'ppp_Paze'];
 
@@ -413,10 +413,10 @@ function nuveiPayForExistingOrder() {
     nuveiIsPayForExistingOrderPage = true;
 
     // add nuvei_checkout_container
-    if(jQuery('form#order_review #nuvei_checkout_container').length == 0) {
-        jQuery('form#order_review .payment_box.payment_method_nuvei p').hide();
-        jQuery('form#order_review .payment_box.payment_method_nuvei').append(nuveiCheckoutContainer);
-    }
+//    if (jQuery('form#order_review #nuvei_checkout_container').length == 0) {
+//        jQuery('form#order_review .payment_box.payment_method_nuvei p').hide();
+//        jQuery('form#order_review .payment_box.payment_method_nuvei').append(nuveiCheckoutContainer);
+//    }
     
     // clone the Place Order button
     nuveiInsertCustomPayButton(nuveiCheckoutClassicPayBtn);
@@ -618,12 +618,22 @@ jQuery(function($) {
         console.log('try nuveiSubmitPayment');
     
         try {
-            // blocks checkout
-            if (jQuery('.wc-block-components-notices').length > 0 && nuveiIsCheckoutBlocksFormValid()) {
-                simplyConnect.submitPayment();
+            // classic checkout and admin order payment page
+            if (jQuery(nuveiCheckoutClassicFormClass).length || nuveiIsPayForExistingOrderPage) {
+                if (nuveiIsCheckoutClassicFormValid()) {
+                    simplyConnect.submitPayment();
+                }
+                
+                return;
             }
-            else if (nuveiIsCheckoutClassicFormValid()) {
-                simplyConnect.submitPayment();
+            
+            // blocks checkout
+            if (jQuery(nuveiCheckoutBlockFormClass).length) {
+                if (jQuery('.wc-block-components-notices').length > 0 && nuveiIsCheckoutBlocksFormValid()) {
+                    simplyConnect.submitPayment();
+                }
+                
+                return;
             }
         }
         catch(exception) {}

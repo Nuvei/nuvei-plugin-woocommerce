@@ -65,14 +65,24 @@
 
 /* Show a text in case the container is empty by some reason. */
 #nuvei_checkout_container:empty::before {
-    content: attr(data-placeholder);
-    color: red;
+    content: "";
+    display: inline-block;
+    background-image: url(../icons/loader.gif);
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 24px;
+    height: 24px;
 }
 
-/*#nuvei_checkout_container {
-    padding: 0 1em;
-}*/
-    
+form.wc-block-components-form #nuvei_checkout_container:empty::before,
+form.checkout.woocommerce-checkout #nuvei_checkout_container:empty::before {
+    content: attr(data-placeholder);
+    color: red;
+    background-image: none;
+    width: auto;
+    height: auto;
+}
+
 #nuvei_checkout_container .nuvei_loader {
     max-width: 30px;
     margin-left: calc(50% - 15px);

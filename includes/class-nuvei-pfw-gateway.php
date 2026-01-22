@@ -52,9 +52,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
         
         $this->plugin_data  = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
 
-		// $this->use_wpml_thanks_page = !empty($this->settings['use_wpml_thanks_page'])
-		// ? $this->settings['use_wpml_thanks_page'] : 'no';
-
 		// products are supported by default
 		$this->supports[] = 'refunds'; // to enable auto refund support
 		$this->supports[] = 'subscriptions'; // to enable WC Subscriptions
@@ -989,6 +986,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			),
 			'sourceApplication'		=> NUVEI_PFW_SOURCE_APPLICATION,
 			'fieldStyle'			=> json_decode( $this->get_option( 'simply_connect_style', '' ), true ),
+            'preventScrollOnInit'   => true,
 		);
         
 		// For the QA site only
