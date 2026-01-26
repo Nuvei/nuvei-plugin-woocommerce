@@ -505,6 +505,26 @@ jQuery(function() {
         });
     });
     
+    // for Nuvei Payment column in the Orders list
+    jQuery('.nuvei-payment-ok').on('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        jQuery(document).find('.nuvei-payment-tooltip').hide();
+        
+        let _parent = jQuery(this).closest('td');
+        
+        _parent.find('.nuvei-payment-tooltip').show();
+    });
+    
+    jQuery('.nuvei-payment-tooltip').on('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    
+    jQuery('.nuvei-payment-tooltip .nuvei-tooltip-close').on('click', function (e) {
+        jQuery(this).parent().hide();
+    });
 });
 // document ready function END
 

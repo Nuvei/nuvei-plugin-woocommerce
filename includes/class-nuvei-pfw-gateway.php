@@ -43,7 +43,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                         'nuvei-payments-for-woocommerce'
                     )
                         : __(
-                            'Please fill email and country fields to continue with payment.',
+//                            'Please fill email and country fields to continue with payment.',
+                            'Loading...',
                             'nuvei-payments-for-woocommerce'
                         )
                 )
@@ -1187,7 +1188,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$subscription_id  = $renewal_order->get_meta( '_subscription_renewal', true );;
         // we need them for the payment.do request
 		$billing_mail     = $renewal_order->get_billing_email();
-		$billing_country  = $renewal_order->get_billing_country();
+		$billing_country  = $renewal_order->get_billing_country() ?: $renewal_order->get_shipping_country();
+        
+        if (empty($billing_country)) {
+            $store_country = wc_get_base_location(); // ['country' => 'BG', 'state' => '']
+            $billing_country = $store_country['country'] ?? '';
+        }
 
         Nuvei_Pfw_Logger::write(
 			[

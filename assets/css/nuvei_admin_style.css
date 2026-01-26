@@ -3,20 +3,20 @@
 	content: '\f18e';
 }
 
-#_sc_subscr_recurr_amount, 
-#_sc_subscr_recurr_period, 
-#_sc_subscr_trial_period, 
+#_sc_subscr_recurr_amount,
+#_sc_subscr_recurr_period,
+#_sc_subscr_trial_period,
 #_sc_subscr_end_after_period {
 	-moz-appearance: textfield !important;
 }
 
-#_sc_subscr_recurr_amount::-webkit-outer-spin-button, 
-#_sc_subscr_recurr_amount::-webkit-inner-spin-button, 
-#_sc_subscr_recurr_period::-webkit-outer-spin-button, 
-#_sc_subscr_recurr_period::-webkit-inner-spin-button, 
-#_sc_subscr_trial_period::-webkit-outer-spin-button, 
-#_sc_subscr_trial_period::-webkit-inner-spin-button, 
-#_sc_subscr_end_after_period::-webkit-outer-spin-button, 
+#_sc_subscr_recurr_amount::-webkit-outer-spin-button,
+#_sc_subscr_recurr_amount::-webkit-inner-spin-button,
+#_sc_subscr_recurr_period::-webkit-outer-spin-button,
+#_sc_subscr_recurr_period::-webkit-inner-spin-button,
+#_sc_subscr_trial_period::-webkit-outer-spin-button,
+#_sc_subscr_trial_period::-webkit-inner-spin-button,
+#_sc_subscr_end_after_period::-webkit-outer-spin-button,
 #_sc_subscr_end_after_period::-webkit-inner-spin-button {
 	-webkit-appearance: none;
 	margin: 0;
@@ -88,4 +88,40 @@ th {
 .description .nuvei_payments_msg .notice-dismiss {
     justify-self: end;
     position: relative !important;
+}
+
+/* style for the Nuvei Payment column in the Orders list */
+/* .nuvei-payment-ok { */
+/*     position: relative; */
+/* } */
+
+.nuvei-payment-ok.dashicons-yes {
+    color: green;
+    cursor: pointer;
+}
+
+.nuvei-payment-tooltip {
+    position: absolute;
+    margin-left: 30px;
+    z-index: 1000;
+    background: #1e1e1e;
+    color: #fff;
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    max-width: 260px;
+    display: none;
+    cursor: default;
+}
+
+.nuvei-tooltip-close {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    color: #666;
 }

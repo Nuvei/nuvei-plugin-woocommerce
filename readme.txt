@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.9
-Stable tag: 3.10.1
+Stable tag: 3.11.0
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,12 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.11.0 =
+* In the Orders' list was added a column to show if the Order is paid or not in Nuvei system.
+* Fixed a bug related with the WC Subscription, the Renewal Orders, in the case where the Parent Order does not contain billing country.
+* In the checkout was added a check for Google reCaptchs. 
+* We changed the place-holder of Simply Connect. Now it will be "Loading...".
 
 = 3.10.1 =
 * Fix for the problem with the Orders, generated from the Admin.

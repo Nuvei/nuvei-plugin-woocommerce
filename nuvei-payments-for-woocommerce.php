@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.10.1
+ * Version: 3.11.0
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
@@ -112,7 +112,7 @@ class Nuvei_Payments_For_Woocommerce
 
         // add admin style
         add_filter( 'admin_enqueue_scripts', array(__CLASS__, 'load_admin_styles_scripts') );
-        
+
         // add void and/or settle buttons to completed orders
         add_action( 'woocommerce_order_item_add_action_buttons', array(__CLASS__, 'add_buttons'), 10, 1 );
         add_action( 'after_wcfm_orders_details_items', array(__CLASS__, 'add_buttons_wcfm'), 10, 3 );
@@ -182,11 +182,11 @@ class Nuvei_Payments_For_Woocommerce
 
         // for the thank-you page
         add_filter( 'woocommerce_thankyou_order_received_text', array (__CLASS__, 'thank_you_page_mod'), 10, 2 );
-        // for the thank-you page. 
+        // for the thank-you page.
         // in case something decide to automaticaly complete the order with auto_complete_paid_order, try to disable it.
         add_action( 'woocommerce_thankyou', function($order_id) {
             $order = wc_get_order( $order_id );
-            
+
             if ( $order && $order->get_payment_method() == NUVEI_PFW_GATEWAY_NAME ) {
                 remove_action( 'woocommerce_thankyou', 'auto_complete_paid_order' );
             }
@@ -202,6 +202,25 @@ class Nuvei_Payments_For_Woocommerce
 			10,
 			2
 		);
+
+        # Nuvei custom Payment column in the Orders list
+        // add a custom column for successful Nuvei Payment/Transaction
+        add_filter( 'manage_woocommerce_page_wc-orders_columns', function ( $columns ) {
+            $new_columns = [];
+
+            foreach ( $columns as $key => $label ) {
+                $new_columns[ $key ] = $label;
+
+                // Status колоната
+                if ( $key === 'order_status' ) {
+                    $new_columns['nuvei_payment_status'] = __('Nuvei Paid', 'nuvei-payments-for-woocommerce');
+                }
+            }
+
+            return $new_columns;
+        } );
+        // fill the added column
+        add_action( 'manage_woocommerce_page_wc-orders_custom_column', array (__CLASS__, 'populate_payment_column'), 10, 2 );
 
         // for the Store > My Account > Orders list
         add_action(
@@ -278,7 +297,10 @@ class Nuvei_Payments_For_Woocommerce
                 'TransactionAppr'   => __( 'The transaction was approved.', 'nuvei-payments-for-woocommerce' ),
                 'RefundAmountError' => __( 'Please, check requested Refund amount!', 'nuvei-payments-for-woocommerce' ),
                 'TermsError'        => __( 'To continue, please accept the Terms!', 'nuvei-payments-for-woocommerce' ),
-//                'Loading'           => __( 'Loading...', 'nuvei-payments-for-woocommerce' ),
+                'CaptchaError'      => __( 'Please complete the reCAPTCHA to verify that you are not a robot.', 'nuvei-payments-for-woocommerce' ),
+                
+                'MissingEmailCountry'   => __( 'Please fill email and country fields to continue with payment.', 'nuvei-payments-for-woocommerce' ),
+                'MissingRequiredFields' => __( 'Please fill the required fields to continue with payment.', 'nuvei-payments-for-woocommerce' ),
             )
         );
     }
@@ -916,7 +938,7 @@ class Nuvei_Payments_For_Woocommerce
 	/**
 	 * // We call this function after the user click the Place Order button.
 	 * // Here we know if there are any errors in the checkout form.
-     * 
+     *
      * We manually validate the form calling WC checout method from our JS file.
      * Here we will check for our custom flag. In case there is flag, and no
      * errors, we will return 'result' => 'failure', to prevent the checkout
@@ -926,13 +948,13 @@ class Nuvei_Payments_For_Woocommerce
 	 * @param array $errors
 	 */
 	public static function after_checkout_validation ( $data, $errors ) {
-	    Nuvei_Pfw_Logger::write( 
-            array( 
-                $data, 
+	    Nuvei_Pfw_Logger::write(
+            array(
+                $data,
                 $errors,
                 Nuvei_Pfw_Http::get_param( 'nuveiFormValidation', 'int', 0, array(), true )
             ),
-            'action woocommerce_after_checkout_validation start' 
+            'action woocommerce_after_checkout_validation start'
         );
 
 		if ( $errors->has_errors()
@@ -957,10 +979,10 @@ class Nuvei_Payments_For_Woocommerce
 //			Nuvei_Pfw_Logger::write( 'action woocommerce_after_checkout_validation nuvei logic' );
 //			self::$wc_nuvei->call_checkout();
 //		}
-        
+
         // search for custom nuvei flag - validation only
         $nuvei_form_validation = Nuvei_Pfw_Http::get_param( 'nuveiFormValidation', 'int', 0, array(), true );
-        
+
         if (1 == $nuvei_form_validation) {
             wp_send_json(
                 array(
@@ -1140,7 +1162,7 @@ class Nuvei_Payments_For_Woocommerce
 	}
 
 	/**
-	 * For the custom baloon in Order column in the Order list.
+	 * For the custom balloon in Order column in the Order list.
 	 */
 	public static function order_list_columns_edit( $column, $col_id ) {
 		// the column we put/edit baloons
@@ -1177,7 +1199,7 @@ class Nuvei_Payments_For_Woocommerce
 	}
 
 	/**
-	 * For the custom baloon in Order column in the Order list.
+	 * For the custom balloon in Order column in the Order list.
 	 */
 	public static function order_list_columns_edit_hpos( $column, $order ) {
 		// the column we put/edit baloons
@@ -1405,7 +1427,7 @@ class Nuvei_Payments_For_Woocommerce
 	 * On activate.
 	 * Deactivate the old version plugin who use index.php file.
 	 * Try to create custom logs directory and few files.
-     * 
+     *
      * We cannot log in this method!
 	 */
 	public static function on_plugin_activate() {
@@ -1528,5 +1550,57 @@ class Nuvei_Payments_For_Woocommerce
 
 		return $rest_resp;
 	}
-    
+
+    /**
+     *
+     * @param string $column
+     * @param WC_Order $order
+     */
+    public static function populate_payment_column($column, $order) {
+        if ( $column !== 'nuvei_payment_status' ) {
+            return;
+        }
+
+        if ( $order->get_payment_method() !== NUVEI_PFW_GATEWAY_NAME ) {
+            echo '—';
+            return;
+        }
+
+        $transactions = $order->get_meta( '_nuveiTransactions' );
+
+        $tr_details = [];
+        $icon       = 'dashicons-no';
+
+        if ( !empty( $transactions ) ) {
+            foreach ($transactions as $tr_id => $details) {
+                if ( in_array($details['transactionType'], ['Sale', 'Settle'])
+                    && 'approved' == strtolower($details['status'])
+                ) {
+                    $icon       = 'dashicons-yes';
+                    $tr_details = [
+                        'status'    => $details['status'],
+                        'type'      => $details['transactionType'],
+                        'number'    => $tr_id,
+                    ];
+                    break;
+                }
+            }
+        }
+
+        $output = '<span class="nuvei-payment-ok dashicons '. $icon .'"></span>';
+
+        if ( !empty($tr_details)) {
+            $output .= '<div class="nuvei-payment-tooltip">'
+                . '<button type="button" class="nuvei-tooltip-close" aria-label="Close">×</button>'
+                . '<div class="nuvei-tooltip-content">'
+                    . 'Status: '
+                    . $tr_details['status'] .'<br/>Type: '
+                    . $tr_details['type'] .'<br/>Tr.number: '. $tr_details['number'] 
+                .'</div>'
+            .'</div>';
+        }
+
+        echo $output;
+    }
+
 }
