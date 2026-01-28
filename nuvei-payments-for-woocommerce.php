@@ -1595,6 +1595,19 @@ class Nuvei_Payments_For_Woocommerce
                         'number'    => $tr_id,
                     ];
                 }
+                
+                // Zero-total Auth is like Sale/Settle, as there never be real transaction
+                if ( $details['transactionType'] == 'Auth'
+                    && 'approved' == strtolower($details['status'])
+                    && 0 == (float) round( $order->get_total(), 2 )
+                ) {
+                    $icon       = 'credit-card-check';
+                    $tr_details = [
+                        'status'    => $details['status'],
+                        'type'      => $details['transactionType'],
+                        'number'    => $tr_id,
+                    ];
+                }
             }
         }
 
