@@ -343,7 +343,7 @@ class Nuvei_Payments_For_Woocommerce
             'nuvei_js_public',
             $plugin_url . 'assets/js/nuvei_public.js',
             array( 'jquery' ),
-            '2026-01-21',
+            '2026-01-28',
             false
         );
 
@@ -451,7 +451,7 @@ class Nuvei_Payments_For_Woocommerce
 				'nuvei_admin_style',
 				$plugin_url . 'assets/css/nuvei_admin_style.css',
 				'',
-				1,
+				'2026-01-28',
 				'all'
 			);
 			wp_enqueue_style( 'nuvei_admin_style' );
@@ -1562,32 +1562,44 @@ class Nuvei_Payments_For_Woocommerce
         }
 
         if ( $order->get_payment_method() !== NUVEI_PFW_GATEWAY_NAME ) {
-            echo '—';
+            echo '<span class="nuvei-payment-ok"><img src="'
+                . esc_attr(plugin_dir_url( NUVEI_PFW_PLUGIN_FILE )) . 'assets/icons/minus.svg" /></span>';
             return;
         }
 
         $transactions = $order->get_meta( '_nuveiTransactions' );
 
         $tr_details = [];
-        $icon       = 'dashicons-no';
+        $icon       = 'credit-card-x';
 
         if ( !empty( $transactions ) ) {
             foreach ($transactions as $tr_id => $details) {
                 if ( in_array($details['transactionType'], ['Sale', 'Settle'])
                     && 'approved' == strtolower($details['status'])
                 ) {
-                    $icon       = 'dashicons-yes';
+                    $icon       = 'credit-card-check';
                     $tr_details = [
                         'status'    => $details['status'],
                         'type'      => $details['transactionType'],
                         'number'    => $tr_id,
                     ];
-                    break;
+                }
+                
+                if ( in_array($details['transactionType'], ['Void', 'Refund', 'Credit'])
+                    && 'approved' == strtolower($details['status'])
+                ) {
+                    $icon       = 'credit-card-refresh';
+                    $tr_details = [
+                        'status'    => $details['status'],
+                        'type'      => $details['transactionType'],
+                        'number'    => $tr_id,
+                    ];
                 }
             }
         }
 
-        echo '<span class="nuvei-payment-ok dashicons '. esc_attr($icon) .'"></span>';
+        echo '<span class="nuvei-payment-ok"><span class="nuvei-payment-ok"><img src="'
+            . esc_attr(plugin_dir_url( NUVEI_PFW_PLUGIN_FILE )) . 'assets/icons/'. esc_attr($icon) .'.svg" /></span></span>';
         
         if ( !empty($tr_details)) {
             echo '<div class="nuvei-payment-tooltip">'

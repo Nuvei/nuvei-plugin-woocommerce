@@ -90,14 +90,14 @@ th {
     position: relative !important;
 }
 
-/* style for the Nuvei Payment column in the Orders list */
-/* .nuvei-payment-ok { */
-/*     position: relative; */
-/* } */
+.nuvei-payment-ok {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+}
 
-.nuvei-payment-ok.dashicons-yes {
-    color: green;
-    cursor: pointer;
+.nuvei-payment-ok img {
+    width: 24px;
 }
 
 .nuvei-payment-tooltip {
@@ -112,6 +112,7 @@ th {
     max-width: 260px;
     display: none;
     cursor: default;
+    margin-top: -10px;
 }
 
 .nuvei-tooltip-close {
