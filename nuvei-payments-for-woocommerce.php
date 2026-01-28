@@ -1587,20 +1587,19 @@ class Nuvei_Payments_For_Woocommerce
             }
         }
 
-        $output = '<span class="nuvei-payment-ok dashicons '. $icon .'"></span>';
-
+        echo '<span class="nuvei-payment-ok dashicons '. esc_attr($icon) .'"></span>';
+        
         if ( !empty($tr_details)) {
-            $output .= '<div class="nuvei-payment-tooltip">'
+            echo '<div class="nuvei-payment-tooltip">'
                 . '<button type="button" class="nuvei-tooltip-close" aria-label="Close">×</button>'
                 . '<div class="nuvei-tooltip-content">'
                     . 'Status: '
-                    . $tr_details['status'] .'<br/>Type: '
-                    . $tr_details['type'] .'<br/>Tr.number: '. $tr_details['number'] 
+                    . esc_html($tr_details['status']) .'<br/>Type: '
+                    . esc_html($tr_details['type']) .'<br/>Tr.number: '
+                    . esc_html($tr_details['number']) 
                 .'</div>'
             .'</div>';
         }
-
-        echo $output;
     }
 
 }
