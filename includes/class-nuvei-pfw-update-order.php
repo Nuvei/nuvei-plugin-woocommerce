@@ -26,7 +26,6 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 	 *
 	 * @return array
 	 */
-	// public function process($products_data, $open_order_details = [])
 	public function process() {
 		global $woocommerce;
 
@@ -34,6 +33,7 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 		$products_data      = $func_params['products_data'] ?? array();
 		$open_order_details = $func_params['open_order_details'] ?? array();
 		$plugin_settings    = $func_params['plugin_settings'] ?? array();
+        $order_id           = $func_params['order_id'] ?? null;
 
 		// default flow
 		if ( empty( $this->rest_params ) && ! empty( $woocommerce->session ) ) {
@@ -68,11 +68,9 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 			'backUrl'         => wc_get_checkout_url(),
 		);
 
-		// if ( 1 == $plugin_settings['close_popup'] ) {
 		$url_details['successUrl'] = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
 		$url_details['failureUrl'] = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
 		$url_details['pendingUrl'] = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
-		// }
 
 		// create Order upgrade
 		$params = array(
@@ -98,6 +96,14 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 				'customField2' => $currency,
 			),
 		);
+        
+        // if the Order already exists, pass the its ID here, as we cannot update clientUniqueId
+        if ( is_a( $this->sc_order, 'WC_Order' ) ) {
+            $params['merchantDetails']['customField5'] = $this->sc_order->get_id();
+        }
+        else if ( !empty($order_id) ) {
+            $params['merchantDetails']['customField5'] = $order_id;
+        }
 
 		// WC Subsc
 		if ( ! empty( $products_data['wc_subscr'] ) ) {

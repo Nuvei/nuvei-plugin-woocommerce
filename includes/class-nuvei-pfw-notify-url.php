@@ -33,6 +33,8 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 			'customField1'              => Nuvei_Pfw_Http::get_param( 'customField1', 'string' ),
 			'customField2'              => Nuvei_Pfw_Http::get_param( 'customField2', 'string' ),
 			'customField3'              => Nuvei_Pfw_Http::get_param( 'customField3', 'string' ),
+			'customField4'              => Nuvei_Pfw_Http::get_param( 'customField4', 'string' ),
+			'customField5'              => Nuvei_Pfw_Http::get_param( 'customField5', 'int' ),
 			'customData'                => Nuvei_Pfw_Http::get_param( 'customData', 'string' ),
 			'payment_method'            => Nuvei_Pfw_Http::get_param( 'payment_method', 'string' ),
 			'webMasterId'               => Nuvei_Pfw_Http::get_param( 'webMasterId', 'string' ),
@@ -247,10 +249,11 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	 *
 	 * @param mixed  $trans_id         Can be the transactionId or null.
 	 * @param string $transaction_type
+	 * @param int $order_id
 	 *
 	 * @return int
 	 */
-	private function search_order_by_dmn_data( $trans_id, $transaction_type = '' ) {
+	private function search_order_by_dmn_data( $trans_id, $transaction_type = '', $order_id = 0 ) {
 		Nuvei_Pfw_Logger::write( 
             array( 
                 '$trans_id'         => $trans_id, 
@@ -267,15 +270,15 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		do {
 			++$tries;
 
-			$res = $this->get_order_data( $trans_id );
+			$res = $this->get_order_data( $trans_id, $order_id );
 
 			if ( empty( $res[0]->post_id ) ) {
 				sleep( $wait_time );
 			}
 		} while ( $tries <= $max_tries && empty( $res[0]->post_id ) );
 
+        // for Auth and Sale implement Auto-Void if more than 30 minutes passed and still no Order
 		if ( empty( $res[0]->post_id ) ) {
-			// for Auth and Sale implement Auto-Void if more than 30 minutes passed and still no Order
 			$resp_code = $this->create_auto_void( $transaction_type );
 
 			Nuvei_Pfw_Logger::write(
@@ -448,10 +451,13 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	 * Just a repeating code.
 	 *
 	 * @global $wpdb
-	 * @param  int|null $transaction_id
-	 * @return array
+     * 
+	 * @param  string|null $transaction_id
+	 * @param  int $order_id
+	 * 
+     * @return array
 	 */
-	private function get_order_data( $transaction_id ) {
+	private function get_order_data( $transaction_id, $order_id = 0 ) {
 		global $wpdb;
 
 		// we pass null when this is SDK Order
@@ -465,8 +471,8 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 				Nuvei_Pfw_Http::get_param( 'clientUniqueId' )
 			);
 
-               // phpcs:ignore
-         $res = $wpdb->get_results( $query );
+            // phpcs:ignore
+            $res = $wpdb->get_results( $query );
 
 			if ( ! empty( $res ) ) {
 					return $res;
@@ -482,8 +488,8 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 				Nuvei_Pfw_Http::get_param( 'clientUniqueId' )
 			);
 
-               // phpcs:ignore
-         $res = $wpdb->get_results( $query );
+            // phpcs:ignore
+            $res = $wpdb->get_results( $query );
 
 			if ( ! empty( $res ) ) {
 					return $res;
@@ -1042,22 +1048,30 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	private function process_auth_sale_dmn( $transaction_type, $client_request_id, $transaction_id, $req_status ) {
 		$is_sdk_order       = false;
 		$merchant_unique_id = Nuvei_Pfw_Http::get_param( 'merchant_unique_id', 'int', false );
+        $order_id           = Nuvei_Pfw_Http::get_param( 'customField5', 'int' );
 
-		// Cashier
-		if ( $merchant_unique_id ) {
-			Nuvei_Pfw_Logger::write( 'Cashier Order' );
-			$order_id = $merchant_unique_id;
-		} elseif ( 'renewal_order' == Nuvei_Pfw_Http::get_param( 'customField4' )
-			&& ! empty( $client_request_id )
-		) { // WCS renewal order
-			Nuvei_Pfw_Logger::write( 'Renewal Order' );
-			$order_id = current( explode( '_', $client_request_id ) );
-		} elseif ( $transaction_id ) { // SDK
-			Nuvei_Pfw_Logger::write( 'SDK Order' );
-			$is_sdk_order = true;
-			$order_id     = $this->search_order_by_dmn_data( null, $transaction_type );
-		}
+        if ( empty($order_id) ) {
+            // Cashier
+            if ( $merchant_unique_id ) {
+                Nuvei_Pfw_Logger::write( 'Cashier Order' );
+                $order_id = $merchant_unique_id;
+            }
+            // WCS renewal order
+            elseif ( 'renewal_order' == Nuvei_Pfw_Http::get_param( 'customField4' )
+                && ! empty( $client_request_id )
+            ) {
+                Nuvei_Pfw_Logger::write( 'Renewal Order' );
+                $order_id = current( explode( '_', $client_request_id ) );
+            }
+            // SDK
+            elseif ( $transaction_id ) {
+                Nuvei_Pfw_Logger::write( 'SDK Order' );
+                $is_sdk_order = true;
+                $order_id     = $this->search_order_by_dmn_data( null, $transaction_type );
+            }
+        }
 
+        // here we eventually populate $this->sc_order
 		$this->is_order_valid( $order_id );
 
 		// error check for SDK orders only

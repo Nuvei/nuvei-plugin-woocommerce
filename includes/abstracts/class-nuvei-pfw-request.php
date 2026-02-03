@@ -665,11 +665,6 @@ abstract class Nuvei_Pfw_Request {
 	 * @return array $data
 	 */
 	protected function get_products_data() {
-			// we expect this method to be used on the Store only
-		// if (is_admin()) {
-		// return [];
-		// }
-
 		// main variable to fill
 		$data = array(
 			'wc_subscr'     => false,
@@ -719,11 +714,6 @@ abstract class Nuvei_Pfw_Request {
 					'in_stock'   => $cart_product->is_in_stock(),
 					'item_id'    => $item_id,
 				);
-
-				// Nuvei_Pfw_Logger::write([
-				// 'nuvei taxonomy name'   => $nuvei_taxonomy_name,
-				// 'product attributes'    => $cart_prod_attr
-				// ]);
 
 				// check for WCS
 				if ( false !== strpos( $cart_product->get_type(), 'subscription' ) ) {
@@ -1296,36 +1286,6 @@ abstract class Nuvei_Pfw_Request {
 	}
 
 	/**
-	 * Common function to sanitize an associative array.
-	 * If no array was passed use $_REQUEST variable.
-	 *
-	 * @param  array $arr
-	 * @return array
-	 */
-	// protected function sanitize_assoc_array($arr = array()) {
-	// if ( !is_array($arr) ) {
-	// return array();
-	// }
-	//
-	// if ( empty($arr) ) {
-	// $arr = $_REQUEST;
-	// }
-	//
-	// $keys   = array_keys($arr);
-	// $values = array_values($arr);
-	//
-	// $san_keys = array_map(function($val) {
-	// return sanitize_text_field($val);
-	// }, $keys);
-	//
-	// $san_values = array_map(function($val) {
-	// return sanitize_text_field($val);
-	// }, $values);
-	//
-	// return array_combine($san_keys, $san_values);
-	// }
-
-	/**
 	 * Get the request endpoint - sandbox or production.
 	 *
 	 * @return string
@@ -1419,4 +1379,5 @@ abstract class Nuvei_Pfw_Request {
 
 		return $params;
 	}
+    
 }

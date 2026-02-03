@@ -32,8 +32,9 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 
 		global $woocommerce;
 
-		$try_update_order = true;
-		$method_params    = func_get_args(); // optionaly we will pass here Order ID.
+		$try_update_order   = true;
+		$method_params      = func_get_args(); // optionaly we will pass here Order ID.
+        $open_order_details = [];
 
 		// if we pass Order ID get the order.
 		if ( ! empty( $method_params[0]['order_id'] ) ) {
@@ -67,9 +68,7 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 
 		// do not allow WCS and Nuvei Subscription in same Order
 		if ( ! empty( $products_data['subscr_data'] ) && $products_data['wc_subscr'] ) {
-			$msg = 'It is not allowed to put product with WCS and product witn Nuvei Subscription in same Order! Please, contact the site administrator for this problem!';
-
-			Nuvei_Pfw_Logger::write( $msg );
+			Nuvei_Pfw_Logger::write( 'It is not allowed to put product with WCS and product witn Nuvei Subscription in same Order! Please, contact the site administrator for this problem!' );
 
 			return array(
 				'status'     => 0,
@@ -106,9 +105,17 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 		) {
 			Nuvei_Pfw_Logger::write(
 				array(
-					'$open_order_details' => $open_order_details,
-					'$transaction_type'   => $transaction_type,
-					'$addresses'          => $addresses,
+					'$open_order_details'   => $open_order_details,
+					'$transaction_type'     => $transaction_type,
+					'oo userTokenId'        => $open_order_details['userTokenId'],
+					'billingAddress email'  => $addresses['billingAddress']['email'],
+                    
+					'is empty transactionType'  => empty( $open_order_details['transactionType'] ),
+					'is empty userTokenId'      => empty( $open_order_details['userTokenId'] ),
+					'is empty billing email'    => empty( $addresses['billingAddress']['email'] ),
+					'is transactionType match'  => $open_order_details['transactionType'] != $transaction_type,
+					'is userTokenId match'      => $open_order_details['userTokenId'] != $addresses['billingAddress']['email'],
+					'is order empty'            => empty( $this->sc_order ),
 				),
 				'$try_update_order = false',
 				'DEBUG'

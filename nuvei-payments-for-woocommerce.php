@@ -125,12 +125,12 @@ class Nuvei_Payments_For_Woocommerce
         add_action( 'wp_ajax_nopriv_sc-ajax-action', array(__CLASS__, 'ajax_action') );
 
         // On checkout form validation. Works on Classic Checkout only!
-        add_action(
-            'woocommerce_after_checkout_validation',
-            array (__CLASS__, 'after_checkout_validation'),
-            PHP_INT_MAX, // set it on max, just to be sure we will catch all additional validation errors
-            2
-        );
+//        add_action(
+//            'woocommerce_after_checkout_validation',
+//            array (__CLASS__, 'after_checkout_validation'),
+//            PHP_INT_MAX, // set it on max, just to be sure we will catch all additional validation errors
+//            2
+//        );
 
         // when the client click Pay button on the Order from My Account -> Orders menu.
         add_filter( 'woocommerce_pay_order_after_submit', array (__CLASS__, 'user_orders') );
@@ -244,13 +244,12 @@ class Nuvei_Payments_For_Woocommerce
 
         // Add this hook to catch Zero Total Orders in WC Blocks. The others still go through process_payment().
         add_action(
-//             'woocommerce_blocks_checkout_order_processed',
             'woocommerce_store_api_checkout_order_processed',
             array (__CLASS__, 'checkout_order_processed'),
             10,
 			3
         );
-
+        
         add_action(
             'nuvei_pfwc_after_rebilling_payment',
             function () {
@@ -343,7 +342,7 @@ class Nuvei_Payments_For_Woocommerce
             'nuvei_js_public',
             $plugin_url . 'assets/js/nuvei_public.js',
             array( 'jquery' ),
-            '2026-01-28',
+            '2026-02-03',
             false
         );
 
@@ -571,7 +570,6 @@ class Nuvei_Payments_For_Woocommerce
 		 * In above check we will hide the Refund button.
 		 */
 		if ( empty( $last_tr_data['status'] )
-//			|| 'approved' != strtolower( $last_tr_data['status'] )
 			|| 'pending' == strtolower( $last_tr_data['status'] )
 		) {
 			Nuvei_Pfw_Logger::write(
@@ -620,9 +618,7 @@ class Nuvei_Payments_For_Woocommerce
 
 		// hide Refund Button, it is visible by default
 		if ( ! in_array( $order_payment_method, NUVEI_PFW_PMS_REFUND_VOID )
-//			|| ! in_array( $last_tr_data['transactionType'], array( 'Sale', 'Settle', 'Credit', 'Refund' ) )
 			|| ! in_array( $last_approved_tr_data['transactionType'], array( 'Sale', 'Settle', 'Credit', 'Refund' ) )
-//			|| 'approved' != strtolower( $last_tr_data['status'] )
 			|| 'approved' != strtolower( $last_approved_tr_data['status'] )
 			|| 0 == $order_total
 			|| $ref_amount >= $order_total
@@ -647,7 +643,6 @@ class Nuvei_Payments_For_Woocommerce
          */
 		if ( 'cc_card' == $order_payment_method
 			&& empty( $order_refunds )
-//			&& in_array( $last_tr_data['transactionType'], array( 'Sale', 'Settle', 'Auth' ) )
 			&& in_array( $last_approved_tr_data['transactionType'], array( 'Sale', 'Settle', 'Auth' ) )
 			&& (float) $order_total > 0
 			&& time() < $order_time + 172800 // 48 hours
@@ -683,7 +678,6 @@ class Nuvei_Payments_For_Woocommerce
 		}
 
 		// show SETTLE button ONLY if transaction type IS Auth and the Total is not 0
-//		if ( 'Auth' == $last_tr_data['transactionType']
 		if ( 'Auth' == $last_approved_tr_data['transactionType']
 			&& $order_total > 0
 		) {
@@ -880,13 +874,7 @@ class Nuvei_Payments_For_Woocommerce
 			if ( isset( $messages[ $msg_id ]['read'] ) ) {
 				// remove the message
 				if ( true === $messages[ $msg_id ]['read'] ) {
-
-	//            }
-	//			if ( $messages[ $msg_id ]['read'] ) {
 					unset( $messages[ $msg_id ] );
-
-					// Re-index the array to maintain sequential keys (optional)
-					// $messages = array_values($messages);
 				}
 				// mark the message as read
 				else {
@@ -946,8 +934,14 @@ class Nuvei_Payments_For_Woocommerce
 	 *
 	 * @param array $data
 	 * @param array $errors
+     * @deprecated
 	 */
 	public static function after_checkout_validation ( $data, $errors ) {
+        // Only proceed for our gateway
+		if ( NUVEI_PFW_GATEWAY_NAME !== $data['payment_method'] ) {
+		    return;
+		}
+        
 	    Nuvei_Pfw_Logger::write(
             array(
                 $data,
@@ -961,17 +955,12 @@ class Nuvei_Payments_For_Woocommerce
 		    || wc_notice_count( 'error' ) > 0
 		    || ! empty( $errors->get_error_messages() )
 		    || ! empty( $errors->errors )
-            || NUVEI_PFW_GATEWAY_NAME !== $data['payment_method']
 		) {
 		    Nuvei_Pfw_Logger::write('There are errors in the checkout form.');
 		    return;
 		}
 
-		// Only proceed for your gateway
-//		if ( NUVEI_PFW_GATEWAY_NAME !== $data['payment_method'] ) {
-//		    return;
-//		}
-
+		
 //		if ( empty( Nuvei_Pfw_Http::get_param( 'nuvei_transaction_id', 'int', 0, array(), true ) )
 //		    && isset( self::$wc_nuvei->settings['integration_type'] )
 //		    && 'cashier' != self::$wc_nuvei->settings['integration_type']
@@ -1379,10 +1368,16 @@ class Nuvei_Payments_For_Woocommerce
 	}
 
  	public static function checkout_order_processed($order) {
-// 		if ( 0 == (float) $order->get_total() ) {
+        // no Nuvei Order
+        if ($order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME) {
+            return;
+        }
+        
+        Nuvei_Pfw_Logger::write('checkout_order_processed');
+        
+        // Zero-total Order in WC Blocks
 	    if ( $order instanceof WC_Order
 	        && 0 == (float) $order->get_total()
-	        && $order->get_payment_method() == NUVEI_PFW_GATEWAY_NAME
         ) {
 			Nuvei_Pfw_Logger::write( 'hook woocommerce_blocks_checkout_order_processed - Zero Total Order.' );
 

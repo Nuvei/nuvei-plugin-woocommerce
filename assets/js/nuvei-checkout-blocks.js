@@ -2,18 +2,16 @@ const nuveiCheckoutBlockPayBtn      = '.wc-block-components-checkout-place-order
 const nuveiCheckoutBlockPMethodName = 'input[name="radio-control-wc-payment-method-options"]';
 
 const nuveiFormNotInvalidTxt = window.wp.i18n.__(
-//    'Please fill email and country fields to continue with payment.', 
     'Loading...', 
     'nuvei-payments-for-woocommerce'
 );
 
-const nuveiCheckoutBlockContText    = (typeof scTrans == 'object'
-    && scTrans.hasOwnProperty('checkoutIntegration')
-    && 'sdk' === scTrans.checkoutIntegration) ?
-        nuveiFormNotInvalidTxt :
+const nuveiCheckoutBlockContText = 
+    (typeof scTrans == 'object'
+        && scTrans.hasOwnProperty('checkoutIntegration')
+        && 'sdk' === scTrans.checkoutIntegration
+    ) ? nuveiFormNotInvalidTxt :
             window.wp.i18n.__('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce');
-
-//const nuveiInvalidField = window.wp.i18n.__('The field is not valid.', 'nuvei-payments-for-woocommerce');
 
 /**
  * Checks if the Checkout form is valid.
@@ -38,6 +36,8 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
     
     // Minimal check, when need only the country and the email.
     if ( justLoadSimply ) {
+        console.log('call nuveiIsCheckoutBlocksFormValid justLoadSimply');
+        
         Object.keys( validationErrors ).forEach( ( id ) => {
             if (id == 'billing_email' || id == 'billing_country') {
                 isFormValid = false;
@@ -60,13 +60,12 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
 //                    } 
 //                );
                 
-                jQuery('#nuvei_checkout_container').html(scTrans.MissingEmailCountry);
-                
                 return true;
             }
         });
         
         if (!isFormValid) {
+            jQuery('#nuvei_checkout_container').text(scTrans.MissingEmailCountry);
             return false;
         }
         
@@ -82,8 +81,6 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
             }
         });
     });
-    
-//    console.log('scroll to the msg');
     
     // and scroll to the message
     setTimeout( () => {
@@ -107,8 +104,6 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
  */
 function secondSubscriber() {
     const currentpaymentMethod  = wp.data.select( 'wc/store/payment' ).getActivePaymentMethod();
-    
-//    console.log(currentpaymentMethod);
     
     // Catch changed Payment Method and Show/Hide the default payment button.
     try {
@@ -158,6 +153,13 @@ function secondSubscriber() {
     const Content = () => {
         useEffect(() => {
             console.log('Nuvei payment method element loaded. Check if the checkout form is valid.');
+            
+            // Append the origial Simply Connect container, in all cases, just for the message.
+            if (jQuery('#payment-method').find('#nuvei_checkout_container').length == 0) {
+                jQuery('#radio-control-wc-payment-method-options-nuvei')
+                    .closest('.wc-block-components-radio-control-accordion-option')
+                    .append(`<div id="nuvei_checkout_container" data-placeholder="${nuveiCheckoutBlockContText}"></div>`);
+            }
 
             if (typeof scTrans == 'object'
                 && scTrans.hasOwnProperty('checkoutIntegration')
@@ -165,15 +167,6 @@ function secondSubscriber() {
             ) {
                 // clone the original Place Order button
                 nuveiInsertCustomPayButton(nuveiCheckoutBlockPayBtn);
-
-                // append the origial Simply Connect container
-                if (jQuery('#payment-method').find('#nuvei_checkout_container').length == 0) {
-                    let placeholderText =
-
-                    jQuery('#radio-control-wc-payment-method-options-nuvei')
-                        .closest('.wc-block-components-radio-control-accordion-option')
-                        .append(`<div id="nuvei_checkout_container" data-placeholder="${nuveiCheckoutBlockContText}"></div>`);
-                }
 
                 // try to validate the form on checkout page load
                 if (nuveiIsCheckoutBlocksFormValid(true)) {

@@ -63,6 +63,11 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 == Changelog ==
 
+= 3.12.0 =
+* Updated payment flow for the Classic Checkout.
+* Removed old comments.
+* Fix for the Blocks Checkout messages under Nuvei Payment option.
+
 = 3.11.0 =
 * In the Orders' list was added a column to show if the Order is paid or not in Nuvei system.
 * Fixed a bug related with the WC Subscription, the Renewal Orders, in the case where the Parent Order does not contain billing country.

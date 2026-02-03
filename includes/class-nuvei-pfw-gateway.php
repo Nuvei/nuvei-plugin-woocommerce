@@ -38,15 +38,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
         $this->description  = wp_kses_post(
             '<div id="nuvei_checkout_container" data-placeholder="' .
                 ( 'cashier' === $this->get_option( 'integration_type' ) ?
-                    __(
-                        'You will be redirected to Nuvei secure payment page.',
-                        'nuvei-payments-for-woocommerce'
-                    )
-                        : __(
-//                            'Please fill email and country fields to continue with payment.',
-                            'Loading...',
-                            'nuvei-payments-for-woocommerce'
-                        )
+                    __('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce')
+                        : __('Loading...', 'nuvei-payments-for-woocommerce')
                 )
              . '"></div>'
         );
@@ -69,7 +62,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		// parent method to save Plugin Settings
 		add_action(
 			'woocommerce_update_options_payment_gateways_' . $this->id,
-// 			array( $this, 'process_admin_options' )
 			array( $this, 'validate_settings' )
 		);
 
@@ -320,14 +312,18 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	 * @return array
 	 */
 	public function process_payment( $order_id ) {
-		$nuvei_order_details = WC()->session->get( NUVEI_PFW_SESSION_PROD_DETAILS );
-		$nuvei_oo_details    = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
+		$nuvei_order_details    = WC()->session->get( NUVEI_PFW_SESSION_PROD_DETAILS );
+		$nuvei_oo_details       = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
+        // is Classic Checkout request
+        $is_classic             = ! str_contains( $_SERVER['REQUEST_URI'] ?? '', 'wc/store/v1/checkout' );
 
 		Nuvei_Pfw_Logger::write(
 			array(
-				'$order_id'                    => $order_id,
-				NUVEI_PFW_SESSION_PROD_DETAILS => $nuvei_order_details,
-				NUVEI_PFW_SESSION_OO_DETAILS   => $nuvei_oo_details,
+				'$order_id'                     => $order_id,
+				NUVEI_PFW_SESSION_PROD_DETAILS  => $nuvei_order_details,
+				NUVEI_PFW_SESSION_OO_DETAILS    => $nuvei_oo_details,
+                '$_REQUEST' => $_REQUEST, 
+                '$_SERVER'  => $_SERVER
 			),
 			'Process payment(), Order'
 		);
@@ -361,7 +357,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			$this->get_return_url( $order )
 		);
 
-		// error
+		// error - not Nuvei Order
 		if ( $order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME ) {
 			Nuvei_Pfw_Logger::write( 'Process payment Error - Order payment does not belongs to ' . NUVEI_PFW_GATEWAY_NAME );
 
@@ -384,6 +380,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			$this->order = $order;
 			$url         = $this->generate_cashier_url( $return_success_url, $return_error_url );
 
+            // success
 			if ( ! empty( $url ) ) {
 				return array(
 					'result'   => 'success',
@@ -391,9 +388,9 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				);
 			}
 
+            // error - the Cashier URL is missing.
 			return;
 		}
-		// /in case we use Cashier
 
 		// search for subscr data
 		if ( ! empty( $nuvei_order_details ) && is_array( $nuvei_order_details ) ) {
@@ -433,6 +430,41 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
         if (!empty($nuvei_oo_details['clientUniqueId'])) {
             $order->update_meta_data( NUVEI_PFW_CLIENT_UNIQUE_ID, $nuvei_oo_details['clientUniqueId'] );
         }
+        
+        /*
+         * No Transaction ID - This is the new checkout flow for the Classic Checkout, at this moment.
+         * Here we already have saved Order, but not transaction/payment.
+         * At this place we will call updateOrder request, using the Order details.
+         */
+        if ( empty(Nuvei_Pfw_Http::get_param( 'nuvei_transaction_id' )) && $is_classic ) {
+            Nuvei_Pfw_Logger::write( 'Process payment(), before return' );
+            
+            $order->save();
+            
+            // call Update Order
+            $helper         = new Nuvei_Pfw_Helper();
+            $uo_obj         = new Nuvei_Pfw_Update_Order( $this->rest_params );
+            $products_data  = $helper->get_products();
+            
+			
+            $uo_obj->process(array(
+                'open_order_details'    => $nuvei_oo_details,
+                'products_data'         => $products_data,
+                'plugin_settings'       => $this->settings,
+                'order_id'              => $order->get_id(),
+            ));
+            
+            $resp = [
+                'result'    => 'success',
+                'redirect'  => '#',
+                'data'      => [
+                    'nuvei_try_payment' => true,
+                    'succsess_url'      => $return_success_url,
+                ]
+            ];
+            
+            return $resp;
+        }
 
 		$order->update_status( $this->settings['status_auth'] );
 		$order->save();
@@ -443,7 +475,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		// Return thankyou redirect.
 		return array(
 			'result'   => 'success',
-			'redirect' => $this->get_return_url( $order ),
+			'redirect' => $return_success_url,
 		);
 	}
 
@@ -512,69 +544,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		return;
 	}
-
-	/**
-	 * @global $woocommerce $woocommerce
-	 *
-	 * @deprecated since version 3.1.0
-	 */
-//	public function reorder() {
-//		global $woocommerce;
-//
-//		$products_ids = json_decode( Nuvei_Pfw_Http::get_param( 'product_ids' ), true );
-//
-//		if ( empty( $products_ids ) || ! is_array( $products_ids ) ) {
-//			wp_send_json(
-//				array(
-//					'status' => 0,
-//					'msg'    => __( 'Problem with the Products IDs.', 'nuvei-payments-for-woocommerce' ),
-//				)
-//			);
-//			exit;
-//		}
-//
-//		$prod_factory  = new WC_Product_Factory();
-//		$msg           = '';
-//		$is_prod_added = false;
-//
-//		foreach ( $products_ids as $id ) {
-//			$product = $prod_factory->get_product( $id );
-//
-//			if ( 'in-stock' != $product->get_availability()['class'] ) {
-//				$msg = __( 'Some of the Products are not availavle, and are not added in the new Order.', 'nuvei-payments-for-woocommerce' );
-//				continue;
-//			}
-//
-//			$is_prod_added = true;
-//			$woocommerce->cart->add_to_cart( $id );
-//		}
-//
-//		if ( ! $is_prod_added ) {
-//			wp_send_json(
-//				array(
-//					'status' => 0,
-//					'msg'    => 'There are no added Products to the Cart.',
-//				)
-//			);
-//			exit;
-//		}
-//
-//		$cart_url = wc_get_cart_url();
-//
-//		if ( ! empty( $msg ) ) {
-//			$cart_url .= strpos( $cart_url, '?' ) !== false ? '&sc_msg=' : '?sc_msg=';
-//			$cart_url .= urlencode( $msg );
-//		}
-//
-//		wp_send_json(
-//			array(
-//				'status'       => 1,
-//				'msg'          => $msg,
-//				'redirect_url' => wc_get_cart_url(),
-//			)
-//		);
-//		exit;
-//	}
 
 	/**
 	 * Download the Active Payment pPlans and save them to a json file.
@@ -1189,7 +1158,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
         // we need them for the payment.do request
 		$billing_mail     = $renewal_order->get_billing_email();
 		$billing_country  = $renewal_order->get_billing_country() ?: $renewal_order->get_shipping_country();
-        
+
         if (empty($billing_country)) {
             $store_country = wc_get_base_location(); // ['country' => 'BG', 'state' => '']
             $billing_country = $store_country['country'] ?? '';
@@ -1231,25 +1200,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$parent_tr_id     = $helper->helper_get_tr_id( $parent_order_id );
 		$parent_tr_upo_id = $helper->get_tr_upo_id( $parent_order_id );
 
-		// just an additional check
-//		if (empty($billing_mail)) {
-//		    $billing_mail = $parent_order->get_billing_email();
-//		}
-//		if (empty($billing_country)) {
-//		    $billing_country = $parent_order->get_billing_country();
-//		}
-//
-//		Nuvei_Pfw_Logger::write(
-//		    [
-//		        '$parent_order_id'  => $parent_order_id,
-//		        'parent $billing_mail'     => $parent_order->get_billing_email(),
-//		        'parent $billing_country'  => $parent_order->get_billing_country(),
-//		        'parent $billing_address'  => $parent_order->get_formatted_billing_address(),
-//		    ],
-//		    'create_wc_subscr_order',
-//		    'TRACE'
-//	    );
-//
 		Nuvei_Pfw_Logger::write(
 			array(
 				'$renewal_order_id' => $renewal_order_id,
@@ -1509,6 +1459,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'customField1'       => $total_amount,
 			'customField2'       => $currency,
 			'customField3'       => time(), // create time time()
+			'customField5'       => $this->order->get_id(),
 
 			'currency'           => $currency,
 			'total_tax'          => 0,
@@ -1531,11 +1482,13 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		// create one combined item
 		if ( 1 == $this->get_option( 'combine_cashier_products' ) ) {
-			$params['item_name_1']     = 'WC_Cashier_Order';
+			$params['item_name_1']     = __( 'Order', 'nuvei-payments-for-woocommerce' ) . ' ' . $this->order->get_id();
 			$params['item_quantity_1'] = 1;
 			$params['item_amount_1']   = $total_amount;
 			$params['numberofitems']   = 1;
-		} else { // add all the items
+		} 
+        // add all the items
+        else {
 			$cnt                     = 1;
 			$contol_amount           = 0;
 			$params['numberofitems'] = 0;
