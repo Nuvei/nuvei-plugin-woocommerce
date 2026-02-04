@@ -181,9 +181,16 @@ function nuveiAfterSdkResponse(resp) {
 
         // in case of Blocks Checkout
         if (jQuery(nuveiCheckoutBlockFormClass).length > 0) {
-            console.log('nuveiCheckoutBlockFormClass submit');
+            console.log('clearValidationErrors and nuveiCheckoutBlockPayBtn click');
             
-            jQuery(nuveiCheckoutBlockPayBtn).trigger('click');
+            nuveiAllowFormSubmit = true;
+            
+            wp.data.dispatch('wc/store/validation').clearValidationErrors();
+            
+            setTimeout(() => {
+                jQuery(nuveiCheckoutBlockPayBtn).trigger('click');
+            }, 200);
+            
             return;
         }
 	}
@@ -583,30 +590,30 @@ jQuery(function($) {
 	}
 
     // on click on our custom Place Order button
-    jQuery(document.body).on('click', '#nuvei_place_order', function (e) {
-        console.log('try nuveiSubmitPayment');
-
-        try {
-            // classic checkout and admin order payment page
-            if (jQuery(nuveiCheckoutClassicFormClass).length || nuveiIsPayForExistingOrderPage) {
-                if (nuveiIsCheckoutClassicFormValid()) {
-                    simplyConnect.submitPayment();
-                }
-
-                return;
-            }
-
-            // blocks checkout
-            if (jQuery(nuveiCheckoutBlockFormClass).length) {
-                if (jQuery('.wc-block-components-notices').length > 0 && nuveiIsCheckoutBlocksFormValid()) {
-                    simplyConnect.submitPayment();
-                }
-
-                return;
-            }
-        }
-        catch(exception) {}
-    });
+//    jQuery(document.body).on('click', '#nuvei_place_order', function (e) {
+//        console.log('try nuveiSubmitPayment');
+//
+//        try {
+//            // classic checkout and admin order payment page
+//            if (jQuery(nuveiCheckoutClassicFormClass).length || nuveiIsPayForExistingOrderPage) {
+//                if (nuveiIsCheckoutClassicFormValid()) {
+//                    simplyConnect.submitPayment();
+//                }
+//
+//                return;
+//            }
+//
+//            // blocks checkout
+//            if (jQuery(nuveiCheckoutBlockFormClass).length) {
+//                if (jQuery('.wc-block-components-notices').length > 0 && nuveiIsCheckoutBlocksFormValid()) {
+//                    simplyConnect.submitPayment();
+//                }
+//
+//                return;
+//            }
+//        }
+//        catch(exception) {}
+//    });
 
     // When the client is on accout -> orders page and pay an order created from the merchant.
     if (jQuery('#nuveiPayForExistingOrder').length > 0

@@ -465,6 +465,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             
             return $resp;
         }
+//        elseif (!$is_classic) {
+//            return array(
+//                'result'   => 'success',
+//                'redirect' => '#' . $return_success_url,
+//            );
+//        }
 
 		$order->update_status( $this->settings['status_auth'] );
 		$order->save();

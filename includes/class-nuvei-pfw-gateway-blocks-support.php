@@ -37,8 +37,9 @@ final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 				'wp-element',
 				'wp-html-entities',
 				'wp-i18n',
+                'wc-blocks-checkout',
 			),
-			'2026-01-28',
+			'2026-02-03',
             true
 		);
 

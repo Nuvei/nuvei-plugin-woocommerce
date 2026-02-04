@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.9
-Stable tag: 3.11.0
+Stable tag: 3.12.0
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -67,6 +67,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 * Updated payment flow for the Classic Checkout.
 * Removed old comments.
 * Fix for the Blocks Checkout messages under Nuvei Payment option.
+* Use the default "Place Order" button.
 
 = 3.11.0 =
 * In the Orders' list was added a column to show if the Order is paid or not in Nuvei system.
