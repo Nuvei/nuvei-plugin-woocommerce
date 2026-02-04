@@ -322,8 +322,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'$order_id'                     => $order_id,
 				NUVEI_PFW_SESSION_PROD_DETAILS  => $nuvei_order_details,
 				NUVEI_PFW_SESSION_OO_DETAILS    => $nuvei_oo_details,
-                '$_REQUEST' => $_REQUEST, 
-                '$_SERVER'  => $_SERVER
+//                '$_REQUEST' => $_REQUEST, 
+//                '$_SERVER'  => $_SERVER
 			),
 			'Process payment(), Order'
 		);

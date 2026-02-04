@@ -783,7 +783,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 
 					// check for correct currency
 					if ( $this->sc_order->get_currency() !== Nuvei_Pfw_Http::get_param( 'currency' )
-					&& $this->sc_order->get_currency() !== Nuvei_Pfw_Http::get_param( 'customField2' )
+                        && $this->sc_order->get_currency() !== Nuvei_Pfw_Http::get_param( 'customField2' )
 					) {
 						$set_curr_warning = true;
 						Nuvei_Pfw_Logger::write( 'Currency warning!' );
@@ -791,7 +791,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 
 					// when currency is same, check the amount again, in case of some kind partial transaction
 					if ( $this->sc_order->get_currency() === Nuvei_Pfw_Http::get_param( 'currency' )
-					&& $order_amount != $dmn_amount
+                        && $order_amount != $dmn_amount
 					) {
 						$set_amount_warning = true;
 						Nuvei_Pfw_Logger::write( 'Amount warning when currency is same!' );

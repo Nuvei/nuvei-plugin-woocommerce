@@ -110,12 +110,12 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 					'oo userTokenId'        => $open_order_details['userTokenId'],
 					'billingAddress email'  => $addresses['billingAddress']['email'],
                     
-					'is empty transactionType'  => empty( $open_order_details['transactionType'] ),
-					'is empty userTokenId'      => empty( $open_order_details['userTokenId'] ),
-					'is empty billing email'    => empty( $addresses['billingAddress']['email'] ),
-					'is transactionType match'  => $open_order_details['transactionType'] != $transaction_type,
-					'is userTokenId match'      => $open_order_details['userTokenId'] != $addresses['billingAddress']['email'],
-					'is order empty'            => empty( $this->sc_order ),
+//					'is empty transactionType'  => empty( $open_order_details['transactionType'] ),
+//					'is empty userTokenId'      => empty( $open_order_details['userTokenId'] ),
+//					'is empty billing email'    => empty( $addresses['billingAddress']['email'] ),
+//					'is transactionType match'  => $open_order_details['transactionType'] != $transaction_type,
+//					'is userTokenId match'      => $open_order_details['userTokenId'] != $addresses['billingAddress']['email'],
+//					'is order empty'            => empty( $this->sc_order ),
 				),
 				'$try_update_order = false',
 				'DEBUG'

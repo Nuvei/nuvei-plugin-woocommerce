@@ -249,7 +249,7 @@ function nuveiOnPlaceOrderBtnClick(currentpaymentMethod) {
                 && 'sdk' === scTrans.checkoutIntegration
             ) {
                 // clone the original Place Order button
-                nuveiInsertCustomPayButton(nuveiCheckoutBlockPayBtn);
+//                nuveiInsertCustomPayButton(nuveiCheckoutBlockPayBtn);
 
                 // try to validate the form on checkout page load
                 if (nuveiIsCheckoutBlocksFormValid(true)) {
