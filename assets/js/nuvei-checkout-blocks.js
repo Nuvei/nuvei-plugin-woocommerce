@@ -121,25 +121,7 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
 function nuveiSecondSubscriber() {
     const currentpaymentMethod  = wp.data.select( 'wc/store/payment' ).getActivePaymentMethod();
 
-//    // Catch changed Payment Method and Show/Hide the default payment button.
-//    try {
-//        // in case Nuvei is selected
-//        if (scTrans && scTrans.paymentGatewayName == currentpaymentMethod) {
-////            jQuery(nuveiCheckoutBlockPayBtn).not(nuveiCheckoutCustomPayBtn).hide();
-//            jQuery('#nuvei_checkout_container').show();
-////            nuveiShowCustomPayBtn();
-//        }
-//        else {
-//            nuveiDestroySimplyConnect();
-////            jQuery(nuveiCheckoutCustomPayBtn).hide();
-//            jQuery('#nuvei_checkout_container').hide();
-////            jQuery(nuveiCheckoutBlockPayBtn).not(nuveiCheckoutCustomPayBtn).show();
-//        }
-//    }
-//    catch(e) {}
-
     nuveiOnPaymentProviderChange(currentpaymentMethod);
-
     nuveiOnPlaceOrderBtnClick(currentpaymentMethod);
 };
 
@@ -248,9 +230,6 @@ function nuveiOnPlaceOrderBtnClick(currentpaymentMethod) {
                 && scTrans.hasOwnProperty('checkoutIntegration')
                 && 'sdk' === scTrans.checkoutIntegration
             ) {
-                // clone the original Place Order button
-//                nuveiInsertCustomPayButton(nuveiCheckoutBlockPayBtn);
-
                 // try to validate the form on checkout page load
                 if (nuveiIsCheckoutBlocksFormValid(true)) {
                     nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
@@ -375,27 +354,5 @@ jQuery(function() {
     // subscribe from payment method changes
     wp.data.subscribe(nuveiSecondSubscriber);
 
-
-
-//    // 1. Subscribe to the checkout store
-//    const { onCheckoutValidation } = wp.data.dispatch('wc/store/checkout');
-//
-//    // 2. Register a validation callback
-//    onCheckoutValidation(async () => {
-//        console.log("Place Order Button Clicked!");
-//
-//        // Run your custom logic
-//        const shouldStop = false;
-//
-//        if (shouldStop) {
-//            return {
-//                type: 'error',
-//                message: 'Custom Logic Error: Stop the order.',
-//            };
-//        }
-//
-//        // Return true/success to allow the order to proceed
-//        return true;
-//    });
 });
 // document ready function end
