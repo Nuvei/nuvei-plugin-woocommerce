@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.9
-Stable tag: 3.12.0
+Stable tag: 3.12.1
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,11 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.12.1 =
+* Fix for the Place Order button logic in case GPay, ApplePay or Paze is selected.
+* Use jQuery to detect when the Checkout payment method is changed.
+* Switch from input even in the checkout mandatory fields to blur, change and focusout.
 
 = 3.12.0 =
 * Updated payment flow for the Classic Checkout.
