@@ -3,14 +3,14 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.12.1
+ * Version: 3.12.2
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
  * Text Domain: nuvei-payments-for-woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.9.1
+ * Tested up to: 6.9
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
  * WC tested up to: 10.5.1
@@ -373,7 +373,7 @@ class Nuvei_Payments_For_Woocommerce
             $removeWCSPayBtn    = false;
             $new_title          = '';
 
-            if ( $order->get_payment_method() == NUVEI_PFW_GATEWAY_NAME ) {
+            if ( is_a( $order, 'WC_Order' ) && $order->get_payment_method() == NUVEI_PFW_GATEWAY_NAME ) {
                 if ( 'error' == $request_status
                     || 'fail' == strtolower( wc_clean( 'ppp_status' ) )
                 ) {
