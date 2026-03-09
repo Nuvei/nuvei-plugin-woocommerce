@@ -87,6 +87,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		// just give few seconds to WC to finish its Order
 		sleep( 3 );
 
+        // error
 		if ( ! $this->validate_checksum() ) {
 			$msg = 'DMN Error - Checksum validation problem!';
 
@@ -669,8 +670,8 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 			'Nuvei change_order_status()'
 		);
 
-		$dmn_amount = Nuvei_Pfw_Http::get_param( 'totalAmount', 'float' );
-
+		$dmn_amount = number_format(Nuvei_Pfw_Http::get_param( 'totalAmount', 'float' ), 2, '.', ''); 
+                
         // phpcs:ignore
         $msg_transaction = '<b>' . $transaction_type . ' </b> ' 
 			. __( 'request', 'nuvei-payments-for-woocommerce' ) . '.<br/>';
@@ -709,7 +710,8 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 				break;
 
 			case 'APPROVED':
-				$order_amount       = round( floatval( $this->sc_order->get_total() ), 2 );
+//				$order_amount       = round( floatval( $this->sc_order->get_total() ), 2 );
+				$order_amount       = number_format($this->sc_order->get_total(), 2, '.', '');
 				$this->msg['class'] = 'woocommerce_message';
 
 				// Void
@@ -774,7 +776,8 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 					);
 
 					// check for correct amount
-					if ( $order_amount != $dmn_amount
+//					if ( $order_amount != $dmn_amount
+					if ( bccomp($order_amount, $dmn_amount, 2) === 0
 						&& Nuvei_Pfw_Http::get_param( 'customField1' ) != $order_amount
 					) {
 						$set_amount_warning = true;

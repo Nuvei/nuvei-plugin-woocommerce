@@ -438,7 +438,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
          * At this place we will call updateOrder request, using the Order details.
          */
         if ( empty(Nuvei_Pfw_Http::get_param( 'nuvei_transaction_id' )) && $is_classic ) {
-            Nuvei_Pfw_Logger::write( 'Process payment(), before return' );
+            Nuvei_Pfw_Logger::write( 'Process payment, classic checkout' );
             
             $order->save();
             
@@ -448,30 +448,35 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             $products_data  = $helper->get_products();
             
 			
-            $uo_obj->process(array(
+            $resp = $uo_obj->process(array(
                 'open_order_details'    => $nuvei_oo_details,
                 'products_data'         => $products_data,
-                'plugin_settings'       => $this->settings,
                 'order_id'              => $order->get_id(),
+                'session_token'         => Nuvei_Pfw_Http::get_param( 'nuvei_session_token' ),
+                'oo_order_id'           => Nuvei_Pfw_Http::get_param( 'nuvei_oo_order_id' ),
             ));
             
-            $resp = [
-                'result'    => 'success',
-                'redirect'  => '#',
-                'data'      => [
-                    'nuvei_try_payment' => true,
-                    'succsess_url'      => $return_success_url,
-                ]
-            ];
+            // success
+            if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
+                return [
+                    'result'    => 'success',
+                    'redirect'  => '#',
+                    'data'      => [
+                        'nuvei_try_payment' => true,
+                        'succsess_url'      => $return_success_url,
+                    ]
+                ];
+            }
             
-            return $resp;
+            // error
+            return array(
+				'result'   => 'success',
+				'redirect' => array(
+					'Status' => 'error',
+				),
+				wc_get_checkout_url() . 'order-received/' . $order_id . '/',
+			);
         }
-//        elseif (!$is_classic) {
-//            return array(
-//                'result'   => 'success',
-//                'redirect' => '#' . $return_success_url,
-//            );
-//        }
 
 		$order->update_status( $this->settings['status_auth'] );
 		$order->save();
@@ -1018,11 +1023,11 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		$resp_data['nuveiPluginUrl'] = plugin_dir_url( NUVEI_PFW_PLUGIN_FILE );
 		$resp_data['nuveiSiteUrl']   = get_site_url();
+        $checkout_data['orderId']    = $oo_data['orderId'];
 
 		// REST API call
 		if ( ! empty( $this->rest_params ) ) {
 			$checkout_data['transactionType'] = $oo_data['transactionType'];
-			$checkout_data['orderId']         = $oo_data['orderId'];
 			$checkout_data['products_data']   = $prod_details;
 
 			Nuvei_Pfw_Logger::write( $checkout_data, 'REST API CALL $checkout_data' );
@@ -1037,14 +1042,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			return $checkout_data;
 		}
 
-		wp_send_json(
-			array(
-				'result'      => 'failure', // this is just to stop WC send the form, and show APMs
-				'refresh'     => false,
-				'reload'      => false,
-				'nuveiParams' => $checkout_data,
-			)
-		);
+		wp_send_json(array(
+            'result'      => 'failure', // this is just to stop WC send the form, and show APMs
+            'refresh'     => false,
+            'reload'      => false,
+            'nuveiParams' => $checkout_data,
+        ));
 
 		exit;
 	}
@@ -1059,17 +1062,16 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$open_order_details  = $woocommerce->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
 		$products_data       = $nuvei_helper->get_products();
 
-		// success
+		// nothing is changed, continue
 		if ( ! empty( $open_order_details['sessionToken'] )
 			&& ! empty( $nuvei_order_details[ $open_order_details['sessionToken'] ]['products_data_hash'] )
 			&& md5( serialize( $products_data ) ) == $nuvei_order_details[ $open_order_details['sessionToken'] ]['products_data_hash']
 		) {
-			wp_send_json(
-				array(
-					'success' => 1,
-				)
-			);
-
+            Nuvei_Pfw_Logger::write( 'checkout_prepayment_check() success' );
+            
+			wp_send_json(array(
+                'success' => 1,
+            ));
 			exit;
 		}
 
@@ -1078,15 +1080,13 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'$nuvei_order_details' => $nuvei_order_details,
 				'$open_order_details'  => $open_order_details,
 				'$products_data'       => $products_data,
-			)
+			),
+            'checkout_prepayment_check() fail'
 		);
 
-		wp_send_json(
-			array(
-				'success' => 0,
-			)
-		);
-
+		wp_send_json(array(
+            'success' => 0,
+        ));
 		exit;
 	}
 
@@ -1381,6 +1381,23 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		return false;
 	}
+    
+    public function blocks_create_order() {
+        Nuvei_Pfw_Logger::write( 'blocks_create_order' );
+        
+        $order = wc_create_order( [
+            'customer_id' => get_current_user_id(),
+            'status'      => 'on-hold'
+        ] );
+        
+        // Copy cart to order
+        foreach ( WC()->cart->get_cart() as $item ) {
+            $order->add_product(
+                wc_get_product( $item['product_id'] ),
+                $item['quantity']
+            );
+        }
+    }
 
 	/**
 	 * Get a plugin setting by its key.

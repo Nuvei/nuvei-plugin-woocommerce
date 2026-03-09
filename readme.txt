@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.9
-Stable tag: 3.12.2
+Stable tag: 3.12.3
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,10 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.12.3 =
+* Fix for the Blocks Checkout when try to place an Order.
+* For the Classic Checkout was added a fallback approach for the Update Order process.
 
 = 3.12.2 =
 * Fixed the info in the readme file.

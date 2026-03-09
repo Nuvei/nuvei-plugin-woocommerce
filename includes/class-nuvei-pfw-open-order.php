@@ -126,12 +126,17 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 				)
 			);
 
+            // success
 			if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
 				return $resp;
-			} elseif ( ! empty( $resp['status'] ) && ! empty( $resp['reload_checkout'] ) ) {
+			}
+            // error
+            elseif ( ! empty( $resp['status'] ) && ! empty( $resp['reload_checkout'] ) ) {
 				wp_send_json( array( 'reload_checkout' => 1 ) );
 				exit;
 			}
+            
+            Nuvei_Pfw_Logger::write('simulated update order');
 		}
 		// /try to update Order or not
 

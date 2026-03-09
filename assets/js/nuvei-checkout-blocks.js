@@ -13,7 +13,31 @@ const nuveiCheckoutBlockContText =
     ) ? nuveiFormNotInvalidTxt :
             window.wp.i18n.__('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce');
 
-var nuveiAllowFormSubmit = false;
+var nuveiAllowFormSubmit        = false;
+
+/**
+ * We use pre-payment for the Blocks only.
+ * We call this method from nuvei_public.js
+ * 
+ * @param {object} paymentDetails
+ * @returns {Promise}
+ */
+function nuveiPrePayment(paymentDetails) {
+	console.log('nuveiPrePayment');
+
+	return new Promise((resolve, reject) => {
+        // check for recaptch
+        if (jQuery('#g-recaptcha-response').length && '' == jQuery('#g-recaptcha-response').val()) {
+            nuveiShowErrorMsg(scTrans.CaptchaError);
+            reject();
+            return;
+        }
+        
+        // Update the Order
+        nuveiUpdateOrder(resolve, reject);
+        return;
+	});
+}
 
 /**
  * Checks if the Checkout form is valid.
@@ -75,8 +99,6 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
         return true;
     }
 
-
-
     // show all errors
     Object.keys( validationErrors ).forEach( ( id ) => {
         // skip Nuvei custom orders.
@@ -115,84 +137,22 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
     }, 100 ); // Short delay ensures the notice has rendered in the DOM
 }
 
-/**
- * In this subscriber we try to handle the payment method check.
- */
-function nuveiSecondSubscriber() {
-    const currentpaymentMethod  = wp.data.select( 'wc/store/payment' ).getActivePaymentMethod();
-
-    nuveiOnPaymentProviderChange(currentpaymentMethod);
-    nuveiOnPlaceOrderBtnClick(currentpaymentMethod);
-};
-
-function nuveiOnPaymentProviderChange(currentpaymentMethod) {
-    try {
-        // in case Nuvei is selected
-        if (scTrans && scTrans.paymentGatewayName == currentpaymentMethod) {
-            jQuery('#nuvei_checkout_container').show();
-        }
-        else {
-            nuveiDestroySimplyConnect();
-            jQuery('#nuvei_checkout_container').hide();
-        }
-    }
-    catch(e) {}
-}
-
-function nuveiOnPlaceOrderBtnClick(currentpaymentMethod) {
-    // run Simply Connect logic via the original Place Order Button
-    const checkoutStore     = wp.data.select('wc/store/checkout');
-    const validationStore   = wp.data.dispatch('wc/store/validation');
-    let isTransaction       = ( jQuery('#nuvei_transaction_id').length && jQuery('#nuvei_transaction_id').val() !== '');
-
-    // error - not Nuvei GW
-    if (!scTrans || scTrans.paymentGatewayName !== currentpaymentMethod) {
-        console.log('not Nuvei GW')
-        return;
-    }
-    
-    // error - not the click event
-    if (!checkoutStore.isBeforeProcessing()) {
-        return;
-    }
-    
-    // allow form submission
-    if (nuveiAllowFormSubmit) {
-        console.log('nuveiAllowFormSubmit', nuveiAllowFormSubmit)
-        return;
-    }
-
-    // The status moves to 'before_processing' immediately after the click
-    if ( !isTransaction ) {
-        console.log("Place Order clicked - checking custom logic...");
-
-        // stop the submit and add custom error, but skip it in the form check!
-        validationStore.setValidationErrors({
-            'nuvei-transaction-error': {
-                message: 'You must complete the custom logic first.',
-                hidden: false
-            }
-        });
-
-        // validate the form and submit the payment
-        if (jQuery('.wc-block-components-notices').length > 0
-            && nuveiIsCheckoutBlocksFormValid()
-        ) {
-            simplyConnect.submitPayment();
-        }
-    }
-    // submit the form
-    else {
-        console.log("There is a transaction.", jQuery('#nuvei_transaction_id').val());
-        validationStore.clearValidationErrors();
-    }
+async function nuveiBlocksRunTransaction() {
+    return new Promise( function( resolve ) {
+        nuveiBlocksResolvePayment = resolve; // set the resolver
+        simplyConnect.submitPayment();
+    } );
 }
 
 /**
  * Integrate Nuvei payment option and button in the Blocks Chckout.
  */
 (function() {
-    const { useEffect } = window.wp.element;
+    console.log('auto func');
+    
+    const { useEffect, createElement } = window.wp.element;
+    const { useSelect }                 = window.wp.data;
+    
     const nuveiSettings = window.wc.wcSettings.getSetting( 'nuvei_data', {} );
     const nuveiLabel    = window.wp.htmlEntities.decodeEntities( nuveiSettings.title )
         || window.wp.i18n.__('Nuvei', 'nuvei-payments-for-woocommerce');
@@ -215,7 +175,11 @@ function nuveiOnPlaceOrderBtnClick(currentpaymentMethod) {
         );
     }
 
-    const Content = () => {
+    const Content = (props) => {
+        const { eventRegistration, emitResponse } = props;
+        const { onPaymentSetup } = eventRegistration;
+        
+        // only on the first load
         useEffect(() => {
             console.log('Nuvei payment method element loaded. Check if the checkout form is valid.');
 
@@ -226,19 +190,51 @@ function nuveiOnPlaceOrderBtnClick(currentpaymentMethod) {
                     .append(`<div id="nuvei_checkout_container" data-placeholder="${nuveiCheckoutBlockContText}"></div>`);
             }
 
-            if (typeof scTrans == 'object'
-                && scTrans.hasOwnProperty('checkoutIntegration')
-                && 'sdk' === scTrans.checkoutIntegration
+            if ('sdk' === scTrans?.checkoutIntegration 
+                && nuveiIsCheckoutBlocksFormValid(true)
             ) {
-                // try to validate the form on checkout page load
-                if (nuveiIsCheckoutBlocksFormValid(true)) {
-                    nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
-                }
+                nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
             }
+        }, []);
+        
+        // subscribe for place order event
+        useEffect(() => {
+            const unsubscribe = onPaymentSetup( async function() {
+                console.log('onPaymentSetup logic');
+                // Step 1: validate your SDK fields
+                if ( !nuveiIsCheckoutBlocksFormValid() ) {
+                    return {
+                        type: emitResponse.responseTypes.ERROR
+                    };
+                }
 
+                // Step 2: run transaction against Order ID
+                const payment = await nuveiBlocksRunTransaction();
+                
+                if ( !payment.success ) {
+                    return {
+                        type: emitResponse.responseTypes.ERROR,
+                        message: payment.error || 'Payment declined, please try again.'
+                    };
+                }
+
+                // Step 3: approved - continue the proccess
+                return {
+                    type: emitResponse.responseTypes.SUCCESS,
+                    meta: {
+                        paymentMethodData: {
+                            _nuveiTrId: payment.transaction_id
+                        }
+                    }
+                };
+            } );
+
+            // Cleanup on unmount
+            return unsubscribe;
+            
             // Cleanup: do nothing (no destroy here)
 //            return () => { };
-        }, []);
+        }, [onPaymentSetup]);
 
 //        return window.wp.element.createElement(
 //            'div',
@@ -250,8 +246,8 @@ function nuveiOnPlaceOrderBtnClick(currentpaymentMethod) {
     const nuveiBlocksOptions = {
         name: 'nuvei',
         label: label,
-        content: Object( window.wp.element.createElement )( Content, null ),
-        edit: Object( window.wp.element.createElement )( Content, null ),
+        content: createElement( Content, null ),
+        edit: createElement( Content, null ),
         ariaLabel: nuveiLabel,
         canMakePayment: () => true
     };
@@ -260,9 +256,12 @@ function nuveiOnPlaceOrderBtnClick(currentpaymentMethod) {
     window.nuveiCheckoutSdkParams = nuveiSettings.checkoutParams;
 
     console.log('nuveiBlocksOptions was registered', scTrans.checkoutIntegration);
+    
 })();
 
 jQuery(function() {
+    console.log('jquery func');
+    
     // Prevent running in WP admin area
     if (typeof window.wp !== 'undefined'
         && window.wp.data
@@ -295,64 +294,100 @@ jQuery(function() {
     let lastTotal           = store.getCartTotals().total_price;
     let lastBillingEmail    = store.getCartData().billingAddress.email;
     let lastBillingCountry  = store.getCartData().billingAddress.country;
+    let reloadTimer         = null;
 
-    // subscribe to change events for the totals and the billing address
-    if (typeof nuveiDebounce != 'undefined') {
-        const debouncedHandler = nuveiDebounce(() => {
-            if (jQuery('#nuvei_checkout_container').length == 0) {
-                return;
+    // Subscribe using the debounced handler
+    wp.data.subscribe(() => {
+        if (nuveiIsPayForExistingOrderPage) {
+            return;
+        }
+        
+        if (jQuery('#nuvei_checkout_container').length == 0) {
+            return;
+        }
+
+        // Do not check the totals and billing address if Nuvei is not selected
+        const currentpaymentMethod = wp.data.select( 'wc/store/payment' ).getActivePaymentMethod();
+
+        if (scTrans && scTrans.paymentGatewayName !== currentpaymentMethod) {
+            console.log('The selected payment method is not Nuvei.');
+            jQuery('#nuvei_checkout_container').hide();
+            return;
+        }
+
+        jQuery('#nuvei_checkout_container').show();
+
+        const currentTotals         = store.getCartTotals ? store.getCartTotals().total_price : null;
+        const currentBillingEmail   = store.getCartData().billingAddress.email;
+        const currentBillingCountry = store.getCartData().billingAddress.country;
+        
+        // check for changes
+        if (currentTotals != lastTotal
+            || currentBillingEmail !== lastBillingEmail
+            || currentBillingCountry !== lastBillingCountry
+        ) {
+            jQuery('#nuvei_blocker').show();
+            
+            console.log('Checkout changed:', {
+                'is email changed': currentBillingEmail != lastBillingEmail,
+                'is total changed': currentTotals != lastTotal,
+                'is country changed': lastBillingCountry  != currentBillingCountry,
+            });
+    
+            lastTotal           = currentTotals;
+            lastBillingEmail    = currentBillingEmail;
+            lastBillingCountry  = currentBillingCountry;
+            
+            nuveiDestroySimplyConnect();
+            jQuery('#nuvei_checkout_container').html(window.wp.i18n.__('Loading...', 'nuvei-payments-for-woocommerce'));
+            
+            if (nuveiIsCheckoutBlocksFormValid(true)) {
+                // add small delay
+                clearTimeout( reloadTimer );
+                reloadTimer = setTimeout( function() {
+                    nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
+                    jQuery('#nuvei_blocker').hide();
+                    return;
+                }, 600 );
             }
+        }
+        
+//        // Totals have changed
+//        if (currentTotals != lastTotal) {
+//            lastTotal = currentTotals;
+//
+//            console.log('Cart totals changed:', currentTotals);
+//
+//            nuveiDestroySimplyConnect();
+//            jQuery('#nuvei_checkout_container').html(window.wp.i18n.__('Loading...', 'nuvei-payments-for-woocommerce'));
+//            
+//            // add small delay
+//            clearTimeout( reloadTimer );
+//            reloadTimer = setTimeout( function() {
+//                nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
+//            }, 600 );
+//            
+//            return;
+//        }
+//
+//        // Billing address changed
+//        if (currentBillingEmail !== lastBillingEmail
+//            || currentBillingCountry !== lastBillingCountry
+//        ) {
+//            lastBillingEmail = currentBillingEmail;
+//            lastBillingCountry = currentBillingCountry;
+//
+//            console.log('Billing address changed');
+//
+//            nuveiDestroySimplyConnect();
+//
+//            if (nuveiIsCheckoutBlocksFormValid(true)) {
+//                nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
+//                return;
+//            }
+//        }
 
-            // Do not check the totals and billing address if Nuvei is not selected
-            const currentpaymentMethod = wp.data.select( 'wc/store/payment' ).getActivePaymentMethod();
-
-            if (scTrans && scTrans.paymentGatewayName !== currentpaymentMethod) {
-                console.log('The selected payment method is not Nuvei.')
-                return;
-            }
-
-            const currentTotals         = store.getCartTotals ? store.getCartTotals().total_price : null;
-            const currentBillingEmail   = store.getCartData().billingAddress.email;
-            const currentBillingCountry = store.getCartData().billingAddress.country;
-
-            // Totals have changed
-            if (!nuveiIsPayForExistingOrderPage && currentTotals != lastTotal) {
-                lastTotal = currentTotals;
-
-                console.log('Cart totals changed:', currentTotals);
-
-                nuveiDestroySimplyConnect();
-                jQuery('#nuvei_checkout_container').html(window.wp.i18n.__('Loading...', 'nuvei-payments-for-woocommerce'));
-                nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
-            }
-
-            // Billing address changed
-            if (!nuveiIsPayForExistingOrderPage) {
-                if (currentBillingEmail !== lastBillingEmail
-                    || currentBillingCountry !== lastBillingCountry
-                ) {
-                    lastBillingEmail = currentBillingEmail;
-                    lastBillingCountry = currentBillingCountry;
-
-                    console.log('Billing address changed');
-
-                    nuveiDestroySimplyConnect();
-
-                    if (nuveiIsCheckoutBlocksFormValid(true)) {
-                        nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
-                        return;
-                    }
-                }
-            }
-
-        }, 1000);
-
-        // Subscribe using the debounced handler
-        wp.data.subscribe(debouncedHandler);
-    }
-
-    // subscribe from payment method changes
-    wp.data.subscribe(nuveiSecondSubscriber);
+    });
 
 });
 // document ready function end
