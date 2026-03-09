@@ -682,9 +682,8 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
             . __( 'Transaction ID: ', 'nuvei-payments-for-woocommerce' ) . Nuvei_Pfw_Http::get_param( 'TransactionID', 'int' ) . '.<br/>'
             . __( 'Related Transaction ID: ', 'nuvei-payments-for-woocommerce' )
             . Nuvei_Pfw_Http::get_param( 'relatedTransactionId', 'int' ) . '.<br/>'
-            . __( 'Transaction Amount: ', 'nuvei-payments-for-woocommerce' )
-            . number_format( $dmn_amount, 2, '.', '' )
-            . ' ' . Nuvei_Pfw_Http::get_param( 'currency' ) . '.';
+            . __( 'Transaction Amount: ', 'nuvei-payments-for-woocommerce' ) . $dmn_amount . ' ' 
+            . Nuvei_Pfw_Http::get_param( 'currency' ) . '.';
 
 		$message = '';
 		$status  = $this->sc_order->get_status();
@@ -710,7 +709,6 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 				break;
 
 			case 'APPROVED':
-//				$order_amount       = round( floatval( $this->sc_order->get_total() ), 2 );
 				$order_amount       = number_format($this->sc_order->get_total(), 2, '.', '');
 				$this->msg['class'] = 'woocommerce_message';
 
@@ -776,8 +774,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 					);
 
 					// check for correct amount
-//					if ( $order_amount != $dmn_amount
-					if ( bccomp($order_amount, $dmn_amount, 2) === 0
+					if ( $order_amount != $dmn_amount
 						&& Nuvei_Pfw_Http::get_param( 'customField1' ) != $order_amount
 					) {
 						$set_amount_warning = true;
