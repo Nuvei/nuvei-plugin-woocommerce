@@ -137,6 +137,30 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
     }, 100 ); // Short delay ensures the notice has rendered in the DOM
 }
 
+/**
+ * Just reusing some code.
+ */
+function nuveiBlocksReloadSimply() {
+    let reloadTimer = null;
+    
+    jQuery('#nuvei_blocker').show();
+            
+    nuveiDestroySimplyConnect();
+
+    jQuery('#nuvei_checkout_container').html(window.wp.i18n.__('Loading...', 'nuvei-payments-for-woocommerce'));
+
+    if (nuveiIsCheckoutBlocksFormValid(true)) {
+        // add small delay
+        clearTimeout( reloadTimer );
+        
+        reloadTimer = setTimeout( function() {
+            nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
+            jQuery('#nuvei_blocker').hide();
+            return;
+        }, 600 );
+    }
+}
+
 async function nuveiBlocksRunTransaction() {
     return new Promise( function( resolve ) {
         nuveiBlocksResolvePayment = resolve; // set the resolver
@@ -287,22 +311,33 @@ jQuery(function() {
             .append('<div id="nuvei_blocker"><img class="nuvei_loader" src="'
                 + scTrans.loaderUrl + '" /></div>');
     }
+    
+    // watch the email field for changes
+    let lastEmail = document.getElementById('email')?.value;
+    
+    jQuery(document.body).on('blur', '#email', function(e) {
+        let self = jQuery(this);
+
+        // Check if the value has actually changed
+        if (self.val() !== lastEmail) {
+            console.log('mail was changed', lastEmail, self.val())
+            
+            lastEmail = self.val();
+            
+            nuveiBlocksReloadSimply();
+        }
+    });
 
     // WP Blocks subscriber
     const store = wp.data.select( 'wc/store/cart' );
 
+    // Subscribe for total and billign changes
     let lastTotal           = store.getCartTotals().total_price;
-    let lastBillingEmail    = store.getCartData().billingAddress.email;
     let lastBillingCountry  = store.getCartData().billingAddress.country;
-    let reloadTimer         = null;
 
-    // Subscribe using the debounced handler
     wp.data.subscribe(() => {
-        if (nuveiIsPayForExistingOrderPage) {
-            return;
-        }
-        
-        if (jQuery('#nuvei_checkout_container').length == 0) {
+        // some errors
+        if (nuveiIsPayForExistingOrderPage || jQuery('#nuvei_checkout_container').length == 0) {
             return;
         }
 
@@ -318,75 +353,23 @@ jQuery(function() {
         jQuery('#nuvei_checkout_container').show();
 
         const currentTotals         = store.getCartTotals ? store.getCartTotals().total_price : null;
-        const currentBillingEmail   = store.getCartData().billingAddress.email;
         const currentBillingCountry = store.getCartData().billingAddress.country;
         
         // check for changes
         if (currentTotals != lastTotal
-            || currentBillingEmail !== lastBillingEmail
             || currentBillingCountry !== lastBillingCountry
         ) {
-            jQuery('#nuvei_blocker').show();
-            
             console.log('Checkout changed:', {
-                'is email changed': currentBillingEmail != lastBillingEmail,
                 'is total changed': currentTotals != lastTotal,
                 'is country changed': lastBillingCountry  != currentBillingCountry,
             });
-    
+            
             lastTotal           = currentTotals;
-            lastBillingEmail    = currentBillingEmail;
             lastBillingCountry  = currentBillingCountry;
             
-            nuveiDestroySimplyConnect();
-            jQuery('#nuvei_checkout_container').html(window.wp.i18n.__('Loading...', 'nuvei-payments-for-woocommerce'));
-            
-            if (nuveiIsCheckoutBlocksFormValid(true)) {
-                // add small delay
-                clearTimeout( reloadTimer );
-                reloadTimer = setTimeout( function() {
-                    nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
-                    jQuery('#nuvei_blocker').hide();
-                    return;
-                }, 600 );
-            }
+            nuveiBlocksReloadSimply();
         }
         
-//        // Totals have changed
-//        if (currentTotals != lastTotal) {
-//            lastTotal = currentTotals;
-//
-//            console.log('Cart totals changed:', currentTotals);
-//
-//            nuveiDestroySimplyConnect();
-//            jQuery('#nuvei_checkout_container').html(window.wp.i18n.__('Loading...', 'nuvei-payments-for-woocommerce'));
-//            
-//            // add small delay
-//            clearTimeout( reloadTimer );
-//            reloadTimer = setTimeout( function() {
-//                nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
-//            }, 600 );
-//            
-//            return;
-//        }
-//
-//        // Billing address changed
-//        if (currentBillingEmail !== lastBillingEmail
-//            || currentBillingCountry !== lastBillingCountry
-//        ) {
-//            lastBillingEmail = currentBillingEmail;
-//            lastBillingCountry = currentBillingCountry;
-//
-//            console.log('Billing address changed');
-//
-//            nuveiDestroySimplyConnect();
-//
-//            if (nuveiIsCheckoutBlocksFormValid(true)) {
-//                nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
-//                return;
-//            }
-//        }
-
     });
 
 });

@@ -342,7 +342,7 @@ class Nuvei_Payments_For_Woocommerce
             'nuvei_js_public',
             $plugin_url . 'assets/js/nuvei_public.js',
             array( 'jquery' ),
-            '2026-02-03',
+            '2026-03-10',
             false
         );
 

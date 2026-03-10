@@ -9,9 +9,9 @@ const nuveiWallets                      = ['ppp_ApplePay', 'ppp_GooglePay', 'ppp
 var nuveiCheckoutSdkParams          = {};
 var nuveiIsCheckoutLoaded           = false;
 var nuveiIsPayForExistingOrderPage  = false;
-//var nuveiTriggeredUpdateEvent       = false;
 var nuveiSuccessRedirect            = '';
 var nuveiIsFormValid                = true;
+let nuveiBlocksResolvePayment       = null;
 
 // Debounce function to limit how often a function can fire
 function nuveiDebounce(func, wait) {
@@ -204,9 +204,10 @@ function showNuveiCheckout(_params) {
 
     // for the Blocks only
     if ( jQuery(nuveiCheckoutBlockFormClass).length > 0 ) {
-        nuveiCheckoutSdkParams.prePayment   = nuveiPrePayment;
-        nuveiCheckoutSdkParams.onResult     = function( resp ) {
-            // dynamically attach the logic of nuveiAfterSdkResponse() in this empty method.
+        nuveiCheckoutSdkParams.prePayment = nuveiPrePayment;
+        
+        // dynamically attach the logic of nuveiAfterSdkResponse() in this empty method.
+        nuveiCheckoutSdkParams.onResult = function( resp ) {
             if ( nuveiBlocksResolvePayment ) {
                 console.log('afterSdkResponse for Blocks', resp);
 
@@ -585,7 +586,7 @@ jQuery(function($) {
                 }
             }
             
-            $(document.body).on('blur change focusout', nuveiMandatoryCheckoutFields, function(e) {
+            jQuery(document.body).on('blur change focusout', nuveiMandatoryCheckoutFields, function(e) {
                 var self    = jQuery(this);
                 var newVal  = self.val();
                 // Retrieve the previous value stored on this specific element
@@ -683,10 +684,10 @@ jQuery(function($) {
             });
             
             // catch when the form is submitted
-            const payForm = $( 'form#order_review' );
+            const payForm = jQuery( 'form#order_review' );
             
             payForm.on( 'submit', function( e ) {
-                const selectedMethod = $(`${nuveiCheckoutClassicPMethodName}:checked`).val();
+                const selectedMethod = jQuery(`${nuveiCheckoutClassicPMethodName}:checked`).val();
 
                 // Nuvei GW is not selected
                 if ( selectedMethod !== scTrans.paymentGatewayName ) {
