@@ -21,62 +21,137 @@ function nuveiAction(question, action, orderId, subscrId, isWcfm) {
 		
     jQuery('#custom_loader').show();
 
-    var data = {
-        action: 'sc-ajax-action',
-        nuveiSecurity: scTrans.nuveiSecurity,
-        orderId: orderId
+//    var data = {
+//        action: 'sc-ajax-action',
+//        nuveiSecurity: scTrans.nuveiSecurity,
+//        orderId: orderId
+//    };
+
+    let url     = scTrans.apiUrl;
+    let data    = {
+        method: 'POST',
+        headers: {
+            'X-WP-Nonce': scTrans.nuveiApiSec,
+            'Content-Type': 'application/json'
+        }
     };
 
     if (action == 'settle') {
-        data.settleOrder = 1;
+//        data.settleOrder = 1;
     }
     else if (action == 'void') {
-        data.cancelOrder = 1;
+//        data.cancelOrder = 1;
+        url += 'cancel-order/';
     }
     else if ('cancelSubscr' == action) {
-        data.cancelSubs = 1;
-        data.subscrId   = subscrId;
+//        data.cancelSubs = 1;
+//        data.subscrId   = subscrId;
     }
 
-    jQuery.ajax({
-        type: "POST",
-        url: scTrans.ajaxurl,
-        data: data,
-        dataType: 'json'
-    })
-        .fail(function( jqXHR, textStatus, errorThrown){
-            jQuery('#custom_loader').hide();
-            alert('Response fail.');
+//    jQuery.ajax({
+//        type: "POST",
+//        url: scTrans.ajaxurl,
+//        data: data,
+//        dataType: 'json'
+//    })
+//        .fail(function( jqXHR, textStatus, errorThrown){
+//            jQuery('#custom_loader').hide();
+//            alert('Response fail.');
+//
+//            console.error(textStatus)
+//            console.error(errorThrown)
+//        })
+//        .done(function(resp) {
+//            console.log(resp, isWcfm);
+//
+//            if (resp && typeof resp.status != 'undefined' && resp.data != 'undefined') {
+//                if (resp.status == 1) {
+//                    if (isWcfm) {
+//                        window.location = '/store-manager/orderslist/';
+//                        return;
+//                    }
+//                    
+//                    var urlParts    = window.location.toString().split('post.php');
+//                    window.location = urlParts[0] + 'edit.php?post_type=shop_order';
+//                } else if (resp.data.reason != 'undefined' && resp.data.reason != '') {
+//                    jQuery('#custom_loader').hide();
+//                    alert(resp.data.reason);
+//                } else if (resp.data.gwErrorReason != 'undefined' && resp.data.gwErrorReason != '') {
+//                    jQuery('#custom_loader').hide();
+//                    alert(resp.data.gwErrorReason);
+//                } else {
+//                    jQuery('#custom_loader').hide();
+//                    alert('Response error.');
+//                }
+//            } else {
+//                jQuery('#custom_loader').hide();
+//                alert('Response error.');
+//            }
+//        });
 
-            console.error(textStatus)
-            console.error(errorThrown)
+    fetch( wpApiSettings.root + 'myproject/v1/admin-data', data)
+        // 1. first check for the status code (200 OK)
+        .then(res => {
+            if (!res.ok) {
+                // error - 401, 403, 404 or 500
+                throw res; 
+            }
+            
+            // success, continue
+            return res.json();
         })
-        .done(function(resp) {
-            console.log(resp, isWcfm);
-
-            if (resp && typeof resp.status != 'undefined' && resp.data != 'undefined') {
-                if (resp.status == 1) {
-                    if (isWcfm) {
-                        window.location = '/store-manager/orderslist/';
-                        return;
-                    }
-                    
-                    var urlParts    = window.location.toString().split('post.php');
-                    window.location = urlParts[0] + 'edit.php?post_type=shop_order';
-                } else if (resp.data.reason != 'undefined' && resp.data.reason != '') {
-                    jQuery('#custom_loader').hide();
-                    alert(resp.data.reason);
-                } else if (resp.data.gwErrorReason != 'undefined' && resp.data.gwErrorReason != '') {
-                    jQuery('#custom_loader').hide();
-                    alert(resp.data.gwErrorReason);
-                } else {
-                    jQuery('#custom_loader').hide();
-                    alert('Response error.');
-                }
-            } else {
+        // the success
+        .then(resp => {
+            console.log('Данните са тук:', resp);
+            alert('Браво! ' + data.message);
+            
+            // error - response error
+            if (!resp || !resp?.status || !resp?.data) {
                 jQuery('#custom_loader').hide();
                 alert('Response error.');
+                return;
             }
+            
+            if (resp.status == 1) {
+                if (isWcfm) {
+                    window.location = '/store-manager/orderslist/';
+                    return;
+                }
+
+                let urlParts    = window.location.toString().split('post.php');
+                window.location = urlParts[0] + 'edit.php?post_type=shop_order';
+                
+                return;
+            }
+            
+            if (resp?.data?.reason && resp.data.reason != '') {
+                jQuery('#custom_loader').hide();
+                alert(resp.data.reason);
+                return;
+            }
+            
+            if (resp?.data?.gwErrorReason && resp.data.gwErrorReason != '') {
+                jQuery('#custom_loader').hide();
+                alert(resp.data.gwErrorReason);
+                return;
+            }
+            
+            // error
+            jQuery('#custom_loader').hide();
+            alert('Response error.');
+        })
+        // error after the first check
+        .catch(async err => {
+            // in case of WP_Error, usually in json
+            if (err.json) {
+                const errorData = await err.json();
+                alert('Server error: ' + errorData.message);
+            }
+            else {
+                alert('Unexpected error.');
+            }
+            
+            jQuery('#custom_loader').hide();
         });
 }
 

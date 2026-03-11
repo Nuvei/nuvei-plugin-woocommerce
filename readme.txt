@@ -63,6 +63,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 == Changelog ==
 
+= 3.13.0 =
+* Migrate to WP Rest API.
+
 = 3.12.3 =
 * Fix for the Blocks Checkout when try to place an Order.
 * For the Classic Checkout was added a fallback approach for the Update Order process.

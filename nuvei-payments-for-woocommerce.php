@@ -124,14 +124,9 @@ class Nuvei_Payments_For_Woocommerce
         add_action( 'wp_ajax_sc-ajax-action', array(__CLASS__, 'ajax_action') );
         add_action( 'wp_ajax_nopriv_sc-ajax-action', array(__CLASS__, 'ajax_action') );
 
-        // On checkout form validation. Works on Classic Checkout only!
-//        add_action(
-//            'woocommerce_after_checkout_validation',
-//            array (__CLASS__, 'after_checkout_validation'),
-//            PHP_INT_MAX, // set it on max, just to be sure we will catch all additional validation errors
-//            2
-//        );
-
+        // the new api endpoint for the front-end requests
+        add_action( 'rest_api_init', array(__CLASS__, 'rest_api_calls') );
+        
         // when the client click Pay button on the Order from My Account -> Orders menu.
         add_filter( 'woocommerce_pay_order_after_submit', array (__CLASS__, 'user_orders') );
 
@@ -350,15 +345,17 @@ class Nuvei_Payments_For_Woocommerce
         $localizations = array_merge(
             NUVEI_PFW_JS_LOCALIZATIONS,
             array(
-                'nuveiSecurity'       => wp_create_nonce( 'nuvei-security-nonce' ),
-                'wcThSep'             => get_option( 'woocommerce_price_thousand_sep' ),
-                'wcDecSep'            => get_option( 'woocommerce_price_decimal_sep' ),
-                'useUpos'             => self::$wc_nuvei->can_use_upos(),
-                'isUserLogged'        => is_user_logged_in() ? 1 : 0,
-                'isPluginActive'      => self::$wc_nuvei->settings['enabled'],
-                'loaderUrl'           => plugin_dir_url( __FILE__ ) . 'assets/icons/loader.gif',
-                'checkoutIntegration' => self::$wc_nuvei->settings['integration_type'],
-                'webMasterId'         => 'WooCommerce ' . WOOCOMMERCE_VERSION
+                'nuveiSecurity'         => wp_create_nonce( 'nuvei-security-nonce' ),
+                'nuveiApiSec'           => wp_create_nonce( 'wp_rest' ),
+                'apiUrl'                => esc_url_raw(rest_url() . NUVEI_API_PATH),
+                'wcThSep'               => get_option( 'woocommerce_price_thousand_sep' ),
+                'wcDecSep'              => get_option( 'woocommerce_price_decimal_sep' ),
+                'useUpos'               => self::$wc_nuvei->can_use_upos(),
+                'isUserLogged'          => is_user_logged_in() ? 1 : 0,
+                'isPluginActive'        => self::$wc_nuvei->settings['enabled'],
+                'loaderUrl'             => plugin_dir_url( __FILE__ ) . 'assets/icons/loader.gif',
+                'checkoutIntegration'   => self::$wc_nuvei->settings['integration_type'],
+                'webMasterId'           => 'WooCommerce ' . WOOCOMMERCE_VERSION
                     . '; Plugin v' . $helper->helper_get_plugin_version(),
             )
         );
@@ -481,6 +478,8 @@ class Nuvei_Payments_For_Woocommerce
 				NUVEI_PFW_JS_LOCALIZATIONS,
 				array(
 					'nuveiSecurity'     => wp_create_nonce( 'nuvei-security-nonce' ),
+                    'nuveiApiSec'       => wp_create_nonce( 'wp_rest' ),
+                    'apiUrl'            => esc_url_raw(rest_url() . NUVEI_API_PATH),
 					'nuveiPaymentPlans' => $plans_list,
 					'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION
 						. '; Plugin v' . $helper->helper_get_plugin_version(),
@@ -767,11 +766,13 @@ class Nuvei_Payments_For_Woocommerce
 	 * Main function for the Ajax requests.
 	 */
 	public static function ajax_action() {
+        // error - nonce
 		if ( ! check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false ) ) {
 			wp_send_json_error( __( 'Invalid security token sent.', 'nuvei-payments-for-woocommerce' ) );
 			wp_die( 'Invalid security token sent' );
 		}
 
+        // error - not set site mode
 		if ( empty( self::$wc_nuvei->settings['test'] ) ) {
 			wp_send_json_error( __( 'Invalid site mode.', 'nuvei-payments-for-woocommerce' ) );
 			wp_die( 'Invalid site mode.' );
@@ -1622,4 +1623,85 @@ class Nuvei_Payments_For_Woocommerce
         }
     }
 
+    public static function rest_api_calls() {
+        // TODO - Get Checkout data
+//        if ( Nuvei_Pfw_Http::get_param( 'getBlocksCheckoutData', 'int' ) == 1 ) {
+//			// Simply Connect flow
+//			if ( 'sdk' == self::$wc_nuvei->settings['integration_type'] ) {
+//				wp_send_json( self::$wc_nuvei->call_checkout( false, true ) );
+//				exit;
+//			}
+//
+//			// Cashier flow
+//			if ( 'cashier' == self::$wc_nuvei->settings['integration_type'] ) {
+//				// TODO
+//				exit;
+//			}
+//
+//			exit;
+//		}
+        
+        register_rest_route(NUVEI_API_PATH, '/get-checkout-data/', array(
+            'methods'             => 'GET',
+            'callback'            => self::$wc_nuvei->call_checkout( false, true ),
+            'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
+        ));
+        
+        // Void (Cancel)
+//		if ( Nuvei_Pfw_Http::get_param( 'cancelOrder', 'int' ) == 1 && $order_id > 0 ) {
+//			$nuvei_settle_void = new Nuvei_Pfw_Settle_Void( self::$wc_nuvei->settings );
+//			$nuvei_settle_void->create_settle_void( sanitize_text_field( $order_id ), 'void' );
+//		}
+        
+        register_rest_route(NUVEI_API_PATH, '/cancel-order/', array(
+            'methods'             => 'GET',
+            'callback'            => function($request) {
+                $nuvei_settle_void = new Nuvei_Pfw_Settle_Void( self::$wc_nuvei->settings );
+                
+                $order_id   = $request->get_param('orderId');
+                $data       = $nuvei_settle_void->create_settle_void( sanitize_text_field( $order_id ), 'void' );
+                
+                return rest_ensure_response( $data );
+            },
+            'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
+        ));
+    }
+    
+    /**
+     * Validation of the Store requests.
+     * 
+     * @param object $request
+     * @return \WP_Error|bool
+     */
+    public static function validate_my_api_nonce($request) {
+        $nonce = $request->get_header('X-WP-Nonce');
+        
+        if ( ! wp_verify_nonce($nonce, 'wp_rest') ) {
+            return new WP_Error('rest_forbidden', 'Invalid Nonce!', array('status' => 403));
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Validation of the Admin requests.
+     * 
+     * @param object $request
+     * @return \WP_Error|bool
+     */
+    public static function check_admin_or_store_owner($request) {
+        $nonce = $request->get_header('X-WP-Nonce');
+        
+        if ( ! wp_verify_nonce($nonce, 'wp_rest') ) {
+            return new WP_Error('rest_forbidden', 'Invalid Nonce!', array('status' => 403));
+        }
+        
+        // 'manage_woocommerce'
+        if (current_user_can('manage_woocommerce') || current_user_can('manage_options')) {
+            return true;
+        }
+        
+        return new WP_Error('rest_forbidden', 'You do not have required permissions.', array('status' => 401));
+    }
+    
 }
