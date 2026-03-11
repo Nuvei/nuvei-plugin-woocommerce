@@ -315,7 +315,7 @@ jQuery(function() {
     // watch the email field for changes
     let lastEmail = document.getElementById('email')?.value;
     
-    jQuery(document.body).on('blur', '#email', function(e) {
+    jQuery( document.body ).on( 'blur', '#email:not(#nuvei_checkout_container #email)', function(e) {
         let self = jQuery(this);
 
         // Check if the value has actually changed
