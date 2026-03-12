@@ -43,6 +43,8 @@ final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
             true
 		);
 
+		wp_set_script_translations( 'nuvei-checkout-blocks', 'nuvei-payments-for-woocommerce' );
+
 		return array( 'nuvei-checkout-blocks' );
 	}
 

@@ -13,7 +13,7 @@ try {
  * @returns void
  */
 function nuveiAction(question, action, orderId, subscrId, isWcfm) {
-	console.log('settleAndCancelOrder')
+	console.log('nuveiAction', action, question, orderId, subscrId, isWcfm);
 	
 	if (!confirm(question)) {
         return;
@@ -21,27 +21,16 @@ function nuveiAction(question, action, orderId, subscrId, isWcfm) {
 		
     jQuery('#custom_loader').show();
 
-//    var data = {
-//        action: 'sc-ajax-action',
-//        nuveiSecurity: scTrans.nuveiSecurity,
-//        orderId: orderId
-//    };
-
-    let url     = scTrans.apiUrl;
-    let data    = {
-        method: 'POST',
-        headers: {
-            'X-WP-Nonce': scTrans.nuveiApiSec,
-            'Content-Type': 'application/json'
-        }
-    };
+    let url         = scTrans.apiUrl;
+    let orderData   = {};
 
     if (action == 'settle') {
-//        data.settleOrder = 1;
+        url += '/settle-order/';
+        orderData.orderId = orderId;
     }
     else if (action == 'void') {
-//        data.cancelOrder = 1;
-        url += 'cancel-order/';
+        url += '/cancel-order/';
+        orderData.orderId = orderId;
     }
     else if ('cancelSubscr' == action) {
 //        data.cancelSubs = 1;
@@ -89,7 +78,14 @@ function nuveiAction(question, action, orderId, subscrId, isWcfm) {
 //            }
 //        });
 
-    fetch( wpApiSettings.root + 'myproject/v1/admin-data', data)
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-WP-Nonce': scTrans.nuveiApiSec,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
+    })
         // 1. first check for the status code (200 OK)
         .then(res => {
             if (!res.ok) {
@@ -101,18 +97,18 @@ function nuveiAction(question, action, orderId, subscrId, isWcfm) {
             return res.json();
         })
         // the success
-        .then(resp => {
-            console.log('Данните са тук:', resp);
-            alert('Браво! ' + data.message);
+        .then(data => {
+            console.log(data);
+//            alert('Браво! ' + data.message);
             
             // error - response error
-            if (!resp || !resp?.status || !resp?.data) {
+            if (!data || !data?.status || !data?.data) {
                 jQuery('#custom_loader').hide();
                 alert('Response error.');
                 return;
             }
             
-            if (resp.status == 1) {
+            if (data.status == 1) {
                 if (isWcfm) {
                     window.location = '/store-manager/orderslist/';
                     return;
@@ -124,15 +120,15 @@ function nuveiAction(question, action, orderId, subscrId, isWcfm) {
                 return;
             }
             
-            if (resp?.data?.reason && resp.data.reason != '') {
+            if (data?.data?.reason && data.data.reason != '') {
                 jQuery('#custom_loader').hide();
-                alert(resp.data.reason);
+                alert(data.data.reason);
                 return;
             }
             
-            if (resp?.data?.gwErrorReason && resp.data.gwErrorReason != '') {
+            if (data?.data?.gwErrorReason && data.data.gwErrorReason != '') {
                 jQuery('#custom_loader').hide();
-                alert(resp.data.gwErrorReason);
+                alert(data.data.gwErrorReason);
                 return;
             }
             

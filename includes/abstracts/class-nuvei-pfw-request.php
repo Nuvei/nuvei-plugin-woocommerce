@@ -136,8 +136,6 @@ abstract class Nuvei_Pfw_Request {
 	/**
 	 * Help function to generate Billing and Shipping details.
 	 *
-	 * @global Woocommerce $woocommerce
-	 *
 	 * @return array
 	 */
 	protected function get_order_addresses() {
@@ -186,10 +184,17 @@ abstract class Nuvei_Pfw_Request {
 		}
 
 		// default plugin flow
-		global $woocommerce;
+        if (!WC()->cart) {
+            Nuvei_Pfw_Logger::write( WC()->cart, 'WC Cart is not valid.', 'WARN' );
+            wc_load_cart();
+        }
 
-		$billing_address         = array();
-		$cart                    = $woocommerce->cart;
+        if ( null === WC()->cart || WC()->cart->is_empty() ) {
+            throw new Exception( 'The Cart is empty!' );
+        }
+        
+		$billing_address        = array();
+		$cart                   = WC()->cart;
         $existing_order_data    = array();
 
 		if ( ! empty( $this->sc_order ) ) {
@@ -678,14 +683,22 @@ abstract class Nuvei_Pfw_Request {
 
 		// default plugin flow
 		if ( empty( $this->rest_params ) ) {
-			global $woocommerce;
-
-				// get the data from the Cart
+            if (!WC()->cart) {
+//                Nuvei_Pfw_Logger::write( WC()->cart, 'WC Cart is not valid.', 'WARN' );
+//                wc_load_cart();
+                return $data;
+            }
+            
+//            if ( null === WC()->cart || WC()->cart->is_empty() ) {
+//                throw new Exception( 'The Cart is empty!' );
+//            }
+            
+            // get the data from the Cart
 			if ( empty( $this->sc_order ) ) {
-				$items = $woocommerce->cart->get_cart();
+				$items = WC()->cart->get_cart();
 
 				if ( ! empty( $items ) ) {
-					$data['totals'] = $woocommerce->cart->get_totals();
+					$data['totals'] = WC()->cart->get_totals();
 				}
 			} else { // get the data from the existing Order
 				$items = $this->sc_order->get_items();

@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.12.3
+ * Version: 3.13.0
  * Author: Nuvei
  * Author: URI: https://nuvei.com
  * License: GPLv2
@@ -13,7 +13,7 @@
  * Tested up to: 6.9
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 10.5.3
+ * WC tested up to: 10.6.0
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -799,16 +799,16 @@ class Nuvei_Payments_For_Woocommerce
 		}
 
 		// Void (Cancel)
-		if ( Nuvei_Pfw_Http::get_param( 'cancelOrder', 'int' ) == 1 && $order_id > 0 ) {
-			$nuvei_settle_void = new Nuvei_Pfw_Settle_Void( self::$wc_nuvei->settings );
-			$nuvei_settle_void->create_settle_void( sanitize_text_field( $order_id ), 'void' );
-		}
+//		if ( Nuvei_Pfw_Http::get_param( 'cancelOrder', 'int' ) == 1 && $order_id > 0 ) {
+//			$nuvei_settle_void = new Nuvei_Pfw_Settle_Void( self::$wc_nuvei->settings );
+//			$nuvei_settle_void->create_settle_void( sanitize_text_field( $order_id ), 'void' );
+//		}
 
-		// Settle
-		if ( Nuvei_Pfw_Http::get_param( 'settleOrder', 'int' ) == 1 && $order_id > 0 ) {
-			$nuvei_settle_void = new Nuvei_Pfw_Settle_Void( self::$wc_nuvei->settings );
-			$nuvei_settle_void->create_settle_void( sanitize_text_field( $order_id ), 'settle' );
-		}
+//		// Settle
+//		if ( Nuvei_Pfw_Http::get_param( 'settleOrder', 'int' ) == 1 && $order_id > 0 ) {
+//			$nuvei_settle_void = new Nuvei_Pfw_Settle_Void( self::$wc_nuvei->settings );
+//			$nuvei_settle_void->create_settle_void( sanitize_text_field( $order_id ), 'settle' );
+//		}
 
 		// Refund
 		if ( Nuvei_Pfw_Http::get_param( 'refAmount', 'float' ) != 0 ) {
@@ -819,29 +819,29 @@ class Nuvei_Payments_For_Woocommerce
 			);
 		}
 
-		// Cancel Subscription
-		if ( Nuvei_Pfw_Http::get_param( 'cancelSubs', 'int' ) == 1
-			&& ! empty( Nuvei_Pfw_Http::get_param( 'subscrId', 'int' ) )
-		) {
-			$subscription_id = Nuvei_Pfw_Http::get_param( 'subscrId', 'int' );
-			$order           = wc_get_order( Nuvei_Pfw_Http::get_param( 'orderId', 'int' ) );
-
-			$nuvei_class = new Nuvei_Pfw_Subscription_Cancel( self::$wc_nuvei->settings );
-			$resp        = $nuvei_class->process( array( 'subscriptionId' => $subscription_id ) );
-			$ord_status  = 0;
-
-			if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
-				$ord_status = 1;
-			}
-
-			wp_send_json(
-				array(
-					'status' => $ord_status,
-					'data'   => $resp,
-				)
-			);
-			exit;
-		}
+//		// Cancel Subscription
+//		if ( Nuvei_Pfw_Http::get_param( 'cancelSubs', 'int' ) == 1
+//			&& ! empty( Nuvei_Pfw_Http::get_param( 'subscrId', 'int' ) )
+//		) {
+//			$subscription_id = Nuvei_Pfw_Http::get_param( 'subscrId', 'int' );
+//			$order           = wc_get_order( Nuvei_Pfw_Http::get_param( 'orderId', 'int' ) );
+//
+//			$nuvei_class = new Nuvei_Pfw_Subscription_Cancel( self::$wc_nuvei->settings );
+//			$resp        = $nuvei_class->process( array( 'subscriptionId' => $subscription_id ) );
+//			$ord_status  = 0;
+//
+//			if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
+//				$ord_status = 1;
+//			}
+//
+//			wp_send_json(
+//				array(
+//					'status' => $ord_status,
+//					'data'   => $resp,
+//				)
+//			);
+//			exit;
+//		}
 
 		// Check Cart on SDK pre-payment event
 		if ( Nuvei_Pfw_Http::get_param( 'prePayment', 'int' ) == 1 ) {
@@ -1624,6 +1624,8 @@ class Nuvei_Payments_For_Woocommerce
     }
 
     public static function rest_api_calls() {
+        Nuvei_Pfw_Logger::write('rest_api_calls');
+        
         // TODO - Get Checkout data
 //        if ( Nuvei_Pfw_Http::get_param( 'getBlocksCheckoutData', 'int' ) == 1 ) {
 //			// Simply Connect flow
@@ -1641,27 +1643,80 @@ class Nuvei_Payments_For_Woocommerce
 //			exit;
 //		}
         
-        register_rest_route(NUVEI_API_PATH, '/get-checkout-data/', array(
-            'methods'             => 'GET',
-            'callback'            => self::$wc_nuvei->call_checkout( false, true ),
-            'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
-        ));
+//        register_rest_route(NUVEI_API_PATH, '/get-checkout-data/', array(
+//            'methods'             => 'GET',
+//            'callback'            => self::$wc_nuvei->call_checkout( false, true ),
+//            'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
+//        ));
+        
         
         // Void (Cancel)
-//		if ( Nuvei_Pfw_Http::get_param( 'cancelOrder', 'int' ) == 1 && $order_id > 0 ) {
-//			$nuvei_settle_void = new Nuvei_Pfw_Settle_Void( self::$wc_nuvei->settings );
-//			$nuvei_settle_void->create_settle_void( sanitize_text_field( $order_id ), 'void' );
-//		}
-        
         register_rest_route(NUVEI_API_PATH, '/cancel-order/', array(
-            'methods'             => 'GET',
+            'methods'             => 'POST',
             'callback'            => function($request) {
-                $nuvei_settle_void = new Nuvei_Pfw_Settle_Void( self::$wc_nuvei->settings );
-                
+                $sv_class   = new Nuvei_Pfw_Settle_Void( self::$wc_nuvei->settings );
                 $order_id   = $request->get_param('orderId');
-                $data       = $nuvei_settle_void->create_settle_void( sanitize_text_field( $order_id ), 'void' );
+                $data       = $sv_class->create_settle_void( sanitize_text_field( $order_id ), 'void' );
                 
                 return rest_ensure_response( $data );
+            },
+            'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
+        ));
+            
+        // Settle
+        register_rest_route(NUVEI_API_PATH, '/settle-order/', array(
+            'methods'             => 'POST',
+            'callback'            => function($request) {
+                $sv_class   = new Nuvei_Pfw_Settle_Void( self::$wc_nuvei->settings );
+                $order_id   = $request->get_param('orderId');
+                $data       = $sv_class->create_settle_void( sanitize_text_field( $order_id ), 'settle' );
+                
+                return rest_ensure_response( $data );
+            },
+            'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
+        ));
+            
+        // Cancel Subscription
+//		if ( Nuvei_Pfw_Http::get_param( 'cancelSubs', 'int' ) == 1
+//			&& ! empty( Nuvei_Pfw_Http::get_param( 'subscrId', 'int' ) )
+//		) {
+//			$subscription_id = Nuvei_Pfw_Http::get_param( 'subscrId', 'int' );
+//			$order           = wc_get_order( Nuvei_Pfw_Http::get_param( 'orderId', 'int' ) );
+//
+//			$nuvei_class = new Nuvei_Pfw_Subscription_Cancel( self::$wc_nuvei->settings );
+//			$resp        = $nuvei_class->process( array( 'subscriptionId' => $subscription_id ) );
+//			$ord_status  = 0;
+//
+//			if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
+//				$ord_status = 1;
+//			}
+//
+//			wp_send_json(
+//				array(
+//					'status' => $ord_status,
+//					'data'   => $resp,
+//				)
+//			);
+//			exit;
+//		}
+        
+        register_rest_route(NUVEI_API_PATH, '/cancel-subs/', array(
+            'methods'             => 'POST',
+            'callback'            => function($request) {
+                $subs_id    = $request->get_param( 'subscrId' );
+                $order_id   = $request->get_param('orderId');
+                $obj        = new Nuvei_Pfw_Subscription_Cancel( self::$wc_nuvei->settings );
+                $resp       = $obj->process( array( 'subscriptionId' => $subscription_id ) );
+                $ord_status = 0;
+                
+                if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
+                    $ord_status = 1;
+                }
+                
+                return rest_ensure_response(array(
+					'status' => $ord_status,
+					'data'   => $resp,
+				));
             },
             'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
         ));

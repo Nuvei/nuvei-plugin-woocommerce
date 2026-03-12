@@ -772,9 +772,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	public function add_to_cart_validation( $true, $product_id, $quantity ) {
 		Nuvei_Pfw_Logger::write( is_user_logged_in(), 'add_to_cart_validation' );
 
-		global $woocommerce;
-
-		$cart       = $woocommerce->cart;
 		$product    = wc_get_product( $product_id );
 		$attributes = $product->get_attributes();
 
@@ -819,8 +816,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	/**
 	 * Call the Nuvei Checkout SDK form here and pass all parameters.
 	 *
-	 * @global $woocommerce
-	 *
 	 * @param bool $is_rest     Is the method called from the REST API?
 	 * @param bool $return_data Pass true when need the method to return the data. We need it when page use WC Blocks and when the client will pay for an order created from the admin.
 	 * @param int  $order_id    We will pass the Order ID when will pay an order created from the admin.
@@ -836,8 +831,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			),
 			'call_checkout()'
 		);
-
-		global $woocommerce;
 
 		// OpenOrder::START
 		$oo_obj  = new Nuvei_Pfw_Open_Order( $this->settings, $this->rest_params );
@@ -1055,12 +1048,16 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	public function checkout_prepayment_check() {
 		Nuvei_Pfw_Logger::write( 'checkout_prepayment_check()' );
 
-		global $woocommerce;
-
-		$nuvei_helper        = new Nuvei_Pfw_Helper();
-		$nuvei_order_details = $woocommerce->session->get( NUVEI_PFW_SESSION_PROD_DETAILS );
-		$open_order_details  = $woocommerce->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
-		$products_data       = $nuvei_helper->get_products();
+        $nuvei_order_details    = [];
+        $open_order_details     = [];
+        
+        if ( ! is_null( WC()->session ) ) {
+            $nuvei_order_details = WC()->session->get( NUVEI_PFW_SESSION_PROD_DETAILS );
+            $open_order_details  = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
+        }
+        
+		$nuvei_helper   = new Nuvei_Pfw_Helper();
+		$products_data  = $nuvei_helper->get_products();
 
 		// nothing is changed, continue
 		if ( ! empty( $open_order_details['sessionToken'] )
@@ -1098,12 +1095,10 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	 * @return array
 	 */
 	public function hide_payment_gateways( $available_gateways ) {
-		global $woocommerce;
-
 		// we expect this method to be used on the Store only
 		if ( is_admin()
-			|| ! isset( $woocommerce->cart )
-			|| empty( $woocommerce->cart->get_cart() )
+			|| ! isset( WC()->cart )
+			|| empty( WC()->cart->get_cart() )
 		) {
 			return $available_gateways;
 		}
@@ -1117,8 +1112,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'is_wc_endpoint_url'   => is_wc_endpoint_url(),
 				// 'is_shop()' => is_shop(),
 				// 'isset(WC()->session)'  => isset(WC()->session),
-					'isset(WC cart)'   => isset( $woocommerce->cart ),
-				'items'                => isset( $woocommerce->cart ) ? $woocommerce->cart->get_cart() : null,
+					'isset(WC cart)'   => isset( WC()->cart ),
+				'items'                => isset( WC()->cart ) ? WC()->cart->get_cart() : null,
 			// 'SCRIPT_FILENAME'       => $_SERVER['SCRIPT_FILENAME'],
 			// 'checkout_id ' => WC()->session->get('checkout_id'),
 			// 'get checkoutid ' => @$_GET['checkoutid'],
@@ -1415,8 +1410,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	}
 
 	/**
-	 * @global type $woocommerce
-	 *
 	 * @param string $success_url
 	 * @param string $error_url
 	 * @param string $back_url    It is only passed in REST API flow.

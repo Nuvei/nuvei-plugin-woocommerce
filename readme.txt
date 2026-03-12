@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.9
-Stable tag: 3.12.3
+Stable tag: 3.13.0
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -65,6 +65,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 = 3.13.0 =
 * Migrate to WP Rest API.
+* The global $woocommerce was replaced with WC().
 
 = 3.12.3 =
 * Fix for the Blocks Checkout when try to place an Order.

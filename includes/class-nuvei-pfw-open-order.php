@@ -24,13 +24,10 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 	/**
 	 * The main method.
 	 *
-	 * @global object $woocommerce
 	 * @return array|boolean
 	 */
 	public function process() {
 		Nuvei_Pfw_Logger::write( 'OpenOrder class.' );
-
-		global $woocommerce;
 
 		$try_update_order   = true;
 		$method_params      = func_get_args(); // optionaly we will pass here Order ID.
@@ -57,7 +54,10 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 		}
         // default flow
         else {
-			$open_order_details = $woocommerce->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
+			if (WC()->session) {
+                $open_order_details = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
+            }
+            
 			$products_data      = $this->get_products_data();
 			$cart_total         = (float) $products_data['totals']['total'];
 			$addresses          = $this->get_order_addresses();

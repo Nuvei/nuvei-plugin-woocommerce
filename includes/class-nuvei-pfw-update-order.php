@@ -19,8 +19,6 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 	/**
 	 * Main method
 	 *
-	 * @global Woocommerce $woocommerce
-	 *
 	 * @param array $products_data
 	 * @param array $open_order_details Pass them only in REST API flow.
 	 *
@@ -29,8 +27,6 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 	public function process() {
         Nuvei_Pfw_Logger::write( 'update_order()' );
         
-		global $woocommerce;
-
 		$func_params        = current( func_get_args() );
 		$products_data      = $func_params['products_data'] ?? array();
 		$open_order_details = $func_params['open_order_details'] ?? array();
@@ -40,17 +36,15 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
         $oo_order_id        = $open_order_details['orderId'] ?: $func_params['oo_order_id'] ?: null;
 
 		// default flow
-		if ( empty( $this->rest_params ) && ! empty( $woocommerce->session ) ) {
-			$open_order_details = $woocommerce->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
-			$cart_amount        = (string) number_format( (float) $woocommerce->cart->total, 2, '.', '' );
-		} else { // REST API flow
+		if ( empty( $this->rest_params ) && ! empty( WC()->session ) ) {
+			$open_order_details = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
+			$cart_amount        = (string) number_format( (float) WC()->cart->total, 2, '.', '' );
+		}
+        // REST API flow
+        else {
 			$cart_amount = (string) number_format( (float) $products_data['totals'], 2, '.', '' );
 		}
 
-//		if ( empty( $open_order_details )
-//			|| empty( $open_order_details['sessionToken'] )
-//			|| empty( $open_order_details['orderId'] )
-//		) {
 		if ( empty( $session_token ) || empty( $oo_order_id ) ) {
 			Nuvei_Pfw_Logger::write(
                 [
