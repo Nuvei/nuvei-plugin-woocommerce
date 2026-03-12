@@ -225,17 +225,18 @@ async function nuveiBlocksRunTransaction() {
         useEffect(() => {
             const unsubscribe = onPaymentSetup( async function() {
                 console.log('onPaymentSetup logic');
-                // Step 1: validate your SDK fields
-                if ( !nuveiIsCheckoutBlocksFormValid() ) {
-                    return {
-                        type: emitResponse.responseTypes.ERROR
-                    };
-                }
-
+                
                 // For redirect/cashier mode - just let WooCommerce proceed
                 if ( 'sdk' !== scTrans?.checkoutIntegration ) {
                     return {
                         type: emitResponse.responseTypes.SUCCESS
+                    };
+                }
+                
+                // Step 1: validate your SDK fields
+                if ( !nuveiIsCheckoutBlocksFormValid() ) {
+                    return {
+                        type: emitResponse.responseTypes.ERROR
                     };
                 }
 

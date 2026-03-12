@@ -33,50 +33,9 @@ function nuveiAction(question, action, orderId, subscrId, isWcfm) {
         orderData.orderId = orderId;
     }
     else if ('cancelSubscr' == action) {
-//        data.cancelSubs = 1;
-//        data.subscrId   = subscrId;
+        url += '/cancel-subs/';
+        orderData.subscrId = subscrId;
     }
-
-//    jQuery.ajax({
-//        type: "POST",
-//        url: scTrans.ajaxurl,
-//        data: data,
-//        dataType: 'json'
-//    })
-//        .fail(function( jqXHR, textStatus, errorThrown){
-//            jQuery('#custom_loader').hide();
-//            alert('Response fail.');
-//
-//            console.error(textStatus)
-//            console.error(errorThrown)
-//        })
-//        .done(function(resp) {
-//            console.log(resp, isWcfm);
-//
-//            if (resp && typeof resp.status != 'undefined' && resp.data != 'undefined') {
-//                if (resp.status == 1) {
-//                    if (isWcfm) {
-//                        window.location = '/store-manager/orderslist/';
-//                        return;
-//                    }
-//                    
-//                    var urlParts    = window.location.toString().split('post.php');
-//                    window.location = urlParts[0] + 'edit.php?post_type=shop_order';
-//                } else if (resp.data.reason != 'undefined' && resp.data.reason != '') {
-//                    jQuery('#custom_loader').hide();
-//                    alert(resp.data.reason);
-//                } else if (resp.data.gwErrorReason != 'undefined' && resp.data.gwErrorReason != '') {
-//                    jQuery('#custom_loader').hide();
-//                    alert(resp.data.gwErrorReason);
-//                } else {
-//                    jQuery('#custom_loader').hide();
-//                    alert('Response error.');
-//                }
-//            } else {
-//                jQuery('#custom_loader').hide();
-//                alert('Response error.');
-//            }
-//        });
 
     fetch(url, {
         method: 'POST',
@@ -99,7 +58,6 @@ function nuveiAction(question, action, orderId, subscrId, isWcfm) {
         // the success
         .then(data => {
             console.log(data);
-//            alert('Браво! ' + data.message);
             
             // error - response error
             if (!data || !data?.status || !data?.data) {
@@ -168,14 +126,20 @@ function nuveiReturnNuveiBtns() {
 function scCreateRefund(question, showMsg, isWcfm) {
 	console.log('scCreateRefund()');
 	
-	var refAmount	= jQuery('#refund_amount').val().replaceAll(' ', '');
+	let refAmountRaw = jQuery('#refund_amount').val();
+	
+	if (!refAmountRaw) {
+		refAmountRaw = '';
+	}
+	
+	let refAmount	= refAmountRaw.replaceAll(' ', '');
 	refAmount		= refAmount.replaceAll(",", ".");
-	refAmount		= refAmount.replace(/\.(?=.*\.)/, '');
+	refAmount		= refAmount.replace(/\.(?=.*\.)/g, '');
 	refAmount		= parseFloat(refAmount);
 
-	if(isNaN(refAmount) || refAmount < 0.001) {
+	if(isNaN(refAmount) || refAmount < 0.01) {
 		jQuery('#refund_amount').css('border-color', 'red');
-		jQuery('#refund_amount').on('focus', function() {
+		jQuery('#refund_amount').off('focus.nuveiRefund').one('focus.nuveiRefund', function() {
 			jQuery('#refund_amount').css('border-color', 'inherit');
 		});
         
@@ -192,71 +156,87 @@ function scCreateRefund(question, showMsg, isWcfm) {
 	jQuery('body').find('#sc_api_refund').prop('disabled', true);
 	jQuery('body').find('#sc_refund_spinner').show();
 	
-	var data = {
-		action: 'sc-ajax-action',
-		nuveiSecurity: scTrans.nuveiSecurity,
-		refAmount: refAmount,
-		postId: jQuery("#post_ID").val()
-	};
+    fetch(scTrans.apiUrl + '/refund-order/', {
+        method: 'POST',
+        headers: {
+            'X-WP-Nonce': scTrans.nuveiApiSec,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            refAmount: refAmount,
+            postId: jQuery("#post_ID").val()
+        })
+    })
+        // 1. first check for the status code (200 OK)
+        .then(res => {
+            if (!res.ok) {
+                // error - 401, 403, 404 or 500
+                throw res; 
+            }
+            
+            // success, continue
+            return res.json();
+        })
+        // the success
+        .then(data => {
+            console.log(data);
+            
+            // success
+            if (data?.status == 1) {
+                if (isWcfm) {
+                    window.location = '/store-manager/orderslist/';
+                    return;
+                }
 
-	jQuery.ajax({
-		type: "POST",
-		url: scTrans.ajaxurl,
-		data: data,
-		dataType: 'json'
-	})
-		.fail(function( jqXHR, textStatus, errorThrown) {
-			jQuery('body').find('#sc_api_refund').prop('disabled', false);
+                let urlParts    = window.location.toString().split('post.php');
+                window.location = urlParts[0] + 'edit.php?post_type=shop_order';
+                return;
+            }
+
+            // error
+            if(data?.data) {
+                jQuery('body').find('#sc_api_refund').prop('disabled', false);
+                jQuery('body').find('#sc_refund_spinner').hide();
+
+                if (data?.data?.reason && data.data.reason != '') {
+                    alert(data.data.reason);
+                }
+                else if (data?.data?.gwErrorReason && data.data.gwErrorReason != '') {
+                    alert(data.data.gwErrorReason);
+                }
+
+                return;
+            }
+            
+            // error
+            if(data?.msg && '' != data.msg) {
+                jQuery('body').find('#sc_api_refund').prop('disabled', false);
+                jQuery('body').find('#sc_refund_spinner').hide();
+
+                alert(data.msg);
+                return;
+            }
+            
+            // error
+            alert('Response error.');
+
+            jQuery('body').find('#sc_api_refund').prop('disabled', false);
+            jQuery('body').find('#sc_refund_spinner').hide();
+        })
+        // error after the first check
+        .catch(async err => {
+            jQuery('body').find('#sc_api_refund').prop('disabled', false);
 			jQuery('body').find('#sc_refund_spinner').hide();
-			
-			alert('Response fail.');
-
-			console.error(textStatus)
-			console.error(errorThrown)
-		})
-		.done(function(resp) {
-			console.log(resp, isWcfm);
-
-			if (resp && typeof resp.status != 'undefined' && resp.data != 'undefined') {
-				if (resp.status == 1) {
-                    if (isWcfm) {
-                        window.location = '/store-manager/orderslist/';
-                        return;
-                    }
-                    
-					var urlParts    = window.location.toString().split('post.php');
-					window.location = urlParts[0] + 'edit.php?post_type=shop_order';
-				}
-				else if(resp.hasOwnProperty('data')) {
-					jQuery('body').find('#sc_api_refund').prop('disabled', false);
-					jQuery('body').find('#sc_refund_spinner').hide();
-					
-					if (resp.data.reason != 'undefined' && resp.data.reason != '') {
-						alert(resp.data.reason);
-					}
-					else if (resp.data.gwErrorReason != 'undefined' && resp.data.gwErrorReason != '') {
-						alert(resp.data.gwErrorReason);
-					}
-				}
-				else if(resp.hasOwnProperty('msg') && '' != resp.msg) {
-					jQuery('body').find('#sc_api_refund').prop('disabled', false);
-					jQuery('body').find('#sc_refund_spinner').hide();
-					
-					alert(resp.msg);
-				}
-				else {
-					jQuery('body').find('#sc_api_refund').prop('disabled', false);
-					jQuery('body').find('#sc_refund_spinner').hide();
-					
-					alert('Response error.');
-				}
-			} else {
-				alert('Response error.');
-				
-				jQuery('body').find('#sc_api_refund').prop('disabled', false);
-				jQuery('body').find('#sc_refund_spinner').hide();
-			}
-		});
+            
+            // in case of WP_Error, usually in json
+            if (err.json) {
+                const errorData = await err.json();
+                alert('Server error: ' + errorData.message);
+            }
+            else {
+                alert('Unexpected error.');
+            }
+        });
 }
 
 function nuvei_show_hide_rest_settings() {

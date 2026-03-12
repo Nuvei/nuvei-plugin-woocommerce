@@ -798,51 +798,6 @@ class Nuvei_Payments_For_Woocommerce
 			exit;
 		}
 
-		// Void (Cancel)
-//		if ( Nuvei_Pfw_Http::get_param( 'cancelOrder', 'int' ) == 1 && $order_id > 0 ) {
-//			$nuvei_settle_void = new Nuvei_Pfw_Settle_Void( self::$wc_nuvei->settings );
-//			$nuvei_settle_void->create_settle_void( sanitize_text_field( $order_id ), 'void' );
-//		}
-
-//		// Settle
-//		if ( Nuvei_Pfw_Http::get_param( 'settleOrder', 'int' ) == 1 && $order_id > 0 ) {
-//			$nuvei_settle_void = new Nuvei_Pfw_Settle_Void( self::$wc_nuvei->settings );
-//			$nuvei_settle_void->create_settle_void( sanitize_text_field( $order_id ), 'settle' );
-//		}
-
-		// Refund
-		if ( Nuvei_Pfw_Http::get_param( 'refAmount', 'float' ) != 0 ) {
-			$nuvei_refund = new Nuvei_Pfw_Refund( self::$wc_nuvei->settings );
-			$nuvei_refund->create_refund_request(
-				Nuvei_Pfw_Http::get_param( 'postId', 'int' ),
-				Nuvei_Pfw_Http::get_param( 'refAmount', 'float' )
-			);
-		}
-
-//		// Cancel Subscription
-//		if ( Nuvei_Pfw_Http::get_param( 'cancelSubs', 'int' ) == 1
-//			&& ! empty( Nuvei_Pfw_Http::get_param( 'subscrId', 'int' ) )
-//		) {
-//			$subscription_id = Nuvei_Pfw_Http::get_param( 'subscrId', 'int' );
-//			$order           = wc_get_order( Nuvei_Pfw_Http::get_param( 'orderId', 'int' ) );
-//
-//			$nuvei_class = new Nuvei_Pfw_Subscription_Cancel( self::$wc_nuvei->settings );
-//			$resp        = $nuvei_class->process( array( 'subscriptionId' => $subscription_id ) );
-//			$ord_status  = 0;
-//
-//			if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
-//				$ord_status = 1;
-//			}
-//
-//			wp_send_json(
-//				array(
-//					'status' => $ord_status,
-//					'data'   => $resp,
-//				)
-//			);
-//			exit;
-//		}
-
 		// Check Cart on SDK pre-payment event
 		if ( Nuvei_Pfw_Http::get_param( 'prePayment', 'int' ) == 1 ) {
 			self::$wc_nuvei->checkout_prepayment_check();
@@ -1676,37 +1631,29 @@ class Nuvei_Payments_For_Woocommerce
             'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
         ));
             
-        // Cancel Subscription
-//		if ( Nuvei_Pfw_Http::get_param( 'cancelSubs', 'int' ) == 1
-//			&& ! empty( Nuvei_Pfw_Http::get_param( 'subscrId', 'int' ) )
-//		) {
-//			$subscription_id = Nuvei_Pfw_Http::get_param( 'subscrId', 'int' );
-//			$order           = wc_get_order( Nuvei_Pfw_Http::get_param( 'orderId', 'int' ) );
-//
-//			$nuvei_class = new Nuvei_Pfw_Subscription_Cancel( self::$wc_nuvei->settings );
-//			$resp        = $nuvei_class->process( array( 'subscriptionId' => $subscription_id ) );
-//			$ord_status  = 0;
-//
-//			if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
-//				$ord_status = 1;
-//			}
-//
-//			wp_send_json(
-//				array(
-//					'status' => $ord_status,
-//					'data'   => $resp,
-//				)
-//			);
-//			exit;
-//		}
+        // Refund
+        register_rest_route(NUVEI_API_PATH, '/refund-order/', array(
+            'methods'             => 'POST',
+            'callback'            => function($request) {
+                $obj    = new Nuvei_Pfw_Refund( self::$wc_nuvei->settings );
+                $data   = $obj->create_refund_request(
+                    $request->get_param('postId'),
+                    $request->get_param('refAmount')
+                );
+                
+                return rest_ensure_response( $data );
+            },
+            'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
+        ));
         
+        // Cancel Subscription
         register_rest_route(NUVEI_API_PATH, '/cancel-subs/', array(
             'methods'             => 'POST',
             'callback'            => function($request) {
                 $subs_id    = $request->get_param( 'subscrId' );
                 $order_id   = $request->get_param('orderId');
                 $obj        = new Nuvei_Pfw_Subscription_Cancel( self::$wc_nuvei->settings );
-                $resp       = $obj->process( array( 'subscriptionId' => $subscription_id ) );
+                $resp       = $obj->process( array( 'subscriptionId' => $subs_id ) );
                 $ord_status = 0;
                 
                 if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {

@@ -643,8 +643,6 @@ jQuery(function($) {
                 console.log('Order success.', data)
                 
                 if (data.data && data.data.nuvei_try_payment && simplyConnect) {
-//                    console.log('Stop redirect.');
-                    
                     nuveiSuccessRedirect = data.data.succsess_url;
                     
                     jQuery('#nuvei_blocker').show();

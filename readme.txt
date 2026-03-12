@@ -67,6 +67,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 * Migrate to WP Rest API.
 * The global $woocommerce was replaced with WC().
 
+= 3.12.4 =
+* Fix for the crash with Blocks and Redirect.
+
 = 3.12.3 =
 * Fix for the Blocks Checkout when try to place an Order.
 * For the Classic Checkout was added a fallback approach for the Update Order process.
