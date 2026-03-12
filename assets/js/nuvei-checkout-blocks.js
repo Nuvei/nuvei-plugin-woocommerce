@@ -18,7 +18,7 @@ var nuveiAllowFormSubmit        = false;
 /**
  * We use pre-payment for the Blocks only.
  * We call this method from nuvei_public.js
- * 
+ *
  * @param {object} paymentDetails
  * @returns {Promise}
  */
@@ -32,7 +32,7 @@ function nuveiPrePayment(paymentDetails) {
             reject();
             return;
         }
-        
+
         // Update the Order
         nuveiUpdateOrder(resolve, reject);
         return;
@@ -142,9 +142,9 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
  */
 function nuveiBlocksReloadSimply() {
     let reloadTimer = null;
-    
+
     jQuery('#nuvei_blocker').show();
-            
+
     nuveiDestroySimplyConnect();
 
     jQuery('#nuvei_checkout_container').html(window.wp.i18n.__('Loading...', 'nuvei-payments-for-woocommerce'));
@@ -152,7 +152,7 @@ function nuveiBlocksReloadSimply() {
     if (nuveiIsCheckoutBlocksFormValid(true)) {
         // add small delay
         clearTimeout( reloadTimer );
-        
+
         reloadTimer = setTimeout( function() {
             nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
             jQuery('#nuvei_blocker').hide();
@@ -173,10 +173,10 @@ async function nuveiBlocksRunTransaction() {
  */
 (function() {
     console.log('auto func');
-    
+
     const { useEffect, createElement } = window.wp.element;
     const { useSelect }                 = window.wp.data;
-    
+
     const nuveiSettings = window.wc.wcSettings.getSetting( 'nuvei_data', {} );
     const nuveiLabel    = window.wp.htmlEntities.decodeEntities( nuveiSettings.title )
         || window.wp.i18n.__('Nuvei', 'nuvei-payments-for-woocommerce');
@@ -202,7 +202,7 @@ async function nuveiBlocksRunTransaction() {
     const Content = (props) => {
         const { eventRegistration, emitResponse } = props;
         const { onPaymentSetup } = eventRegistration;
-        
+
         // only on the first load
         useEffect(() => {
             console.log('Nuvei payment method element loaded. Check if the checkout form is valid.');
@@ -214,17 +214,25 @@ async function nuveiBlocksRunTransaction() {
                     .append(`<div id="nuvei_checkout_container" data-placeholder="${nuveiCheckoutBlockContText}"></div>`);
             }
 
-            if ('sdk' === scTrans?.checkoutIntegration 
+            if ('sdk' === scTrans?.checkoutIntegration
                 && nuveiIsCheckoutBlocksFormValid(true)
             ) {
                 nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
             }
         }, []);
-        
+
         // subscribe for place order event
         useEffect(() => {
             const unsubscribe = onPaymentSetup( async function() {
                 console.log('onPaymentSetup logic');
+
+                // For redirect/cashier mode - just let WooCommerce proceed
+                if ( 'sdk' !== scTrans?.checkoutIntegration ) {
+                    return {
+                        type: emitResponse.responseTypes.SUCCESS
+                    };
+                }
+
                 // Step 1: validate your SDK fields
                 if ( !nuveiIsCheckoutBlocksFormValid() ) {
                     return {
@@ -234,7 +242,7 @@ async function nuveiBlocksRunTransaction() {
 
                 // Step 2: run transaction against Order ID
                 const payment = await nuveiBlocksRunTransaction();
-                
+
                 if ( !payment.success ) {
                     return {
                         type: emitResponse.responseTypes.ERROR,
@@ -255,7 +263,7 @@ async function nuveiBlocksRunTransaction() {
 
             // Cleanup on unmount
             return unsubscribe;
-            
+
             // Cleanup: do nothing (no destroy here)
 //            return () => { };
         }, [onPaymentSetup]);
@@ -280,12 +288,12 @@ async function nuveiBlocksRunTransaction() {
     window.nuveiCheckoutSdkParams = nuveiSettings.checkoutParams;
 
     console.log('nuveiBlocksOptions was registered', scTrans.checkoutIntegration);
-    
+
 })();
 
 jQuery(function() {
     console.log('jquery func');
-    
+
     // Prevent running in WP admin area
     if (typeof window.wp !== 'undefined'
         && window.wp.data
@@ -311,19 +319,19 @@ jQuery(function() {
             .append('<div id="nuvei_blocker"><img class="nuvei_loader" src="'
                 + scTrans.loaderUrl + '" /></div>');
     }
-    
+
     // watch the email field for changes
     let lastEmail = document.getElementById('email')?.value;
-    
+
     jQuery( document.body ).on( 'blur', '#email:not(#nuvei_checkout_container #email)', function(e) {
         let self = jQuery(this);
 
         // Check if the value has actually changed
         if (self.val() !== lastEmail) {
             console.log('mail was changed', lastEmail, self.val())
-            
+
             lastEmail = self.val();
-            
+
             nuveiBlocksReloadSimply();
         }
     });
@@ -354,7 +362,7 @@ jQuery(function() {
 
         const currentTotals         = store.getCartTotals ? store.getCartTotals().total_price : null;
         const currentBillingCountry = store.getCartData().billingAddress.country;
-        
+
         // check for changes
         if (currentTotals != lastTotal
             || currentBillingCountry !== lastBillingCountry
@@ -363,13 +371,13 @@ jQuery(function() {
                 'is total changed': currentTotals != lastTotal,
                 'is country changed': lastBillingCountry  != currentBillingCountry,
             });
-            
+
             lastTotal           = currentTotals;
             lastBillingCountry  = currentBillingCountry;
-            
+
             nuveiBlocksReloadSimply();
         }
-        
+
     });
 
 });
