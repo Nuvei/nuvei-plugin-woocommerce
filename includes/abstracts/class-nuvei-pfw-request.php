@@ -135,6 +135,7 @@ abstract class Nuvei_Pfw_Request {
 
 	/**
 	 * Help function to generate Billing and Shipping details.
+     * We use this method for Carts and Orders.
 	 *
 	 * @return array
 	 */
@@ -183,16 +184,6 @@ abstract class Nuvei_Pfw_Request {
 			return $addresses;
 		}
 
-		// default plugin flow
-        if (!WC()->cart) {
-            Nuvei_Pfw_Logger::write( WC()->cart, 'WC Cart is not valid.', 'WARN' );
-            wc_load_cart();
-        }
-
-        if ( null === WC()->cart || WC()->cart->is_empty() ) {
-            throw new Exception( 'The Cart is empty!' );
-        }
-        
 		$billing_address        = array();
 		$cart                   = WC()->cart;
         $existing_order_data    = array();
@@ -670,6 +661,8 @@ abstract class Nuvei_Pfw_Request {
 	 * @return array $data
 	 */
 	protected function get_products_data() {
+        Nuvei_Pfw_Logger::write( 'get_products_data()' );
+        
 		// main variable to fill
 		$data = array(
 			'wc_subscr'     => false,
@@ -677,14 +670,14 @@ abstract class Nuvei_Pfw_Request {
 			'products_data' => array(),
 			'totals'        => 0,
 		);
-
+        
 		$nuvei_taxonomy_name  = wc_attribute_taxonomy_name( Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) );
 		$nuvei_plan_variation = 'attribute_' . $nuvei_taxonomy_name;
 
 		// default plugin flow
 		if ( empty( $this->rest_params ) ) {
             if (!WC()->cart) {
-//                Nuvei_Pfw_Logger::write( WC()->cart, 'WC Cart is not valid.', 'WARN' );
+                Nuvei_Pfw_Logger::write( WC()->cart, 'WC Cart is not valid.' );
 //                wc_load_cart();
                 return $data;
             }
@@ -700,7 +693,9 @@ abstract class Nuvei_Pfw_Request {
 				if ( ! empty( $items ) ) {
 					$data['totals'] = WC()->cart->get_totals();
 				}
-			} else { // get the data from the existing Order
+			}
+            // get the data from the existing Order
+            else {
 				$items = $this->sc_order->get_items();
 
 				if ( ! empty( $items ) ) {
@@ -708,9 +703,10 @@ abstract class Nuvei_Pfw_Request {
 				}
 			}
 
-				Nuvei_Pfw_Logger::write( $items, 'get_products_data() items' );
+            Nuvei_Pfw_Logger::write( $items, 'get_products_data() items' );
 
 			if ( empty( $items ) ) {
+                Nuvei_Pfw_Logger::write( 'There are no items.' );
 				return $data;
 			}
 

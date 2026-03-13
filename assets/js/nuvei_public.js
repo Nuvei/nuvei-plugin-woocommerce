@@ -344,77 +344,75 @@ function nuveiShowErrorMsg(text) {
 }
 
 /**
- * We update Nuvei Order here.
- *
- * @returns {bool}
- */
-function nuveiUpdateOrder(resolve, reject) {
-    jQuery.ajax({
-        type: "POST",
-        url: scTrans.ajaxurl,
-        data: {
-            action: 'sc-ajax-action',
-            nuveiSecurity: scTrans.nuveiSecurity,
-            prePayment: 1
-        },
-        dataType: 'json'
-    })
-        .fail(function(){
-            reject();
-            ShowErrorMsg(scTrans.unexpectedError);
-            jQuery('#nuvei_blocker').hide();
-            return;
-        })
-        .done(function(resp) {
-            console.log(resp);
-
-            if (!resp.hasOwnProperty('success') || 0 == resp.success) {
-                reject();
-                window.location.reload();
-                return;
-            }
-
-            console.log('prepayment resolved.');
-
-            resolve();
-            return;
-        });
-}
-
-/**
  * A method for the case when the merchant create an Order in the admin, then
  * the client pay it from its Store profile.
  */
 function nuveiPayForExistingOrder() {
     console.log('nuveiPayForExistingOrder');
 
-    jQuery.ajax({
-        type: "POST",
-        url: scTrans.ajaxurl,
-        data: {
-            action: 'sc-ajax-action',
-            nuveiSecurity: scTrans.nuveiSecurity,
-            payForExistingOrder: 1,
-            orderId: jQuery('#nuveiPayForExistingOrder').val()
+    fetch(scTrans.apiUrl + '/pay-for-existing-order/', {
+        method: 'POST',
+        headers: {
+            'X-WP-Nonce': scTrans.nuveiApiSec,
+            'Content-Type': 'application/json'
         },
-        dataType: 'json'
-    })
-        .fail(function() {
-            console.log('Nuvei request failed.');
-            nuveiShowErrorMsg();
-            jQuery('#nuvei_blocker').hide();
-            return;
+        body: JSON.stringify({
+            orderId: jQuery('#nuveiPayForExistingOrder').val()
         })
-        .done(function(resp) {
-            console.log(resp);
-
+    })
+        // 1. first check for the status code (200 OK)
+        .then(res => {
+            if (!res.ok) {
+                // error - 401, 403, 404 or 500
+                throw res; 
+            }
+            
+            // success, continue
+            return res.json();
+        })
+        // the success
+        .then(data => {
+            console.log(data);
+            
             if (!nuveiIsCheckoutLoaded) {
                 nuveiIsCheckoutLoaded = true;
-                showNuveiCheckout(resp);
+                showNuveiCheckout(data);
             }
-
-            return;
+        })
+        // error after the first check
+        .catch(async err => {
+            console.error(err);
+            nuveiShowErrorMsg();
+            jQuery('#nuvei_blocker').hide();
         });
+
+//    jQuery.ajax({
+//        type: "POST",
+//        url: scTrans.ajaxurl,
+//        data: {
+//            action: 'sc-ajax-action',
+//            nuveiSecurity: scTrans.nuveiSecurity,
+//            payForExistingOrder: 1,
+//            orderId: jQuery('#nuveiPayForExistingOrder').val()
+//        },
+//        dataType: 'json'
+//    })
+//        .fail(function() {
+//            console.log('Nuvei request failed.');
+//            nuveiShowErrorMsg();
+//            jQuery('#nuvei_blocker').hide();
+//            return;
+//        })
+//        .done(function(resp) {
+//            console.log(resp);
+//
+//            if (!nuveiIsCheckoutLoaded) {
+//                nuveiIsCheckoutLoaded = true;
+//                showNuveiCheckout(resp);
+//            }
+//
+//            return;
+//        });
 }
 
 /**
@@ -454,7 +452,7 @@ function nuveiSetTransactionField(trId) {
 }
 
 /**
- * Get the required parameters for the SDK.
+ * Get the required parameters for the SDK, on Classic Checkout.
  *
  * @param {string} formId   The class/id of the checkout form.
  * @param {string} attrName The used attribute - id or name. It is 'name' by default.
@@ -466,7 +464,7 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
         return;
     }
 
-    var scFormData = {};
+    let scFormData = {};
 
     // get only populated fields
     jQuery(formId).find('input, select, textarea').each(function(){
@@ -483,34 +481,43 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
             return true;
         }
     });
-
-    jQuery.ajax({
-        type: "POST",
-        url: scTrans.ajaxurl,
-        data: {
-            action: 'sc-ajax-action',
-            nuveiSecurity: scTrans.nuveiSecurity,
-            getBlocksCheckoutData: 1,
-            scFormData: scFormData
+    
+    fetch(scTrans.apiUrl + '/get-checkout-data/', {
+        method: 'POST',
+        headers: {
+            'X-WP-Nonce': scTrans.nuveiApiSec,
+            'Content-Type': 'application/json'
         },
-        dataType: 'json'
+        body: JSON.stringify({
+            scFormData: scFormData
+        })
     })
-        .fail(function() {
-            console.log('Nuvei request failed.');
+        // 1. first check for the status code (200 OK)
+        .then(res => {
+            if (!res.ok) {
+                // error - 401, 403, 404 or 500
+                throw res; 
+            }
+            
+            // success, continue
+            return res.json();
+        })
+        // the success
+        .then(data => {
+            console.log(data);
+            showNuveiCheckout(data);
+        })
+        // error after the first check
+        .catch(async err => {
+            console.error('Nuvei request failed.', err);
             nuveiShowErrorMsg();
             jQuery('#nuvei_blocker').hide();
-            return;
-        })
-        .done(function(resp) {
-            console.log(resp);
-            showNuveiCheckout(resp);
-            return;
         });
+    
+    return;
 }
 
 function nuveiDestroySimplyConnect() {
-//    console.log('try nuveiDestroySimplyConnect');
-
     if (typeof simplyConnect != 'undefined' && simplyConnect.hasOwnProperty('destroy')) {
         try {
             simplyConnect.destroy();
@@ -518,8 +525,6 @@ function nuveiDestroySimplyConnect() {
         catch(e) {
             console.log('exception', e);
         }
-
-//        console.log('simplyConnect was destroyed');
     }
 }
 

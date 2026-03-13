@@ -820,7 +820,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	 * @param bool $return_data Pass true when need the method to return the data. We need it when page use WC Blocks and when the client will pay for an order created from the admin.
 	 * @param int  $order_id    We will pass the Order ID when will pay an order created from the admin.
 	 *
-	 * @return array|void       Return array with SDK params or echo same params as JSON.
+	 * @return array       Return array with SDK params.
 	 */
 	public function call_checkout( $is_rest = false, $return_data = false, $order_id = null ) {
 		Nuvei_Pfw_Logger::write(
@@ -831,6 +831,25 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			),
 			'call_checkout()'
 		);
+        
+        // wakeup the WC and the session in case of API call
+        if (!function_exists('WC')) {
+            Nuvei_Pfw_Logger::write( 'no function_exists WC.' );
+            
+            return array(
+                'messages' => "The function WC doesn't exists",
+                'status'   => 'error',
+            );
+        }
+        
+        if (is_null(WC()->session)) {
+            WC()->session = new WC_Session_Handler();
+            WC()->session->init();
+        }
+        
+        if (is_null(WC()->cart)) {
+            wc_load_cart();
+        }
 
 		// OpenOrder::START
 		$oo_obj  = new Nuvei_Pfw_Open_Order( $this->settings, $this->rest_params );
@@ -856,16 +875,15 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				);
 			}
 
-			wp_send_json(
-				array(
-					'result'   => 'failure',
-					'refresh'  => false,
-					'reload'   => false,
-					'messages' => '<ul id="sc_fake_error" class="woocommerce-error" role="alert"><li>' . $msg . '</li></ul>',
-				)
-			);
-
-			exit;
+//			wp_send_json(
+            return array(
+                'result'   => 'failure',
+                'refresh'  => false,
+                'reload'   => false,
+                'messages' => '<ul id="sc_fake_error" class="woocommerce-error" role="alert"><li>' . $msg . '</li></ul>',
+            );
+//			);
+//			exit;
 		}
 		// OpenOrder::END
 
@@ -982,7 +1000,9 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			}
 
 			unset( $checkout_data['pmBlacklist'] );
-		} elseif ( 0 == $total && 1 == $this->get_option( 'allow_zero_checkout' ) ) { // in case of Zero-Total and enabled allow_zero_checkout option
+		}
+        // in case of Zero-Total and enabled allow_zero_checkout option
+        elseif ( 0 == $total && 1 == $this->get_option( 'allow_zero_checkout' ) ) {
 			$checkout_data['pmWhitelist'] = array( 'cc_card' );
 			unset( $checkout_data['pmBlacklist'] );
 		}
@@ -999,7 +1019,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		if ( empty( $blocked_cards_str ) ) {
 			$checkout_data['blockCards'] = array();
-		} else {
+		}
+        else {
 			$block_cards_sets = explode( ';', $blocked_cards_str );
 
 			if ( count( $block_cards_sets ) == 1 ) {
@@ -1035,18 +1056,42 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			return $checkout_data;
 		}
 
-		wp_send_json(array(
+//		wp_send_json(
+        return array(
             'result'      => 'failure', // this is just to stop WC send the form, and show APMs
             'refresh'     => false,
             'reload'      => false,
             'nuveiParams' => $checkout_data,
-        ));
-
-		exit;
+        );
+//        );
+//		exit;
 	}
 
+    /**
+     * This is a lazy method.
+     * Here we just compare the current products (as hash) with the products hash
+     * from the openOrder request. If all is same - fine. If it is not - return
+     * success = 0, and the front-end will reloads.
+     * 
+     * @return array
+     */
 	public function checkout_prepayment_check() {
 		Nuvei_Pfw_Logger::write( 'checkout_prepayment_check()' );
+        
+        // wakeup the WC and the session in case of API call
+        if (!function_exists('WC')) {
+            Nuvei_Pfw_Logger::write( 'no function_exists WC.' );
+            return ['success' => 0];
+        }
+        
+        if (is_null(WC()->session)) {
+            WC()->session = new WC_Session_Handler();
+            WC()->session->init();
+        }
+        
+        if (is_null(WC()->cart)) {
+            wc_load_cart();
+        }
 
         $nuvei_order_details    = [];
         $open_order_details     = [];
@@ -1066,10 +1111,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		) {
             Nuvei_Pfw_Logger::write( 'checkout_prepayment_check() success' );
             
-			wp_send_json(array(
-                'success' => 1,
-            ));
-			exit;
+            return ['success' => 1];
+            
+//			wp_send_json(array(
+//                'success' => 1,
+//            ));
+//			exit;
 		}
 
 		Nuvei_Pfw_Logger::write(
@@ -1081,10 +1128,11 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             'checkout_prepayment_check() fail'
 		);
 
-		wp_send_json(array(
-            'success' => 0,
-        ));
-		exit;
+        return ['success' => 0];
+//		wp_send_json(array(
+//            'success' => 0,
+//        ));
+//		exit;
 	}
 
 	/**

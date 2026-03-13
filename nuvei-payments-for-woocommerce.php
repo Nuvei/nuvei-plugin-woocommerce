@@ -120,12 +120,11 @@ class Nuvei_Payments_For_Woocommerce
         // for WCFM orders, show Nuvei Order's Notes
         add_action( 'end_wcfm_orders_details', array(__CLASS__, 'wcfm_show_notes'), 10, 1 );
 
-        // handle custom Ajax calls
-        add_action( 'wp_ajax_sc-ajax-action', array(__CLASS__, 'ajax_action') );
-        add_action( 'wp_ajax_nopriv_sc-ajax-action', array(__CLASS__, 'ajax_action') );
-
         // the new api endpoint for the front-end requests
         add_action( 'rest_api_init', array(__CLASS__, 'rest_api_calls') );
+        // TODO - modify the old REST anpoint for hedless implementation
+        // register the plugin REST endpoint
+//        add_action('rest_api_init', array (__CLASS__, 'register_plugin_rest_endpoint') );
         
         // when the client click Pay button on the Order from My Account -> Orders menu.
         add_filter( 'woocommerce_pay_order_after_submit', array (__CLASS__, 'user_orders') );
@@ -254,9 +253,6 @@ class Nuvei_Payments_For_Woocommerce
 
         // hook to show unreaded Nuvei' system messages
         add_action( 'admin_notices', array (__CLASS__, 'display_messages') );
-
-        // register the plugin REST endpoint
-        add_action('rest_api_init', array (__CLASS__, 'register_plugin_rest_endpoint') );
 
     }
 
@@ -760,123 +756,6 @@ class Nuvei_Payments_For_Woocommerce
 		include_once __DIR__ . DIRECTORY_SEPARATOR . 'templates/admin/wcfm-orders-details-msgs.php';
 
 		ob_end_flush();
-	}
-
-	/**
-	 * Main function for the Ajax requests.
-	 */
-	public static function ajax_action() {
-        // error - nonce
-		if ( ! check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false ) ) {
-			wp_send_json_error( __( 'Invalid security token sent.', 'nuvei-payments-for-woocommerce' ) );
-			wp_die( 'Invalid security token sent' );
-		}
-
-        // error - not set site mode
-		if ( empty( self::$wc_nuvei->settings['test'] ) ) {
-			wp_send_json_error( __( 'Invalid site mode.', 'nuvei-payments-for-woocommerce' ) );
-			wp_die( 'Invalid site mode.' );
-		}
-
-		$order_id = Nuvei_Pfw_Http::get_param( 'orderId', 'int' );
-
-		// recognize the action:
-		// Get Blocks Checkout data
-		if ( Nuvei_Pfw_Http::get_param( 'getBlocksCheckoutData', 'int' ) == 1 ) {
-			// Simply Connect flow
-			if ( 'sdk' == self::$wc_nuvei->settings['integration_type'] ) {
-				wp_send_json( self::$wc_nuvei->call_checkout( false, true ) );
-				exit;
-			}
-
-			// Cashier flow
-			if ( 'cashier' == self::$wc_nuvei->settings['integration_type'] ) {
-				// TODO
-				exit;
-			}
-
-			exit;
-		}
-
-		// Check Cart on SDK pre-payment event
-		if ( Nuvei_Pfw_Http::get_param( 'prePayment', 'int' ) == 1 ) {
-			self::$wc_nuvei->checkout_prepayment_check();
-		}
-
-		// download Subscriptions Plans
-		if ( Nuvei_Pfw_Http::get_param( 'downloadPlans', 'int' ) == 1 ) {
-			self::$wc_nuvei->download_subscr_pans();
-		}
-
-		// when need data to pay Existing Order for Simply Connect flow
-		if ( Nuvei_Pfw_Http::get_param( 'payForExistingOrder', 'int' ) == 1
-			&& Nuvei_Pfw_Http::get_param( 'orderId', 'int' ) > 0
-			&& 'sdk' == self::$wc_nuvei->settings['integration_type']
-		) {
-			$params = self::$wc_nuvei->call_checkout( false, true, Nuvei_Pfw_Http::get_param( 'orderId', 'int' ) );
-
-			wp_send_json( $params );
-			wp_die();
-		}
-
-		// dismiss Nuvei system message
-		if ( Nuvei_Pfw_Http::get_param( 'msgId', 'int', -1 ) >= 0 ) {
-			$messages = get_option( 'custom_system_messages', array() );
-
-			Nuvei_Pfw_Logger::write($messages);
-
-			$msg_id = Nuvei_Pfw_Http::get_param( 'msgId', 'int' );
-
-			if ( isset( $messages[ $msg_id ]['read'] ) ) {
-				// remove the message
-				if ( true === $messages[ $msg_id ]['read'] ) {
-					unset( $messages[ $msg_id ] );
-				}
-				// mark the message as read
-				else {
-					$messages[ $msg_id ]['read'] = true;
-				}
-
-				update_option( 'custom_system_messages', $messages );
-				wp_send_json_success();
-			}
-
-			wp_send_json_error();
-		}
-
-		// get custom Payment messages
-		if ( Nuvei_Pfw_Http::get_param( 'getPaymentCustomMsgs', 'int' ) == 1 ) {
-			$all_msgs   = get_option( 'custom_system_messages', array() );
-			$last_msgs  = array();
-			$cnt        = 1;
-			$msgs_cnt   = 50;
-
-			Nuvei_Pfw_Logger::write($all_msgs);
-
-			if ( empty( $all_msgs ) ) {
-				wp_send_json( $last_msgs );
-				wp_die();
-			}
-
-			foreach ( array_reverse( $all_msgs, true ) as $index => $msg ) {
-				if ( empty( $msg['created_by'] ) || 'nuvei_payments' != $msg['created_by'] ) {
-					continue;
-				}
-
-				if ( $cnt >= $msgs_cnt ) {
-					break;
-				}
-
-				$last_msgs[ $index ] = $msg;
-				++$cnt;
-			}
-
-			wp_send_json( $last_msgs );
-			wp_die();
-		}
-
-		wp_send_json_error( __( 'Not recognized Ajax call.', 'nuvei-payments-for-woocommerce' ) );
-		wp_die();
 	}
 
 	/**
@@ -1581,30 +1460,7 @@ class Nuvei_Payments_For_Woocommerce
     public static function rest_api_calls() {
         Nuvei_Pfw_Logger::write('rest_api_calls');
         
-        // TODO - Get Checkout data
-//        if ( Nuvei_Pfw_Http::get_param( 'getBlocksCheckoutData', 'int' ) == 1 ) {
-//			// Simply Connect flow
-//			if ( 'sdk' == self::$wc_nuvei->settings['integration_type'] ) {
-//				wp_send_json( self::$wc_nuvei->call_checkout( false, true ) );
-//				exit;
-//			}
-//
-//			// Cashier flow
-//			if ( 'cashier' == self::$wc_nuvei->settings['integration_type'] ) {
-//				// TODO
-//				exit;
-//			}
-//
-//			exit;
-//		}
-        
-//        register_rest_route(NUVEI_API_PATH, '/get-checkout-data/', array(
-//            'methods'             => 'GET',
-//            'callback'            => self::$wc_nuvei->call_checkout( false, true ),
-//            'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
-//        ));
-        
-        
+        # Admin calls
         // Void (Cancel)
         register_rest_route(NUVEI_API_PATH, '/cancel-order/', array(
             'methods'             => 'POST',
@@ -1667,6 +1523,143 @@ class Nuvei_Payments_For_Woocommerce
             },
             'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
         ));
+            
+        // download Subscriptions Plans
+        register_rest_route(NUVEI_API_PATH, '/download-subs-plans/', array(
+            'methods'             => 'GET',
+            'callback'            => function($request) {
+                $data = self::$wc_nuvei->download_subscr_pans();
+                
+                return rest_ensure_response($data);
+            },
+            'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
+        ));
+            
+        // dismiss Nuvei system message
+        register_rest_route(NUVEI_API_PATH, '/dismiss-sys-msg/', array(
+            'methods'             => 'POST',
+            'callback'            => function($request) {
+                $msg_id     = $request->get_param( 'msgId' );
+                $messages   = get_option( 'custom_system_messages', array() );
+
+                Nuvei_Pfw_Logger::write($messages);
+
+                if ( isset( $messages[ $msg_id ]['read'] ) ) {
+    				// remove the message
+    				if ( true === $messages[ $msg_id ]['read'] ) {
+    					unset( $messages[ $msg_id ] );
+    				}
+    				// mark the message as read
+    				else {
+    					$messages[ $msg_id ]['read'] = true;
+    				}
+    
+    				update_option( 'custom_system_messages', $messages );
+    				
+                    return rest_ensure_response(['success'  => true]);
+    			}
+    
+                return new WP_Error( 
+                    'action_failed', 
+                    'Something went wrong.', 
+                    array( 'status' => 500 ) 
+                );
+            },
+            'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
+        ));
+            
+        // get custom Payment messages
+        register_rest_route(NUVEI_API_PATH, '/get-payment-custom-msg/', array(
+            'methods'             => 'GET',
+            'callback'            => function($request) {
+                $all_msgs   = get_option( 'custom_system_messages', array() );
+                $last_msgs  = array();
+                $cnt        = 1;
+                $msgs_cnt   = 50;
+
+                Nuvei_Pfw_Logger::write($all_msgs);
+
+                if ( empty( $all_msgs ) ) {
+                    return rest_ensure_response($last_msgs);
+                }
+                
+                foreach ( array_reverse( $all_msgs, true ) as $index => $msg ) {
+                    if ( empty( $msg['created_by'] ) || 'nuvei_payments' != $msg['created_by'] ) {
+                        continue;
+                    }
+
+                    if ( $cnt >= $msgs_cnt ) {
+                        break;
+                    }
+
+                    $last_msgs[ $index ] = $msg;
+                    ++$cnt;
+                }
+                
+                return rest_ensure_response($last_msgs);
+            },
+            'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
+        ));
+        
+        # Store calls
+        // The pre-payment
+        register_rest_route(NUVEI_API_PATH, '/pre-payment/', array(
+            'methods'             => 'GET',
+            'callback'            => function($request) {
+                $data = self::$wc_nuvei->checkout_prepayment_check();
+                
+                return rest_ensure_response($data);
+            },
+            'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
+        ));
+        
+        // when need data to pay Existing Order for Simply Connect flow
+        register_rest_route(NUVEI_API_PATH, '/pay-for-existing-order/', array(
+            'methods'             => 'POST',
+            'callback'            => function($request) {
+                $order_id = $request->get_param('orderId');
+                
+                if (!is_numeric($order_id) 
+                    || $order_id <= 0 
+                    || 'sdk' != self::$wc_nuvei->settings['integration_type']
+                ) {
+                    Nuvei_Pfw_Logger::write(
+                        [
+                            '$order_id'         => $order_id,
+                            'integration_type'  => self::$wc_nuvei->settings['integration_type'],
+                        ],
+                        'Wrong Order ID or integration_type.'
+                    );
+                    
+                    return new WP_Error( 
+                        'action_failed', 
+                        __('Invalid Order ID or Integration type.', 'nuvei-payments-for-woocommerce'), 
+                        array( 'status' => 404 ) 
+                    );
+                }
+                
+                $data = self::$wc_nuvei->call_checkout( false, true, $order_id );
+                
+                return rest_ensure_response($data);
+            },
+            'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
+        ));
+        
+        // Get Checkout data
+        register_rest_route(NUVEI_API_PATH, '/get-checkout-data/', array(
+            'methods'             => 'POST',
+            'callback'            => function($request) {
+                $data = [];
+            
+                if ( 'sdk' == self::$wc_nuvei->settings['integration_type'] ) {
+                    $data = self::$wc_nuvei->call_checkout( false, true );
+                }
+                
+                return rest_ensure_response($data);
+            },
+            'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
+        ));
+            
     }
     
     /**

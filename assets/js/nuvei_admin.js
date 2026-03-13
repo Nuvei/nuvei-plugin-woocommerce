@@ -265,100 +265,109 @@ function switchNuveiTabs() {
 }
 
 function nuveiSyncPaymentPlans() {
-	var butonTd = jQuery('#woocommerce_nuvei_get_plans_btn').closest('td');
+	let butonTd = jQuery('#woocommerce_nuvei_get_plans_btn').closest('td');
 	
 	butonTd.find('.custom_loader').show();
-			
-	jQuery.ajax({
-		type: "POST",
-		url: scTrans.ajaxurl,
-		data: {
-			action: 'sc-ajax-action',
-			downloadPlans: 1,
-			nuveiSecurity: scTrans.nuveiSecurity
-		},
-		dataType: 'json'
-	})
-	.fail(function(jqXHR, textStatus, errorThrown){
-		alert(scTrans.RequestFail);
-
-		console.error(textStatus);
-		console.error(errorThrown);
-
-		butonTd.find('.custom_loader').hide();
-	})
-	.done(function(resp) {
-		console.log(resp);
-
-		if (resp.hasOwnProperty('status') && 1 == resp.status) {
-			butonTd.find('fieldset span.dashicons.dashicons-yes-alt').css({
-				display :'inline',
-				color : 'green'
-			});
-
-			butonTd.find('fieldset p.description').html(scTrans.LastDownload +': '+ resp.time);
-		}
-        else if (resp.hasOwnProperty('message') && '' != resp.message) {
-            alert(resp.message);
+    
+    fetch(scTrans.apiUrl + '/download-subs-plans/', {
+        method: 'GET',
+        headers: {
+            'X-WP-Nonce': scTrans.nuveiApiSec,
+            'Content-Type': 'application/json'
         }
-        else {
-			alert('Response error.');
-		}
+    })
+        // 1. first check for the status code (200 OK)
+        .then(res => {
+            if (!res.ok) {
+                // error - 401, 403, 404 or 500
+                throw res; 
+            }
+            
+            // success, continue
+            return res.json();
+        })
+        // the success
+        .then(data => {
+            console.log(data);
+            
+            if (data?.status && 1 == data.status) {
+                butonTd.find('fieldset span.dashicons.dashicons-yes-alt').css({
+                    display :'inline',
+                    color : 'green'
+                });
 
-		butonTd.find('.custom_loader').hide();
-	});
+                butonTd.find('fieldset p.description').html(scTrans.LastDownload +': '+ data.time);
+            }
+            else if (data?.message && '' != data.message) {
+                alert(data.message);
+            }
+            else {
+                alert('Response error.');
+            }
+        })
+        // error after the first check
+        .catch(async err => {
+            alert(scTrans.RequestFail);
+
+            console.error(err);
+        });
+    
+    butonTd.find('.custom_loader').hide();
 }
 
 function nuveiGetCustomSystemMsgs() {
-    var butonTd = jQuery('#woocommerce_nuvei_read_msgs').closest('td');
+    let butonTd = jQuery('#woocommerce_nuvei_read_msgs').closest('td');
 	
 	butonTd.find('.custom_loader').show();
-			
-	jQuery.ajax({
-		type: "POST",
-		url: scTrans.ajaxurl,
-		data: {
-			action: 'sc-ajax-action',
-			getPaymentCustomMsgs: 1,
-			nuveiSecurity: scTrans.nuveiSecurity
-		},
-		dataType: 'json'
-	})
-	.fail(function(jqXHR, textStatus, errorThrown){
-		alert(scTrans.RequestFail);
-
-		console.error(textStatus);
-		console.error(errorThrown);
-
-		butonTd.find('.custom_loader').hide();
-	})
-	.done(function(resp) {
-		console.log(resp);
-
-        let msgsHtml = '';
-
-        try {
-            for (let i in resp) {
-                msgsHtml += `<span style="display: block;" class="notice is-dismissible nuvei_payments_msg" data-index="${i}">`
-                    + `<span>${resp[i].message}</span>`
-                    + '<span class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></span>'
-                    + '</span>'; 
+    
+    fetch(scTrans.apiUrl + '/get-payment-custom-msg/', {
+        method: 'GET',
+        headers: {
+            'X-WP-Nonce': scTrans.nuveiApiSec,
+            'Content-Type': 'application/json'
+        }
+    })
+        // 1. first check for the status code (200 OK)
+        .then(res => {
+            if (!res.ok) {
+                // error - 401, 403, 404 or 500
+                throw res; 
             }
             
-            console.log(msgsHtml);
-//            console.log(butonTd.find('.description'));
+            // success, continue
+            return res.json();
+        })
+        // the success
+        .then(data => {
+            console.log(data);
             
-            butonTd.find('.description').html(msgsHtml);
-            
-            
-        } catch(ex) {
-            console.log('Error with the response.', resp);
-            
-            butonTd.closest('fieldset').find('.description').html(msgsHtml);
-        }
+            let msgsHtml = '';
 
-		butonTd.find('.custom_loader').hide();
-	});
+            try {
+                for (let i in data) {
+                    msgsHtml += `<span style="display: block;" class="notice is-dismissible nuvei_payments_msg" data-index="${i}">`
+                        + `<span>${data[i].message}</span>`
+                        + '<span class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></span>'
+                        + '</span>'; 
+                }
+
+                console.log(msgsHtml);
+
+                butonTd.find('.description').html(msgsHtml);
+            }
+            catch(ex) {
+                console.error('Error with the response.', data);
+
+                butonTd.closest('fieldset').find('.description').html(msgsHtml);
+            }
+        })
+        // error after the first check
+        .catch(async err => {
+            alert(scTrans.RequestFail);
+            console.error(err);
+        });
+    
+    butonTd.find('.custom_loader').hide();
 }
 
 function nuveiDisablePm(_value) {
@@ -536,24 +545,41 @@ jQuery(function() {
         let container   = button.closest('.nuvei_payments_msg');
         let index       = container.attr('data-index');
         
-        jQuery.ajax({
-            type: "POST",
-            url: scTrans.ajaxurl,
-            data: {
-                action: 'sc-ajax-action',
-                msgId: index,
-                nuveiSecurity: scTrans.nuveiSecurity
+        fetch(scTrans.apiUrl + '/dismiss-sys-msg/', {
+            method: 'POST',
+            headers: {
+                'X-WP-Nonce': scTrans.nuveiApiSec,
+                'Content-Type': 'application/json'
             },
-            dataType: 'json'
+            body: JSON.stringify({
+                msgId: index
+            })
         })
-        .fail(function( jqXHR, textStatus, errorThrown){
-            console.error(textStatus);
-            console.error(errorThrown);
-        })
-        .done(function(resp) {
-            console.log(resp);
-            container.remove();
-        });
+            // 1. first check for the status code (200 OK)
+            .then(res => {
+                if (!res.ok) {
+                    // error - 401, 403, 404 or 500
+                    throw res; 
+                }
+
+                // success, continue
+                return res.json();
+            })
+            // the success
+            .then(data => {
+                console.log(data);
+
+                if (data?.success && 1 == data.success) {
+                    container.remove();
+                    return;
+                }
+                
+                alert('Request error.');
+            })
+            // error after the first check
+            .catch(async err => {
+                console.error(err);
+            });
     });
     
     // for Nuvei Payment column in the Orders list

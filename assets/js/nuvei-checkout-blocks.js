@@ -16,6 +16,86 @@ const nuveiCheckoutBlockContText =
 var nuveiAllowFormSubmit        = false;
 
 /**
+ * We update Nuvei Order here.
+ *
+ * @returns {bool}
+ */
+function nuveiUpdateOrder(resolve, reject) {
+    fetch(scTrans.apiUrl + '/pre-payment/', {
+        method: 'GET',
+        headers: {
+            'X-WP-Nonce': scTrans.nuveiApiSec,
+            'Content-Type': 'application/json'
+        }
+    })
+        // 1. first check for the status code (200 OK)
+        .then(res => {
+            if (!res.ok) {
+                // error - 401, 403, 404 or 500
+                throw res; 
+            }
+            
+            // success, continue
+            return res.json();
+        })
+        // the success
+        .then(data => {
+            console.log(data);
+            
+            // success
+            if (data?.success && 1 == data.success) {
+                console.log('prepayment resolved.');
+
+                resolve();
+                return;
+            }
+            
+            // error
+            reject();
+            window.location.reload();
+            return;
+        })
+        // error after the first check
+        .catch(async err => {
+            reject();
+            ShowErrorMsg(scTrans.unexpectedError);
+            jQuery('#nuvei_blocker').hide();
+            return;
+        });
+    
+//    jQuery.ajax({
+//        type: "POST",
+//        url: scTrans.ajaxurl,
+//        data: {
+//            action: 'sc-ajax-action',
+//            nuveiSecurity: scTrans.nuveiSecurity,
+//            prePayment: 1
+//        },
+//        dataType: 'json'
+//    })
+//        .fail(function(){
+//            reject();
+//            ShowErrorMsg(scTrans.unexpectedError);
+//            jQuery('#nuvei_blocker').hide();
+//            return;
+//        })
+//        .done(function(resp) {
+//            console.log(resp);
+//
+//            if (!resp.hasOwnProperty('success') || 0 == resp.success) {
+//                reject();
+//                window.location.reload();
+//                return;
+//            }
+//
+//            console.log('prepayment resolved.');
+//
+//            resolve();
+//            return;
+//        });
+}
+
+/**
  * We use pre-payment for the Blocks only.
  * We call this method from nuvei_public.js
  *
