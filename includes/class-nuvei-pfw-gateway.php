@@ -24,7 +24,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$this->method_description = __( 'Pay with ', 'nuvei-payments-for-woocommerce' )
 			. NUVEI_PFW_GATEWAY_TITLE . '.';
 		$this->method_name        = NUVEI_PFW_GATEWAY_TITLE;
-		$this->icon               = plugin_dir_url( NUVEI_PFW_PLUGIN_FILE ) . 'assets/icons/nuvei.png';
 		$this->has_fields         = false;
 
 		$this->init_settings();
@@ -81,12 +80,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
      * Get the badge "Action needed". It is available only when the plugin is not enabled.
      */
 	public function needs_setup() {
-	    return empty($this->get_option['test'])
-            || empty($this->get_option['merchantId'])
-            || empty($this->get_option['merchantSiteId'])
-            || empty($this->get_option['secret'])
-            || empty($this->get_option['hash_type'])
-            || empty($this->get_option['payment_action'])
+	    return empty($this->get_option('test'))
+            || empty($this->get_option('merchantId'))
+            || empty($this->get_option('merchantSiteId'))
+            || empty($this->get_option('secret'))
+            || empty($this->get_option('hash_type'))
+            || empty($this->get_option('payment_action'))
         ;
 	}
 
@@ -323,27 +322,27 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'$order_id'                     => $order_id,
 				NUVEI_PFW_SESSION_PROD_DETAILS  => $nuvei_order_details,
 				NUVEI_PFW_SESSION_OO_DETAILS    => $nuvei_oo_details,
-//                '$_REQUEST' => $_REQUEST, 
+//                '$_REQUEST' => $_REQUEST,
 //                '$_SERVER'  => $_SERVER
 			),
 			'Process payment(), Order'
 		);
 
 		$order = wc_get_order( $order_id );
-		$key   = $order->get_order_key();
 
 		// error
 		if ( ! $order ) {
-			Nuvei_Pfw_Logger::write( 'Order is false for order id ' . $order_id );
+			Nuvei_Pfw_Logger::write( 'Invalid Order for id ' . $order_id );
+
+			wc_add_notice( __('Invalid Order.', 'nuvei-payments-for-woocommerce'), 'error' );
 
 			return array(
-				'result'   => 'success',
-				'redirect' => array(
-					'Status' => 'error',
-				),
-				wc_get_checkout_url() . 'order-received/' . $order_id . '/',
+			    'result'     => 'failure',
+			    'redirect'   => wc_get_checkout_url(),
 			);
 		}
+
+		$key = $order->get_order_key();
 
 		$return_success_url = add_query_arg(
 			array( 'key' => $key ),
@@ -431,7 +430,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
         if (!empty($nuvei_oo_details['clientUniqueId'])) {
             $order->update_meta_data( NUVEI_PFW_CLIENT_UNIQUE_ID, $nuvei_oo_details['clientUniqueId'] );
         }
-        
+
         /*
          * No Transaction ID - This is the new checkout flow for the Classic Checkout, at this moment.
          * Here we already have saved Order, but not transaction/payment.
@@ -439,15 +438,15 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
          */
         if ( empty(Nuvei_Pfw_Http::get_param( 'nuvei_transaction_id' )) && $is_classic ) {
             Nuvei_Pfw_Logger::write( 'Process payment, classic checkout' );
-            
+
             $order->save();
-            
+
             // call Update Order
             $helper         = new Nuvei_Pfw_Helper();
             $uo_obj         = new Nuvei_Pfw_Update_Order( $this->rest_params );
             $products_data  = $helper->get_products();
-            
-			
+
+
             $resp = $uo_obj->process(array(
                 'open_order_details'    => $nuvei_oo_details,
                 'products_data'         => $products_data,
@@ -455,7 +454,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 'session_token'         => Nuvei_Pfw_Http::get_param( 'nuvei_session_token' ),
                 'oo_order_id'           => Nuvei_Pfw_Http::get_param( 'nuvei_oo_order_id' ),
             ));
-            
+
             // success
             if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
                 return [
@@ -463,11 +462,11 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                     'redirect'  => '#',
                     'data'      => [
                         'nuvei_try_payment' => true,
-                        'succsess_url'      => $return_success_url,
+                        'success_url'      => $return_success_url,
                     ]
                 ];
             }
-            
+
             // error
             return array(
 				'result'   => 'success',
@@ -568,8 +567,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		Nuvei_Pfw_Logger::write( 'download_subscr_pans' );
 
 		if ( $recursions > 1 ) {
-			wp_send_json( array( 'status' => 0 ) );
-			exit;
+			return array( 'status' => 0 );
 		}
 
 		$ndp_obj = new Nuvei_Pfw_Download_Plans( $this->settings );
@@ -578,11 +576,10 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		if ( empty( $resp ) || ! is_array( $resp ) || 'SUCCESS' != $resp['status'] ) {
 			Nuvei_Pfw_Logger::write( 'Unexpected error, when try to download the plans.' );
 
-			wp_send_json( array(
-                'status'    => 0,
-                'message'   => __( 'Unexpected error, when try to download the plans.', 'nuvei-payments-for-woocommerce')
-            ) );
-			exit;
+			return array(
+			    'status'    => 0,
+			    'message'   => __( 'Unexpected error, when try to download the plans.', 'nuvei-payments-for-woocommerce')
+			);
 		}
 
 		// in case there are  no active plans - create default one
@@ -604,15 +601,23 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			wp_json_encode( $resp['plans'] ),
 			0644
 		) ) {
-			$this->create_nuvei_global_attribute();
+			$resp = $this->create_nuvei_global_attribute();
 
-			wp_send_json(
-				array(
-					'status' => 1,
-					'time'   => gmdate( 'Y-m-d H:i:s' ),
-				)
-			);
-			exit;
+            if (!is_array($resp)) {
+                Nuvei_Pfw_Logger::write(
+                    ''.
+                    'Unexpected error when try to create a Nuvei global attribute.',
+                    'WARN'
+                );
+
+                return array(
+                    'status' => 0,
+                );
+            }
+
+            $resp['time'] = gmdate( 'Y-m-d H:i:s' );
+
+			return $resp;
 		}
 
 		Nuvei_Pfw_Logger::write(
@@ -620,11 +625,10 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'Plans list was not saved.'
 		);
 
-		wp_send_json( array(
-            'status'    => 0,
-            'message'   => __( 'Unexpected error, when try to save the file with the plans.', 'nuvei-payments-for-woocommerce')
-        ) );
-		exit;
+		return array(
+		    'status'    => 0,
+		    'message'   => __( 'Unexpected error, when try to save the file with the plans.', 'nuvei-payments-for-woocommerce')
+		);
 	}
 
 	public function get_today_log() {
@@ -684,17 +688,14 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$nuvei_glob_attr_name_slug = Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME );
 		$taxonomy_name             = wc_attribute_taxonomy_name( $nuvei_glob_attr_name_slug );
 
-		// a check
+		// error
 		if ( ! is_readable( $nuvei_plans_path ) ) {
 			Nuvei_Pfw_Logger::write( 'Plans json is not readable.' );
 
-			wp_send_json(
-				array(
-					'status' => 0,
-					'msg'    => __( 'Plans json is not readable.', 'nuvei-payments-for-woocommerce' ),
-				)
+			return array(
+				'status' => 0,
+				'msg'    => __( 'Plans json is not readable.', 'nuvei-payments-for-woocommerce' ),
 			);
-			exit;
 		}
 
 		$plans = wp_json_file_decode(
@@ -702,23 +703,23 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			array( 'associative' => true )
 		);
 
-		// a check
+		// error
 		if ( empty( $plans ) || ! is_array( $plans ) ) {
 			Nuvei_Pfw_Logger::write( $plans, 'Unexpected problem with the Plans list.', 'nuvei-payments-for-woocommerce' );
 
-			wp_send_json(
-				array(
-					'status' => 0,
-					'msg'    => __( 'Unexpected problem with the Plans list.', 'nuvei-payments-for-woocommerce' ),
-				)
+			return array(
+				'status' => 0,
+				'msg'    => __( 'Unexpected problem with the Plans list.', 'nuvei-payments-for-woocommerce' ),
 			);
-			exit;
 		}
 
 		// check if Taxonomy exists
 		if ( taxonomy_exists( $taxonomy_name ) ) {
-			Nuvei_Pfw_Logger::write( '$taxonomy_name exists' );
-			return;
+		    Nuvei_Pfw_Logger::write( $taxonomy_name, 'Taxonomi name already exists.' );
+		    return array(
+		        'status' => 1,
+		        'msg'    => __( 'Taxonomi name already exists.', 'nuvei-payments-for-woocommerce' ),
+		    );
 		}
 
 		// create the Global Attribute
@@ -732,6 +733,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		// create the attribute and check for errors
 		$attribute_id = wc_create_attribute( $args );
 
+		// error
 		if ( is_wp_error( $attribute_id ) ) {
 			Nuvei_Pfw_Logger::write(
 				array(
@@ -741,13 +743,10 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'Error when try to add Global Attribute with arguments'
 			);
 
-			wp_send_json(
-				array(
-					'status' => 0,
-					'msg'    => $attribute_id->get_error_message(),
-				)
+			return array(
+				'status' => 0,
+				'msg'    => $attribute_id->get_error_message(),
 			);
-			exit;
 		}
 
 		// craete WP taxonomy based on the WC attribute
@@ -757,6 +756,10 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			array(
 				'public' => false,
 			)
+		);
+
+		return array(
+		    'status' => 1,
 		);
 	}
 
@@ -831,22 +834,22 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			),
 			'call_checkout()'
 		);
-        
+
         // wakeup the WC and the session in case of API call
         if (!function_exists('WC')) {
             Nuvei_Pfw_Logger::write( 'no function_exists WC.' );
-            
+
             return array(
                 'messages' => "The function WC doesn't exists",
                 'status'   => 'error',
             );
         }
-        
+
         if (is_null(WC()->session)) {
             WC()->session = new WC_Session_Handler();
             WC()->session->init();
         }
-        
+
         if (is_null(WC()->cart)) {
             wc_load_cart();
         }
@@ -939,9 +942,9 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
         }
 
         $fullName = trim(
-            $ord_details['billingAddress']['firstName'] ?? ''
+            ($ord_details['billingAddress']['firstName'] ?? '')
             . ' '
-            . $oo_data['billingAddress']['lastName'] ?? ''
+            . ($ord_details['billingAddress']['lastName'] ?? '')
         );
 
 		$checkout_data = array( // use it in the template
@@ -1072,35 +1075,35 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
      * Here we just compare the current products (as hash) with the products hash
      * from the openOrder request. If all is same - fine. If it is not - return
      * success = 0, and the front-end will reloads.
-     * 
+     *
      * @return array
      */
 	public function checkout_prepayment_check() {
 		Nuvei_Pfw_Logger::write( 'checkout_prepayment_check()' );
-        
+
         // wakeup the WC and the session in case of API call
         if (!function_exists('WC')) {
             Nuvei_Pfw_Logger::write( 'no function_exists WC.' );
             return ['success' => 0];
         }
-        
+
         if (is_null(WC()->session)) {
             WC()->session = new WC_Session_Handler();
             WC()->session->init();
         }
-        
+
         if (is_null(WC()->cart)) {
             wc_load_cart();
         }
 
         $nuvei_order_details    = [];
         $open_order_details     = [];
-        
+
         if ( ! is_null( WC()->session ) ) {
             $nuvei_order_details = WC()->session->get( NUVEI_PFW_SESSION_PROD_DETAILS );
             $open_order_details  = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
         }
-        
+
 		$nuvei_helper   = new Nuvei_Pfw_Helper();
 		$products_data  = $nuvei_helper->get_products();
 
@@ -1110,9 +1113,9 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			&& md5( serialize( $products_data ) ) == $nuvei_order_details[ $open_order_details['sessionToken'] ]['products_data_hash']
 		) {
             Nuvei_Pfw_Logger::write( 'checkout_prepayment_check() success' );
-            
+
             return ['success' => 1];
-            
+
 //			wp_send_json(array(
 //                'success' => 1,
 //            ));
@@ -1324,85 +1327,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	}
 
 	/**
-	 * Get and return SimplyConnect data to REST API caller.
-	 *
-	 * @param  array $params Expected Cart data.
-	 * @return array
-	 */
-	public function rest_get_simply_connect_data( $params ) {
-		Nuvei_Pfw_Logger::write( null, 'rest_get_simply_connect_data', 'DEBUG' );
-
-		$this->rest_params = $params;
-
-		return $this->call_checkout( true );
-	}
-
-	public function rest_get_cashier_link( $params ) {
-		// error
-		if ( empty( $params['id'] ) || empty( $params['successUrl'] ) || empty( array( 'returnUrl' ) ) ) {
-			$msg = __( 'Missing incoming parameters.', 'nuvei-payments-for-woocommerce' );
-			Nuvei_Pfw_Logger::write( $params, $msg );
-
-			return array(
-				'code'    => 'missing_parameters',
-				'message' => $msg,
-				'data'    => array( 'status' => 400 ),
-			);
-		}
-
-		$order_id = (int) $params['id'];
-		$order    = wc_get_order( $order_id );
-
-		// error
-		if ( ! $order ) {
-			$msg = __( 'Order is false for order id ', 'nuvei-payments-for-woocommerce' ) . $order_id;
-			Nuvei_Pfw_Logger::write( $msg );
-
-			return array(
-				'code'    => 'invalid_order',
-				'message' => $msg,
-				'data'    => array( 'status' => 400 ),
-			);
-		}
-
-		// error
-		if ( $order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME ) {
-			$msg = __( 'Process payment Error - Order payment does not belongs to ', 'nuvei-payments-for-woocommerce' )
-			. NUVEI_PFW_GATEWAY_NAME;
-			Nuvei_Pfw_Logger::write( $msg );
-
-			return array(
-				'code'    => 'not_nuvei_order',
-				'message' => $msg,
-				'data'    => array( 'status' => 400 ),
-			);
-		}
-
-		$this->order = $order;
-
-		$url = $this->generate_cashier_url(
-			$params['successUrl'],
-			$params['successUrl'], // error and success URLs are same
-			$params['backUrl'],
-		);
-
-		// error
-		if ( empty( $url ) ) {
-			$msg = __( 'Error empty Cashier URL.', 'nuvei-payments-for-woocommerce' );
-			Nuvei_Pfw_Logger::write( $msg );
-
-			return array(
-				'code'    => 'empty_cashier_url',
-				'message' => $msg,
-				'data'    => array( 'status' => 400 ),
-			);
-		}
-
-		// success
-		return array( 'url' => $url );
-	}
-
-	/**
 	 * Common method to check if the plugin is used on the QA site.
 	 * The method also check if NUVEI_PFW_SDK_URL_TAG constant is defined.
 	 *
@@ -1424,22 +1348,29 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		return false;
 	}
-    
-    public function blocks_create_order() {
-        Nuvei_Pfw_Logger::write( 'blocks_create_order' );
-        
-        $order = wc_create_order( [
-            'customer_id' => get_current_user_id(),
-            'status'      => 'on-hold'
-        ] );
-        
-        // Copy cart to order
-        foreach ( WC()->cart->get_cart() as $item ) {
-            $order->add_product(
-                wc_get_product( $item['product_id'] ),
-                $item['quantity']
-            );
-        }
+
+    /**
+     * Just a setter
+     *
+     * @param array $params
+     * @return self
+     */
+    public function set_rest_params($params = array()) {
+        $this->rest_params = $params;
+
+        return $this;
+    }
+
+    /**
+     * Just a setter
+     *
+     * @param object $order
+     * @return self
+     */
+    public function set_order($order) {
+        $this->order = $order;
+
+        return $this;
     }
 
 	/**
@@ -1458,6 +1389,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	}
 
 	/**
+     * We expect $this->order to be a valid WC_Order.
+     *
 	 * @param string $success_url
 	 * @param string $error_url
 	 * @param string $back_url    It is only passed in REST API flow.
@@ -1551,7 +1484,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			$params['item_quantity_1'] = 1;
 			$params['item_amount_1']   = $total_amount;
 			$params['numberofitems']   = 1;
-		} 
+		}
         // add all the items
         else {
 			$cnt                     = 1;
@@ -1713,7 +1646,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'disable_wcs_alert' => array(
 				'title'   => __( 'Hide WCS Warning', 'nuvei-payments-for-woocommerce' ),
 				'type'    => 'checkbox',
-				'label'   => __( 'Check it to hide WCS waringn permanent.', 'nuvei-payments-for-woocommerce' ),
+				'label'   => __( 'Check it to hide WCS warning permanently.', 'nuvei-payments-for-woocommerce' ),
 				'default' => 'no',
 			),
 		);
@@ -1824,7 +1757,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'combine_cashier_products' => array(
 				'title'       => __( 'Combine Cashier Products into One', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'select',
-				'description' => __( 'Cobine the products into one, to avoid eventual problems with, taxes, discounts, coupons, etc.', 'nuvei-payments-for-woocommerce' ),
+				'description' => __( 'Combine the products into one, to avoid eventual problems with, taxes, discounts, coupons, etc.', 'nuvei-payments-for-woocommerce' ),
 				'default'     => 1,
 				'options'     => array(
 					1 => __( 'Yes', 'nuvei-payments-for-woocommerce' ),
@@ -1849,7 +1782,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				),
 				'default'     => 0,
 				'class'       => 'nuvei_checkout_setting',
-				'description' => __( 'If enalbe this option, only Nuvei GW will be listed as payment option. This option can be used for Card authentication.<br/>Zero-total checkout for rebilling products is enable by default.', 'nuvei-payments-for-woocommerce' ),
+				'description' => __( 'If enable this option, only Nuvei GW will be listed as payment option. This option can be used for Card authentication.<br/>Zero-total checkout for rebilling products is enable by default.', 'nuvei-payments-for-woocommerce' ),
 			),
 			'use_upos'                 => array(
 				'title'       => __( 'Allow Client to Use UPOs', 'nuvei-payments-for-woocommerce' ),

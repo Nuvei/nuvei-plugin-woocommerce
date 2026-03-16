@@ -26,14 +26,13 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 	 */
 	public function process() {
         Nuvei_Pfw_Logger::write( 'update_order()' );
-        
+
 		$func_params        = current( func_get_args() );
 		$products_data      = $func_params['products_data'] ?? array();
 		$open_order_details = $func_params['open_order_details'] ?? array();
-//		$plugin_settings    = $func_params['plugin_settings'] ?? array();
         $order_id           = $func_params['order_id'] ?? null;
-        $session_token      = $open_order_details['sessionToken'] ?: $func_params['session_token'] ?: null;
-        $oo_order_id        = $open_order_details['orderId'] ?: $func_params['oo_order_id'] ?: null;
+        $session_token      = $open_order_details['sessionToken'] ?? $func_params['session_token'] ?? null;
+        $oo_order_id        = $open_order_details['orderId'] ?? $func_params['oo_order_id'] ?? null;
 
 		// default flow
 		if ( empty( $this->rest_params ) && ! empty( WC()->session ) ) {
@@ -50,8 +49,8 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
                 [
                     '$session_token'    => $session_token,
                     '$oo_order_id'      => $oo_order_id,
-                ], 
-                'update_order() - Missing mandatory data for UpdateOrder.' 
+                ],
+                'update_order() - Missing mandatory data for UpdateOrder.'
             );
 
 			return array( 'status' => 'ERROR' );
@@ -101,7 +100,7 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 				'customField2' => $currency,
 			),
 		);
-        
+
         // if the Order already exists, pass the its ID here, as we cannot update clientUniqueId
         if ( !empty($order_id) ) {
             $params['merchantDetails']['customField5'] = $order_id;
@@ -109,17 +108,17 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
         elseif ( is_a( $this->sc_order, 'WC_Order' ) ) {
             $params['merchantDetails']['customField5'] = $this->sc_order->get_id();
         }
-         
+
 		// WC Subsc
 		if ( ! empty( $products_data['wc_subscr'] ) ) {
-			$oo_params['isRebilling']                          = 0;
-			$oo_params['card']['threeD']['v2AdditionalParams'] = array( // some default params
+			$params['isRebilling']                          = 0;
+			$params['card']['threeD']['v2AdditionalParams'] = array( // some default params
 				'rebillFrequency' => 30, // days
 				'rebillExpiry '   => gmdate( 'Ymd', strtotime( '+5 years' ) ),
 			);
 		} else {
-			$oo_params['isRebilling'] = null;
-			$oo_params['card']        = null;
+			$params['isRebilling'] = null;
+			$params['card']        = null;
 		}
 
 		$resp = $this->call_rest_api( 'updateOrder', $params );

@@ -6,8 +6,6 @@ defined( 'ABSPATH' ) || exit;
  * A class for Settle and Void requests.
  */
 class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
-
-
 	/**
 	 * Main method of the class.
 	 * Expected parameters are:
@@ -22,10 +20,10 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 			|| empty( $data['action'] )
 			|| empty( $data['method'] )
 		) {
-			Nuvei_Pfw_Logger::write( 
-                $data, 
-                'Nuvei_Pfw_Settle_Void error missing mandatoriy parameters.', 
-                'TRACE' 
+			Nuvei_Pfw_Logger::write(
+                $data,
+                'Nuvei_Pfw_Settle_Void error missing mandatoriy parameters.',
+                'TRACE'
             );
 			return false;
 		}
@@ -91,13 +89,18 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 			$this->sc_order->save();
 		}
 
-		wp_send_json(
-			array(
-				'status' => $ord_status,
-				'data'   => $resp,
-			)
-		);
-		exit;
+//		wp_send_json(
+//			array(
+//				'status' => $ord_status,
+//				'data'   => $resp,
+//			)
+//		);
+//		exit;
+        
+        return array(
+            'status' => $ord_status,
+            'data'   => $resp,
+        );
 	}
 
 	protected function get_checksum_params() {

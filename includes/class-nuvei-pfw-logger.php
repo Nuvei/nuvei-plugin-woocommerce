@@ -23,6 +23,8 @@ class Nuvei_Pfw_Logger {
 	);
 
 	private static $trace_id;
+	private static $plugin_data;
+	private static $gw_data;
 
 	/**
 	 * Save plugin logs.
@@ -33,7 +35,7 @@ class Nuvei_Pfw_Logger {
 	 * @param string $span_id Process unique ID.
 	 */
 	public static function write( $data, $message = '', $log_level = 'INFO', $span_id = '' ) {
-		$nuvei_gw        = WC()->payment_gateways->payment_gateways()[ NUVEI_PFW_GATEWAY_NAME ];
+		$nuvei_gw        = self::get_gw_data();
 		$save_logs       = $nuvei_gw->get_option( 'save_logs' );
 		$save_single_log = $nuvei_gw->get_option( 'save_single_log' );
 
@@ -44,7 +46,7 @@ class Nuvei_Pfw_Logger {
 			return;
 		}
 
-		$plugin_data    = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
+		$plugin_data    = self::get_pl_data();
 		$test_mode      = $nuvei_gw->get_option( 'test' );
 		$mask_user_data = $nuvei_gw->get_option( 'mask_user_data' );
 
@@ -196,4 +198,29 @@ class Nuvei_Pfw_Logger {
 			}
 		}
 	}
+
+	/**
+	 * Just try to get the plugin data.
+	 *
+	 * @return array
+	 */
+	private static function get_pl_data() {
+	    if (!empty(self::$plugin_data)) {
+	        return self::$plugin_data;
+	    }
+
+	    self::$plugin_data = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
+
+	    return self::$plugin_data;
+	}
+
+    private static function get_gw_data() {
+        if (!empty(self::$gw_data)) {
+	        return self::$gw_data;
+	    }
+
+	    self::$gw_data = WC()->payment_gateways->payment_gateways()[ NUVEI_PFW_GATEWAY_NAME ];
+
+	    return self::$gw_data;
+    }
 }

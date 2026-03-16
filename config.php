@@ -152,43 +152,42 @@ define(
 	)
 );
 
-define( 'NUVEI_PFW_BROWSERS_LIST', array( 
-    'ucbrowser', 
-    'firefox', 
-    'chrome', 
-    'opera', 
-    'msie', 
-    'edge', 
-    'safari', 
-    'blackberry', 
-    'trident' 
+define( 'NUVEI_PFW_BROWSERS_LIST', array(
+    'ucbrowser',
+    'firefox',
+    'chrome',
+    'opera',
+    'msie',
+    'edge',
+    'safari',
+    'blackberry',
+    'trident'
 ) );
 
-define( 'NUVEI_PFW_DEVICES_LIST', array( 
-    'iphone', 
-    'ipad', 
-    'android', 
-    'silk', 
-    'blackberry', 
-    'touch', 
-    'linux', 
-    'windows', 
-    'mac' 
+define( 'NUVEI_PFW_DEVICES_LIST', array(
+    'iphone',
+    'ipad',
+    'android',
+    'silk',
+    'blackberry',
+    'touch',
+    'linux',
+    'windows',
+    'mac'
 ) );
 
-define( 'NUVEI_PFW_DEVICES_TYPES_LIST', array( 
-    'macintosh', 
-    'tablet', 
-    'mobile', 
-    'tv', 
-    'windows', 
-    'linux', 
-    'tv', 
-    'smarttv', 
-    'googletv', 
-    'appletv', 
-    'hbbtv', 
-    'pov_tv', 
-    'netcast.tv', 
-    'bluray' 
+define( 'NUVEI_PFW_DEVICES_TYPES_LIST', array(
+    'macintosh',
+    'tablet',
+    'mobile',
+    'tv',
+    'windows',
+    'linux',
+    'smarttv',
+    'googletv',
+    'appletv',
+    'hbbtv',
+    'pov_tv',
+    'netcast.tv',
+    'bluray'
 ) );

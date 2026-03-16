@@ -66,6 +66,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 = 3.13.0 =
 * Migrate to WP Rest API.
 * The global $woocommerce was replaced with WC().
+* The old API endpoint was changed from '/wc/nuvei/?action={action}' to 'nuvei/api/v1/{action}/'.
 
 = 3.12.4 =
 * Fix for the crash with Blocks and Redirect.

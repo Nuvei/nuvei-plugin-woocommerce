@@ -31,7 +31,6 @@ abstract class Nuvei_Pfw_Request {
 	 *  ),
 	 */
 	public function __construct() {
-		$plugin_data    = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
 		$this->nuvei_gw = WC()->payment_gateways->payment_gateways()[ NUVEI_PFW_GATEWAY_NAME ];
 		$time           = gmdate( 'Ymdhis' );
 
@@ -121,15 +120,15 @@ abstract class Nuvei_Pfw_Request {
 	protected function get_web_master_id() {
 		return 'WooCommerce ' . WOOCOMMERCE_VERSION . '; Plugin v' . $this->get_plugin_version();
 	}
-	
+
 	/**
 	 * A helper function to get the plugin version.
-	 * 
+	 *
 	 * @return string
 	 */
 	protected function get_plugin_version() {
 		$plugin_data = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
-		
+
 		return $plugin_data['Version'];
 	}
 
@@ -290,8 +289,8 @@ abstract class Nuvei_Pfw_Request {
 			$bc = trim( (string) $cart->get_customer()->get_billing_city() );
 		}
 
-		$billing_address['city'] = ! empty( $bc ) ? $bc : 'Missing parameter';
-		$billing_address['city'] = $bc;
+		$billing_address['city'] = $bc ?? 'Missing parameter';
+// 		$billing_address['city'] = $bc;
 
 		// billing_country
 		$bcn = $this->get_scformdata_address_parts( 'country' );
@@ -359,7 +358,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( ! empty( $existing_order_data['shipping']['address_1'] ) ) {
 			$sa = trim( (string) $existing_order_data['shipping']['address_1'] );
 
-			if ( empty( $existing_order_data['shipping']['address_2'] ) ) {
+			if ( ! empty( $existing_order_data['shipping']['address_2'] ) ) {
 				$sa .= ' ' . trim( (string) $existing_order_data['shipping']['address_2'] );
 			}
 		}
@@ -662,7 +661,7 @@ abstract class Nuvei_Pfw_Request {
 	 */
 	protected function get_products_data() {
         Nuvei_Pfw_Logger::write( 'get_products_data()' );
-        
+
 		// main variable to fill
 		$data = array(
 			'wc_subscr'     => false,
@@ -670,7 +669,7 @@ abstract class Nuvei_Pfw_Request {
 			'products_data' => array(),
 			'totals'        => 0,
 		);
-        
+
 		$nuvei_taxonomy_name  = wc_attribute_taxonomy_name( Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) );
 		$nuvei_plan_variation = 'attribute_' . $nuvei_taxonomy_name;
 
@@ -681,11 +680,11 @@ abstract class Nuvei_Pfw_Request {
 //                wc_load_cart();
                 return $data;
             }
-            
+
 //            if ( null === WC()->cart || WC()->cart->is_empty() ) {
 //                throw new Exception( 'The Cart is empty!' );
 //            }
-            
+
             // get the data from the Cart
 			if ( empty( $this->sc_order ) ) {
 				$items = WC()->cart->get_cart();
@@ -835,7 +834,7 @@ abstract class Nuvei_Pfw_Request {
 
 		// REST API flow
 		$items          = $this->rest_params['items'] ?? array();
-		$data['totals'] = $this->get_total_from_rest_params( $this->rest_params );
+		$data['totals'] = $this->get_total_from_rest_params();
 
 		foreach ( $items as $item ) {
 			$product_id     = $item['product_id'] ?? $item['id'];
@@ -1146,12 +1145,12 @@ abstract class Nuvei_Pfw_Request {
 	 * @return void
 	 */
 	protected function save_transaction_data( $params = array(), $wc_refund_id = null ) {
-		Nuvei_Pfw_Logger::write( 
-            array( 
-                '$params'       => $params, 
-                '$wc_refund_id' => $wc_refund_id, 
-            ), 
-            'save_transaction_data() incoming method parameters' 
+		Nuvei_Pfw_Logger::write(
+            array(
+                '$params'       => $params,
+                '$wc_refund_id' => $wc_refund_id,
+            ),
+            'save_transaction_data() incoming method parameters'
         );
 
 		$transaction_id = Nuvei_Pfw_Http::get_param( 'TransactionID', 'int', '', $params );
@@ -1173,13 +1172,13 @@ abstract class Nuvei_Pfw_Request {
 
 		$transaction_type = Nuvei_Pfw_Http::get_param( 'transactionType', 'string', '', $params );
 		$status           = Nuvei_Pfw_Http::get_request_status();
-        
-        Nuvei_Pfw_Logger::write( 
+
+        Nuvei_Pfw_Logger::write(
             [
                 '$transaction_type' => $transaction_type,
                 '$status'           => $status,
             ],
-            'save_transaction_data() paramters from DMN or REST response' 
+            'save_transaction_data() paramters from DMN or REST response'
         );
 
 		// check for already existing data
@@ -1216,7 +1215,7 @@ abstract class Nuvei_Pfw_Request {
             Nuvei_Pfw_Logger::write( 'save_transaction_data(), Auth or Sale');
 			$this->sc_order->update_meta_data( NUVEI_PFW_TR_ID, $transaction_id );
 		}
-        
+
 		// Update for Settle only if it was Approved. If it is not, the merchant can try again.
 		if ( 'Settle' == $transaction_type && 'approved' == strtolower($status) ) {
             Nuvei_Pfw_Logger::write( 'save_transaction_data(), Approved Settle');
@@ -1388,5 +1387,5 @@ abstract class Nuvei_Pfw_Request {
 
 		return $params;
 	}
-    
+
 }
