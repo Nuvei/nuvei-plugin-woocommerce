@@ -307,12 +307,15 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		$order_request_time = Nuvei_Pfw_Http::get_param( 'customField3', 'int' ); // time of create/update order
 		$curr_time          = time();
 		$dmn_tr_id          = Nuvei_Pfw_Http::get_param( 'TransactionID', 'int' );
+		$orderId            = Nuvei_Pfw_Http::get_param( 'customField5', 'int', '' );
+        $req_status         = Nuvei_Pfw_Http::get_request_status();
 
 		Nuvei_Pfw_Logger::write(
 			array(
 				'order_request_time' => $order_request_time,
 				'transactionType'    => $transaction_type,
 				'curr_time'          => $curr_time,
+				'order Id'           => $orderId,
 			),
 			'create_auto_void()',
             'WARN'
@@ -328,9 +331,6 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 			);
 			return 200; // is $order_request_time is missing we can't do anything
 		}
-
-		// not allowed transaction type error
-		$req_status = Nuvei_Pfw_Http::get_request_status();
 
 		// not allowed type of transactions
 		if ( ! in_array( $transaction_type, array( 'Auth', 'Sale' ), true )
@@ -358,7 +358,13 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 
 		// system message
 		$msg_txt = '<b>' . __( 'Nuvei Payments notification.', 'nuvei-payments-for-woocommerce' ) . '</b> '
-			. __( 'The plugin cannot find corresponding Order for Nuvei Transaction ', 'nuvei-payments-for-woocommerce' ) . $dmn_tr_id . '. '
+			. __( 'The plugin cannot find corresponding Order', 'nuvei-payments-for-woocommerce' );
+                
+        if (!empty($orderId)) {
+            $msg_txt .= ' #' . $orderId;
+        }
+        
+        $msg_txt .= __( ' for Nuvei Transaction ', 'nuvei-payments-for-woocommerce' ) . $dmn_tr_id . '. '
 			. __( 'Please, check it in the Nuvei Control Panel!', 'nuvei-payments-for-woocommerce' );
 
 		// if the auto-void is disabled
