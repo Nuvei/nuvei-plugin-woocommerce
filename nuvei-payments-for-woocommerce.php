@@ -1522,7 +1522,7 @@ class Nuvei_Payments_For_Woocommerce
                 $data = [];
 
                 if ( 'sdk' == self::$wc_nuvei->settings['integration_type'] ) {
-                    $data = self::$wc_nuvei->set_rest_params($request->get_params())
+                    $data = self::$wc_nuvei->set_rest_params($request->get_param('scFormData'))
                         ->call_checkout( false, true );
                 }
 
