@@ -626,13 +626,12 @@ jQuery(function($) {
             });
 
             // Listen for updated_checkout event on Classic Checkout
-            jQuery(document.body).on('updated_checkout', function(event, data) {
-                console.log('updated_checkout event', nuveiIsFormValid);
+            jQuery(document.body).on('updated_checkout', function() {
+                console.log('updated_checkout event');
 
                 if (!nuveiIsFormValid) {
                     jQuery('#nuvei_checkout_container').html(scTrans.MissingEmailCountry);
                 }
-
             });
 
             // when the checkout form is placed successfully initiate Nuvei transaction
