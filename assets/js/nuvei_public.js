@@ -12,6 +12,8 @@ var nuveiIsPayForExistingOrderPage  = false;
 var nuveiSuccessRedirect            = '';
 var nuveiIsFormValid                = true;
 let nuveiBlocksResolvePayment       = null;
+// AbortController for the current openOrder fetch request
+var nuveiGetCheckoutDataController  = null;
 
 // Debounce function to limit how often a function can fire
 function nuveiDebounce(func, wait) {
@@ -454,6 +456,17 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
         }
     });
 
+    // Abort any previous in-flight openOrder request to prevent duplicates.
+    // Two near-simultaneous calls (e.g. useEffect + wp.data.subscribe, or
+    // page-load + field-change) would otherwise both reach the server and
+    // create two openOrder sessions.
+    if (nuveiGetCheckoutDataController) {
+        console.log('nuveiGetCheckoutData: aborting previous in-flight request');
+        nuveiGetCheckoutDataController.abort();
+    }
+
+    nuveiGetCheckoutDataController = new AbortController();
+
     fetch(scTrans.apiUrl + '/get-checkout-data/', {
         method: 'POST',
         headers: {
@@ -462,7 +475,8 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
         },
         body: JSON.stringify({
             scFormData: scFormData
-        })
+        }),
+        signal: nuveiGetCheckoutDataController.signal
     })
         // 1. first check for the status code (200 OK)
         .then(res => {
@@ -481,6 +495,12 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
         })
         // error after the first check
         .catch(async err => {
+            // Do not treat an intentional abort as an error
+            if (err.name === 'AbortError') {
+                console.log('nuveiGetCheckoutData: previous request was aborted');
+                return;
+            }
+            
             console.error('Nuvei request failed.', err);
             nuveiShowErrorMsg();
             jQuery('#nuvei_blocker').hide();

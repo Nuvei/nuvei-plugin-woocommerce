@@ -13,7 +13,9 @@ const nuveiCheckoutBlockContText =
     ) ? nuveiFormNotInvalidTxt :
             window.wp.i18n.__('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce');
 
-var nuveiAllowFormSubmit        = false;
+var nuveiAllowFormSubmit    = false;
+// must be outside the function so clearTimeout actually debounces
+var nuveiBlocksReloadTimer  = null;
 
 /**
  * We update Nuvei Order here.
@@ -192,8 +194,6 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
  * Just reusing some code.
  */
 function nuveiBlocksReloadSimply() {
-    let reloadTimer = null;
-
     jQuery('#nuvei_blocker').show();
 
     nuveiDestroySimplyConnect();
@@ -202,9 +202,9 @@ function nuveiBlocksReloadSimply() {
 
     if (nuveiIsCheckoutBlocksFormValid(true)) {
         // add small delay
-        clearTimeout( reloadTimer );
+        clearTimeout( nuveiBlocksReloadTimer );
 
-        reloadTimer = setTimeout( function() {
+        nuveiBlocksReloadTimer = setTimeout( function() {
             nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
             jQuery('#nuvei_blocker').hide();
             return;

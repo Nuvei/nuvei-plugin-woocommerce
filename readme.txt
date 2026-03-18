@@ -67,6 +67,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 * Migrate to WP Rest API.
 * The global $woocommerce was replaced with WC().
 * The old API endpoint was changed from '/wc/nuvei/?action={action}' to 'nuvei/api/v1/{action}/'.
+* Implemented fix for overlapping API calls to openOrder server requests.
 
 = 3.12.4 =
 * Fix for the crash with Blocks and Redirect.
