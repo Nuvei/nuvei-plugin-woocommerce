@@ -385,34 +385,6 @@ function nuveiPayForExistingOrder() {
             nuveiShowErrorMsg();
             jQuery('#nuvei_blocker').hide();
         });
-
-//    jQuery.ajax({
-//        type: "POST",
-//        url: scTrans.ajaxurl,
-//        data: {
-//            action: 'sc-ajax-action',
-//            nuveiSecurity: scTrans.nuveiSecurity,
-//            payForExistingOrder: 1,
-//            orderId: jQuery('#nuveiPayForExistingOrder').val()
-//        },
-//        dataType: 'json'
-//    })
-//        .fail(function() {
-//            console.log('Nuvei request failed.');
-//            nuveiShowErrorMsg();
-//            jQuery('#nuvei_blocker').hide();
-//            return;
-//        })
-//        .done(function(resp) {
-//            console.log(resp);
-//
-//            if (!nuveiIsCheckoutLoaded) {
-//                nuveiIsCheckoutLoaded = true;
-//                showNuveiCheckout(resp);
-//            }
-//
-//            return;
-//        });
 }
 
 /**

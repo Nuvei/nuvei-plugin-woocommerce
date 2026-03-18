@@ -344,7 +344,6 @@ class Nuvei_Payments_For_Woocommerce
         $localizations = array_merge(
             NUVEI_PFW_JS_LOCALIZATIONS,
             array(
-                'nuveiSecurity'         => wp_create_nonce( 'nuvei-security-nonce' ),
                 'nuveiApiSec'           => wp_create_nonce( 'wp_rest' ),
                 'apiUrl'                => esc_url_raw(rest_url() . NUVEI_API_PATH),
                 'wcThSep'               => get_option( 'woocommerce_price_thousand_sep' ),
@@ -474,7 +473,6 @@ class Nuvei_Payments_For_Woocommerce
 			$localizations = array_merge(
 				NUVEI_PFW_JS_LOCALIZATIONS,
 				array(
-					'nuveiSecurity'     => wp_create_nonce( 'nuvei-security-nonce' ),
                     'nuveiApiSec'       => wp_create_nonce( 'wp_rest' ),
                     'apiUrl'            => esc_url_raw(rest_url() . NUVEI_API_PATH),
 					'nuveiPaymentPlans' => $plans_list,
@@ -1524,7 +1522,8 @@ class Nuvei_Payments_For_Woocommerce
                 $data = [];
 
                 if ( 'sdk' == self::$wc_nuvei->settings['integration_type'] ) {
-                    $data = self::$wc_nuvei->call_checkout( false, true );
+                    $data = self::$wc_nuvei->set_rest_params($request->get_params())
+                        ->call_checkout( false, true );
                 }
 
                 return rest_ensure_response($data);
@@ -1532,12 +1531,12 @@ class Nuvei_Payments_For_Woocommerce
             'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
         ));
 
-        # Plugin's REST API
+        # Plugin's REST API, for headless usage
         // get-simply-connect-data
         register_rest_route(NUVEI_API_PATH, '/get-simply-connect-data/', array(
             'methods'             => 'GET',
             'callback'            => function ($request) {
-                $data = self::$wc_nuvei->set_rest_params($request->get_params())
+                $data = self::$wc_nuvei->set_rest_params($request->get_param('scFormData') ?: [])
                     ->call_checkout( true );
 
                 return rest_ensure_response($data);

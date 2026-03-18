@@ -15,30 +15,10 @@ class Nuvei_Pfw_Http {
 	 * @param string $type        Optional. Possible vaues: string, float, int, array, mail/email, other.
 	 * @param mixed  $default     Optional. Return value if fail.
 	 * @param array  $parent      Optional array with parameters to search in.
-	 * @param bool   $check_nonce Optional. Check for nonce or no. We use this method mostly for outside requests, so the default will be false.
 	 *
 	 * @return mixed
 	 */
-	public static function get_param( $key, $type = 'string', $default = '', $parent = array(), $check_nonce = false ) {
-		// check for Nuvei or WC nonoce. If at least one of them pass - the incoming data is safe.
-		if ( $check_nonce ) {
-			$helper = new Nuvei_Pfw_Helper();
-
-			// here we check the nonce
-			if ( ! $helper->helper_is_request_safe() ) {
-				Nuvei_Pfw_Logger::write(
-					array( '$key' => sanitize_text_field( $key ) ),
-					'Faild to check nonce.'
-				);
-
-				if ( in_array( $type, array( 'int', 'float' ) ) ) {
-					return 0;
-				}
-
-				return '';
-			}
-		}
-
+	public static function get_param( $key, $type = 'string', $default = '', $parent = array() ) {
 		switch ( $type ) {
 			case 'mail':
 			case 'email':

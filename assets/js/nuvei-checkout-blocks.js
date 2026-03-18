@@ -62,37 +62,6 @@ function nuveiUpdateOrder(resolve, reject) {
             jQuery('#nuvei_blocker').hide();
             return;
         });
-    
-//    jQuery.ajax({
-//        type: "POST",
-//        url: scTrans.ajaxurl,
-//        data: {
-//            action: 'sc-ajax-action',
-//            nuveiSecurity: scTrans.nuveiSecurity,
-//            prePayment: 1
-//        },
-//        dataType: 'json'
-//    })
-//        .fail(function(){
-//            reject();
-//            ShowErrorMsg(scTrans.unexpectedError);
-//            jQuery('#nuvei_blocker').hide();
-//            return;
-//        })
-//        .done(function(resp) {
-//            console.log(resp);
-//
-//            if (!resp.hasOwnProperty('success') || 0 == resp.success) {
-//                reject();
-//                window.location.reload();
-//                return;
-//            }
-//
-//            console.log('prepayment resolved.');
-//
-//            resolve();
-//            return;
-//        });
 }
 
 /**
@@ -173,6 +142,7 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
 
         if (!isFormValid) {
             jQuery('#nuvei_checkout_container').text(scTrans.MissingEmailCountry);
+            jQuery('#nuvei_blocker').hide();
             return false;
         }
 
@@ -210,6 +180,7 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
                 behavior: 'smooth'
             } );
 
+            jQuery('#nuvei_blocker').hide();
             return false;
         }
 

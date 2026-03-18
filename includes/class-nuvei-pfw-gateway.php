@@ -509,7 +509,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	}
 
 	public function return_settle_btn( $and_taxes, $order ) {
-		// Nuvei_Pfw_Logger::write('', 'return_settle_btn', "TRACE");
+		 Nuvei_Pfw_Logger::write('', 'return_settle_btn', "TRACE");
 
 		if ( ! is_a( $order, 'WC_Order' ) || is_a( $order, 'WC_Subscription' ) ) {
 			return false;
@@ -523,7 +523,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		}
 
 		// revert buttons on Recalculate
-		if ( Nuvei_Pfw_Http::get_param( 'refund_amount', 'float', 0, array(), true ) == 0
+		if ( Nuvei_Pfw_Http::get_param( 'refund_amount', 'float', 0 ) == 0
 			&& ! empty( Nuvei_Pfw_Http::get_param( 'items' ) )
 		) {
 			wp_add_inline_script(
@@ -878,15 +878,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				);
 			}
 
-//			wp_send_json(
             return array(
                 'result'   => 'failure',
                 'refresh'  => false,
                 'reload'   => false,
                 'messages' => '<ul id="sc_fake_error" class="woocommerce-error" role="alert"><li>' . $msg . '</li></ul>',
             );
-//			);
-//			exit;
 		}
 		// OpenOrder::END
 
@@ -1041,6 +1038,13 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$resp_data['nuveiPluginUrl'] = plugin_dir_url( NUVEI_PFW_PLUGIN_FILE );
 		$resp_data['nuveiSiteUrl']   = get_site_url();
         $checkout_data['orderId']    = $oo_data['orderId'];
+        
+        Nuvei_Pfw_Logger::write( $checkout_data, '$checkout_data' );
+
+		// For blocks checkout, get the data when register Nuvei gateway.
+		if ( $return_data ) {
+			return $checkout_data;
+		}
 
 		// REST API call
 		if ( ! empty( $this->rest_params ) ) {
@@ -1052,22 +1056,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			return $checkout_data;
 		}
 
-		Nuvei_Pfw_Logger::write( $checkout_data, '$checkout_data' );
-
-		// For blocks checkout, get the data when register Nuvei gateway.
-		if ( $return_data ) {
-			return $checkout_data;
-		}
-
-//		wp_send_json(
         return array(
             'result'      => 'failure', // this is just to stop WC send the form, and show APMs
             'refresh'     => false,
             'reload'      => false,
             'nuveiParams' => $checkout_data,
         );
-//        );
-//		exit;
 	}
 
     /**

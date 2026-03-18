@@ -135,53 +135,12 @@ abstract class Nuvei_Pfw_Request {
 	/**
 	 * Help function to generate Billing and Shipping details.
      * We use this method for Carts and Orders.
+     * In the method we will try to get the details from different sources.
 	 *
 	 * @return array
 	 */
 	protected function get_order_addresses() {
         Nuvei_Pfw_Logger::write( 'get_order_addresses()' );
-
-		// REST API flow
-		if ( ! empty( $this->rest_params ) ) {
-			$addresses = array();
-
-			if ( ! empty( $this->rest_params['shipping_address'] ) ) {
-				$shipping_addr = trim(
-					(string) ( $this->rest_params['shipping_address']['address_1'] ?? '' )
-					. ' ' . (string) ( $this->rest_params['shipping_address']['address_2'] ?? '' )
-				);
-
-				$addresses['shippingAddress'] = array(
-					'firstName' => $this->rest_params['shipping_address']['first_name'] ?? '',
-					'lastName'  => $this->rest_params['shipping_address']['last_name'] ?? '',
-					'address'   => $shipping_addr,
-					'zip'       => $this->rest_params['shipping_address']['postcode'] ?? '',
-					'city'      => $this->rest_params['shipping_address']['city'] ?? '',
-					'country'   => $this->rest_params['shipping_address']['country'] ?? '',
-				);
-			}
-
-			if ( ! empty( $this->rest_params['billing_address'] ) ) {
-				$billing_addr = trim(
-					(string) ( $this->rest_params['billing_address']['address_1'] ?? '' )
-					. ' ' . (string) ( $this->rest_params['billing_address']['address_2'] ?? '' )
-				);
-
-				$addresses['billingAddress'] = array(
-					'firstName' => $this->rest_params['billing_address']['first_name'] ?? '',
-					'lastName'  => $this->rest_params['billing_address']['last_name'] ?? '',
-					'address'   => $billing_addr,
-					'phone'     => $this->rest_params['billing_address']['phone'] ?? '',
-					'zip'       => $this->rest_params['billing_address']['postcode'] ?? '',
-					'city'      => $this->rest_params['billing_address']['city'] ?? '',
-					'country'   => $this->rest_params['billing_address']['country'] ?? '',
-					'state'     => $this->rest_params['billing_address']['state'] ?? '',
-					'email'     => $this->rest_params['billing_address']['email'] ?? '',
-				);
-			}
-
-			return $addresses;
-		}
 
 		$billing_address        = array();
 		$cart                   = WC()->cart;
@@ -193,8 +152,11 @@ abstract class Nuvei_Pfw_Request {
 
 		# Set billing params.
 		// billing_first_name
-		$bfn = $this->get_scformdata_address_parts( 'first_name' );
-
+        $bfn = $this->rest_params['billing-first_name'] ?? ''; // default
+        
+        if (empty($bfn)) {
+            $bfn = $this->rest_params['billing_address']['first_name'] ?? ''; // headless
+        }
 		if ( ! empty( $existing_order_data['billing']['first_name'] ) ) {
 			$bfn = trim( (string) $existing_order_data['billing']['first_name'] );
 		}
@@ -205,8 +167,11 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['firstName'] = $bfn;
 
 		// billing_last_name
-		$bln = $this->get_scformdata_address_parts( 'last_name' );
-
+        $bln = $this->rest_params['billing-last_name'] ?? ''; // default
+        
+        if ( empty($bln) ) {
+            $bln = $this->rest_params['billing_address']['last_name'] ?? ''; // headless
+        }
 		if ( ! empty( $existing_order_data['billing']['last_name'] ) ) {
 			$bln = trim( (string) $existing_order_data['billing']['last_name'] );
 		}
@@ -218,10 +183,24 @@ abstract class Nuvei_Pfw_Request {
 
 		// address
 		$ba     = '';
-		$ba_ln1 = $this->get_scformdata_address_parts( 'address_1' );
-		$ba_ln2 = $this->get_scformdata_address_parts( 'address_2' );
-
-		if ( ! empty( $ba_ln1 ) ) {
+        $ba_ln1 = '';
+        $ba_ln2 = '';
+        
+        if (!empty($this->rest_params['billing-address_1'])) {
+            $ba_ln1 = $this->rest_params['billing-address_1'];
+        }
+        elseif (!empty($this->rest_params['billing_address']['address_1'])) {
+            $ba_ln1 = $this->rest_params['billing_address']['address_1'];
+        }
+        
+        if (!empty($this->rest_params['billing-address_2'])) {
+            $ba_ln2 = $this->rest_params['billing-address_2'];
+        }
+        elseif (!empty ($this->rest_params['billing_address']['address_2'])) {
+            $ba_ln2 = $this->rest_params['billing_address']['address_2'];
+        }
+        
+        if ( ! empty( $ba_ln1 ) ) {
 			$ba = $ba_ln1;
 
 			if ( ! empty( $ba_ln2 ) ) {
@@ -256,8 +235,11 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['address'] = $ba;
 
 		// billing_phone
-		$bp = $this->get_scformdata_address_parts( 'phone' );
-
+        $bp = $this->rest_params['billing-phone'] ?? '';
+        
+        if (empty($bp)) {
+            $bp = $this->rest_params['billing_address']['phone'] ?? '';
+        }
 		if ( ! empty( $existing_order_data['billing']['phone'] ) ) {
 			$bp = trim( (string) $existing_order_data['billing']['phone'] );
 		}
@@ -268,8 +250,11 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['phone'] = $bp;
 
 		// billing_postcode
-		$bz = $this->get_scformdata_address_parts( 'postcode' );
-
+        $bz = $this->rest_params['billing-postcode'] ?? '';
+        
+        if (empty($bz)) {
+            $bz = $this->rest_params['billing_address']['postcode'] ?? '';
+        }
 		if ( ! empty( $existing_order_data['billing']['postcode'] ) ) {
 			$bz = trim( (string) $existing_order_data['billing']['postcode'] );
 		}
@@ -280,8 +265,11 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['zip'] = $bz;
 
 		// billing_city
-		$bc = $this->get_scformdata_address_parts( 'city' );
-
+        $bc = $this->rest_params['billing-city'] ?? '';
+        
+        if (empty($bc)) {
+            $bc = $this->rest_params['billing_address']['city'] ?? '';
+        }
 		if ( ! empty( $existing_order_data['billing']['city'] ) ) {
 			$bc = trim( (string) $existing_order_data['billing']['city'] );
 		}
@@ -290,11 +278,13 @@ abstract class Nuvei_Pfw_Request {
 		}
 
 		$billing_address['city'] = $bc ?? 'Missing parameter';
-// 		$billing_address['city'] = $bc;
 
 		// billing_country
-		$bcn = $this->get_scformdata_address_parts( 'country' );
-
+		$bcn = $this->rest_params['billing-country'] ?? '';
+        
+        if (empty($bcn)) {
+            $bcn = $this->rest_params['billing_address']['country'] ?? '';
+        }
 		if ( ! empty( $existing_order_data['billing']['country'] ) ) {
 			$bcn = trim( (string) $existing_order_data['billing']['country'] );
 		}
@@ -305,8 +295,11 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['country'] = $bcn;
 
 		// billing state
-		$bst = $this->get_scformdata_address_parts( 'state' );
+		$bst = $this->rest_params['billing-state'] ?? '';
 
+        if (empty($bst)) {
+            $bst = $this->rest_params['billing_address']['state'] ?? '';
+        }
 		if ( ! empty( $existing_order_data['billing']['state'] ) ) {
 			$bst = trim( (string) $existing_order_data['billing']['state'] );
 		}
@@ -317,8 +310,11 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['state'] = $bst;
 
 		// billing_email
-		$be = $this->get_scformdata_address_parts( 'email' );
+		$be = $this->rest_params['email'] ?? '';
 
+        if (empty($be)) {
+            $be = $this->rest_params['billing_address']['email'] ?? '';
+        }
 		if ( ! empty( $existing_order_data['billing']['email'] ) ) {
 			$be = trim( (string) $existing_order_data['billing']['email'] );
 		}
@@ -329,9 +325,9 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['email'] = $be;
 		// set billing params END
 
-		// set shipping params
+		# Set shipping params. When we do openOrder we do not pass shipping details.
 		// shipping first name
-		$sfn = $this->get_scformdata_address_parts( 'first_name', 'shipping' );
+		$sfn = $this->rest_params['shipping_address']['first_name'] ?? '';
 
 		if ( ! empty( $existing_order_data['shipping']['first_name'] ) ) {
 			$sfn = trim( (string) $existing_order_data['shipping']['first_name'] );
@@ -341,7 +337,7 @@ abstract class Nuvei_Pfw_Request {
 		}
 
 		// shippinh last name
-		$sln = $this->get_scformdata_address_parts( 'last_name', 'shipping' );
+		$sln = $this->rest_params['shipping_address']['last_name'] ?? '';
 
 		if ( ! empty( $existing_order_data['shipping']['last_name'] ) ) {
 			$sln = trim( (string) $existing_order_data['shipping']['last_name'] );
@@ -351,9 +347,10 @@ abstract class Nuvei_Pfw_Request {
 		}
 
 		// shipping address
-		$sa_l1 = $this->get_scformdata_address_parts( 'address_1', 'shipping' );
-		$sa_l2 = $this->get_scformdata_address_parts( 'address_2', 'shipping' );
-		$sa    = trim( (string) $sa_l1 . ' ' . (string) $sa_l2 );
+		$sa = trim(
+                (string) ( $this->rest_params['shipping_address']['address_1'] ?? '' )
+                . ' ' . (string) ( $this->rest_params['shipping_address']['address_2'] ?? '' )
+            );
 
 		if ( ! empty( $existing_order_data['shipping']['address_1'] ) ) {
 			$sa = trim( (string) $existing_order_data['shipping']['address_1'] );
@@ -370,7 +367,7 @@ abstract class Nuvei_Pfw_Request {
 		}
 
 		// shipping zip
-		$sz = $this->get_scformdata_address_parts( 'postcode', 'shipping' );
+		$sz = $this->rest_params['shipping_address']['postcode'] ?? '';
 
 		if ( ! empty( $existing_order_data['shipping']['postcode'] ) ) {
 			$sz = trim( (string) $existing_order_data['shipping']['postcode'] );
@@ -380,7 +377,7 @@ abstract class Nuvei_Pfw_Request {
 		}
 
 		// shipping city
-		$sc = $this->get_scformdata_address_parts( 'city', 'shipping' );
+		$sc = $this->rest_params['shipping_address']['city'] ?? '';
 
 		if ( ! empty( $existing_order_data['shipping']['city'] ) ) {
 			$sc = trim( (string) $existing_order_data['shipping']['city'] );
@@ -390,7 +387,7 @@ abstract class Nuvei_Pfw_Request {
 		}
 
 		// shipping country
-		$scn = $this->get_scformdata_address_parts( 'country', 'shipping' );
+		$scn = $this->rest_params['shipping_address']['country'] ?? '';
 
 		if ( ! empty( $existing_order_data['shipping']['country'] ) ) {
 			$scn = trim( (string) $existing_order_data['shipping']['country'] );
@@ -410,58 +407,6 @@ abstract class Nuvei_Pfw_Request {
 				'country'   => $scn,
 			),
 		);
-	}
-
-	/**
-	 * Check incoming data for valid nonce.
-	 *
-	 * @return boolean
-	 */
-	protected function is_request_safe() {
-		$request_safe = false;
-
-		if ( false !== check_ajax_referer( 'nuvei-security-nonce', 'nuveiSecurity', false ) ) {
-			return true;
-		}
-		if ( isset( $_POST['woocommerce-process-checkout-nonce'] )
-			&& false !== wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['woocommerce-process-checkout-nonce'] ) ), 'woocommerce-process_checkout' )
-		) {
-			return true;
-		}
-
-		return false;
-	}
-
-	/**
-	 * A helper function to safety check for, and get address parameters from the store request.
-	 *
-	 * @param string $field The field we are looking for.
-	 * @param string $group The address group - shipping or billing.
-	 *
-	 * @return string
-	 */
-	private function get_scformdata_address_parts( $field, $group = 'billing' ) {
-		// here we check for Nuvei nonce or WC Checkout nonce
-		if ( ! $this->is_request_safe() ) {
-			Nuvei_Pfw_Logger::write( $field, 'Securtity parameter is missing or nonce is not valid' );
-			return '';
-		}
-
-		// shortcode
-		if ( ! empty( $_REQUEST['scFormData'][ $group . '_' . $field ] ) ) {
-			return trim( sanitize_text_field( wp_unslash( $_REQUEST['scFormData'][ $group . '_' . $field ] ) ) );
-		}
-		// blocks
-		elseif ( ! empty( $_REQUEST['scFormData'][ $group . '-' . $field ] ) ) {
-			return trim( sanitize_text_field( wp_unslash( $_REQUEST['scFormData'][ $group . '-' . $field ] ) ) );
-		}
-
-		// additional check for the email
-		if ( 'email' == $field && ! empty( $_REQUEST['scFormData']['email'] ) ) {
-			return trim( sanitize_email( wp_unslash( $_REQUEST['scFormData']['email'] ) ) );
-		}
-
-		return '';
 	}
 
 	/**
