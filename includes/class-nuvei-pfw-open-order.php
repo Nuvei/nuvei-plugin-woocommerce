@@ -15,15 +15,6 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 	public function __construct( array $plugin_settings, $rest_params = array() ) {
 		parent::__construct();
         
-        Nuvei_Pfw_Logger::write(
-            [
-                '$plugin_settings'  => $plugin_settings,
-                '$rest_params'      => $rest_params,
-            ],
-            'OpenOrder __construct.',
-            'TRACE'
-        );
-
 		$this->plugin_settings = $plugin_settings;
 		$this->rest_params     = $rest_params;
 	}
@@ -114,7 +105,10 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 			$try_update_order = false;
 		}
 
+        // try to update Order or not
 		if ( $try_update_order ) {
+            Nuvei_Pfw_Logger::write( $products_data, 'updateOrder $products_data' );
+            
 			$uo_obj = new Nuvei_Pfw_Update_Order( $this->rest_params );
 			$resp   = $uo_obj->process(
 				array(
@@ -124,19 +118,31 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 				)
 			);
 
-            // success
-			if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
-				return $resp;
-			}
-            // error
-            elseif ( ! empty( $resp['status'] ) && ! empty( $resp['reload_checkout'] ) ) {
-				wp_send_json( array( 'reload_checkout' => 1 ) );
-				exit;
-			}
-            
-            Nuvei_Pfw_Logger::write('simulated update order');
+            // updateOrder succeeded
+            if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
+                // Update_Order already called save the session data
+                $saved_oo_details = array(
+                    'sessionToken'    => $resp['sessionToken'],
+                    'orderId'         => $resp['orderId'],
+                    'transactionType' => $transaction_type,
+                    'userTokenId'     => $addresses['billingAddress']['email'],
+                    'clientUniqueId'  => $open_order_details['clientUniqueId'] ?? '',
+                );
+
+                $this->set_nuvei_session_data(
+                    $resp['sessionToken'],
+                    $saved_oo_details,
+                    $products_data
+                );
+
+                Nuvei_Pfw_Logger::write( $saved_oo_details, 'updateOrder success - session open_order_details' );
+
+                return $resp;
+            }
+
+            // updateOrder failed — fall through to a fresh openOrder below
+            Nuvei_Pfw_Logger::write( 'updateOrder failed, falling through to openOrder.' );
 		}
-		// /try to update Order or not
 
 		$url_details = array(
 			'notificationUrl' => Nuvei_Pfw_String::get_notify_url( $this->plugin_settings ),
@@ -184,33 +190,27 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 
 		$resp = $this->call_rest_api( 'openOrder', $oo_params );
 
-		if ( empty( $resp['status'] ) ) {
-			return false;
-		}
+        if ( empty( $resp['status'] ) || 'SUCCESS' != $resp['status'] || empty( $resp['sessionToken'] ) ) {
+            Nuvei_Pfw_Logger::write( $resp, 'openOrder failed.' );
+            return $resp ?: false;
+        }
 
-		if ( 'SUCCESS' != $resp['status'] || empty( $resp['sessionToken'] ) ) {
-			return $resp;
-		}
+        // set them to session for the check before submit the data to the webSDK
+        $open_order_details = array(
+            'sessionToken'    => $resp['sessionToken'], // use it in updateOrder
+            'orderId'         => $resp['orderId'], // use it in updateOrder, this is PPP_TransactionID in the DMN
+            'transactionType' => $oo_params['transactionType'], // use it to decide call or not updateOrder
+            'userTokenId'     => $oo_params['userTokenId'], // use it to decide call or not updateOrder
+            'clientUniqueId'  => $oo_params['clientUniqueId'], // the new parameter to recognize the Order
+        );
 
-		// in default flow
-		if ( empty( $this->rest_params ) ) {
-			// set them to session for the check before submit the data to the webSDK
-			$open_order_details = array(
-				'sessionToken'    => $resp['sessionToken'], // use it in updateOrder
-				'orderId'         => $resp['orderId'], // use it in updateOrder, this is PPP_TransactionID in the DMN
-				'transactionType' => $oo_params['transactionType'], // use it to decide call or not updateOrder
-				'userTokenId'     => $oo_params['userTokenId'], // use it to decide call or not updateOrder
-				'clientUniqueId'  => $oo_params['clientUniqueId'], // the new parameter to recognize the Order
-			);
+        $this->set_nuvei_session_data(
+            $resp['sessionToken'],
+            $open_order_details,
+            $products_data
+        );
 
-			$this->set_nuvei_session_data(
-				$resp['sessionToken'],
-				$open_order_details,
-				$products_data
-			);
-
-			Nuvei_Pfw_Logger::write( $open_order_details, 'session open_order_details' );
-		}
+        Nuvei_Pfw_Logger::write( $open_order_details, 'session open_order_details' );
 
 		$resp['products_data'] = $products_data;
 

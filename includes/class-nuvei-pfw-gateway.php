@@ -1065,7 +1065,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	}
 
     /**
-     * This is a lazy method.
      * Here we just compare the current products (as hash) with the products hash
      * from the openOrder request. If all is same - fine. If it is not - return
      * success = 0, and the front-end will reloads.
@@ -1098,38 +1097,32 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             $open_order_details  = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
         }
 
-		$nuvei_helper   = new Nuvei_Pfw_Helper();
-		$products_data  = $nuvei_helper->get_products();
+		$nuvei_helper       = new Nuvei_Pfw_Helper();
+		$products_data      = $nuvei_helper->get_products(); // the current data
+        $prods_data_hash    = $nuvei_order_details[ $open_order_details['sessionToken'] ]['products_data_hash'] ?? '';
 
 		// nothing is changed, continue
 		if ( ! empty( $open_order_details['sessionToken'] )
-			&& ! empty( $nuvei_order_details[ $open_order_details['sessionToken'] ]['products_data_hash'] )
-			&& md5( serialize( $products_data ) ) == $nuvei_order_details[ $open_order_details['sessionToken'] ]['products_data_hash']
+			&& ! empty( $prods_data_hash )
+			&& md5( serialize( $products_data ) ) == $prods_data_hash
 		) {
             Nuvei_Pfw_Logger::write( 'checkout_prepayment_check() success' );
 
             return ['success' => 1];
-
-//			wp_send_json(array(
-//                'success' => 1,
-//            ));
-//			exit;
 		}
 
 		Nuvei_Pfw_Logger::write(
 			array(
-				'$nuvei_order_details' => $nuvei_order_details,
-				'$open_order_details'  => $open_order_details,
-				'$products_data'       => $products_data,
+				'$nuvei_order_details'  => $nuvei_order_details,
+				'$open_order_details'   => $open_order_details,
+				'$products_data'        => $products_data,
+				'saved products hash'   => $prods_data_hash,
+				'current products hash' => md5( serialize( $products_data ) ),
 			),
             'checkout_prepayment_check() fail'
 		);
 
         return ['success' => 0];
-//		wp_send_json(array(
-//            'success' => 0,
-//        ));
-//		exit;
 	}
 
 	/**

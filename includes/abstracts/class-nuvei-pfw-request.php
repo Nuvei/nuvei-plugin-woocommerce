@@ -615,172 +615,36 @@ abstract class Nuvei_Pfw_Request {
 			'totals'        => 0,
 		);
 
-		$nuvei_taxonomy_name  = wc_attribute_taxonomy_name( Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) );
-		$nuvei_plan_variation = 'attribute_' . $nuvei_taxonomy_name;
+		$nuvei_taxonomy_name    = wc_attribute_taxonomy_name( Nuvei_Pfw_String::get_slug( NUVEI_PFW_GLOB_ATTR_NAME ) );
+		$nuvei_plan_variation   = 'attribute_' . $nuvei_taxonomy_name;
+        $items                  = [];
 
-		// default plugin flow
-		if ( empty( $this->rest_params ) ) {
-            if (!WC()->cart) {
-                Nuvei_Pfw_Logger::write( WC()->cart, 'WC Cart is not valid.' );
-//                wc_load_cart();
-                return $data;
+        if (!empty($this->rest_params['items'])) {
+            $items          = $this->rest_params['items'];
+            $data['totals'] = $this->get_total_from_rest_params();
+        }
+        elseif (!empty($this->sc_order)) {
+            $items = $this->sc_order->get_items();
+            
+            if ( ! empty( $items ) ) {
+                $data['totals'] = array( 'total' => $this->sc_order->get_total() );
             }
-
-//            if ( null === WC()->cart || WC()->cart->is_empty() ) {
-//                throw new Exception( 'The Cart is empty!' );
-//            }
-
-            // get the data from the Cart
-			if ( empty( $this->sc_order ) ) {
-				$items = WC()->cart->get_cart();
-
-				if ( ! empty( $items ) ) {
-					$data['totals'] = WC()->cart->get_totals();
-				}
-			}
-            // get the data from the existing Order
-            else {
-				$items = $this->sc_order->get_items();
-
-				if ( ! empty( $items ) ) {
-					$data['totals'] = array( 'total' => $this->sc_order->get_total() );
-				}
-			}
-
-            Nuvei_Pfw_Logger::write( $items, 'get_products_data() items' );
-
-			if ( empty( $items ) ) {
-                Nuvei_Pfw_Logger::write( 'There are no items.' );
-				return $data;
-			}
-
-			foreach ( $items as $item_id => $item ) {
-				$cart_product   = wc_get_product( $item['product_id'] );
-				$cart_prod_attr = $cart_product->get_attributes();
-
-				// get short items data, we use it for Cashier url
-				$data['products_data'][] = array(
-					'product_id' => $item['product_id'],
-					'quantity'   => $item['quantity'],
-					'price'      => get_post_meta( $item['product_id'], '_price', true ),
-					'name'       => $cart_product->get_title(),
-					'in_stock'   => $cart_product->is_in_stock(),
-					'item_id'    => $item_id,
-				);
-
-				// check for WCS
-				if ( false !== strpos( $cart_product->get_type(), 'subscription' ) ) {
-					$data['wc_subscr'] = true;
-					continue;
-				}
-
-				// check for product with Nuvei Payment Plan variation
-				// We will not add the products with "empty plan" into subscr_data array!
-				if ( ! empty( $item['variation'] )
-					&& 0 != $item['variation_id']
-					&& array_key_exists( $nuvei_plan_variation, $item['variation'] )
-				) {
-					$term = get_term_by( 'slug', $item['variation'][ $nuvei_plan_variation ], $nuvei_taxonomy_name );
-
-					Nuvei_Pfw_Logger::write( (array) $term, '$term' );
-
-					if ( is_wp_error( $term ) || empty( $term->term_id ) ) {
-						Nuvei_Pfw_Logger::write(
-							$item['variation'][ $nuvei_plan_variation ],
-							'Error when try to get Term by Slug'
-						);
-
-						continue;
-					}
-
-					$term_meta = get_term_meta( $term->term_id );
-
-					// Nuvei_Pfw_Logger::write($term_meta, '$term_meta');
-
-					if ( empty( $term_meta['planId'][0] ) ) {
-						continue;
-					}
-
-					$data['subscr_data'][] = array(
-						'variation_id'    => $item['variation_id'],
-						'planId'          => $term_meta['planId'][0],
-						'recurringAmount' => number_format( $term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', '' ),
-						'recurringPeriod' => array(
-							$term_meta['recurringPeriodUnit'][0] => $term_meta['recurringPeriodPeriod'][0],
-						),
-						'startAfter'      => array(
-							$term_meta['startAfterUnit'][0] => $term_meta['startAfterPeriod'][0],
-						),
-						'endAfter'        => array(
-							$term_meta['endAfterUnit'][0] => $term_meta['endAfterPeriod'][0],
-						),
-						'item_id'         => $item_id,
-					);
-
-					continue;
-				}
-				// /check for product with Nuvei Payment Plan variation
-
-				// check if product has only Nuvei Payment Plan Attribute
-				foreach ( $cart_prod_attr as $attr ) {
-					Nuvei_Pfw_Logger::write( (array) $attr, '$attr' );
-
-					$name = $attr->get_name();
-
-					// if the attribute name is not nuvei taxonomy name go to next attribute
-					if ( $name != $nuvei_taxonomy_name ) {
-						Nuvei_Pfw_Logger::write( $name, 'Not Nuvei attribute, check the next one.' );
-						continue;
-					}
-
-					$attr_option = current( $attr->get_options() );
-
-					// get all terms for this product ID
-					// $terms = wp_get_post_terms( $item['product_id'], $name, 'all' );
-					$terms = wp_get_post_terms( $item['product_id'], $name, array( 'term_id' => $attr_option ) );
-
-					if ( is_wp_error( $terms ) ) {
-						continue;
-					}
-
-					$nuvei_plan_term = current( $terms );
-					$term_meta       = get_term_meta( $nuvei_plan_term->term_id );
-
-					// in case of missing Nuvei Plan ID
-					if ( empty( $term_meta['planId'][0] ) ) {
-						Nuvei_Pfw_Logger::write( $term_meta, 'Iteam with attribute $term_meta' );
-						continue;
-					}
-
-					// in this case we do not have variation_id, only product_id
-					$data['subscr_data'][] = array(
-						'product_id'      => $item['product_id'],
-						'planId'          => $term_meta['planId'][0],
-						'recurringAmount' => number_format( $term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', '' ),
-						'recurringPeriod' => array(
-							$term_meta['recurringPeriodUnit'][0] => $term_meta['recurringPeriodPeriod'][0],
-						),
-						'startAfter'      => array(
-							$term_meta['startAfterUnit'][0] => $term_meta['startAfterPeriod'][0],
-						),
-						'endAfter'        => array(
-							$term_meta['endAfterUnit'][0] => $term_meta['endAfterPeriod'][0],
-						),
-						'item_id'         => $item_id,
-					);
-				}
-				// /check if product has only Nuvei Payment Plan Attribute
-			}
-
-			Nuvei_Pfw_Logger::write( $data, 'get_products_data() data' );
-
-			return $data;
-		}
-
-		// REST API flow
-		$items          = $this->rest_params['items'] ?? array();
-		$data['totals'] = $this->get_total_from_rest_params();
-
+        }
+        elseif (!empty(WC()->cart)) {
+            $items = WC()->cart->get_cart();
+            
+            if ( ! empty( $items ) ) {
+                $data['totals'] = WC()->cart->get_totals();
+            }
+        }
+        
+        // error
+        if ( empty( $items ) ) {
+            Nuvei_Pfw_Logger::write( $items, 'There are no items.' );
+            return $data;
+        }
+        
+        // check the items
 		foreach ( $items as $item ) {
 			$product_id     = $item['product_id'] ?? $item['id'];
 			$cart_product   = wc_get_product( $product_id );
