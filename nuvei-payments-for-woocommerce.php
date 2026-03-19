@@ -71,15 +71,6 @@ class Nuvei_Payments_For_Woocommerce
 						true
 					);
                 }
-
-                // Declare compatibility for 'cart_checkout_blocks'
-//                if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
-//                    \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
-//						'cart_checkout_blocks',
-//						__FILE__,
-//						true
-//					);
-//                }
             }
         );
 

@@ -439,7 +439,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 
 		// Void fail
 		$messages[] = array(
-			'message'    => __( 'The searched Order does not exists, and the Auto Void request was not successfu! Please, check the following transaction ID in the Nuvei Control Panel: ', 'nuvei-payments-for-woocommerce' ) . $dmn_tr_id,
+			'message'    => __( 'The searched Order does not exists, and the Auto Void request was not successful! Please, check the following transaction ID in the Nuvei Control Panel: ', 'nuvei-payments-for-woocommerce' ) . $dmn_tr_id,
 			'read'       => false,
 			'created_by' => 'nuvei_payments',
 			'timestamp'  => current_time( 'mysql' ),
