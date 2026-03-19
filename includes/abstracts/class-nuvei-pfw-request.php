@@ -781,13 +781,14 @@ abstract class Nuvei_Pfw_Request {
 
 	/**
 	 * A help function to extract the total from Cart passed with REST API request.
+     * In case the total is not passed via the API, then this is not a headless
+     * request and we will return false.
 	 *
-	 * @param  array $rest_params
-	 * @return string
+     * @param int $total    A default total.
+	 * @return string|bool
 	 */
-	protected function get_total_from_rest_params() {
-		if ( isset( $this->rest_params['totals']['total_price'], $this->rest_params['totals']['currency_minor_unit'] )
-		) {
+	protected function get_total_from_rest_params($total = 0) {
+		if ( isset( $this->rest_params['totals']['total_price'], $this->rest_params['totals']['currency_minor_unit'] ) ) {
 			$min_unit  = $this->rest_params['totals']['currency_minor_unit'];
 			$delimeter = 1;
 
@@ -800,7 +801,7 @@ abstract class Nuvei_Pfw_Request {
 			return (string) number_format( $price, 2, '.', '' );
 		}
 
-		return '0';
+		return $total;
 	}
 
 

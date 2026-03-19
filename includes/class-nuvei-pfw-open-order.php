@@ -62,9 +62,7 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
             $cart_total = $products_data['totals']['total'];
         }
         
-        if ($this->get_total_from_rest_params() == 0
-            || 0 == $cart_total
-        ) {
+        if ( $this->get_total_from_rest_params($cart_total) == 0 ) {
             $transaction_type = 'Auth';
         }
         else {
@@ -82,6 +80,15 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 				'custom_msg' => __( 'You cannot combine those products in same Order.', 'nuvei-payments-for-woocommerce' ),
 			);
 		}
+        
+        Nuvei_Pfw_Logger::write( 
+            [
+                $this->get_total_from_rest_params(),
+                $cart_total,
+                $open_order_details['transactionType'], 
+                $transaction_type
+            ], 
+            'OpenOrder check' );
 
 		// try to update Order or not
 		if ( ! is_array( $open_order_details )

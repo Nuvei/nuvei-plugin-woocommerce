@@ -255,7 +255,6 @@ class Nuvei_Payments_For_Woocommerce
         define(
             'NUVEI_PFW_JS_LOCALIZATIONS',
             array(
-                'ajaxurl'            => admin_url( 'admin-ajax.php' ),
                 'sourceApplication'  => NUVEI_PFW_SOURCE_APPLICATION,
                 'plugin_dir_url'     => plugin_dir_url( __FILE__ ),
                 'paymentGatewayName' => NUVEI_PFW_GATEWAY_NAME,
