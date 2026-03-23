@@ -81,15 +81,6 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 			);
 		}
         
-        Nuvei_Pfw_Logger::write( 
-            [
-                $this->get_total_from_rest_params(),
-                $cart_total,
-                $open_order_details['transactionType'], 
-                $transaction_type
-            ], 
-            'OpenOrder check' );
-
 		// try to update Order or not
 		if ( ! is_array( $open_order_details )
 			|| empty( $open_order_details['transactionType'] )

@@ -151,8 +151,8 @@ abstract class Nuvei_Pfw_Request {
 		}
 
 		# Set billing params.
-		// billing_first_name
-        $bfn = $this->rest_params['billing-first_name'] ?? ''; // default
+		// billing_first_name, for all check for Blocks and Classic formats
+        $bfn = $this->rest_params['billing-first_name'] ?? $this->rest_params['billing_first_name'] ?? '';
         
         if (empty($bfn)) {
             $bfn = $this->rest_params['billing_address']['first_name'] ?? ''; // headless
@@ -167,7 +167,7 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['firstName'] = $bfn;
 
 		// billing_last_name
-        $bln = $this->rest_params['billing-last_name'] ?? ''; // default
+        $bln = $this->rest_params['billing-last_name'] ?? $this->rest_params['billing_last_name'] ?? '';
         
         if ( empty($bln) ) {
             $bln = $this->rest_params['billing_address']['last_name'] ?? ''; // headless
@@ -183,21 +183,14 @@ abstract class Nuvei_Pfw_Request {
 
 		// address
 		$ba     = '';
-        $ba_ln1 = '';
-        $ba_ln2 = '';
+        $ba_ln1 = $this->rest_params['billing-address_1'] ?? $this->rest_params['billing_address_1'] ?? '';
+        $ba_ln2 = $this->rest_params['billing-address_2'] ?? $this->rest_params['billing_address_2'] ?? '';
         
-        if (!empty($this->rest_params['billing-address_1'])) {
-            $ba_ln1 = $this->rest_params['billing-address_1'];
+        if (empty($ba_ln1)) {
+            $ba_ln1 = $this->rest_params['billing_address']['address_1'] ?? '';
         }
-        elseif (!empty($this->rest_params['billing_address']['address_1'])) {
-            $ba_ln1 = $this->rest_params['billing_address']['address_1'];
-        }
-        
-        if (!empty($this->rest_params['billing-address_2'])) {
-            $ba_ln2 = $this->rest_params['billing-address_2'];
-        }
-        elseif (!empty ($this->rest_params['billing_address']['address_2'])) {
-            $ba_ln2 = $this->rest_params['billing_address']['address_2'];
+        if (!empty ($ba_ln2)) {
+            $ba_ln2 = $this->rest_params['billing_address']['address_2'] ?? '';
         }
         
         if ( ! empty( $ba_ln1 ) ) {
@@ -235,7 +228,7 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['address'] = $ba;
 
 		// billing_phone
-        $bp = $this->rest_params['billing-phone'] ?? '';
+        $bp = $this->rest_params['billing-phone'] ?? $this->rest_params['billing_phone'] ?? '';
         
         if (empty($bp)) {
             $bp = $this->rest_params['billing_address']['phone'] ?? '';
@@ -250,7 +243,7 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['phone'] = $bp;
 
 		// billing_postcode
-        $bz = $this->rest_params['billing-postcode'] ?? '';
+        $bz = $this->rest_params['billing-postcode'] ?? $this->rest_params['billing_postcode'] ?? '';
         
         if (empty($bz)) {
             $bz = $this->rest_params['billing_address']['postcode'] ?? '';
@@ -265,7 +258,7 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['zip'] = $bz;
 
 		// billing_city
-        $bc = $this->rest_params['billing-city'] ?? '';
+        $bc = $this->rest_params['billing-city'] ?? $this->rest_params['billing_city'] ?? '';
         
         if (empty($bc)) {
             $bc = $this->rest_params['billing_address']['city'] ?? '';
@@ -280,7 +273,7 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['city'] = $bc ?? 'Missing parameter';
 
 		// billing_country
-		$bcn = $this->rest_params['billing-country'] ?? '';
+		$bcn = $this->rest_params['billing-country'] ?? $this->rest_params['billing_country'] ?? '';
         
         if (empty($bcn)) {
             $bcn = $this->rest_params['billing_address']['country'] ?? '';
@@ -295,7 +288,7 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['country'] = $bcn;
 
 		// billing state
-		$bst = $this->rest_params['billing-state'] ?? '';
+		$bst = $this->rest_params['billing-state'] ?? $this->rest_params['billing_state'] ?? '';
 
         if (empty($bst)) {
             $bst = $this->rest_params['billing_address']['state'] ?? '';
@@ -310,7 +303,7 @@ abstract class Nuvei_Pfw_Request {
 		$billing_address['state'] = $bst;
 
 		// billing_email
-		$be = $this->rest_params['email'] ?? '';
+		$be = $this->rest_params['email'] ?? $this->rest_params['billing_email'] ?? '';
 
         if (empty($be)) {
             $be = $this->rest_params['billing_address']['email'] ?? '';
@@ -646,10 +639,18 @@ abstract class Nuvei_Pfw_Request {
         
         // check the items
 		foreach ( $items as $item ) {
-			$product_id     = $item['product_id'] ?? $item['id'];
-			$cart_product   = wc_get_product( $product_id );
+			// Normalize: REST items use 'id', Cart and Order items use 'product_id'
+			$product_id   = $item['product_id'] ?? $item['id'] ?? 0;
+			$variation_id = $item['variation_id'] ?? $item['id'] ?? 0;
+			$cart_product = wc_get_product( $product_id );
+            
+            if ( empty($cart_product) ) {
+                Nuvei_Pfw_Logger::write( $item, 'Could not load product, skip item.' );
+                continue;
+            }
+            
 			$cart_prod_attr = $cart_product->get_attributes();
-
+            
 			// get short items data
 			$data['products_data'][] = array(
 				'product_id' => $product_id,
@@ -675,14 +676,18 @@ abstract class Nuvei_Pfw_Request {
 
 			// check for product with Nuvei Payment Plan variation
 			if ( ! empty( $item['variation'] )
-				&& 0 != $item['id']
+				&& 0 != $variation_id
 				&& array_key_exists( $nuvei_taxonomy_name, $cart_prod_attr )
 			) {
-				$term = get_term_by(
-					'slug',
-					$cart_prod_attr[ $nuvei_taxonomy_name ],
-					$nuvei_taxonomy_name
-				);
+				// The slug comes from the selected variation, not from the attribute object
+				$variation_slug = $item['variation'][ $nuvei_plan_variation ] ?? '';
+
+				if ( empty( $variation_slug ) ) {
+					Nuvei_Pfw_Logger::write( $item['variation'], 'Missing variation slug for ' . $nuvei_plan_variation );
+					continue;
+				}
+
+				$term = get_term_by( 'slug', $variation_slug, $nuvei_taxonomy_name );
 
 				Nuvei_Pfw_Logger::write( (array) $term, '$term' );
 
@@ -704,8 +709,7 @@ abstract class Nuvei_Pfw_Request {
 				}
 
 				$data['subscr_data'][] = array(
-					// 'variation_id'      => $item['variation_id'],
-					'variation_id'    => $item['id'],
+					'variation_id'    => $variation_id,
 					'planId'          => $term_meta['planId'][0],
 					'recurringAmount' => number_format( $term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', '' ),
 					'recurringPeriod' => array(
@@ -739,7 +743,7 @@ abstract class Nuvei_Pfw_Request {
 				$attr_option = current( $attr->get_options() );
 
 				// get all terms for this product ID
-				$terms = wp_get_post_terms( $item['id'], $name, array( 'term_id' => $attr_option ) );
+				$terms = wp_get_post_terms( $product_id, $name, array( 'term_id' => $attr_option ) );
 
 				if ( is_wp_error( $terms ) ) {
 					continue;
@@ -756,7 +760,7 @@ abstract class Nuvei_Pfw_Request {
 
 				// in this case we do not have variation_id, only product_id
 				$data['subscr_data'][] = array(
-					'product_id'      => $item['id'],
+					'product_id'      => $product_id,
 					'planId'          => $term_meta['planId'][0],
 					'recurringAmount' => number_format( $term_meta['recurringAmount'][0] * $item['quantity'], 2, '.', '' ),
 					'recurringPeriod' => array(
