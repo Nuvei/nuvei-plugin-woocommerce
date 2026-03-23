@@ -1528,11 +1528,17 @@ class Nuvei_Payments_For_Woocommerce
             'callback'            => function ($request) {
                 $data = self::$wc_nuvei->set_rest_params($request->get_param('scFormData') ?: [])
                     ->call_checkout( true );
+                
+                // success
+                if (isset($data['nuveiParams']['sessionToken'])) {
+                    return rest_ensure_response($data['nuveiParams']);
+                }
 
+                // fallback
                 return rest_ensure_response($data);
             },
             'permission_callback' => function () {
-                return ( is_user_logged_in() && current_user_can( 'activate_plugins' ) );
+                return ( current_user_can( 'manage_woocommerce' ) );
             }
         ));
 
@@ -1545,7 +1551,6 @@ class Nuvei_Payments_For_Woocommerce
                 // error
                 if ( empty( $params['id'] )
                     || empty( $params['successUrl'] )
-                    || empty( $params['returnUrl'] )
                     || empty( $params['backUrl'] )
                 ) {
                     $msg = __( 'Missing incoming parameters.', 'nuvei-payments-for-woocommerce' );
@@ -1590,7 +1595,7 @@ class Nuvei_Payments_For_Woocommerce
                 $url = self::$wc_nuvei->set_order($order)->generate_cashier_url(
                     $params['successUrl'],
                     $params['successUrl'], // error and success URLs are same
-                    $params['backUrl'],
+                    $params['backUrl']
                 );
 
                 // error
@@ -1609,7 +1614,7 @@ class Nuvei_Payments_For_Woocommerce
                 return rest_ensure_response([ 'url' => $url ]);
             },
             'permission_callback' => function () {
-                return ( is_user_logged_in() && current_user_can( 'activate_plugins' ) );
+                return ( current_user_can( 'manage_woocommerce' ) );
             }
         ));
 

@@ -135,6 +135,8 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 
                 Nuvei_Pfw_Logger::write( $saved_oo_details, 'updateOrder success - session open_order_details' );
 
+                $resp['transactionType'] = $transaction_type;
+                
                 return $resp;
             }
 

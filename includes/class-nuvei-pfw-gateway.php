@@ -1039,7 +1039,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$resp_data['nuveiSiteUrl']   = get_site_url();
         $checkout_data['orderId']    = $oo_data['orderId'];
         
-        Nuvei_Pfw_Logger::write( $checkout_data, '$checkout_data' );
+//        Nuvei_Pfw_Logger::write( $checkout_data, '$checkout_data' );
 
 		// For blocks checkout, get the data when register Nuvei gateway.
 		if ( $return_data ) {
@@ -1047,14 +1047,14 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		}
 
 		// REST API call
-		if ( ! empty( $this->rest_params ) ) {
+//		if ( ! empty( $this->rest_params ) ) {
 			$checkout_data['transactionType'] = $oo_data['transactionType'];
 			$checkout_data['products_data']   = $prod_details;
 
-			Nuvei_Pfw_Logger::write( $checkout_data, 'REST API CALL $checkout_data' );
+			Nuvei_Pfw_Logger::write( $checkout_data, '$checkout_data' );
 
-			return $checkout_data;
-		}
+//			return $checkout_data;
+//		}
 
         return array(
             'result'      => 'failure', // this is just to stop WC send the form, and show APMs
@@ -1359,38 +1359,25 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
         return $this;
     }
-
-	/**
-	 * Get a plugin setting by its key.
-	 * If key does not exists, return default value.
-	 *
-	 * @param string $key     - the key we are search for
-	 * @param mixed  $default - the default value if no setting found
-	 */
-	private function get_setting( $key, $default = 0 ) {
-		if ( isset( $this->settings[ $key ] ) ) {
-			return $this->settings[ $key ];
-		}
-
-		return $default;
-	}
-
-	/**
+    
+    /**
      * We expect $this->order to be a valid WC_Order.
      *
 	 * @param string $success_url
 	 * @param string $error_url
-	 * @param string $back_url    It is only passed in REST API flow.
+	 * @param string $back_url      It is only passed in REST API flow.
+	 * @param int $order_id         Eventually Order ID.
 	 *
 	 * @return string
 	 */
-	private function generate_cashier_url( $success_url, $error_url, $back_url = '' ) {
-		Nuvei_Pfw_Logger::write( 'get_cashier_url()' );
+	public function generate_cashier_url( $success_url, $error_url, $back_url = '', $order_id = 0 ) {
+		Nuvei_Pfw_Logger::write($this->order->get_address(),  'get_cashier_url()' );
 
 		$nuvei_helper = new Nuvei_Pfw_Helper();
 		$addresses    = $nuvei_helper->get_addresses(
 			array(
-				'billing_address' => $this->order->get_address(),
+				'billing_address'   => $this->order->get_address(),
+                'order_id'          => $this->order->get_id()
 			)
 		);
 		$total_amount = (string) number_format( (float) $this->order->get_total(), 2, '.', '' );
@@ -1531,6 +1518,21 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		Nuvei_Pfw_Logger::write( $url, 'get_cashier_url() url' );
 
 		return $url;
+	}
+
+	/**
+	 * Get a plugin setting by its key.
+	 * If key does not exists, return default value.
+	 *
+	 * @param string $key     - the key we are search for
+	 * @param mixed  $default - the default value if no setting found
+	 */
+	private function get_setting( $key, $default = 0 ) {
+		if ( isset( $this->settings[ $key ] ) ) {
+			return $this->settings[ $key ];
+		}
+
+		return $default;
 	}
 
 	/**

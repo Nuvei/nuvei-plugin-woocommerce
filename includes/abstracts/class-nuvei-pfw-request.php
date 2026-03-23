@@ -146,10 +146,16 @@ abstract class Nuvei_Pfw_Request {
 		$cart                   = WC()->cart;
         $existing_order_data    = array();
 
+        if ( ! empty($this->rest_params['order_id'])
+            && empty($this->sc_order)
+        ) {
+            $this->sc_order = wc_get_order($this->rest_params['order_id']);
+        }
+        
 		if ( ! empty( $this->sc_order ) ) {
 			$existing_order_data = $this->sc_order->get_data();
 		}
-
+        
 		# Set billing params.
 		// billing_first_name, for all check for Blocks and Classic formats
         $bfn = $this->rest_params['billing-first_name'] ?? $this->rest_params['billing_first_name'] ?? '';
@@ -160,7 +166,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( ! empty( $existing_order_data['billing']['first_name'] ) ) {
 			$bfn = trim( (string) $existing_order_data['billing']['first_name'] );
 		}
-		if ( empty( $bfn ) ) {
+		if ( $cart && empty( $bfn ) ) {
 			$bfn = trim( (string) $cart->get_customer()->get_billing_first_name() );
 		}
 
@@ -175,7 +181,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( ! empty( $existing_order_data['billing']['last_name'] ) ) {
 			$bln = trim( (string) $existing_order_data['billing']['last_name'] );
 		}
-		if ( empty( $bln ) ) {
+		if ( $cart && empty( $bln ) ) {
 			$bln = trim( (string) $cart->get_customer()->get_billing_last_name() );
 		}
 
@@ -212,7 +218,7 @@ abstract class Nuvei_Pfw_Request {
 				}
 			}
 		}
-		if ( empty( $ba ) ) {
+		if ( $cart && empty( $ba ) ) {
 			$ba_ln1 = trim( (string) $cart->get_customer()->get_billing_address() );
 			$ba_ln2 = trim( (string) $cart->get_customer()->get_billing_address_2() );
 
@@ -236,7 +242,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( ! empty( $existing_order_data['billing']['phone'] ) ) {
 			$bp = trim( (string) $existing_order_data['billing']['phone'] );
 		}
-		if ( empty( $bp ) ) {
+		if ( $cart && empty( $bp ) ) {
 			$bp = trim( (string) $cart->get_customer()->get_billing_phone() );
 		}
 
@@ -251,7 +257,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( ! empty( $existing_order_data['billing']['postcode'] ) ) {
 			$bz = trim( (string) $existing_order_data['billing']['postcode'] );
 		}
-		if ( empty( $bz ) ) {
+		if ( $cart && empty( $bz ) ) {
 			$bz = trim( (string) $cart->get_customer()->get_billing_postcode() );
 		}
 
@@ -266,7 +272,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( ! empty( $existing_order_data['billing']['city'] ) ) {
 			$bc = trim( (string) $existing_order_data['billing']['city'] );
 		}
-		if ( empty( $bc ) ) {
+		if ( $cart && empty( $bc ) ) {
 			$bc = trim( (string) $cart->get_customer()->get_billing_city() );
 		}
 
@@ -281,7 +287,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( ! empty( $existing_order_data['billing']['country'] ) ) {
 			$bcn = trim( (string) $existing_order_data['billing']['country'] );
 		}
-		if ( empty( $bcn ) ) {
+		if ( $cart && empty( $bcn ) ) {
 			$bcn = trim( (string) $cart->get_customer()->get_billing_country() );
 		}
 
@@ -296,7 +302,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( ! empty( $existing_order_data['billing']['state'] ) ) {
 			$bst = trim( (string) $existing_order_data['billing']['state'] );
 		}
-		if ( empty( $bst ) ) {
+		if ( $cart && empty( $bst ) ) {
 			$bst = trim( (string) $cart->get_customer()->get_billing_state() );
 		}
 
@@ -311,7 +317,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( ! empty( $existing_order_data['billing']['email'] ) ) {
 			$be = trim( (string) $existing_order_data['billing']['email'] );
 		}
-		if ( empty( $be ) ) {
+		if ( $cart && empty( $be ) ) {
             $be = trim( (string) $cart->get_customer()->get_billing_email() );
 		}
 
@@ -325,7 +331,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( ! empty( $existing_order_data['shipping']['first_name'] ) ) {
 			$sfn = trim( (string) $existing_order_data['shipping']['first_name'] );
 		}
-		if ( empty( $sfn ) ) {
+		if ( $cart && empty( $sfn ) ) {
 			$sfn = trim( (string) $cart->get_customer()->get_shipping_first_name() );
 		}
 
@@ -335,7 +341,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( ! empty( $existing_order_data['shipping']['last_name'] ) ) {
 			$sln = trim( (string) $existing_order_data['shipping']['last_name'] );
 		}
-		if ( empty( $sln ) ) {
+		if ( $cart && empty( $sln ) ) {
 			$sln = trim( (string) $cart->get_customer()->get_shipping_last_name() );
 		}
 
@@ -352,7 +358,7 @@ abstract class Nuvei_Pfw_Request {
 				$sa .= ' ' . trim( (string) $existing_order_data['shipping']['address_2'] );
 			}
 		}
-		if ( empty( $sa ) ) {
+		if ( $cart && empty( $sa ) ) {
 			$sa = trim(
 				(string) $cart->get_customer()->get_shipping_address() . ' '
 				. (string) $cart->get_customer()->get_shipping_address_2()
@@ -365,7 +371,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( ! empty( $existing_order_data['shipping']['postcode'] ) ) {
 			$sz = trim( (string) $existing_order_data['shipping']['postcode'] );
 		}
-		if ( empty( $sz ) ) {
+		if ( $cart && empty( $sz ) ) {
 			$sz = trim( (string) $cart->get_customer()->get_shipping_postcode() );
 		}
 
@@ -375,7 +381,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( ! empty( $existing_order_data['shipping']['city'] ) ) {
 			$sc = trim( (string) $existing_order_data['shipping']['city'] );
 		}
-		if ( empty( $sc ) ) {
+		if ( $cart && empty( $sc ) ) {
 			$sc = trim( (string) $cart->get_customer()->get_shipping_city() );
 		}
 
@@ -385,7 +391,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( ! empty( $existing_order_data['shipping']['country'] ) ) {
 			$scn = trim( (string) $existing_order_data['shipping']['country'] );
 		}
-		if ( empty( $scn ) ) {
+		if ( $cart && empty( $scn ) ) {
 			$scn = trim( (string) $cart->get_customer()->get_shipping_country() );
 		}
 
