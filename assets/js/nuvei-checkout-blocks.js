@@ -357,18 +357,18 @@ jQuery(function() {
 
     console.log('document ready blocks checkout');
 
-    if (typeof scTrans == 'object'
-        && scTrans.hasOwnProperty('checkoutIntegration')
-        && 'sdk' !== scTrans.checkoutIntegration
-    ) {
-        return;
-    }
-
     // append a blocker
     if ( typeof scTrans != 'undefined' && jQuery('#payment-method').length ) {
         jQuery('#payment-method')
             .append('<div id="nuvei_blocker"><img class="nuvei_loader" src="'
                 + scTrans.loaderUrl + '" /></div>');
+    }
+    
+    if (typeof scTrans == 'object'
+        && scTrans.hasOwnProperty('checkoutIntegration')
+        && 'sdk' !== scTrans.checkoutIntegration
+    ) {
+        return;
     }
 
     // watch the email field for changes
