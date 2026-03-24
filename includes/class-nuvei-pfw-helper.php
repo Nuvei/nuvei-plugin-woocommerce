@@ -107,18 +107,8 @@ class Nuvei_Pfw_Helper extends Nuvei_Pfw_Request {
 		return $order->get_meta( '_transactionType' ); // NUVEI_RESP_TRANS_TYPE
 	}
 
-	public function get_rest_total( $rest_params ) {
-		$this->rest_params = $rest_params;
-
-		return $this->get_total_from_rest_params();
-	}
-
 	public function get_rebiling_details( $all_data ) {
 		return $this->get_order_rebiling_details( $all_data );
-	}
-
-	public function helper_is_request_safe() {
-		return $this->is_request_safe();
 	}
 
 	public function helper_get_web_master_id() {

@@ -13,7 +13,58 @@ const nuveiCheckoutBlockContText =
     ) ? nuveiFormNotInvalidTxt :
             window.wp.i18n.__('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce');
 
-var nuveiAllowFormSubmit        = false;
+var nuveiAllowFormSubmit    = false;
+// must be outside the function so clearTimeout actually debounces
+var nuveiBlocksReloadTimer  = null;
+
+/**
+ * We update Nuvei Order here.
+ *
+ * @returns {bool}
+ */
+function nuveiUpdateOrder(resolve, reject) {
+    fetch(scTrans.apiUrl + '/pre-payment/', {
+        method: 'GET',
+        headers: {
+            'X-WP-Nonce': scTrans.nuveiApiSec,
+            'Content-Type': 'application/json'
+        }
+    })
+        // 1. first check for the status code (200 OK)
+        .then(res => {
+            if (!res.ok) {
+                // error - 401, 403, 404 or 500
+                throw res; 
+            }
+            
+            // success, continue
+            return res.json();
+        })
+        // the success
+        .then(data => {
+            console.log(data);
+            
+            // success
+            if (data?.success && 1 == data.success) {
+                console.log('prepayment resolved.');
+
+                resolve();
+                return;
+            }
+            
+            // error
+            reject();
+            window.location.reload();
+            return;
+        })
+        // error after the first check
+        .catch(async err => {
+            reject();
+            ShowErrorMsg(scTrans.unexpectedError);
+            jQuery('#nuvei_blocker').hide();
+            return;
+        });
+}
 
 /**
  * We use pre-payment for the Blocks only.
@@ -93,6 +144,7 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
 
         if (!isFormValid) {
             jQuery('#nuvei_checkout_container').text(scTrans.MissingEmailCountry);
+            jQuery('#nuvei_blocker').hide();
             return false;
         }
 
@@ -130,6 +182,7 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
                 behavior: 'smooth'
             } );
 
+            jQuery('#nuvei_blocker').hide();
             return false;
         }
 
@@ -141,8 +194,6 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
  * Just reusing some code.
  */
 function nuveiBlocksReloadSimply() {
-    let reloadTimer = null;
-
     jQuery('#nuvei_blocker').show();
 
     nuveiDestroySimplyConnect();
@@ -151,9 +202,9 @@ function nuveiBlocksReloadSimply() {
 
     if (nuveiIsCheckoutBlocksFormValid(true)) {
         // add small delay
-        clearTimeout( reloadTimer );
+        clearTimeout( nuveiBlocksReloadTimer );
 
-        reloadTimer = setTimeout( function() {
+        nuveiBlocksReloadTimer = setTimeout( function() {
             nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
             jQuery('#nuvei_blocker').hide();
             return;
@@ -225,14 +276,14 @@ async function nuveiBlocksRunTransaction() {
         useEffect(() => {
             const unsubscribe = onPaymentSetup( async function() {
                 console.log('onPaymentSetup logic');
-
+                
                 // For redirect/cashier mode - just let WooCommerce proceed
                 if ( 'sdk' !== scTrans?.checkoutIntegration ) {
                     return {
                         type: emitResponse.responseTypes.SUCCESS
                     };
                 }
-
+                
                 // Step 1: validate your SDK fields
                 if ( !nuveiIsCheckoutBlocksFormValid() ) {
                     return {
@@ -306,18 +357,18 @@ jQuery(function() {
 
     console.log('document ready blocks checkout');
 
-    if (typeof scTrans == 'object'
-        && scTrans.hasOwnProperty('checkoutIntegration')
-        && 'sdk' !== scTrans.checkoutIntegration
-    ) {
-        return;
-    }
-
     // append a blocker
     if ( typeof scTrans != 'undefined' && jQuery('#payment-method').length ) {
         jQuery('#payment-method')
             .append('<div id="nuvei_blocker"><img class="nuvei_loader" src="'
                 + scTrans.loaderUrl + '" /></div>');
+    }
+    
+    if (typeof scTrans == 'object'
+        && scTrans.hasOwnProperty('checkoutIntegration')
+        && 'sdk' !== scTrans.checkoutIntegration
+    ) {
+        return;
     }
 
     // watch the email field for changes

@@ -9,74 +9,103 @@ try {
 
 /**
  * When the admin select to Settle, Void or Cancel Subscription actions
- * 
+ *
  * @returns void
  */
 function nuveiAction(question, action, orderId, subscrId, isWcfm) {
-	console.log('settleAndCancelOrder')
-	
+	console.log('nuveiAction', action, question, orderId, subscrId, isWcfm);
+
 	if (!confirm(question)) {
         return;
     }
-		
+
     jQuery('#custom_loader').show();
 
-    var data = {
-        action: 'sc-ajax-action',
-        nuveiSecurity: scTrans.nuveiSecurity,
-        orderId: orderId
-    };
+    let url         = scTrans.apiUrl;
+    let orderData   = {};
 
     if (action == 'settle') {
-        data.settleOrder = 1;
+        url += '/settle-order/';
+        orderData.orderId = orderId;
     }
     else if (action == 'void') {
-        data.cancelOrder = 1;
+        url += '/cancel-order/';
+        orderData.orderId = orderId;
     }
     else if ('cancelSubscr' == action) {
-        data.cancelSubs = 1;
-        data.subscrId   = subscrId;
+        url += '/cancel-subs/';
+        orderData.subscrId = subscrId;
     }
 
-    jQuery.ajax({
-        type: "POST",
-        url: scTrans.ajaxurl,
-        data: data,
-        dataType: 'json'
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-WP-Nonce': scTrans.nuveiApiSec,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
     })
-        .fail(function( jqXHR, textStatus, errorThrown){
-            jQuery('#custom_loader').hide();
-            alert('Response fail.');
+        // 1. first check for the status code (200 OK)
+        .then(res => {
+            if (!res.ok) {
+                // error - 401, 403, 404 or 500
+                throw res;
+            }
 
-            console.error(textStatus)
-            console.error(errorThrown)
+            // success, continue
+            return res.json();
         })
-        .done(function(resp) {
-            console.log(resp, isWcfm);
+        // the success
+        .then(data => {
+            console.log(data);
 
-            if (resp && typeof resp.status != 'undefined' && resp.data != 'undefined') {
-                if (resp.status == 1) {
-                    if (isWcfm) {
-                        window.location = '/store-manager/orderslist/';
-                        return;
-                    }
-                    
-                    var urlParts    = window.location.toString().split('post.php');
-                    window.location = urlParts[0] + 'edit.php?post_type=shop_order';
-                } else if (resp.data.reason != 'undefined' && resp.data.reason != '') {
-                    jQuery('#custom_loader').hide();
-                    alert(resp.data.reason);
-                } else if (resp.data.gwErrorReason != 'undefined' && resp.data.gwErrorReason != '') {
-                    jQuery('#custom_loader').hide();
-                    alert(resp.data.gwErrorReason);
-                } else {
-                    jQuery('#custom_loader').hide();
-                    alert('Response error.');
-                }
-            } else {
+            // error - response error
+            if (!data || !data?.status || !data?.data) {
                 jQuery('#custom_loader').hide();
                 alert('Response error.');
+                return;
             }
+
+            if (data.status == 1) {
+                if (isWcfm) {
+                    window.location = '/store-manager/orderslist/';
+                    return;
+                }
+
+                let urlParts    = window.location.toString().split('post.php');
+                window.location = urlParts[0] + 'edit.php?post_type=shop_order';
+
+                return;
+            }
+
+            if (data?.data?.reason && data.data.reason != '') {
+                jQuery('#custom_loader').hide();
+                alert(data.data.reason);
+                return;
+            }
+
+            if (data?.data?.gwErrorReason && data.data.gwErrorReason != '') {
+                jQuery('#custom_loader').hide();
+                alert(data.data.gwErrorReason);
+                return;
+            }
+
+            // error
+            jQuery('#custom_loader').hide();
+            alert('Response error.');
+        })
+        // error after the first check
+        .catch(async err => {
+            // in case of WP_Error, usually in json
+            if (err.json) {
+                const errorData = await err.json();
+                alert('Server error: ' + errorData.message);
+            }
+            else {
+                alert('Unexpected error.');
+            }
+
+            jQuery('#custom_loader').hide();
         });
 }
 
@@ -96,96 +125,118 @@ function nuveiReturnNuveiBtns() {
 
 function scCreateRefund(question, showMsg, isWcfm) {
 	console.log('scCreateRefund()');
-	
-	var refAmount	= jQuery('#refund_amount').val().replaceAll(' ', '');
+
+	let refAmountRaw = jQuery('#refund_amount').val();
+
+	if (!refAmountRaw) {
+		refAmountRaw = '';
+	}
+
+	let refAmount	= refAmountRaw.replaceAll(' ', '');
 	refAmount		= refAmount.replaceAll(",", ".");
-	refAmount		= refAmount.replace(/\.(?=.*\.)/, '');
+	refAmount		= refAmount.replace(/\.(?=.*\.)/g, '');
 	refAmount		= parseFloat(refAmount);
 
-	if(isNaN(refAmount) || refAmount < 0.001) {
+	if(isNaN(refAmount) || refAmount < 0.01) {
 		jQuery('#refund_amount').css('border-color', 'red');
-		jQuery('#refund_amount').on('focus', function() {
+		jQuery('#refund_amount').off('focus.nuveiRefund').one('focus.nuveiRefund', function() {
 			jQuery('#refund_amount').css('border-color', 'inherit');
 		});
-        
+
         console.log(scTrans.RefundAmountError);
         alert(scTrans.RefundAmountError);
-		
+
 		return;
 	}
-	
+
 	if (!confirm(question)) {
 		return;
 	}
-	
+
 	jQuery('body').find('#sc_api_refund').prop('disabled', true);
 	jQuery('body').find('#sc_refund_spinner').show();
-	
-	var data = {
-		action: 'sc-ajax-action',
-		nuveiSecurity: scTrans.nuveiSecurity,
-		refAmount: refAmount,
-		postId: jQuery("#post_ID").val()
-	};
 
-	jQuery.ajax({
-		type: "POST",
-		url: scTrans.ajaxurl,
-		data: data,
-		dataType: 'json'
-	})
-		.fail(function( jqXHR, textStatus, errorThrown) {
-			jQuery('body').find('#sc_api_refund').prop('disabled', false);
+    fetch(scTrans.apiUrl + '/refund-order/', {
+        method: 'POST',
+        headers: {
+            'X-WP-Nonce': scTrans.nuveiApiSec,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            refAmount: refAmount,
+            postId: jQuery("#post_ID").val()
+        })
+    })
+        // 1. first check for the status code (200 OK)
+        .then(res => {
+            if (!res.ok) {
+                // error - 401, 403, 404 or 500
+                throw res;
+            }
+
+            // success, continue
+            return res.json();
+        })
+        // the success
+        .then(data => {
+            console.log(data);
+
+            // success
+            if (data?.status == 1) {
+                if (isWcfm) {
+                    window.location = '/store-manager/orderslist/';
+                    return;
+                }
+
+                let urlParts    = window.location.toString().split('post.php');
+                window.location = urlParts[0] + 'edit.php?post_type=shop_order';
+                return;
+            }
+
+            // error
+            if(data?.data) {
+                jQuery('body').find('#sc_api_refund').prop('disabled', false);
+                jQuery('body').find('#sc_refund_spinner').hide();
+
+                if (data?.data?.reason && data.data.reason != '') {
+                    alert(data.data.reason);
+                }
+                else if (data?.data?.gwErrorReason && data.data.gwErrorReason != '') {
+                    alert(data.data.gwErrorReason);
+                }
+
+                return;
+            }
+
+            // error
+            if(data?.msg && '' != data.msg) {
+                jQuery('body').find('#sc_api_refund').prop('disabled', false);
+                jQuery('body').find('#sc_refund_spinner').hide();
+
+                alert(data.msg);
+                return;
+            }
+
+            // error
+            alert('Response error.');
+
+            jQuery('body').find('#sc_api_refund').prop('disabled', false);
+            jQuery('body').find('#sc_refund_spinner').hide();
+        })
+        // error after the first check
+        .catch(async err => {
+            jQuery('body').find('#sc_api_refund').prop('disabled', false);
 			jQuery('body').find('#sc_refund_spinner').hide();
-			
-			alert('Response fail.');
 
-			console.error(textStatus)
-			console.error(errorThrown)
-		})
-		.done(function(resp) {
-			console.log(resp, isWcfm);
-
-			if (resp && typeof resp.status != 'undefined' && resp.data != 'undefined') {
-				if (resp.status == 1) {
-                    if (isWcfm) {
-                        window.location = '/store-manager/orderslist/';
-                        return;
-                    }
-                    
-					var urlParts    = window.location.toString().split('post.php');
-					window.location = urlParts[0] + 'edit.php?post_type=shop_order';
-				}
-				else if(resp.hasOwnProperty('data')) {
-					jQuery('body').find('#sc_api_refund').prop('disabled', false);
-					jQuery('body').find('#sc_refund_spinner').hide();
-					
-					if (resp.data.reason != 'undefined' && resp.data.reason != '') {
-						alert(resp.data.reason);
-					}
-					else if (resp.data.gwErrorReason != 'undefined' && resp.data.gwErrorReason != '') {
-						alert(resp.data.gwErrorReason);
-					}
-				}
-				else if(resp.hasOwnProperty('msg') && '' != resp.msg) {
-					jQuery('body').find('#sc_api_refund').prop('disabled', false);
-					jQuery('body').find('#sc_refund_spinner').hide();
-					
-					alert(resp.msg);
-				}
-				else {
-					jQuery('body').find('#sc_api_refund').prop('disabled', false);
-					jQuery('body').find('#sc_refund_spinner').hide();
-					
-					alert('Response error.');
-				}
-			} else {
-				alert('Response error.');
-				
-				jQuery('body').find('#sc_api_refund').prop('disabled', false);
-				jQuery('body').find('#sc_refund_spinner').hide();
-			}
-		});
+            // in case of WP_Error, usually in json
+            if (err.json) {
+                const errorData = await err.json();
+                alert('Server error: ' + errorData.message);
+            }
+            else {
+                alert('Unexpected error.');
+            }
+        });
 }
 
 function nuvei_show_hide_rest_settings() {
@@ -197,7 +248,7 @@ function nuvei_show_hide_rest_settings() {
         jQuery('.nuvei_checkout_setting').closest('tr, h3').hide();
         jQuery('.nuvei_cashier_setting').closest('tr, h3').show();
     }
-}   
+}
 
 function switchNuveiTabs() {
 	if('' == window.location.hash) {
@@ -207,118 +258,129 @@ function switchNuveiTabs() {
 	else {
 		jQuery('.nuvei_settings_tabs').removeClass('nav-tab-active');
 		jQuery('.nuvei_checkout_settings_cont').hide();
-		
+
 		jQuery(window.location.hash + '_tab').addClass('nav-tab-active');
 		jQuery(window.location.hash + '_cont').show();
 	}
 }
 
 function nuveiSyncPaymentPlans() {
-	var butonTd = jQuery('#woocommerce_nuvei_get_plans_btn').closest('td');
-	
+	let butonTd = jQuery('#woocommerce_nuvei_get_plans_btn').closest('td');
+
 	butonTd.find('.custom_loader').show();
-			
-	jQuery.ajax({
-		type: "POST",
-		url: scTrans.ajaxurl,
-		data: {
-			action: 'sc-ajax-action',
-			downloadPlans: 1,
-			nuveiSecurity: scTrans.nuveiSecurity
-		},
-		dataType: 'json'
-	})
-	.fail(function(jqXHR, textStatus, errorThrown){
-		alert(scTrans.RequestFail);
 
-		console.error(textStatus);
-		console.error(errorThrown);
-
-		butonTd.find('.custom_loader').hide();
-	})
-	.done(function(resp) {
-		console.log(resp);
-
-		if (resp.hasOwnProperty('status') && 1 == resp.status) {
-			butonTd.find('fieldset span.dashicons.dashicons-yes-alt').css({
-				display :'inline',
-				color : 'green'
-			});
-
-			butonTd.find('fieldset p.description').html(scTrans.LastDownload +': '+ resp.time);
-		}
-        else if (resp.hasOwnProperty('message') && '' != resp.message) {
-            alert(resp.message);
+    fetch(scTrans.apiUrl + '/download-subs-plans/', {
+        method: 'GET',
+        headers: {
+            'X-WP-Nonce': scTrans.nuveiApiSec,
+            'Content-Type': 'application/json'
         }
-        else {
-			alert('Response error.');
-		}
+    })
+        // 1. first check for the status code (200 OK)
+        .then(res => {
+            if (!res.ok) {
+                // error - 401, 403, 404 or 500
+                throw res;
+            }
 
-		butonTd.find('.custom_loader').hide();
-	});
+            // success, continue
+            return res.json();
+        })
+        // the success
+        .then(data => {
+            console.log(data);
+
+            if (data?.status && 1 == data.status) {
+                butonTd.find('fieldset span.dashicons.dashicons-yes-alt').css({
+                    display :'inline',
+                    color : 'green'
+                });
+
+                butonTd.find('fieldset p.description').html(scTrans.LastDownload +': '+ data.time);
+            }
+            else if (data?.message && '' != data.message) {
+                alert(data.message);
+            }
+            else {
+                alert('Response error.');
+            }
+
+            butonTd.find('.custom_loader').hide();
+        })
+        // error after the first check
+        .catch(async err => {
+            alert(scTrans.RequestFail);
+
+            console.error(err);
+            butonTd.find('.custom_loader').hide();
+        });
 }
 
 function nuveiGetCustomSystemMsgs() {
-    var butonTd = jQuery('#woocommerce_nuvei_read_msgs').closest('td');
-	
+    let butonTd = jQuery('#woocommerce_nuvei_read_msgs').closest('td');
+
 	butonTd.find('.custom_loader').show();
-			
-	jQuery.ajax({
-		type: "POST",
-		url: scTrans.ajaxurl,
-		data: {
-			action: 'sc-ajax-action',
-			getPaymentCustomMsgs: 1,
-			nuveiSecurity: scTrans.nuveiSecurity
-		},
-		dataType: 'json'
-	})
-	.fail(function(jqXHR, textStatus, errorThrown){
-		alert(scTrans.RequestFail);
 
-		console.error(textStatus);
-		console.error(errorThrown);
-
-		butonTd.find('.custom_loader').hide();
-	})
-	.done(function(resp) {
-		console.log(resp);
-
-        let msgsHtml = '';
-
-        try {
-            for (let i in resp) {
-                msgsHtml += `<span style="display: block;" class="notice is-dismissible nuvei_payments_msg" data-index="${i}">`
-                    + `<span>${resp[i].message}</span>`
-                    + '<span class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></span>'
-                    + '</span>'; 
-            }
-            
-            console.log(msgsHtml);
-//            console.log(butonTd.find('.description'));
-            
-            butonTd.find('.description').html(msgsHtml);
-            
-            
-        } catch(ex) {
-            console.log('Error with the response.', resp);
-            
-            butonTd.closest('fieldset').find('.description').html(msgsHtml);
+    fetch(scTrans.apiUrl + '/get-payment-custom-msg/', {
+        method: 'GET',
+        headers: {
+            'X-WP-Nonce': scTrans.nuveiApiSec,
+            'Content-Type': 'application/json'
         }
+    })
+        // 1. first check for the status code (200 OK)
+        .then(res => {
+            if (!res.ok) {
+                // error - 401, 403, 404 or 500
+                throw res;
+            }
 
-		butonTd.find('.custom_loader').hide();
-	});
+            // success, continue
+            return res.json();
+        })
+        // the success
+        .then(data => {
+            console.log(data);
+
+            let msgsHtml = '';
+
+            try {
+                for (let i in data) {
+                    msgsHtml += `<span style="display: block;" class="notice is-dismissible nuvei_payments_msg" data-index="${i}">`
+                        + `<span>${data[i].message}</span>`
+                        + '<span class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></span>'
+                        + '</span>';
+                }
+
+                console.log(msgsHtml);
+
+                butonTd.find('.description').html(msgsHtml);
+                butonTd.find('.custom_loader').hide();
+            }
+            catch(ex) {
+                console.error('Error with the response.', data);
+
+                butonTd.closest('fieldset').find('.description').html(msgsHtml);
+                butonTd.find('.custom_loader').hide();
+            }
+        })
+        // error after the first check
+        .catch(async err => {
+            alert(scTrans.RequestFail);
+            console.error(err);
+            butonTd.find('.custom_loader').hide();
+        });
 }
 
 function nuveiDisablePm(_value) {
     console.log('nuveiDisablePm', _value);
-    
+
     let selectedOptionId    = '#nuvei_block_pm_' + _value;
 	let selectedPMs			= jQuery('#woocommerce_nuvei_pm_black_list').val();
 	let selectedPMsVisible	= jQuery('#woocommerce_nuvei_pm_black_list_visible').val();
-    
+
     jQuery(selectedOptionId).hide();
-    
+
 	// fill the hidden input
 	if('' == selectedPMs) {
 		selectedPMs += _value;
@@ -326,7 +388,7 @@ function nuveiDisablePm(_value) {
 	else {
 		selectedPMs += ',' + _value;
 	}
-	
+
 	// fill the visible input
 	if('' == selectedPMsVisible) {
 		selectedPMsVisible += jQuery(selectedOptionId).text();
@@ -334,9 +396,9 @@ function nuveiDisablePm(_value) {
 	else {
 		selectedPMsVisible += ', ' + jQuery(selectedOptionId).text();
 	}
-	
+
 	document.getElementById('nuvei_block_pms_multiselect').selectedIndex  = 0;
-	
+
 	jQuery('#woocommerce_nuvei_pm_black_list').val(selectedPMs);
 	jQuery('#woocommerce_nuvei_pm_black_list_visible').val(selectedPMsVisible);
 }
@@ -344,14 +406,14 @@ function nuveiDisablePm(_value) {
 function nuveiCleanBlockedPMs() {
 	jQuery('#woocommerce_nuvei_pm_black_list, #woocommerce_nuvei_pm_black_list_visible').val('');
 	jQuery('#nuvei_block_pms_multiselect option').show();
-    
+
     // activate "Save changes" button when change the selected Block Payment Methods
     jQuery(".woocommerce-save-button").removeAttr("disabled");
 }
 
 /**
  * Function for the terms form.
- * 
+ *
  * @param int _planId
  * @returns void
  */
@@ -414,7 +476,7 @@ function nuveiFillPlanData(_planId) {
 
 function nuveiPfwDisableRefundBtn(isWcfm) {
     jQuery(".refund-item, .refund-items").prop("disabled", true);
-    
+
     if (isWcfm) {
         jQuery(".refund-item, .refund-items").hide();
     }
@@ -439,25 +501,25 @@ jQuery(function() {
 	if(jQuery('#nuvei_block_pms_multiselect').length > 0) {
 		document.getElementById('nuvei_block_pms_multiselect').selectedIndex  = 0;
 	}
-	
+
 	jQuery('#woocommerce_nuvei_blocked_pms').val('');
-	
+
 	switchNuveiTabs();
-	
+
 	// set the flags
 	if (jQuery('#sc_settle_btn').length == 1) {
 		scSettleBtn = jQuery('#sc_settle_btn');
 	}
-	
+
 	if (jQuery('#sc_void_btn').length == 1) {
 		scVoidBtn = jQuery('#sc_void_btn');
 	}
 	// set the flags END
-	
+
 	jQuery('#refund_amount').prop('readonly', false);
 	jQuery('.do-manual-refund').remove();
 	jQuery('.refund-actions').prepend('<span id="sc_refund_spinner" class="spinner" style="display: none; visibility: visible"></span>');
-	
+
 	jQuery('.do-api-refund')
 		.attr('id', 'sc_api_refund')
 		.attr('onclick', "scCreateRefund('"+ scTrans.refundQuestion +"');")
@@ -465,63 +527,80 @@ jQuery(function() {
 
 	// for the Use Cashier... setting
 	nuvei_show_hide_rest_settings();
-	
+
 	jQuery('#woocommerce_nuvei_integration_type').on('change', function() {
 		nuvei_show_hide_rest_settings();
 	});
-    
+
     // dismiss/remove nuvei custom system message
     jQuery(document).on('click', '.nuvei_payments_msg .notice-dismiss', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         if (window.location.hash === '#nuvei_tools'
             && !confirm('Are you sure you want to delete this message?')
         ) {
             return false;
         }
-        
+
         let button      = jQuery(this);
         let container   = button.closest('.nuvei_payments_msg');
         let index       = container.attr('data-index');
-        
-        jQuery.ajax({
-            type: "POST",
-            url: scTrans.ajaxurl,
-            data: {
-                action: 'sc-ajax-action',
-                msgId: index,
-                nuveiSecurity: scTrans.nuveiSecurity
+
+        fetch(scTrans.apiUrl + '/dismiss-sys-msg/', {
+            method: 'POST',
+            headers: {
+                'X-WP-Nonce': scTrans.nuveiApiSec,
+                'Content-Type': 'application/json'
             },
-            dataType: 'json'
+            body: JSON.stringify({
+                msgId: index
+            })
         })
-        .fail(function( jqXHR, textStatus, errorThrown){
-            console.error(textStatus);
-            console.error(errorThrown);
-        })
-        .done(function(resp) {
-            console.log(resp);
-            container.remove();
-        });
+            // 1. first check for the status code (200 OK)
+            .then(res => {
+                if (!res.ok) {
+                    // error - 401, 403, 404 or 500
+                    throw res;
+                }
+
+                // success, continue
+                return res.json();
+            })
+            // the success
+            .then(data => {
+                console.log(data);
+
+                if (data?.success && 1 == data.success) {
+                    container.remove();
+                    return;
+                }
+
+                alert('Request error.');
+            })
+            // error after the first check
+            .catch(async err => {
+                console.error(err);
+            });
     });
-    
+
     // for Nuvei Payment column in the Orders list
     jQuery('.nuvei-payment-ok').on('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         jQuery(document).find('.nuvei-payment-tooltip').hide();
-        
+
         let _parent = jQuery(this).closest('td');
-        
+
         _parent.find('.nuvei-payment-tooltip').show();
     });
-    
+
     jQuery('.nuvei-payment-tooltip').on('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
     });
-    
+
     jQuery('.nuvei-payment-tooltip .nuvei-tooltip-close').on('click', function (e) {
         jQuery(this).parent().hide();
     });

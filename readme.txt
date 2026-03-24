@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.9
-Stable tag: 3.12.4
+Stable tag: 3.13.0
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,12 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.13.0 =
+* Migrate to WP Rest API.
+* The global $woocommerce was replaced with WC().
+* The old API endpoint was changed from '/wc/nuvei/?action={action}' to 'nuvei/api/v1/{action}/'.
+* Implemented fix for overlapping API calls to openOrder server requests.
 
 = 3.12.4 =
 * Fix for the crash with Blocks and Redirect.

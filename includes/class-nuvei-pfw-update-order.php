@@ -19,8 +19,6 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 	/**
 	 * Main method
 	 *
-	 * @global Woocommerce $woocommerce
-	 *
 	 * @param array $products_data
 	 * @param array $open_order_details Pass them only in REST API flow.
 	 *
@@ -28,36 +26,28 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 	 */
 	public function process() {
         Nuvei_Pfw_Logger::write( 'update_order()' );
-        
-		global $woocommerce;
 
 		$func_params        = current( func_get_args() );
 		$products_data      = $func_params['products_data'] ?? array();
 		$open_order_details = $func_params['open_order_details'] ?? array();
-//		$plugin_settings    = $func_params['plugin_settings'] ?? array();
         $order_id           = $func_params['order_id'] ?? null;
-        $session_token      = $open_order_details['sessionToken'] ?: $func_params['session_token'] ?: null;
-        $oo_order_id        = $open_order_details['orderId'] ?: $func_params['oo_order_id'] ?: null;
+        $session_token      = $open_order_details['sessionToken'] ?? $func_params['session_token'] ?? null;
+        $oo_order_id        = $open_order_details['orderId'] ?? $func_params['oo_order_id'] ?? null;
 
-		// default flow
-		if ( empty( $this->rest_params ) && ! empty( $woocommerce->session ) ) {
-			$open_order_details = $woocommerce->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
-			$cart_amount        = (string) number_format( (float) $woocommerce->cart->total, 2, '.', '' );
-		} else { // REST API flow
-			$cart_amount = (string) number_format( (float) $products_data['totals'], 2, '.', '' );
+        if ( ! empty(WC()->cart->total) ) {
+            $cart_amount = (string) number_format( WC()->cart->total, 2, '.', '' );
+        }
+        else {
+			$cart_amount = (string) number_format( $products_data['totals'], 2, '.', '' );
 		}
 
-//		if ( empty( $open_order_details )
-//			|| empty( $open_order_details['sessionToken'] )
-//			|| empty( $open_order_details['orderId'] )
-//		) {
 		if ( empty( $session_token ) || empty( $oo_order_id ) ) {
 			Nuvei_Pfw_Logger::write(
                 [
                     '$session_token'    => $session_token,
                     '$oo_order_id'      => $oo_order_id,
-                ], 
-                'update_order() - Missing mandatory data for UpdateOrder.' 
+                ],
+                'update_order() - Missing mandatory data for UpdateOrder.'
             );
 
 			return array( 'status' => 'ERROR' );
@@ -107,7 +97,7 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 				'customField2' => $currency,
 			),
 		);
-        
+
         // if the Order already exists, pass the its ID here, as we cannot update clientUniqueId
         if ( !empty($order_id) ) {
             $params['merchantDetails']['customField5'] = $order_id;
@@ -115,47 +105,30 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
         elseif ( is_a( $this->sc_order, 'WC_Order' ) ) {
             $params['merchantDetails']['customField5'] = $this->sc_order->get_id();
         }
-         
+
 		// WC Subsc
 		if ( ! empty( $products_data['wc_subscr'] ) ) {
-			$oo_params['isRebilling']                          = 0;
-			$oo_params['card']['threeD']['v2AdditionalParams'] = array( // some default params
+			$params['isRebilling']                          = 0;
+			$params['card']['threeD']['v2AdditionalParams'] = array( // some default params
 				'rebillFrequency' => 30, // days
 				'rebillExpiry '   => gmdate( 'Ymd', strtotime( '+5 years' ) ),
 			);
 		} else {
-			$oo_params['isRebilling'] = null;
-			$oo_params['card']        = null;
+			$params['isRebilling'] = null;
+			$params['card']        = null;
 		}
 
 		$resp = $this->call_rest_api( 'updateOrder', $params );
 
-		// Success
-		if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
-			// in default flow
-			if ( empty( $this->rest_params ) ) {
-				// put the new data in the session
-				$open_order_details['amount']                    = $cart_amount;
-				$open_order_details['billingAddress']['country'] = $params['billingAddress']['country'];
-				$open_order_details['amount']                    = $params['amount'];
-				$open_order_details['sessionToken']              = $resp['sessionToken'];
-				$open_order_details['orderId']                   = $resp['orderId'];
-				$open_order_details['billingAddress']            = $params['billingAddress'];
-
-				$this->set_nuvei_session_data(
-					$resp['sessionToken'],
-					$open_order_details,
-					$products_data
-				);
-			}
-
+        // if there is status return the response
+		if ( ! empty( $resp['status'] ) ) {
 			$params['products_data'] = $products_data;
 
 			return array_merge( $params, $resp );
 		}
 
         // error
-		Nuvei_Pfw_Logger::write( 'Nuvei_Pfw_Update_Order - Order update was not successful.' );
+		Nuvei_Pfw_Logger::write( 'Nuvei_Pfw_Update_Order - Missing response status.' );
 
 		return array( 'status' => 'ERROR' );
 	}

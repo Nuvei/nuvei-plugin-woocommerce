@@ -32,9 +32,10 @@ const NUVEI_PFW_SDK_URL_PROD        = 'https://cdn.safecharge.com/safecharge_res
 const NUVEI_PFW_SDK_URL_TAG         = 'https://devmobile.sccdev-qa.com/checkoutNext/checkout.js';
 const NUVEI_PFW_POPUP_AUTOCLOSE_URL = 'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html';
 
-const NUVEI_PFW_SESSION_OO_DETAILS   = 'nuvei_last_open_order_details'; // a session key
-const NUVEI_PFW_SESSION_PROD_DETAILS = 'nuvei_order_details'; // products details
-const NUVEI_PFW_LOG_REQUEST_PARAMS   = 'Request params';
+const NUVEI_PFW_SESSION_OO_DETAILS      = 'nuvei_last_open_order_details'; // a session key
+const NUVEI_PFW_SESSION_PROD_DETAILS    = 'nuvei_order_details'; // products details
+const NUVEI_PFW_LOG_REQUEST_PARAMS      = 'Request params';
+const NUVEI_API_PATH                    =  'nuvei/api/v1';
 
 define(
 	'NUVEI_PFW_LOGS_DIR',
@@ -151,43 +152,42 @@ define(
 	)
 );
 
-define( 'NUVEI_PFW_BROWSERS_LIST', array( 
-    'ucbrowser', 
-    'firefox', 
-    'chrome', 
-    'opera', 
-    'msie', 
-    'edge', 
-    'safari', 
-    'blackberry', 
-    'trident' 
+define( 'NUVEI_PFW_BROWSERS_LIST', array(
+    'ucbrowser',
+    'firefox',
+    'chrome',
+    'opera',
+    'msie',
+    'edge',
+    'safari',
+    'blackberry',
+    'trident'
 ) );
 
-define( 'NUVEI_PFW_DEVICES_LIST', array( 
-    'iphone', 
-    'ipad', 
-    'android', 
-    'silk', 
-    'blackberry', 
-    'touch', 
-    'linux', 
-    'windows', 
-    'mac' 
+define( 'NUVEI_PFW_DEVICES_LIST', array(
+    'iphone',
+    'ipad',
+    'android',
+    'silk',
+    'blackberry',
+    'touch',
+    'linux',
+    'windows',
+    'mac'
 ) );
 
-define( 'NUVEI_PFW_DEVICES_TYPES_LIST', array( 
-    'macintosh', 
-    'tablet', 
-    'mobile', 
-    'tv', 
-    'windows', 
-    'linux', 
-    'tv', 
-    'smarttv', 
-    'googletv', 
-    'appletv', 
-    'hbbtv', 
-    'pov_tv', 
-    'netcast.tv', 
-    'bluray' 
+define( 'NUVEI_PFW_DEVICES_TYPES_LIST', array(
+    'macintosh',
+    'tablet',
+    'mobile',
+    'tv',
+    'windows',
+    'linux',
+    'smarttv',
+    'googletv',
+    'appletv',
+    'hbbtv',
+    'pov_tv',
+    'netcast.tv',
+    'bluray'
 ) );
