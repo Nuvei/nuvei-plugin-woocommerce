@@ -14,6 +14,7 @@ var nuveiIsFormValid                = true;
 let nuveiBlocksResolvePayment       = null;
 // AbortController for the current openOrder fetch request
 var nuveiGetCheckoutDataController  = null;
+var nuveiCheckoutRequestId          = null; // request flag
 
 // Debounce function to limit how often a function can fire
 function nuveiDebounce(func, wait) {
@@ -438,6 +439,9 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
         return;
     }
 
+    const requestId         = crypto.randomUUID();
+    nuveiCheckoutRequestId  = requestId;
+    
     let scFormData = {};
 
     // get only populated fields
@@ -483,6 +487,11 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
             if (!res.ok) {
                 // error - 401, 403, 404 or 500
                 throw res;
+            }
+            
+            // stale request check
+            if (nuveiCheckoutRequestId !== requestId) {
+                return; 
             }
 
             // success, continue
