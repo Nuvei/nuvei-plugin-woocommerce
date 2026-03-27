@@ -277,6 +277,8 @@ async function nuveiBlocksRunTransaction() {
             const unsubscribe = onPaymentSetup( async function() {
                 console.log('onPaymentSetup logic');
                 
+                jQuery('#nuvei_blocker').show();
+                
                 // For redirect/cashier mode - just let WooCommerce proceed
                 if ( 'sdk' !== scTrans?.checkoutIntegration ) {
                     return {
@@ -286,6 +288,8 @@ async function nuveiBlocksRunTransaction() {
                 
                 // Step 1: validate your SDK fields
                 if ( !nuveiIsCheckoutBlocksFormValid() ) {
+                    jQuery('#nuvei_blocker').hide();
+                    
                     return {
                         type: emitResponse.responseTypes.ERROR
                     };
@@ -295,6 +299,8 @@ async function nuveiBlocksRunTransaction() {
                 const payment = await nuveiBlocksRunTransaction();
 
                 if ( !payment.success ) {
+                    jQuery('#nuvei_blocker').hide();
+                    
                     return {
                         type: emitResponse.responseTypes.ERROR,
                         message: payment.error || 'Payment declined, please try again.'
