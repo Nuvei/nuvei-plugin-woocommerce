@@ -34,16 +34,16 @@ function nuveiUpdateOrder(resolve, reject) {
         .then(res => {
             if (!res.ok) {
                 // error - 401, 403, 404 or 500
-                throw res; 
+                throw res;
             }
-            
+
             // success, continue
             return res.json();
         })
         // the success
         .then(data => {
             console.log(data);
-            
+
             // success
             if (data?.success && 1 == data.success) {
                 console.log('prepayment resolved.');
@@ -51,7 +51,7 @@ function nuveiUpdateOrder(resolve, reject) {
                 resolve();
                 return;
             }
-            
+
             // error
             reject();
             window.location.reload();
@@ -108,9 +108,9 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
     let realFormErrors  = 0;
 
     // no errors
-    if (Object.keys( validationErrors ).length == 0) {
-        return isFormValid;
-    }
+//    if (Object.keys( validationErrors ).length == 0) {
+//        return isFormValid;
+//    }
 
     // Minimal check, when need only the country and the email.
     if ( justLoadSimply ) {
@@ -138,20 +138,19 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
 //                    }
 //                );
 
+                // just break the loop
                 return true;
             }
         });
 
         if (!isFormValid) {
             jQuery('#nuvei_checkout_container').text(scTrans.MissingEmailCountry);
-            jQuery('#nuvei_blocker').hide();
-            return false;
         }
 
-        return true;
+        return isFormValid;
     }
 
-    // show all errors
+    // count all errors and set messages to be visible
     Object.keys( validationErrors ).forEach( ( id ) => {
         // skip Nuvei custom orders.
         if ( id.search('nuvei') < 0 ) {
@@ -166,28 +165,60 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
         }
     });
 
-    if (realFormErrors == 0) {
-        return true;
+    if (realFormErrors > 0) {
+        isFormValid = false;
+    }
+
+    // now check if the Simply Connect form is valid
+    if (typeof nuveiCheckoutSdkParams != 'undefined' && !nuveiIsSimplyFormValid) {
+        wp.data.dispatch( 'core/notices' ).createErrorNotice(
+            scTrans.MissingRequiredFields,
+            {
+                id: 'nuvei-form-invalid', // Use a unique ID to prevent duplicates
+                context: 'wc/checkout',  // Important: This tells Woo to show it in the checkout area
+                isDismissible: true,
+            }
+        );
+
+        isFormValid = false;
+        
+        // call this just to scroll to the problem
+        simplyConnect.submitPayment();
+        jQuery('#nuvei_blocker').hide();
+        
+        return isFormValid;
     }
 
     // and scroll to the message
     setTimeout( () => {
-        const noticeElement = document.querySelector( '.has-error' );
+        console.log('try to scroll to the error');
 
-        if ( noticeElement ) {
-            const elementPosition = noticeElement.getBoundingClientRect().top + window.pageYOffset;
+        let noticeElement;
+
+        if ( jQuery( '.has-error' ).length ) {
+            noticeElement = jQuery( '.has-error' );
+        }
+        else if ( jQuery( '.wc-block-components-notice-banner.is-error' ).length ) {
+            noticeElement = jQuery( '.wc-block-components-notice-banner.is-error' );
+        }
+
+        // show error if any
+        if ( noticeElement?.length ) {
+            const elementPosition = noticeElement.offset().top;
 
             window.scrollTo( {
                 top: elementPosition - 50,
                 behavior: 'smooth'
             } );
-
-            jQuery('#nuvei_blocker').hide();
-            return false;
         }
 
-        return true;
-    }, 100 ); // Short delay ensures the notice has rendered in the DOM
+    }, 200 ); // Short delay ensures the notice has rendered in the DOM
+
+    if (!isFormValid) {
+        jQuery('#nuvei_blocker').hide();
+    }
+
+    return isFormValid;
 }
 
 /**
@@ -214,7 +245,9 @@ function nuveiBlocksReloadSimply() {
 
 async function nuveiBlocksRunTransaction() {
     return new Promise( function( resolve ) {
-        nuveiBlocksResolvePayment = resolve; // set the resolver
+        // set the resolver - only when actually submitting
+        nuveiBlocksResolvePayment = resolve;
+
         simplyConnect.submitPayment();
     } );
 }
@@ -276,20 +309,22 @@ async function nuveiBlocksRunTransaction() {
         useEffect(() => {
             const unsubscribe = onPaymentSetup( async function() {
                 console.log('onPaymentSetup logic');
-                
+
                 jQuery('#nuvei_blocker').show();
-                
+
                 // For redirect/cashier mode - just let WooCommerce proceed
                 if ( 'sdk' !== scTrans?.checkoutIntegration ) {
+                    // check if form is invalid, just to hide the blocker
+                    nuveiIsCheckoutBlocksFormValid();
+
                     return {
                         type: emitResponse.responseTypes.SUCCESS
                     };
                 }
-                
+
+                // Simply Connect mode
                 // Step 1: validate your SDK fields
                 if ( !nuveiIsCheckoutBlocksFormValid() ) {
-                    jQuery('#nuvei_blocker').hide();
-                    
                     return {
                         type: emitResponse.responseTypes.ERROR
                     };
@@ -300,10 +335,10 @@ async function nuveiBlocksRunTransaction() {
 
                 if ( !payment.success ) {
                     jQuery('#nuvei_blocker').hide();
-                    
+
                     return {
                         type: emitResponse.responseTypes.ERROR,
-                        message: payment.error || 'Payment declined, please try again.'
+                        message: payment.error || scTrans.paymentDeclined
                     };
                 }
 
@@ -369,7 +404,7 @@ jQuery(function() {
             .append('<div id="nuvei_blocker"><img class="nuvei_loader" src="'
                 + scTrans.loaderUrl + '" /></div>');
     }
-    
+
     if (typeof scTrans == 'object'
         && scTrans.hasOwnProperty('checkoutIntegration')
         && 'sdk' !== scTrans.checkoutIntegration

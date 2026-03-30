@@ -15,15 +15,7 @@ let nuveiBlocksResolvePayment       = null;
 // AbortController for the current openOrder fetch request
 var nuveiGetCheckoutDataController  = null;
 var nuveiCheckoutRequestId          = null; // request flag
-
-// Debounce function to limit how often a function can fire
-function nuveiDebounce(func, wait) {
-    let timeout;
-    return function(...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), wait);
-    };
-}
+var nuveiIsSimplyFormValid          = false;
 
 /**
  * Check if the Checkout form is valid.
@@ -36,6 +28,11 @@ function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
     if (!nuveiIsPayForExistingOrderPage && !document.querySelector(nuveiCheckoutClassicFormClass)) {
         console.log('The classic checkout form is missing', nuveiCheckoutClassicFormClass);
         return false;
+    }
+    
+    if ( jQuery('.breakdance').length && ! jQuery('#nuvei_checkout_container').is(':visible') ) {
+        console.log('#nuvei_checkout_container is not visible');
+        return;
     }
 
     nuveiIsFormValid    = true;
@@ -79,7 +76,7 @@ function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
 
         return nuveiIsFormValid;
     }
-
+    
     return nuveiIsFormValid;
 }
 
@@ -277,6 +274,7 @@ function showNuveiCheckout(_params) {
 
     nuveiCheckoutSdkParams.onReady                  = nuveiOnSimplyReady;
     nuveiCheckoutSdkParams.onSelectPaymentMethod    = nuveiPmChange;
+    nuveiCheckoutSdkParams.onFormValidated          = nuveiCheckIsSimplyValid;
 
 	simplyConnect(nuveiCheckoutSdkParams);
 
@@ -287,6 +285,12 @@ function showNuveiCheckout(_params) {
 
         jQuery(nuveiCheckoutClassicFormClass)
             .append(`<input id="nuvei_oo_order_id" type="hidden" name="nuvei_oo_order_id" value="${nuveiCheckoutSdkParams.orderId}" />`);
+    }
+}
+
+function nuveiCheckIsSimplyValid(params) {
+    if (params.hasOwnProperty('isFormValid')) {
+        nuveiIsSimplyFormValid = params.isFormValid;
     }
 }
 

@@ -65,6 +65,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 = 3.13.1 =
 * Added race condition check in case of multiple openOrder requests.
+* Updated the logic which validate the form in Blocks Checkout.
 
 = 3.13.0 =
 * Migrate to WP Rest API.
