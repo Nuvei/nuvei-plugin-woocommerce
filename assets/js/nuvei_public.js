@@ -16,6 +16,10 @@ let nuveiBlocksResolvePayment       = null;
 var nuveiGetCheckoutDataController  = null;
 var nuveiCheckoutRequestId          = null; // request flag
 var nuveiIsSimplyFormValid          = false;
+// Debounce timer and in-flight flag for nuveiGetCheckoutData
+var nuveiGetCheckoutDataTimer       = null;
+var nuveiGetCheckoutDataInFlight    = false;
+const NUVEI_GET_CHECKOUT_DATA_DELAY = 350; // ms — collapses bursts of calls into one fetch
 
 /**
  * Check if the Checkout form is valid.
@@ -443,81 +447,101 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
         return;
     }
 
-    const requestId         = crypto.randomUUID();
-    nuveiCheckoutRequestId  = requestId;
-    
-    let scFormData = {};
+    // ── Debounce ────────────────────────────────────────────────────────────
+    clearTimeout(nuveiGetCheckoutDataTimer);
 
-    // get only populated fields
-    jQuery(formId).find('input, select, textarea').each(function(){
-        let _self = jQuery(this);
+    nuveiGetCheckoutDataTimer = setTimeout(() => {
 
-        try {
-            let fieldById    = jQuery('body').find(`#${_self.attr(attrName)}`);
-
-            if (_self.attr(attrName) && fieldById.length > 0) {
-                scFormData[_self.attr(attrName)] = fieldById.val();
-            }
+        // ── In-flight guard ─────────────────────────────────────────────────
+        if (nuveiGetCheckoutDataInFlight) {
+            console.log('nuveiGetCheckoutData: skipped – previous fetch still in-flight');
+            return;
         }
-        catch (e) {
-            return true;
-        }
-    });
 
-    // Abort any previous in-flight openOrder request to prevent duplicates.
-    // Two near-simultaneous calls (e.g. useEffect + wp.data.subscribe, or
-    // page-load + field-change) would otherwise both reach the server and
-    // create two openOrder sessions.
-    if (nuveiGetCheckoutDataController) {
-        console.log('nuveiGetCheckoutData: aborting previous in-flight request');
-        nuveiGetCheckoutDataController.abort();
-    }
+        const requestId         = crypto.randomUUID();
+        nuveiCheckoutRequestId  = requestId;
 
-    nuveiGetCheckoutDataController = new AbortController();
+        let scFormData = {};
 
-    fetch(scTrans.apiUrl + '/get-checkout-data/', {
-        method: 'POST',
-        headers: {
-            'X-WP-Nonce': scTrans.nuveiApiSec,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            scFormData: scFormData
-        }),
-        signal: nuveiGetCheckoutDataController.signal
-    })
-        // 1. first check for the status code (200 OK)
-        .then(res => {
-            if (!res.ok) {
-                // error - 401, 403, 404 or 500
-                throw res;
+        // get only populated fields
+        jQuery(formId).find('input, select, textarea').each(function(){
+            let _self = jQuery(this);
+
+            try {
+                let fieldById = jQuery('body').find(`#${_self.attr(attrName)}`);
+
+                if (_self.attr(attrName) && fieldById.length > 0) {
+                    scFormData[_self.attr(attrName)] = fieldById.val();
+                }
             }
-            
-            // stale request check
-            if (nuveiCheckoutRequestId !== requestId) {
-                return; 
+            catch (e) {
+                return true;
             }
-
-            // success, continue
-            return res.json();
-        })
-        // the success
-        .then(data => {
-            console.log(data);
-            showNuveiCheckout(data);
-        })
-        // error after the first check
-        .catch(async err => {
-            // Do not treat an intentional abort as an error
-            if (err.name === 'AbortError') {
-                console.log('nuveiGetCheckoutData: previous request was aborted');
-                return;
-            }
-            
-            console.error('Nuvei request failed.', err);
-            nuveiShowErrorMsg();
-            jQuery('#nuvei_blocker').hide();
         });
+
+        // Abort any previous controller so the browser stops waiting for a
+        // response that we no longer care about (belt-and-suspenders alongside
+        // the in-flight guard above).
+        if (nuveiGetCheckoutDataController) {
+            console.log('nuveiGetCheckoutData: aborting stale controller');
+            nuveiGetCheckoutDataController.abort();
+        }
+
+        nuveiGetCheckoutDataController  = new AbortController();
+        nuveiGetCheckoutDataInFlight    = true;
+
+        fetch(scTrans.apiUrl + '/get-checkout-data/', {
+            method: 'POST',
+            headers: {
+                'X-WP-Nonce': scTrans.nuveiApiSec,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                scFormData: scFormData
+            }),
+            signal: nuveiGetCheckoutDataController.signal
+        })
+            // 1. first check for the status code (200 OK)
+            .then(res => {
+                if (!res.ok) {
+                    // error - 401, 403, 404 or 500
+                    throw res;
+                }
+
+                // stale request check (handles the unlikely case where a second
+                // call sneaked past the in-flight guard due to async timing)
+                if (nuveiCheckoutRequestId !== requestId) {
+                    console.log('nuveiGetCheckoutData: stale response ignored');
+                    return;
+                }
+
+                // success, continue
+                return res.json();
+            })
+            // the success
+            .then(data => {
+                if (typeof data !== 'undefined') {
+                    console.log(data);
+                    showNuveiCheckout(data);
+                }
+            })
+            // error after the first check
+            .catch(async err => {
+                // Do not treat an intentional abort as an error
+                if (err.name === 'AbortError') {
+                    console.log('nuveiGetCheckoutData: request was aborted');
+                    return;
+                }
+
+                console.error('Nuvei request failed.', err);
+                nuveiShowErrorMsg();
+                jQuery('#nuvei_blocker').hide();
+            })
+            .finally(() => {
+                nuveiGetCheckoutDataInFlight = false;
+            });
+
+    }, NUVEI_GET_CHECKOUT_DATA_DELAY);
 
     return;
 }
@@ -612,13 +636,14 @@ jQuery(function($) {
                     // My custom checks come here
                     nuveiDestroySimplyConnect();
 
-                    setTimeout(() => {
-//                        console.log('Call nuveiIsCheckoutClassicFormValid.');
-
-                        if (nuveiIsCheckoutClassicFormValid(true)) {
-                            nuveiGetCheckoutData(nuveiCheckoutClassicFormClass);
-                        }
-                    }, 1000);
+                    // No outer setTimeout needed — nuveiGetCheckoutData() has
+                    // its own internal debounce (NUVEI_GET_CHECKOUT_DATA_DELAY)
+                    // that collapses rapid bursts.  The old 1 000 ms delay was
+                    // the primary contributor to the page-load + field-change
+                    // race condition (Race Window 1).
+                    if (nuveiIsCheckoutClassicFormValid(true)) {
+                        nuveiGetCheckoutData(nuveiCheckoutClassicFormClass);
+                    }
                 }
             });
 
