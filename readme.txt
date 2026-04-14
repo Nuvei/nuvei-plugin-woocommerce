@@ -64,7 +64,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 == Changelog ==
 
 = 3.13.2 =
-* Updated the race condition prevention. 
+* Updated the race condition prevention.
+* Exposed two custom events in the plugin front-end - nuveiPfw:isCheckoutClassicFormValidEvent and nuveiPfw:onPageLoadEvent.
+* Added an examples directory, to place examples for plugin's custom events.
 
 = 3.13.1 =
 * Added race condition check in case of multiple openOrder requests.

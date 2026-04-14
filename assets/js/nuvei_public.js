@@ -34,9 +34,11 @@ function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
         return false;
     }
     
-    if ( jQuery('.breakdance').length && ! jQuery('#nuvei_checkout_container').is(':visible') ) {
-        console.log('#nuvei_checkout_container is not visible');
-        return;
+    // Dispatch custom JS event - cancelable so listeners can call e.preventDefault() to halt the flow
+    const nuveiFormValidEvent = new CustomEvent('nuveiPfw:isCheckoutClassicFormValidEvent', { cancelable: true });
+
+    if (!document.dispatchEvent(nuveiFormValidEvent)) {
+        return false;
     }
 
     nuveiIsFormValid    = true;
@@ -557,27 +559,6 @@ function nuveiDestroySimplyConnect() {
     }
 }
 
-/**
- * For the classic checkout only.
- * Insert our custom pay button.
- *
- * @param string originalButton The original Place Order button id
- */
-//function nuveiInsertCustomPayButton(originalButton) {
-//    console.log('try to duplicate the button');
-//
-//    // make a clone of the original Clasic Checkout Pay button.
-//    if (jQuery(nuveiCheckoutCustomPayBtn).length) {
-//        return;
-//    }
-//
-//    let clonePayBtn = jQuery(originalButton).clone();
-//    clonePayBtn.attr('id', 'nuvei_place_order');
-//    clonePayBtn.attr('type', 'button');
-//
-//    jQuery(originalButton).after(clonePayBtn);
-//}
-
 jQuery(function($) {
     console.log('document ready');
 
@@ -693,6 +674,9 @@ jQuery(function($) {
                 console.log('on load #nuvei_checkout_container');
                 nuveiIsCheckoutClassicFormValid(true);
             });
+            
+            // Dispatch custom JS event
+            document.dispatchEvent(new CustomEvent('nuveiPfw:onPageLoadEvent'));
 
         }
         // the Classic Checkout block end
