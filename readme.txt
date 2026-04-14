@@ -67,6 +67,8 @@ If you plan to install this plugin form the WordPress store, but use a version d
 * Updated the race condition prevention.
 * Exposed two custom events in the plugin front-end - nuveiPfw:isCheckoutClassicFormValidEvent and nuveiPfw:onPageLoadEvent.
 * Added an examples directory, to place examples for plugin's custom events.
+* The check for the selected payment method was moved into nuveiIsCheckoutClassicFormValid() and nuveiBlocksReloadSimply(), so it is consistently applied across all call sites and unnecessary requests are skipped when another payment method is selected.
+* Fixed REST API URL construction by passing NUVEI_API_PATH directly to rest_url(), preventing URL resolution failures on certain server configurations.
 
 = 3.13.1 =
 * Added race condition check in case of multiple openOrder requests.

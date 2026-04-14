@@ -225,6 +225,11 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
  * Just reusing some code.
  */
 function nuveiBlocksReloadSimply() {
+    // Only proceed if Nuvei is the selected payment method
+    if (wp.data.select('wc/store/payment').getActivePaymentMethod() !== scTrans.paymentGatewayName) {
+        return;
+    }
+
     jQuery('#nuvei_blocker').show();
 
     nuveiDestroySimplyConnect();

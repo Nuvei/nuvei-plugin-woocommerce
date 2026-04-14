@@ -29,11 +29,20 @@ const NUVEI_GET_CHECKOUT_DATA_DELAY = 350; // ms — collapses bursts of calls i
 function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
     console.log('nuveiIsCheckoutClassicFormValid()', justLoadSimply);
 
+    // check for Admin Order
     if (!nuveiIsPayForExistingOrderPage && !document.querySelector(nuveiCheckoutClassicFormClass)) {
         console.log('The classic checkout form is missing', nuveiCheckoutClassicFormClass);
         return false;
     }
-    
+
+    // Only proceed if Nuvei is the selected payment method
+    if (!nuveiIsPayForExistingOrderPage
+        && jQuery(nuveiCheckoutClassicPMethodName + ':checked').val() !== scTrans.paymentGatewayName
+    ) {
+        console.log('Nuvei is not selected as payment provider');
+        return false;
+    }
+
     // Dispatch custom JS event - cancelable so listeners can call e.preventDefault() to halt the flow
     const nuveiFormValidEvent = new CustomEvent('nuveiPfw:isCheckoutClassicFormValidEvent', { cancelable: true });
 
@@ -585,20 +594,14 @@ jQuery(function($) {
             console.log('Classic checkout.');
 
             // error missing scTrans or scTrans.paymentGatewayName
-            if ( scTrans == 'undefined' || !scTrans.hasOwnProperty('paymentGatewayName') ) {
-                console.error('Missing scTrans object or its property paymentGatewayName.')
+            if ( ! scTrans?.paymentGatewayName ) {
+                console.error('Missing scTrans.paymentGatewayName.')
                 return;
             }
 
-            let currPaymentMethod = jQuery(nuveiCheckoutClassicPMethodName + ':checked').val();
-
-            // Nuvei is selected on page load
-            if (scTrans.paymentGatewayName === currPaymentMethod) {
-                console.log('Nuvei is selected on load.');
-
-                if (nuveiIsCheckoutClassicFormValid(true)) {
-                    nuveiGetCheckoutData(nuveiCheckoutClassicFormClass);
-                }
+            // on page load try to load Simply Connect
+            if (nuveiIsCheckoutClassicFormValid(true)) {
+                nuveiGetCheckoutData(nuveiCheckoutClassicFormClass);
             }
 
             jQuery(document.body).on('blur change focusout', nuveiMandatoryCheckoutFields, function(e) {
@@ -630,14 +633,10 @@ jQuery(function($) {
 
             // on payment provider change
             jQuery(document.body).on('change', nuveiCheckoutClassicPMethodName, function(e) {
-                currPaymentMethod = jQuery(nuveiCheckoutClassicPMethodName + ':checked').val();
+                console.log('Payment Provider change.', jQuery(nuveiCheckoutClassicPMethodName + ':checked').val());
 
-                console.log('Payment Provider change.', currPaymentMethod);
-
-                if (currPaymentMethod == scTrans.paymentGatewayName) {
-                    if (nuveiIsCheckoutClassicFormValid(true)) {
-                        nuveiGetCheckoutData(nuveiCheckoutClassicFormClass);
-                    }
+                if (nuveiIsCheckoutClassicFormValid(true)) {
+                    nuveiGetCheckoutData(nuveiCheckoutClassicFormClass);
                 }
                 else {
                     nuveiDestroySimplyConnect();
@@ -677,7 +676,6 @@ jQuery(function($) {
             
             // Dispatch custom JS event
             document.dispatchEvent(new CustomEvent('nuveiPfw:onPageLoadEvent'));
-
         }
         // the Classic Checkout block end
 

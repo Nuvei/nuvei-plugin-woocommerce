@@ -335,7 +335,7 @@ class Nuvei_Payments_For_Woocommerce
             NUVEI_PFW_JS_LOCALIZATIONS,
             array(
                 'nuveiApiSec'           => wp_create_nonce( 'wp_rest' ),
-                'apiUrl'                => esc_url_raw(rest_url() . NUVEI_API_PATH),
+                'apiUrl'                => esc_url_raw(rest_url(NUVEI_API_PATH)),
                 'wcThSep'               => get_option( 'woocommerce_price_thousand_sep' ),
                 'wcDecSep'              => get_option( 'woocommerce_price_decimal_sep' ),
                 'useUpos'               => self::$wc_nuvei->can_use_upos(),
@@ -464,7 +464,7 @@ class Nuvei_Payments_For_Woocommerce
 				NUVEI_PFW_JS_LOCALIZATIONS,
 				array(
                     'nuveiApiSec'       => wp_create_nonce( 'wp_rest' ),
-                    'apiUrl'            => esc_url_raw(rest_url() . NUVEI_API_PATH),
+                    'apiUrl'            => esc_url_raw(rest_url(NUVEI_API_PATH)),
 					'nuveiPaymentPlans' => $plans_list,
 					'webMasterId'       => 'WooCommerce ' . WOOCOMMERCE_VERSION
 						. '; Plugin v' . $helper->helper_get_plugin_version(),
