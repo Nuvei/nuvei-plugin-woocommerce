@@ -1,4 +1,4 @@
 vendor/*
 composer.*
 phpcs.xml
-.github
+.github/*
