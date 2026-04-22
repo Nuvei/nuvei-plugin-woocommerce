@@ -1546,7 +1546,7 @@ class Nuvei_Payments_For_Woocommerce
                             [ $params ] 
                         ) 
                     ) {
-                        // Set Action Scheduler for about 5 min
+                        // Set Action Scheduler for about 2 min
                         as_schedule_single_action( 
                             time() + 120, 
                             'nuvei_save_transaction_to_order', 
@@ -1714,16 +1714,16 @@ class Nuvei_Payments_For_Woocommerce
         
         Nuvei_Pfw_Logger::write($order_id, 'save_transaction_to_order' );
         
-        $helper = new Nuvei_Pfw_Helper();
+        $handler = new Nuvei_Pfw_Order_Handler();
         
         // error - the Order doesn't belog to Nuvei
-        if ( ! $helper->helper_is_nuvei_order($order_id, true) ) {
+        if ( ! $handler->is_nuvei_order_public($order_id, true) ) {
             Nuvei_Pfw_Logger::write( $order_id, 'The Order does not belong to Nuvei.' );
             return;
         }
         
         // check for saved transacion data
-        $transactions_data = $helper->helper_get_order_meta( NUVEI_PFW_TRANSACTIONS );
+        $transactions_data = $handler->get_order_meta( NUVEI_PFW_TRANSACTIONS );
         
         if ( ! empty( $transactions_data[ $tr_id ] ) ) {
             Nuvei_Pfw_Logger::write( 'We have information for this transaction and will not save it again.' );
@@ -1750,11 +1750,11 @@ class Nuvei_Payments_For_Woocommerce
 		}
 
         // few checks
-        if ( ! $helper->helper_can_override_order_status(true) ) {
+        if ( ! $handler->can_override_order_status_public(true) ) {
             Nuvei_Pfw_Logger::write( 'Nuvei_Pfw_Get_Trans_Details error 3' );
             return;
         }
-        if ( ! $helper->helper_check_for_repeating_dmn($tr_id, $status, true) ) {
+        if ( ! $handler->check_for_repeating_dmn_public($tr_id, $status, true) ) {
             Nuvei_Pfw_Logger::write( 'Nuvei_Pfw_Get_Trans_Details error 4' );
             return;
         }
@@ -1779,18 +1779,18 @@ class Nuvei_Payments_For_Woocommerce
             'wcsRenewal'           => false, // this order can be made only from the admin
         );
 
-        $helper->helper_update_order_meta(NUVEI_PFW_TRANSACTIONS, $transactions_data);
+        $handler->update_order_meta(NUVEI_PFW_TRANSACTIONS, $transactions_data);
 
         // Update it only for Auth and Sale. They are base an we will need this TrID
         if ( in_array( $transaction_type, array( 'Auth', 'Sale' ) ) ) {
             Nuvei_Pfw_Logger::write( 'save_transaction_data(), Auth or Sale');
-            $helper->helper_update_order_meta(NUVEI_PFW_TR_ID, $tr_id);
+            $handler->update_order_meta(NUVEI_PFW_TR_ID, $tr_id);
         }
         
-        $order_status = strtolower( $helper->helper_get_order_status() );
+        $order_status = strtolower( $handler->get_order_status() );
 
 		if ( 'completed' !== $order_status ) {
-			$helper->helper_change_order_status(
+			$handler->change_order_status_public(
 				$order_id,
 				$status,
 				$transaction_type,
@@ -1802,7 +1802,7 @@ class Nuvei_Payments_For_Woocommerce
 			);
 		}
         
-        $helper->helper_save_order();
+        $handler->save_order();
         
 		Nuvei_Pfw_Logger::write( 'Order #' . $order_id . ' was updated.' );
 
