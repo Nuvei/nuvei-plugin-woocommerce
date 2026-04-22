@@ -249,6 +249,8 @@ class Nuvei_Payments_For_Woocommerce
         // hook to show unreaded Nuvei' system messages
         add_action( 'admin_notices', array (__CLASS__, 'display_messages') );
 
+        // add Action Scheduler to check for Nuvei Transacion ID details
+        add_action( 'nuvei_save_transaction_to_order', array( __CLASS__, 'save_transaction_to_order' ), 10, 1 );
     }
 
     public static function set_translated_texts() {
@@ -1318,7 +1320,7 @@ class Nuvei_Payments_For_Woocommerce
     }
 
     public static function rest_api_calls() {
-        Nuvei_Pfw_Logger::write('rest_api_calls');
+//        Nuvei_Pfw_Logger::write('rest_api_calls');
 
         # Admin calls
         // Void (Cancel)
@@ -1521,6 +1523,44 @@ class Nuvei_Payments_For_Woocommerce
             'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
         ));
 
+        // Set Action Scheduler to check for the Transaction Details
+        register_rest_route(NUVEI_API_PATH, '/set-transaction-checker/', array(
+            'methods'             => 'POST',
+            'callback'            => function($request) {
+                $params = $request->get_params();
+                
+                Nuvei_Pfw_Logger::write($params, 'set-transaction-checker' );
+            
+                if ( isset($params['orderId'] )
+                    && is_numeric($params['orderId']) 
+                    && ! empty($params['transactionId'])
+                    && ! empty($params['paymentMethod'])
+                ) {
+                    $order_id   = $request['orderId'] ?? 0;
+                    $order      = wc_get_order( absint( $request['orderId'] ) );
+                    
+                    // check for existing Order and repeating task
+                    if ( $order
+                        && ! as_has_scheduled_action( 
+                            'nuvei_save_transaction_to_order',
+                            [ $params ] 
+                        ) 
+                    ) {
+                        // Set Action Scheduler for about 5 min
+                        as_schedule_single_action( 
+                            time() + 120, 
+                            'nuvei_save_transaction_to_order', 
+                            [ $params ]
+                        );
+                    }
+                }
+                
+                // the front-end will not wait for the response
+                return rest_ensure_response([]);
+            },
+            'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
+        ));
+            
         # Plugin's REST API, for headless usage
         // get-simply-connect-data
         register_rest_route(NUVEI_API_PATH, '/get-simply-connect-data/', array(
@@ -1657,4 +1697,17 @@ class Nuvei_Payments_For_Woocommerce
         return new WP_Error('rest_forbidden', 'You do not have required permissions.', array('status' => 401));
     }
 
+    /**
+     * We will save the transaction data sent from Simply Connect to the Order.
+     * 
+     * @param array $request_params
+     */
+    public static function save_transaction_to_order($request_params) {
+        $obj    = new Nuvei_Pfw_Get_Trans_Details();
+        $data   = $obj->process($request_params);
+        $params = current($request_params);
+        
+        // TODO move all the logic for the ORder update here!
+        $order_id = (int) $params['orderId'] ?? 0;
+    }
 }

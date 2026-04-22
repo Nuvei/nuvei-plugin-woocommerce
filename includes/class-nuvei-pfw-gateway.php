@@ -1144,14 +1144,14 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		Nuvei_Pfw_Logger::write(
 			array(
 				'$available_gateways'  => array_keys( $available_gateways ),
-				'is_admin'             => is_admin(),
-				'is_checkout'          => is_checkout(),
-				'is_checkout_pay_page' => is_checkout_pay_page(),
-				'is_wc_endpoint_url'   => is_wc_endpoint_url(),
+//				'is_admin'             => is_admin(),
+//				'is_checkout'          => is_checkout(),
+//				'is_checkout_pay_page' => is_checkout_pay_page(),
+//				'is_wc_endpoint_url'   => is_wc_endpoint_url(),
 				// 'is_shop()' => is_shop(),
 				// 'isset(WC()->session)'  => isset(WC()->session),
-					'isset(WC cart)'   => isset( WC()->cart ),
-				'items'                => isset( WC()->cart ) ? WC()->cart->get_cart() : null,
+//					'isset(WC cart)'   => isset( WC()->cart ),
+//				'items'                => isset( WC()->cart ) ? WC()->cart->get_cart() : null,
 			// 'SCRIPT_FILENAME'       => $_SERVER['SCRIPT_FILENAME'],
 			// 'checkout_id ' => WC()->session->get('checkout_id'),
 			// 'get checkoutid ' => @$_GET['checkoutid'],
@@ -1477,7 +1477,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 			Nuvei_Pfw_Logger::write( $contol_amount, '$contol_amount' );
 
-			if ( ! empty( $products_data['totals']['shipping_total'] ) ) {
+		if ( ! empty( $products_data['totals']['shipping_total'] ) ) {
 				$shipping = round( $products_data['totals']['shipping_total'], 2 );
 			}
 			if ( ! empty( $products_data['totals']['shipping_tax'] ) ) {

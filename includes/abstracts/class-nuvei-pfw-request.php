@@ -77,39 +77,10 @@ abstract class Nuvei_Pfw_Request {
 		}
 
 		// check for 'sc' also because of the older Orders
-		if ( ! in_array( $this->sc_order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) ) ) {
-			$msg = 'Error - the order does not belongs to Nuvei.';
-			Nuvei_Pfw_Logger::write(
-				array(
-					'order_id'       => $order_id,
-					'payment_method' => $this->sc_order->get_payment_method(),
-				),
-				$msg
-			);
-
-			exit( esc_html( $msg ) );
-		}
-
+        $this->is_nuvei_order($order_id);
+        
 		// can we override Order status (state)
-		$ord_status = strtolower( $this->sc_order->get_status() );
-
-		if ( in_array( $ord_status, array( 'cancelled', 'refunded' ) ) ) {
-			$msg = 'Error - can not override status of Voided/Refunded Order.';
-			Nuvei_Pfw_Logger::write( $this->sc_order->get_payment_method(), $msg );
-
-			exit( esc_html( $msg ) );
-		}
-
-		// do not replace "completed" with "auth" status
-		if ( 'completed' == $ord_status
-			&& 'auth' == strtolower( Nuvei_Pfw_Http::get_param( 'transactionType' ) )
-		) {
-			$msg = 'Error - can not override status Completed with Auth.';
-			Nuvei_Pfw_Logger::write( $this->sc_order->get_payment_method(), $msg );
-
-			exit( esc_html( $msg ) );
-		}
-		// can we override Order status (state) END
+        $this->can_override_order_status();
 	}
 
 	/**
@@ -1113,6 +1084,317 @@ abstract class Nuvei_Pfw_Request {
 		return $subscr_list;
 	}
 
+    /**
+     * Here we check if the order belongs to Nuvei.
+     * 
+     * @param int $order_id
+     * @param bool $return_respons
+     * 
+     * @return bool
+     */
+    protected function is_nuvei_order( $order_id, $return_respons = false) {
+        if ( ! $this->sc_order instanceof WC_Order
+            || ! in_array( $this->sc_order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) ) 
+        ) {
+			$msg = 'Error - the order does not belongs to Nuvei.';
+			
+            Nuvei_Pfw_Logger::write(
+				array(
+					'order_id'       => $order_id,
+					'payment_method' => ( $this->sc_order instanceof WC_Order ) ? $this->sc_order->get_payment_method() : 'N/A',
+				),
+				$msg
+			);
+            
+            if ($return_respons) {
+                return false;
+            }
+
+			exit( esc_html( $msg ) );
+		}
+        
+        return true;
+    }
+    
+    /**
+     * Check if we can override the Order state.
+     * 
+     * @param bool $return_respons
+     * @return void
+     */
+    protected function can_override_order_status( $return_respons = false ) {
+        $ord_status = strtolower( $this->sc_order->get_status() );
+
+		if ( in_array( $ord_status, array( 'cancelled', 'refunded' ) ) ) {
+			$msg = 'Error - can not override status of Voided/Refunded Order.';
+			Nuvei_Pfw_Logger::write( $this->sc_order->get_payment_method(), $msg );
+
+            if ($return_respons) {
+                return false;
+            }
+            
+			exit( esc_html( $msg ) );
+		}
+
+		// do not replace "completed" with "auth" status
+		if ( 'completed' == $ord_status
+			&& 'auth' == strtolower( Nuvei_Pfw_Http::get_param( 'transactionType' ) )
+		) {
+			$msg = 'Error - can not override status Completed with Auth.';
+			Nuvei_Pfw_Logger::write( $this->sc_order->get_payment_method(), $msg );
+
+            if ($return_respons) {
+                return false;
+            }
+            
+			exit( esc_html( $msg ) );
+		}
+        
+        return true;
+    }
+    
+    protected function check_for_repeating_dmn($trId, $status, $return_respons = false) {
+		Nuvei_Pfw_Logger::write( 'check_for_repeating_dmn' );
+
+		$order_data = $this->sc_order->get_meta( NUVEI_PFW_TRANSACTIONS );
+
+		if ( ! empty( $order_data[ $trId ] )
+			&& ! empty( $order_data[ $trId ]['status'] )
+			&& strtolower($status) == strtolower($order_data[ $trId ]['status'])
+		) {
+			Nuvei_Pfw_Logger::write( 'Repating DMN message detected. Stop the process.' );
+            
+            if ($return_respons) {
+                return false;
+            }
+            
+			exit( 'This DMN is already received.' );
+		}
+
+		return true;
+	}
+    
+    /**
+	 * Change the status of the order.
+     * The null parameters are optional in some flows.
+	 *
+	 * @param int           $order_id           The Order Id.
+	 * @param string        $req_status         The Status of the request.
+	 * @param string        $transaction_type   The type of the transaction.
+	 * @param int|null      $refund_id          The ID of the Refund into WC.
+	 * @param float|null    $total              The Total according the plugin.
+	 * @param mixed|null    $tr_id              The Transaction ID according the plugin.
+	 * @param string|null   $pm                 The used payment method according the plugin.
+	 * @param string|null   $curr               The used currency according the plugin.
+	 */
+	protected function change_order_status( 
+        $order_id, 
+        $req_status, 
+        $transaction_type, 
+        $refund_id = null,
+        $total = null,
+        $tr_id = null,
+        $pm = null,
+        $curr = null
+    ) {
+		Nuvei_Pfw_Logger::write('Nuvei change_order_status()');
+
+		$dmn_amount     = $total ?? number_format(Nuvei_Pfw_Http::get_param( 'totalAmount', 'float' ), 2, '.', '');
+        $trans_id       = $tr_id ?? Nuvei_Pfw_Http::get_param( 'TransactionID' );
+        $payment_method = $pm ?? Nuvei_Pfw_Http::get_param( 'payment_method' );
+        $currency       = $curr ?? Nuvei_Pfw_Http::get_param( 'currency' );
+        $msg            = [];
+
+        // phpcs:ignore
+        $msg_transaction = '<b>' . $transaction_type . ' </b> '
+			. __( 'request', 'nuvei-payments-for-woocommerce' ) . '.<br/>';
+
+		$gw_data = $msg_transaction
+            . __( 'Response status: ', 'nuvei-payments-for-woocommerce' ) . '<b>' . $req_status . '</b>.<br/>'
+            . __( 'Payment Method: ', 'nuvei-payments-for-woocommerce' ) . $payment_method . '.<br/>'
+            . __( 'Transaction ID: ', 'nuvei-payments-for-woocommerce' ) . $trans_id . '.<br/>'
+            . __( 'Related Transaction ID: ', 'nuvei-payments-for-woocommerce' )
+            . Nuvei_Pfw_Http::get_param( 'relatedTransactionId', 'int' ) . '.<br/>'
+            . __( 'Transaction Amount: ', 'nuvei-payments-for-woocommerce' ) . $dmn_amount . ' ' . $currency . '.';
+
+		$message = '';
+		$status  = $this->sc_order->get_status();
+
+		Nuvei_Pfw_Logger::write(
+            array(
+                'Order status, order->get_status()' => $status,
+                'order PREV_TRANS_STATUS'           => $this->sc_order->get_meta( NUVEI_PFW_PREV_TRANS_STATUS ),
+                'DMN status'                        => $req_status,
+                'transaction type'                  => $transaction_type
+            ),
+            'order status'
+        );
+
+		switch ( strtolower($req_status) ) {
+			case 'canceled':
+				$message            = $gw_data;
+				$msg['class'] = 'woocommerce_message';
+
+				if ( in_array( $transaction_type, array( 'Auth', 'Settle', 'Sale' ) ) ) {
+					$status = $this->nuvei_gw->get_option( 'status_fail' );
+				}
+				break;
+
+			case 'approved':
+				$order_amount       = number_format($this->sc_order->get_total(), 2, '.', '');
+				$msg['class'] = 'woocommerce_message';
+
+				// Void
+				if ( 'Void' === $transaction_type ) {
+					$message = $gw_data;
+					$status  = $this->nuvei_gw->get_option( 'status_void' );
+					break;
+				}
+
+				// Refund
+				if ( in_array( $transaction_type, array( 'Credit', 'Refund' ), true ) ) {
+					$message = $gw_data;
+					$status  = $this->nuvei_gw->get_option( 'status_paid' );
+
+					// get current refund amount
+					$currency_code   = $this->sc_order->get_currency();
+					$currency_symbol = get_woocommerce_currency_symbol( $currency_code );
+					$message        .= '<br/><b>' . __( 'Refund: ', 'nuvei-payments-for-woocommerce' )
+						. '</b> #' . $refund_id;
+
+					if ( $order_amount == $this->sum_order_refunds() + $dmn_amount ) {
+						$status = $this->nuvei_gw->get_option( 'status_refund' );
+					}
+
+					break;
+				}
+
+				// Auth
+				if ( 'Auth' === $transaction_type ) {
+					$message = $gw_data;
+					$status  = $this->nuvei_gw->get_option( 'status_auth' );
+
+					if ( 0 == $order_amount ) {
+						$status = $this->nuvei_gw->get_option( 'status_paid' );
+					}
+				}
+
+				if ( in_array( $transaction_type, array( 'Settle', 'Sale' ), true ) ) {
+					$message = $gw_data;
+					$status  = $this->nuvei_gw->get_option( 'status_paid' );
+
+					$this->sc_order->payment_complete( $order_id );
+
+					Nuvei_Pfw_Logger::write( $status, 'Settle/Sale status' );
+				}
+
+				// check for correct amount
+				if ( in_array( $transaction_type, array( 'Auth', 'Sale' ), true ) ) {
+					$set_amount_warning = false;
+					$set_curr_warning   = false;
+
+					Nuvei_Pfw_Logger::write(
+						array(
+							'$order_amount'  => $order_amount,
+							'$dmn_amount'    => $dmn_amount,
+							'customField1'   => Nuvei_Pfw_Http::get_param( 'customField1' ),
+							'order currency' => $this->sc_order->get_currency(),
+							'param currency' => $currency,
+							'customField2'   => Nuvei_Pfw_Http::get_param( 'customField2' ),
+						),
+						'Check for fraud order.'
+					);
+
+					// check for correct amount
+					if ( $order_amount != $dmn_amount
+						&& Nuvei_Pfw_Http::get_param( 'customField1' ) != $order_amount
+					) {
+						$set_amount_warning = true;
+						Nuvei_Pfw_Logger::write( 'Amount warning!' );
+					}
+
+					// check for correct currency
+					if ( $this->sc_order->get_currency() !== $currency
+                        && $this->sc_order->get_currency() !== Nuvei_Pfw_Http::get_param( 'customField2' )
+					) {
+						$set_curr_warning = true;
+						Nuvei_Pfw_Logger::write( 'Currency warning!' );
+					}
+
+					// when currency is same, check the amount again, in case of some kind partial transaction
+					if ( $this->sc_order->get_currency() === $currency
+                        && $order_amount != $dmn_amount
+					) {
+						$set_amount_warning = true;
+						Nuvei_Pfw_Logger::write( 'Amount warning when currency is same!' );
+					}
+
+					$this->sc_order->update_meta_data(
+						NUVEI_PFW_ORDER_CHANGES,
+						array(
+							'curr_change'  => $set_curr_warning,
+							'total_change' => $set_amount_warning,
+						)
+					);
+				}
+
+				break;
+
+			case 'error':
+			case 'declined':
+			case 'fail':
+				$message  = Nuvei_Pfw_Http::get_param( 'message' );
+				$err_code = Nuvei_Pfw_Http::get_param( 'ErrCode' );
+				$reason   = Nuvei_Pfw_Http::get_param( 'Reason' );
+
+				if ( empty( $reason ) ) {
+					$reason = Nuvei_Pfw_Http::get_param( 'reason' );
+				}
+
+				$message = $gw_data . '<br/>'
+                	. ( ! empty( $err_code ) ? __( 'Error code: ', 'nuvei-payments-for-woocommerce' ) . $err_code . '<br/>' : '' )
+                    . ( ! empty( $reason ) ? __( 'Reason: ', 'nuvei-payments-for-woocommerce' ) . $reason . '<br/>' : '' )
+                    . ( ! empty( $message ) ? __( 'Message: ', 'nuvei-payments-for-woocommerce' ) . $message : '' );
+
+                $msg['class'] = 'woocommerce_message';
+
+				if ( in_array( $transaction_type, array( 'Auth', 'Sale' ) ) ) {
+					$status = $this->nuvei_gw->get_option( 'status_fail' );
+                    break;
+				}
+				if ( in_array( $transaction_type, array( 'Void', 'Settle' ) ) ) {
+					$status = $this->sc_order->get_meta( NUVEI_PFW_PREV_TRANS_STATUS );
+                    break;
+				}
+				if ( 'Refund' == $transaction_type ) {
+					$status = $this->nuvei_gw->get_option( 'status_paid' );
+                    break;
+				}
+
+				break;
+
+			case 'pending':
+				$message            = $gw_data;
+				$msg['class'] = 'woocommerce_message woocommerce_message_info';
+				break;
+		}
+
+		if ( ! empty( $message ) ) {
+			$msg['message'] = $message;
+			$this->sc_order->add_order_note( $msg['message'] );
+		}
+
+        Nuvei_Pfw_Logger::write(
+			array(
+				'$order_id' => $order_id,
+				'$status'   => $status,
+			),
+			'Order Status before save.'
+		);
+
+		$this->sc_order->update_status( $status );
+	}
+    
 	/**
 	 * Get the request endpoint - sandbox or production.
 	 *
@@ -1133,7 +1415,7 @@ abstract class Nuvei_Pfw_Request {
 	 * @return array
 	 */
 	private function validate_parameters( $params ) {
-		Nuvei_Pfw_Logger::write( $params, 'validate_parameters' );
+		Nuvei_Pfw_Logger::write( 'validate_parameters' );
 
 		// directly check the mails
 		if ( isset( $params['billingAddress']['email'] ) ) {

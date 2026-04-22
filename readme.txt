@@ -63,6 +63,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 == Changelog ==
 
+= 3.14.0 =
+* The plugin can update the Order status based on Simply Connect response, as alternative of the DMN. Still for Nuvei Rebilling Orders the DMNs are mandatory!
+
 = 3.13.2 =
 * Updated the race condition prevention.
 * Exposed two custom events in the plugin front-end - nuveiPfw:isCheckoutClassicFormValidEvent and nuveiPfw:onPageLoadEvent.

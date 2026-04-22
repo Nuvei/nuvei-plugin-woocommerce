@@ -4,6 +4,7 @@ const nuveiCheckoutClassicPayBtn        = '#place_order';
 const nuveiCheckoutCustomPayBtn         = '#nuvei_place_order';
 const nuveiCheckoutClassicPMethodName   = 'input[name="payment_method"]';
 const nuveiMandatoryCheckoutFields      = '#billing_country, #billing_email';
+const nuveiGetChecoutDataDelay          = 350; // ms — collapses bursts of calls into one fetch
 const nuveiWallets                      = ['ppp_ApplePay', 'ppp_GooglePay', 'ppp_Paze'];
 
 var nuveiCheckoutSdkParams          = {};
@@ -11,7 +12,6 @@ var nuveiIsCheckoutLoaded           = false;
 var nuveiIsPayForExistingOrderPage  = false;
 var nuveiSuccessRedirect            = '';
 var nuveiIsFormValid                = true;
-let nuveiBlocksResolvePayment       = null;
 // AbortController for the current openOrder fetch request
 var nuveiGetCheckoutDataController  = null;
 var nuveiCheckoutRequestId          = null; // request flag
@@ -19,7 +19,9 @@ var nuveiIsSimplyFormValid          = false;
 // Debounce timer and in-flight flag for nuveiGetCheckoutData
 var nuveiGetCheckoutDataTimer       = null;
 var nuveiGetCheckoutDataInFlight    = false;
-const NUVEI_GET_CHECKOUT_DATA_DELAY = 350; // ms — collapses bursts of calls into one fetch
+let nuveiBlocksResolvePayment       = null;
+let nuveiSimplyPm                   = '';
+// _nuveiOrderId will be set dynamically and will hold the saved WC Order ID 
 
 /**
  * Check if the Checkout form is valid.
@@ -132,6 +134,27 @@ function nuveiAfterSdkResponse(resp) {
 	) {
         // the new Classic Checkout flow
         if ('' != nuveiSuccessRedirect) {
+            // submit the transacion data and the related order id
+            if ( window?._nuveiOrderId && ! isNaN(window._nuveiOrderId) ) {
+                fetch(scTrans.apiUrl + '/set-transaction-checker/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': scTrans.nuveiApiSec
+                    },
+                    body: JSON.stringify({
+                        orderId: window._nuveiOrderId,
+//                        transactionStatus: resp.transactionStatus,
+//                        transactionType: resp.transactionType,
+                        transactionId: resp.transactionId,
+//                        userPaymentOptionId: resp.userPaymentOptionId,
+                        paymentMethod: nuveiSimplyPm
+                    }),
+                    keepalive: true
+                });
+            }
+            
+            // continue with the redirect
             window.location.href = nuveiSuccessRedirect;
             return;
         }
@@ -314,7 +337,8 @@ function nuveiOnSimplyReady() {
 }
 
 function nuveiPmChange(params) {
-    console.log(params.paymentMethodName);
+//    console.log(params.paymentMethodName);
+    nuveiSimplyPm = params.paymentMethodName;
 
     if (nuveiWallets.indexOf(params.paymentMethodName) >= 0) {
         jQuery(nuveiCheckoutClassicPayBtn).hide();
@@ -552,7 +576,7 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
                 nuveiGetCheckoutDataInFlight = false;
             });
 
-    }, NUVEI_GET_CHECKOUT_DATA_DELAY);
+    }, nuveiGetChecoutDataDelay);
 
     return;
 }
@@ -621,7 +645,7 @@ jQuery(function($) {
                     nuveiDestroySimplyConnect();
 
                     // No outer setTimeout needed — nuveiGetCheckoutData() has
-                    // its own internal debounce (NUVEI_GET_CHECKOUT_DATA_DELAY)
+                    // its own internal debounce (nuveiGetChecoutDataDelay)
                     // that collapses rapid bursts.  The old 1 000 ms delay was
                     // the primary contributor to the page-load + field-change
                     // race condition (Race Window 1).
@@ -662,6 +686,8 @@ jQuery(function($) {
                     jQuery('#nuvei_blocker').show();
                     jQuery('form.checkout').removeClass('processing');
                     jQuery('form.checkout').unblock();
+                    
+                    window._nuveiOrderId = data?.order_id;
 
                     setTimeout(() => {
                         simplyConnect.submitPayment();
