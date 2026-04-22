@@ -236,7 +236,15 @@ class Nuvei_Payments_For_Woocommerce
             'woocommerce_store_api_checkout_order_processed',
             array (__CLASS__, 'checkout_order_processed'),
             10,
-			3
+			1
+        );
+        
+        // For Bloacks Checkout, to get my custom meta data provided from the front-end.
+        add_action(
+            'woocommerce_store_api_checkout_update_order_from_request',
+            array (__CLASS__, 'update_order_from_request'),
+            10,
+			2
         );
 
         add_action(
@@ -1133,22 +1141,69 @@ class Nuvei_Payments_For_Woocommerce
 	}
 
  	public static function checkout_order_processed($order) {
-        // no Nuvei Order
+        // error
+        if ( ! $order instanceof WC_Order ) {
+            return;
+        }
+        
+        // error - no Nuvei Order
         if ($order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME) {
             return;
         }
 
         Nuvei_Pfw_Logger::write('checkout_order_processed');
 
-        // Zero-total Order in WC Blocks
-	    if ( $order instanceof WC_Order
-	        && 0 == (float) $order->get_total()
-        ) {
+        # Zero-total Order in WC Blocks
+	    if ( 0 == (float) $order->get_total() ) {
 			Nuvei_Pfw_Logger::write( 'hook woocommerce_blocks_checkout_order_processed - Zero Total Order.' );
-
 			self::$wc_nuvei->process_payment( $order->get_id() );
 		}
 	}
+    
+    public static function update_order_from_request($order, $request) {
+        // error
+        if ( ! $order instanceof WC_Order ) {
+            return;
+        }
+        
+        // error - no Nuvei Order
+        if ($order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME) {
+            return;
+        }
+        
+        # The logic for validating the Order by the received Transacion ID from Simply Connect
+        // payment_data is an array of {key, value} objects
+        $payment_data  = $request['payment_data'] ?? [];
+        $tr_id         = '';
+        $pm            = '';
+
+        foreach ( $payment_data as $item ) {
+            if ( ( $item['key'] ?? '' ) === '_nuveiTrId' ) {
+                $tr_id = $item['value'];
+            }
+            if ( ( $item['key'] ?? '' ) === '_nuveiPm' ) {
+                $pm    = $item['value'];
+            }
+        }
+
+        if ( empty( $tr_id ) || empty( $pm ) ) {
+            return;
+        }
+
+        $params = [
+            'orderId'       => $order->get_id(),
+            'transactionId' => $tr_id,
+            'paymentMethod' => $pm,
+        ];
+
+        if ( ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $params ] ) ) {
+            as_schedule_single_action(
+                time() + 120,
+                'nuvei_save_transaction_to_order',
+                [ $params ]
+            );
+        }
+    }
 
 	/**
 	 * Display Nuvei message in the admin.
@@ -1541,10 +1596,7 @@ class Nuvei_Payments_For_Woocommerce
                     
                     // check for existing Order and repeating task
                     if ( $order
-                        && ! as_has_scheduled_action( 
-                            'nuvei_save_transaction_to_order',
-                            [ $params ] 
-                        ) 
+                        && ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $params ] ) 
                     ) {
                         // Set Action Scheduler for about 2 min
                         as_schedule_single_action( 

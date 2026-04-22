@@ -144,10 +144,7 @@ function nuveiAfterSdkResponse(resp) {
                     },
                     body: JSON.stringify({
                         orderId: window._nuveiOrderId,
-//                        transactionStatus: resp.transactionStatus,
-//                        transactionType: resp.transactionType,
                         transactionId: resp.transactionId,
-//                        userPaymentOptionId: resp.userPaymentOptionId,
                         paymentMethod: nuveiSimplyPm
                     }),
                     keepalive: true
