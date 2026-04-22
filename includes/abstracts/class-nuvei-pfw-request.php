@@ -1093,6 +1093,10 @@ abstract class Nuvei_Pfw_Request {
      * @return bool
      */
     protected function is_nuvei_order( $order_id, $return_respons = false) {
+        if (! $this->sc_order instanceof WC_Order) {
+            $this->sc_order = wc_get_order($order_id);
+        }
+        
         if ( ! $this->sc_order instanceof WC_Order
             || ! in_array( $this->sc_order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) ) 
         ) {

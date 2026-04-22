@@ -62,7 +62,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		);
 
 		// stop DMNs only for testing!
-//		exit(wp_json_encode('DMN was stopped, please run it manually!'));
+		exit(wp_json_encode('DMN was stopped, please run it manually!'));
 
 		// Exit - do not process CARD_TOKENIZATION DMNs
 		if ( 'CARD_TOKENIZATION' == Nuvei_Pfw_Http::get_param( 'type' ) ) {
