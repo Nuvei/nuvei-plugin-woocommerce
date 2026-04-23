@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.4.0
+ * Version: 3.14.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * License: GPLv2
@@ -239,7 +239,7 @@ class Nuvei_Payments_For_Woocommerce
 			1
         );
         
-        // For Bloacks Checkout, to get my custom meta data provided from the front-end.
+        // For Blocks Checkout, to get my custom meta data provided from the front-end.
         add_action(
             'woocommerce_store_api_checkout_update_order_from_request',
             array (__CLASS__, 'update_order_from_request'),
@@ -1198,7 +1198,7 @@ class Nuvei_Payments_For_Woocommerce
 
         if ( ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $params ] ) ) {
             as_schedule_single_action(
-                time() + 120,
+                time() + NUVEI_ACTION_SCHEDULER_DELAY,
                 'nuvei_save_transaction_to_order',
                 [ $params ]
             );
@@ -1385,6 +1385,16 @@ class Nuvei_Payments_For_Woocommerce
                 $sv_class   = new Nuvei_Pfw_Settle_Void( self::$wc_nuvei->settings );
                 $order_id   = $request->get_param('orderId');
                 $data       = $sv_class->create_settle_void( sanitize_text_field( $order_id ), 'void' );
+                
+                // update the order
+                if ( ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $data ] )  ) {
+                    // Set Action Scheduler
+                    as_schedule_single_action( 
+                        time() + NUVEI_ACTION_SCHEDULER_DELAY, 
+                        'nuvei_save_transaction_to_order', 
+                        [ $data ]
+                    );
+                }
 
                 return rest_ensure_response( $data );
             },
@@ -1398,6 +1408,19 @@ class Nuvei_Payments_For_Woocommerce
                 $sv_class   = new Nuvei_Pfw_Settle_Void( self::$wc_nuvei->settings );
                 $order_id   = $request->get_param('orderId');
                 $data       = $sv_class->create_settle_void( sanitize_text_field( $order_id ), 'settle' );
+                
+                // we need ot for the update
+                $data['orderId'] = $order_id;
+                
+                // update the order
+                if ( ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $data ] )  ) {
+                    // Set Action Scheduler
+                    as_schedule_single_action( 
+                        time() + NUVEI_ACTION_SCHEDULER_DELAY, 
+                        'nuvei_save_transaction_to_order', 
+                        [ $data ]
+                    );
+                }
 
                 return rest_ensure_response( $data );
             },
@@ -1591,16 +1614,15 @@ class Nuvei_Payments_For_Woocommerce
                     && ! empty($params['transactionId'])
                     && ! empty($params['paymentMethod'])
                 ) {
-                    $order_id   = $request['orderId'] ?? 0;
-                    $order      = wc_get_order( absint( $request['orderId'] ) );
+                    $order = wc_get_order( absint( $params['orderId'] ) );
                     
                     // check for existing Order and repeating task
                     if ( $order
                         && ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $params ] ) 
                     ) {
-                        // Set Action Scheduler for about 2 min
+                        // Set Action Scheduler
                         as_schedule_single_action( 
-                            time() + 120, 
+                            time() + NUVEI_ACTION_SCHEDULER_DELAY, 
                             'nuvei_save_transaction_to_order', 
                             [ $params ]
                         );
@@ -1752,13 +1774,11 @@ class Nuvei_Payments_For_Woocommerce
     /**
      * We will save the transaction data sent from Simply Connect to the Order.
      * 
-     * @param array $request_params
+     * @param array $params
      * @return void
      */
-    public static function save_transaction_to_order($request_params) {
-        $params = $request_params;
-        
-        Nuvei_Pfw_Logger::write([$request_params, $params], 'save_transaction_to_order' );
+    public static function save_transaction_to_order($params) {
+        Nuvei_Pfw_Logger::write($params, 'save_transaction_to_order' );
         
         $order_id   = (int) ($params['orderId'] ?? 0);
         $tr_id      = sanitize_text_field( $params['transactionId'] ?? '' );
@@ -1789,7 +1809,7 @@ class Nuvei_Payments_For_Woocommerce
         
         // get the transaction details
         $obj    = new Nuvei_Pfw_Get_Trans_Details();
-        $resp   = $obj->process($request_params);
+        $resp   = $obj->process($params);
         
         $status             = $resp['transactionDetails']['transactionStatus'] ?? '';
         $transaction_type   = $resp['transactionDetails']['transactionType'] ?? '';

@@ -6,8 +6,9 @@ defined( 'ABSPATH' ) || exit;
  * A class for Settle and Void requests.
  */
 class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
-	/**
-	 * Main method of the class.
+	
+    /**
+	 * Mandatory method.
 	 * Expected parameters are:
 	 *
 	 * @param  array [order_id, action, method]
@@ -55,7 +56,8 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 	}
 
 	/**
-	 * Create Settle and Void
+	 * Create Settle and Void after internal API requests.
+     * This is the the main method we use for Settle and Void.
 	 *
 	 * @param int    $order_id
 	 * @param string $action
@@ -89,14 +91,6 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 			$this->sc_order->save();
 		}
 
-//		wp_send_json(
-//			array(
-//				'status' => $ord_status,
-//				'data'   => $resp,
-//			)
-//		);
-//		exit;
-        
         return array(
             'status' => $ord_status,
             'data'   => $resp,
