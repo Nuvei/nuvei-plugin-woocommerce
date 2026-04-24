@@ -52,7 +52,10 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 			'urlDetails'           => array( 'notificationUrl' => $notify_url ),
 		);
 
-		return $this->call_rest_api( $data['method'], $params );
+		$resp = $this->call_rest_api( $data['method'], $params );
+        $resp = array_merge($resp, $params);
+        
+        return $resp;
 	}
 
 	/**
@@ -61,6 +64,7 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 	 *
 	 * @param int    $order_id
 	 * @param string $action
+     * @return array
 	 */
 	public function create_settle_void( $order_id, $action ) {
 		$this->is_order_valid( $order_id );
@@ -82,11 +86,22 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 			// change order status
 			$this->sc_order->update_status( $this->nuvei_gw->get_option( 'status_pending' ) );
 
-			// save the Refund into transactions, but without status, unitl DMN come
-			unset( $resp['status'] );
-			$resp['transactionType'] = ucfirst( $action );
+			// save the transaction into transactions, but without status, unitl DMN come
+//			unset( $resp['status'] );
+//			$resp['transactionType'] = ucfirst( $action );
 
 			$this->save_transaction_data( $resp );
+            
+            $this->change_order_status( 
+                $order_id, 
+                $resp['status'], 
+                $resp['transactionType'], 
+                null, 
+                $resp['amount'], 
+                $resp['transactionId'], 
+                $pm ?? '', 
+                $resp['currency'] 
+            );
 
 			$this->sc_order->save();
 		}

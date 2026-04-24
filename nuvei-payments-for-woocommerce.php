@@ -1387,14 +1387,14 @@ class Nuvei_Payments_For_Woocommerce
                 $data       = $sv_class->create_settle_void( sanitize_text_field( $order_id ), 'void' );
                 
                 // update the order
-                if ( ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $data ] )  ) {
-                    // Set Action Scheduler
-                    as_schedule_single_action( 
-                        time() + NUVEI_ACTION_SCHEDULER_DELAY, 
-                        'nuvei_save_transaction_to_order', 
-                        [ $data ]
-                    );
-                }
+//                if ( ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $data ] )  ) {
+//                    // Set Action Scheduler
+//                    as_schedule_single_action( 
+//                        time() + NUVEI_ACTION_SCHEDULER_DELAY, 
+//                        'nuvei_save_transaction_to_order', 
+//                        [ $data ]
+//                    );
+//                }
 
                 return rest_ensure_response( $data );
             },
@@ -1413,14 +1413,14 @@ class Nuvei_Payments_For_Woocommerce
                 $data['orderId'] = $order_id;
                 
                 // update the order
-                if ( ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $data ] )  ) {
-                    // Set Action Scheduler
-                    as_schedule_single_action( 
-                        time() + NUVEI_ACTION_SCHEDULER_DELAY, 
-                        'nuvei_save_transaction_to_order', 
-                        [ $data ]
-                    );
-                }
+//                if ( ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $data ] )  ) {
+//                    // Set Action Scheduler
+//                    as_schedule_single_action( 
+//                        time() + NUVEI_ACTION_SCHEDULER_DELAY, 
+//                        'nuvei_save_transaction_to_order', 
+//                        [ $data ]
+//                    );
+//                }
 
                 return rest_ensure_response( $data );
             },

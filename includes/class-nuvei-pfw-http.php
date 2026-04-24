@@ -12,13 +12,15 @@ class Nuvei_Pfw_Http {
 	 * Get request parameter by key.
 	 *
 	 * @param string $key         Request key.
-	 * @param string $type        Optional. Possible vaues: string, float, int, array, mail/email, other.
+	 * @param string $type        Optional. Possible values: string, float, int, array, mail/email, other.
 	 * @param mixed  $default     Optional. Return value if fail.
 	 * @param array  $parent      Optional array with parameters to search in.
 	 *
 	 * @return mixed
 	 */
 	public static function get_param( $key, $type = 'string', $default = '', $parent = array() ) {
+        // TODO - when check for the $key try for the exact $key and for lcfirst($key)
+        
 		switch ( $type ) {
 			case 'mail':
 			case 'email':

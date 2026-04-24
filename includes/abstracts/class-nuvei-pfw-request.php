@@ -963,6 +963,10 @@ abstract class Nuvei_Pfw_Request {
 
 		$transaction_type = Nuvei_Pfw_Http::get_param( 'transactionType', 'string', '', $params );
 		$status           = Nuvei_Pfw_Http::get_request_status();
+        
+        if (!empty($params['status'])) {
+            $status = $params['status'];
+        }
 
         Nuvei_Pfw_Logger::write(
             [
