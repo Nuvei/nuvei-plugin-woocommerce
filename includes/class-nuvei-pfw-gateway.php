@@ -946,7 +946,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		$checkout_data = array( // use it in the template
 			'sessionToken'           => $oo_data['sessionToken'],
-			'env'                    => 'yes' == $this->get_option( 'test' ) ? 'test' : 'prod',
+			'env'                    => 'yes' == $this->get_option( 'test' ) ? 'int' : 'prod',
 			'merchantId'             => $this->get_option( 'merchantId' ),
 			'merchantSiteId'         => $this->get_option( 'merchantSiteId' ),
 			'country'                => $ord_details['billingAddress']['country'],

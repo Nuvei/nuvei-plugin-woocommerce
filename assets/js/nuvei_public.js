@@ -105,20 +105,23 @@ function nuveiAfterSdkResponse(resp) {
 	console.log('nuveiAfterSdkResponse', resp);
 
     // expired session
-    if (resp.hasOwnProperty('session_expired') && resp.session_expired) {
+    if (resp?.session_expired) {
         window.location.reload();
         return;
     }
 
-    // a specific Error
-    if(resp.hasOwnProperty('status')
-        && resp.status == 'ERROR'
-        && resp.hasOwnProperty('reason')
-        && resp.reason.toLowerCase().search('the currency is not supported') >= 0
+    // a specific currency Error
+    if ( resp?.status == 'ERROR'
+        && resp?.reason.toLowerCase().search('the currency is not supported') >= 0
     ) {
         nuveiShowErrorMsg(resp.reason);
         return;
     }
+    
+    if (resp?.status.toLowerCase() == 'canceled') {
+		nuveiShowErrorMsg(scTrans.PaymentCanceled);
+		return;
+	}
 
 	if (typeof resp.result == 'undefined') {
 		console.error('Error with Checkout SDK response', resp);
@@ -165,7 +168,7 @@ function nuveiAfterSdkResponse(resp) {
         }
 	}
 
-	if (resp.result == 'DECLINED') {
+	if (resp?.result == 'DECLINED') {
         if (resp.hasOwnProperty('errorDescription')
             && 'insufficient funds' == resp.errorDescription.toLowerCase()
         ) {
@@ -176,7 +179,7 @@ function nuveiAfterSdkResponse(resp) {
 		nuveiShowErrorMsg(scTrans.paymentDeclined);
 		return;
 	}
-
+    
 	nuveiShowErrorMsg(scTrans.unexpectedError);
 	return;
 }
@@ -290,6 +293,7 @@ function showNuveiCheckout(_params) {
     nuveiCheckoutSdkParams.onReady                  = nuveiOnSimplyReady;
     nuveiCheckoutSdkParams.onSelectPaymentMethod    = nuveiPmChange;
     nuveiCheckoutSdkParams.onFormValidated          = nuveiCheckIsSimplyValid;
+    nuveiCheckoutSdkParams.crossBrowserApplePay     = true;
 
 	simplyConnect(nuveiCheckoutSdkParams);
 
