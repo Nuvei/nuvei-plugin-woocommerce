@@ -118,7 +118,7 @@ function nuveiAfterSdkResponse(resp) {
         return;
     }
     
-    if (resp?.status.toLowerCase() == 'canceled') {
+    if (resp?.status?.toLowerCase() == 'canceled') {
 		nuveiShowErrorMsg(scTrans.PaymentCanceled);
 		return;
 	}
