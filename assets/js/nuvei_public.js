@@ -112,7 +112,7 @@ function nuveiAfterSdkResponse(resp) {
 
     // a specific currency Error
     if ( resp?.status == 'ERROR'
-        && resp?.reason.toLowerCase().search('the currency is not supported') >= 0
+        && resp?.reason?.toLowerCase().search('the currency is not supported') >= 0
     ) {
         nuveiShowErrorMsg(resp.reason);
         return;
