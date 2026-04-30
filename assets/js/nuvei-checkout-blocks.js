@@ -406,6 +406,7 @@ jQuery(function() {
     // append a blocker
     if ( typeof scTrans != 'undefined' && jQuery('#payment-method').length ) {
         jQuery('#payment-method')
+            .parent('form')
             .append('<div id="nuvei_blocker"><img class="nuvei_loader" src="'
                 + scTrans.loaderUrl + '" /></div>');
     }
