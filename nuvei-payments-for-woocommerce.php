@@ -603,7 +603,7 @@ class Nuvei_Payments_For_Woocommerce
 		}
 
 		// hide Refund Button, it is visible by default
-		if ( ! in_array( $order_payment_method, NUVEI_PFW_PMS_REFUND_VOID )
+		if ( ! in_array( $order_payment_method, NUVEI_PFW_REFUND_METHODS )
 			|| ! in_array( $last_approved_tr_data['transactionType'], array( 'Sale', 'Settle', 'Credit', 'Refund' ) )
 			|| 'approved' != strtolower( $last_approved_tr_data['status'] )
 			|| 0 == $order_total
@@ -627,8 +627,7 @@ class Nuvei_Payments_For_Woocommerce
          * the Total must be greater than 0;
          * the Void must be triggered no more than 48 hours after the last approved transaction;
          */
-//		if ( 'cc_card' == $order_payment_method
-		if ( in_array( $order_payment_method, NUVEI_PFW_PMS_REFUND_VOID )
+		if ( in_array( $order_payment_method, NUVEI_PFW_VOID_METHODS )
 			&& empty( $order_refunds )
 			&& in_array( $last_approved_tr_data['transactionType'], array( 'Sale', 'Settle', 'Auth' ) )
 			&& (float) $order_total > 0
