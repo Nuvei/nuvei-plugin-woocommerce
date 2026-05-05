@@ -13,7 +13,7 @@
  * Tested up to: 6.9
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 10.6.2
+ * WC tested up to: 10.7.0
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -295,6 +295,7 @@ class Nuvei_Payments_For_Woocommerce
 
                 'MissingEmailCountry'   => __( 'Please fill email and country fields to continue with payment.', 'nuvei-payments-for-woocommerce' ),
                 'MissingRequiredFields' => __( 'Please fill the required fields to continue with payment.', 'nuvei-payments-for-woocommerce' ),
+                'PaymentCanceled'       => __( 'The payment was canceled.', 'nuvei-payments-for-woocommerce' ),
             )
         );
     }
@@ -384,6 +385,7 @@ class Nuvei_Payments_For_Woocommerce
             }
         }
 
+        wp_enqueue_script( 'nuvei_applepay_sdk' );
         wp_enqueue_script( 'nuvei_checkout_sdk' );
 
         wp_localize_script( 'nuvei_js_public', 'scTrans', $localizations );
@@ -455,7 +457,7 @@ class Nuvei_Payments_For_Woocommerce
 				'nuvei_js_admin',
 				$plugin_url . 'assets/js/nuvei_admin.js',
 				array( 'jquery' ),
-				'2024-07-30',
+				'2026-04-24',
 				true
 			);
 
@@ -611,7 +613,7 @@ class Nuvei_Payments_For_Woocommerce
 		}
 
 		// hide Refund Button, it is visible by default
-		if ( ! in_array( $order_payment_method, NUVEI_PFW_PMS_REFUND_VOID )
+		if ( ! in_array( $order_payment_method, NUVEI_PFW_REFUND_METHODS )
 			|| ! in_array( $last_approved_tr_data['transactionType'], array( 'Sale', 'Settle', 'Credit', 'Refund' ) )
 			|| 'approved' != strtolower( $last_approved_tr_data['status'] )
 			|| 0 == $order_total
@@ -635,7 +637,7 @@ class Nuvei_Payments_For_Woocommerce
          * the Total must be greater than 0;
          * the Void must be triggered no more than 48 hours after the last approved transaction;
          */
-		if ( 'cc_card' == $order_payment_method
+		if ( in_array( $order_payment_method, NUVEI_PFW_VOID_METHODS )
 			&& empty( $order_refunds )
 			&& in_array( $last_approved_tr_data['transactionType'], array( 'Sale', 'Settle', 'Auth' ) )
 			&& (float) $order_total > 0
@@ -682,8 +684,9 @@ class Nuvei_Payments_For_Woocommerce
 			);
 
 			if ( $return_html ) {
-						$html_elements['settleQuestion'] = $question;
-			} else {
+                $html_elements['settleQuestion'] = $question;
+			} 
+            else {
 				echo '<button id="sc_settle_btn" type="button" onclick="nuveiAction(\''
 					. esc_html( $question )
 					. '\', \'settle\', \'' . esc_html( $order_id ) . '\')" class="button generate-items">'

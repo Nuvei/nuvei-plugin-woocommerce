@@ -61,52 +61,57 @@ function nuveiAction(question, action, orderId, subscrId, isWcfm) {
 
             // error - response error
             if (!data || !data?.status || !data?.data) {
-                jQuery('#custom_loader').hide();
-                alert('Response error.');
-                return;
+                nuveiShowMsg('Response error.', 'error');
             }
-
-            if (data.status == 1) {
+            // success
+            else if (data.status == 1) {
                 if (isWcfm) {
                     window.location = '/store-manager/orderslist/';
                     return;
                 }
-
-                let urlParts    = window.location.toString().split('post.php');
-                window.location = urlParts[0] + 'edit.php?post_type=shop_order';
-
-                return;
+                
+                nuveiShowMsg(`The ${action} request was submitted. Please, wait for confirmation!`, 'info');
             }
-
-            if (data?.data?.reason && data.data.reason != '') {
-                jQuery('#custom_loader').hide();
-                alert(data.data.reason);
-                return;
-            }
-
-            if (data?.data?.gwErrorReason && data.data.gwErrorReason != '') {
-                jQuery('#custom_loader').hide();
-                alert(data.data.gwErrorReason);
-                return;
-            }
-
             // error
+            else if (data?.data?.reason && data.data.reason != '') {
+                nuveiShowMsg(data.data.reason, 'warning');
+            }
+            // error
+            else if (data?.data?.gwErrorReason && data.data.gwErrorReason != '') {
+                nuveiShowMsg(data.data.gwErrorReason, 'error');
+            }
+            // error
+            else {
+                nuveiShowMsg('Response error.', 'error');
+            }
+            
             jQuery('#custom_loader').hide();
-            alert('Response error.');
         })
         // error after the first check
         .catch(async err => {
             // in case of WP_Error, usually in json
             if (err.json) {
                 const errorData = await err.json();
-                alert('Server error: ' + errorData.message);
+                nuveiShowMsg(`Server error: ${errorData.message}`, 'error');
             }
             else {
-                alert('Unexpected error.');
+                nuveiShowMsg('Unexpected error.', 'error');
             }
 
             jQuery('#custom_loader').hide();
         });
+}
+
+/**
+ * Show a message in the admin.
+ * 
+ * @param {string} msgText
+ * @param {string} msgType Possible values - success, info, warning, error
+ */
+function nuveiShowMsg(msgText, msgType = 'info') {
+    let $notice = jQuery(`<div class="notice notice-${msgType}"><p>${msgText}</p></div>`);
+    jQuery('h1.wp-heading-inline').closest('.wrap').prepend($notice);
+    jQuery('html, body').animate({ scrollTop: 0 }, 300);
 }
 
 /**
@@ -144,7 +149,8 @@ function scCreateRefund(question, showMsg, isWcfm) {
 		});
 
         console.log(scTrans.RefundAmountError);
-        alert(scTrans.RefundAmountError);
+//        alert(scTrans.RefundAmountError);
+        nuveiShowMsg(scTrans.RefundAmountError, 'error');
 
 		return;
 	}
@@ -188,37 +194,25 @@ function scCreateRefund(question, showMsg, isWcfm) {
                     return;
                 }
 
-                let urlParts    = window.location.toString().split('post.php');
-                window.location = urlParts[0] + 'edit.php?post_type=shop_order';
-                return;
+                nuveiShowMsg(`The refund request was submitted. Please, wait for confirmation!`, 'info');
             }
-
             // error
-            if(data?.data) {
-                jQuery('body').find('#sc_api_refund').prop('disabled', false);
-                jQuery('body').find('#sc_refund_spinner').hide();
-
+            else if (data?.data) {
                 if (data?.data?.reason && data.data.reason != '') {
-                    alert(data.data.reason);
+                    nuveiShowMsg(data.data.reason, 'error');
                 }
                 else if (data?.data?.gwErrorReason && data.data.gwErrorReason != '') {
-                    alert(data.data.gwErrorReason);
+                    nuveiShowMsg(data.data.gwErrorReason, 'error');
                 }
-
-                return;
             }
-
             // error
-            if(data?.msg && '' != data.msg) {
-                jQuery('body').find('#sc_api_refund').prop('disabled', false);
-                jQuery('body').find('#sc_refund_spinner').hide();
-
-                alert(data.msg);
-                return;
+            else if(data?.msg && '' != data.msg) {
+                nuveiShowMsg(data.data.gwErrorReason, 'error');
             }
-
             // error
-            alert('Response error.');
+            else {
+                nuveiShowMsg('Response error.', 'error');
+            }
 
             jQuery('body').find('#sc_api_refund').prop('disabled', false);
             jQuery('body').find('#sc_refund_spinner').hide();
@@ -231,10 +225,10 @@ function scCreateRefund(question, showMsg, isWcfm) {
             // in case of WP_Error, usually in json
             if (err.json) {
                 const errorData = await err.json();
-                alert('Server error: ' + errorData.message);
+                nuveiShowMsg('Server error: ' + errorData.message, 'error');
             }
             else {
-                alert('Unexpected error.');
+                nuveiShowMsg('Unexpected error.', 'error');
             }
         });
 }

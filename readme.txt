@@ -66,6 +66,10 @@ If you plan to install this plugin form the WordPress store, but use a version d
 = 3.14.0 =
 * The plugin can update the Order status based on Simply Connect response, as alternative of the DMN. Still for Nuvei Rebilling Orders the DMNs are mandatory!
 
+= 3.13.3 =
+* After admin actions like Settle, Void and Refund, do not redirect/reload, but show a message on the top of the page.
+* Allowed Void and Refund for ApplePay.
+
 = 3.13.2 =
 * Updated the race condition prevention.
 * Exposed two custom events in the plugin front-end - nuveiPfw:isCheckoutClassicFormValidEvent and nuveiPfw:onPageLoadEvent.
