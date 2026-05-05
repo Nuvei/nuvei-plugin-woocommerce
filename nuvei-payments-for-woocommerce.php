@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.13.3
+ * Version: 3.13.4
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * License: GPLv2
@@ -249,6 +249,15 @@ class Nuvei_Payments_For_Woocommerce
         // hook to show unreaded Nuvei' system messages
         add_action( 'admin_notices', array (__CLASS__, 'display_messages') );
 
+        // when save Order check for Nuvei transaction field
+        add_action('woocommerce_checkout_create_order', function($order, $data) {
+            if ( ! empty($_POST['nuvei_transaction_id'])) {
+                $order->update_meta_data(
+                    NUVEI_PFW_TR_ID,
+                    sanitize_text_field($_POST['nuvei_transaction_id'])
+                );
+            }
+        }, 10, 2);
     }
 
     public static function set_translated_texts() {
@@ -1321,7 +1330,7 @@ class Nuvei_Payments_For_Woocommerce
     }
 
     public static function rest_api_calls() {
-        Nuvei_Pfw_Logger::write('rest_api_calls');
+//        Nuvei_Pfw_Logger::write('rest_api_calls');
 
         # Admin calls
         // Void (Cancel)
@@ -1405,7 +1414,7 @@ class Nuvei_Payments_For_Woocommerce
                 $msg_id     = $request->get_param( 'msgId' );
                 $messages   = get_option( 'custom_system_messages', array() );
 
-                Nuvei_Pfw_Logger::write($messages);
+                Nuvei_Pfw_Logger::write(count($messages));
 
                 if ( isset( $messages[ $msg_id ]['read'] ) ) {
     				// remove the message

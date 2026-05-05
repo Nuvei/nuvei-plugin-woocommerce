@@ -18,68 +18,25 @@ var nuveiAllowFormSubmit    = false;
 var nuveiBlocksReloadTimer  = null;
 
 /**
- * We update Nuvei Order here.
- *
- * @returns {bool}
- */
-function nuveiUpdateOrder(resolve, reject) {
-    fetch(scTrans.apiUrl + '/pre-payment/', {
-        method: 'GET',
-        headers: {
-            'X-WP-Nonce': scTrans.nuveiApiSec,
-            'Content-Type': 'application/json'
-        }
-    })
-        // 1. first check for the status code (200 OK)
-        .then(res => {
-            if (!res.ok) {
-                // error - 401, 403, 404 or 500
-                throw res;
-            }
-
-            // success, continue
-            return res.json();
-        })
-        // the success
-        .then(data => {
-            console.log(data);
-
-            // success
-            if (data?.success && 1 == data.success) {
-                console.log('prepayment resolved.');
-
-                resolve();
-                return;
-            }
-
-            // error
-            reject();
-            window.location.reload();
-            return;
-        })
-        // error after the first check
-        .catch(async err => {
-            reject();
-            ShowErrorMsg(scTrans.unexpectedError);
-            jQuery('#nuvei_blocker').hide();
-            return;
-        });
-}
-
-/**
  * We use pre-payment for the Blocks only.
  * We call this method from nuvei_public.js
  *
  * @param {object} paymentDetails
  * @returns {Promise}
  */
-function nuveiPrePayment(paymentDetails) {
-	console.log('nuveiPrePayment');
+function nuveiPrePaymentBlocks(paymentDetails) {
+	console.log('nuveiPrePaymentBlocks');
 
 	return new Promise((resolve, reject) => {
         // check for recaptch
         if (jQuery('#g-recaptcha-response').length && '' == jQuery('#g-recaptcha-response').val()) {
             nuveiShowErrorMsg(scTrans.CaptchaError);
+            reject();
+            return;
+        }
+        
+        // check the form
+        if ( ! nuveiIsCheckoutBlocksFormValid() ) {
             reject();
             return;
         }

@@ -2,7 +2,7 @@
 
 Requires at least: 4.7
 Tested up to: 6.9
-Stable tag: 3.13.3
+Stable tag: 3.13.4
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,10 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.13.4 =
+* We reverted the prePayment logic for the payment methods with personal pay buttons.
+* When search for SDK Order by DMN data, use the Transaction ID.
 
 = 3.13.3 =
 * After admin actions like Settle, Void and Refund, do not redirect/reload, but show a message on the top of the page.
