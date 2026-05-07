@@ -925,7 +925,14 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
         // add GooglePay settings
         $google_pay_settings = array(
-            'locale' => $locale,
+            'locale'            => $locale,
+            'buttonLocation'    => $this->get_option( 'gpay_button_position', '' ),
+        );
+        
+        // add ApplePay settings
+        $apple_pay_settings = array(
+            'locale'            => $locale,
+            'buttonLocation'    => $this->get_option( 'applepay_button_position', '' ),
         );
 
         if (!empty($g_merchat_id = $this->get_option( 'gpay_merchantId' ))) {
@@ -973,9 +980,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'theme'                  => $this->get_option( 'sdk_theme', 'accordion' ),
 			'apmConfig'              => array(
 				'googlePay' => $google_pay_settings,
-				'applePay'  => array(
-					'locale'    => $locale,
-				),
+				'applePay'  => $apple_pay_settings,
 			),
 			'sourceApplication'		=> NUVEI_PFW_SOURCE_APPLICATION,
 			'fieldStyle'			=> json_decode( $this->get_option( 'simply_connect_style', '' ), true ),
@@ -1925,7 +1930,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 'title'       => '<i>' . __( 'Google Pay settings', 'nuvei-payments-for-woocommerce' ) . '</i>',
                 'type'        => 'title',
                 'class'       => 'nuvei_checkout_setting',
-//                'description' => __( 'Common settings for the Cashier and the Simply Connect', 'nuvei-payments-for-woocommerce' ),
             ),
             'gpay_merchantId'        => array(
 				'title'         => __( 'Google Merchant ID', 'nuvei-payments-for-woocommerce' ),
@@ -1939,7 +1943,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 'class'       => 'nuvei_checkout_setting',
 			),
             'gpay_buttonColor'        => array(
-				'title'     => __( 'Google button color', 'nuvei-payments-for-woocommerce' ),
+				'title'     => __( 'Google Button Color', 'nuvei-payments-for-woocommerce' ),
 				'type'      => 'select',
                 'options'   => array(
 					'black'     => __( 'Black', 'nuvei-payments-for-woocommerce' ),
@@ -1949,7 +1953,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 'class'     => 'nuvei_checkout_setting',
 			),
             'gpay_buttonType'        => array(
-				'title'     => __( 'Google button type', 'nuvei-payments-for-woocommerce' ),
+				'title'     => __( 'Google Button Type', 'nuvei-payments-for-woocommerce' ),
 				'type'      => 'select',
                 'options'   => array(
 					'buy'       => __( 'Buy', 'nuvei-payments-for-woocommerce' ),
@@ -1961,6 +1965,33 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 //					'subscribe' => __( 'Subscribe', 'nuvei-payments-for-woocommerce' ),
 				),
                 'default'   => 'buy',
+                'class'     => 'nuvei_checkout_setting',
+			),
+            'gpay_button_position'  => array(
+				'title'     => __( 'Google Button Position', 'nuvei-payments-for-woocommerce' ),
+				'type'      => 'select',
+                'options'   => array(
+					'onTop'     => __( 'On Top', 'nuvei-payments-for-woocommerce' ),
+					'gallery'   => __( 'In The APMs section', 'nuvei-payments-for-woocommerce' ),
+				),
+                'default'   => 'onTop',
+                'class'     => 'nuvei_checkout_setting',
+			),
+            
+            # ApplePay settings
+            'advanced_applepay_settings_title' => array(
+                'title'       => '<i>' . __( 'Apple Pay settings', 'nuvei-payments-for-woocommerce' ) . '</i>',
+                'type'        => 'title',
+                'class'       => 'nuvei_checkout_setting',
+            ),
+            'applepay_button_position'  => array(
+				'title'     => __( 'Google Button Position', 'nuvei-payments-for-woocommerce' ),
+				'type'      => 'select',
+                'options'   => array(
+					'onTop'     => __( 'On Top', 'nuvei-payments-for-woocommerce' ),
+					'gallery'   => __( 'In The APMs section', 'nuvei-payments-for-woocommerce' ),
+				),
+                'default'   => 'onTop',
                 'class'     => 'nuvei_checkout_setting',
 			),
 		);

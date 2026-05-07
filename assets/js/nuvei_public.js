@@ -323,6 +323,8 @@ function showNuveiCheckout(_params) {
         nuveiCheckoutSdkParams.pmBlacklist  = null;
         nuveiCheckoutSdkParams.pmWhitelist  = ['cc_card'];
     }
+    
+    nuveiCheckoutSdkParams.pmWhitelist
 
     // for the Blocks only
     if ( jQuery(nuveiCheckoutBlockFormClass).length > 0 ) {
