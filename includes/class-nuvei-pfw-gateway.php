@@ -1985,7 +1985,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 'class'       => 'nuvei_checkout_setting',
             ),
             'applepay_button_position'  => array(
-				'title'     => __( 'Google Button Position', 'nuvei-payments-for-woocommerce' ),
+				'title'     => __( 'ApplePay Button Position', 'nuvei-payments-for-woocommerce' ),
 				'type'      => 'select',
                 'options'   => array(
 					'onTop'     => __( 'On Top', 'nuvei-payments-for-woocommerce' ),
