@@ -64,7 +64,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 == Changelog ==
 
 = 3.13.4 =
-* We reverted the prePayment logic for the payment methods with personal pay buttons.
+* We reverted the prePayment logic for the payment methods with its own pay buttons.
 * When search for SDK Order by DMN data, use the Transaction ID.
 * In Advanced settings were added two options to change the position of Gpay and ApplePay buttons.
 
