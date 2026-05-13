@@ -14,13 +14,6 @@
 	background-color: orange;
 }
 
-/* for the 3DS modal */
-.sfcModal-dialog {
-	width: 50%;
-	margin: 0 auto;
-	margin-top: 10%;
-}
-
 #sc_reorder_btn {
 	width: 100%;
 	font-size: 1.41575em;

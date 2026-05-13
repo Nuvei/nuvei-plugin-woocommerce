@@ -10,21 +10,22 @@ const NUVEI_PFW_GATEWAY_TITLE   = 'Nuvei';
 const NUVEI_PFW_GATEWAY_NAME    = 'nuvei'; // the name by WC recognize this Gateway
 
 // keys for order metadata, we make them hiden when starts with underscore
-const NUVEI_PFW_TR_ID             = '_nuveiTrId'; // we will keep this data for fast search in Orders
-const NUVEI_PFW_ORDER_ID          = '_nuveiOrderId';
-const NUVEI_PFW_CLIENT_UNIQUE_ID  = '_nuveiClientUniqueId';
-const NUVEI_PFW_ORDER_CHANGES     = '_nuveiOrderChanges'; // mark here total ana currency changes
-const NUVEI_PFW_WC_SUBSCR         = '_wcSubscription';
-const NUVEI_PFW_WC_RENEWAL        = '_wcsRenewal';
-const NUVEI_PFW_TRANSACTIONS      = '_nuveiTransactions';
-const NUVEI_PFW_ORDER_SUBSCR      = '_nuveiSubscr';
-const NUVEI_PFW_PREV_TRANS_STATUS = '_nuveiPrevTransactionStatus';
+const NUVEI_PFW_TR_ID               = '_nuveiTrId'; // we will keep this data for fast search in Orders
+const NUVEI_PFW_ORDER_ID            = '_nuveiOrderId';
+const NUVEI_PFW_CLIENT_UNIQUE_ID    = '_nuveiClientUniqueId';
+const NUVEI_PFW_ORDER_CHANGES       = '_nuveiOrderChanges'; // mark here total ana currency changes
+const NUVEI_PFW_WC_SUBSCR           = '_wcSubscription';
+const NUVEI_PFW_WC_RENEWAL          = '_wcsRenewal';
+const NUVEI_PFW_TRANSACTIONS        = '_nuveiTransactions';
+const NUVEI_PFW_ORDER_SUBSCR        = '_nuveiSubscr';
+const NUVEI_PFW_PREV_TRANS_STATUS   = '_nuveiPrevTransactionStatus';
 
-const NUVEI_PFW_SOURCE_APPLICATION = 'WOOCOMMERCE_PLUGIN';
-const NUVEI_PFW_GLOB_ATTR_NAME     = 'Nuvei Payment Plan'; // the name of the Nuvei Global Product Attribute name
-const NUVEI_PFW_LOG_EXT            = 'log';
-const NUVEI_PFW_PLANS_FILE         = 'sc_plans.json';
-const NUVEI_PFW_PMS_REFUND_VOID    = array( 'cc_card', 'apmgw_expresscheckout' );
+const NUVEI_PFW_SOURCE_APPLICATION  = 'WOOCOMMERCE_PLUGIN';
+const NUVEI_PFW_GLOB_ATTR_NAME      = 'Nuvei Payment Plan'; // the name of the Nuvei Global Product Attribute name
+const NUVEI_PFW_LOG_EXT             = 'log';
+const NUVEI_PFW_PLANS_FILE          = 'sc_plans.json';
+const NUVEI_PFW_REFUND_METHODS      = array( 'cc_card', 'apmgw_expresscheckout', 'ppp_ApplePay' );
+const NUVEI_PFW_VOID_METHODS        = array( 'cc_card', 'ppp_ApplePay' );
 
 const NUVEI_PFW_REST_ENDPOINT_INT   = 'https://ppp-test.nuvei.com/ppp/api/v1/';
 const NUVEI_PFW_REST_ENDPOINT_PROD  = 'https://secure.safecharge.com/ppp/api/v1/';
@@ -35,7 +36,7 @@ const NUVEI_PFW_POPUP_AUTOCLOSE_URL = 'https://cdn.safecharge.com/safecharge_res
 const NUVEI_PFW_SESSION_OO_DETAILS      = 'nuvei_last_open_order_details'; // a session key
 const NUVEI_PFW_SESSION_PROD_DETAILS    = 'nuvei_order_details'; // products details
 const NUVEI_PFW_LOG_REQUEST_PARAMS      = 'Request params';
-const NUVEI_API_PATH                    =  'nuvei/api/v1';
+const NUVEI_API_PATH                    = 'nuvei/api/v1';
 
 define(
 	'NUVEI_PFW_LOGS_DIR',
