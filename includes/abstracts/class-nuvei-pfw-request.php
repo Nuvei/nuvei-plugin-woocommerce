@@ -736,14 +736,14 @@ abstract class Nuvei_Pfw_Request {
 
 			// check if product has only Nuvei Payment Plan Attribute
 			foreach ( $cart_prod_attr as $attr ) {
-				Nuvei_Pfw_Logger::write( (array) $attr, '$attr' );
+//				Nuvei_Pfw_Logger::write( (array) $attr, '$attr' );
 
 				$name = $attr->get_name();
 
 				// if the attribute name is not nuvei taxonomy name go to next attribute
 				if ( $name != $nuvei_taxonomy_name ) {
-						Nuvei_Pfw_Logger::write( $name, 'Not Nuvei attribute, check the next one.' );
-						continue;
+                    Nuvei_Pfw_Logger::write( $name, 'Not Nuvei attribute, check the next one.' );
+                    continue;
 				}
 
 				$attr_option = current( $attr->get_options() );
@@ -823,25 +823,24 @@ abstract class Nuvei_Pfw_Request {
 	 * @param array  $product_data     Short product and subscription data.
 	 */
 	protected function set_nuvei_session_data( $session_token, $last_req_details, $product_data ) {
-		Nuvei_Pfw_Logger::write(
+		WC()->session->set( NUVEI_PFW_SESSION_OO_DETAILS, $last_req_details );
+        
+        $prod_details = array(
+            $session_token => array(
+                'wc_subscr'          => $product_data['wc_subscr'],
+                'subscr_data'        => $product_data['subscr_data'],
+                'products_data_hash' => md5( serialize( $product_data ) ),
+            ),
+        );
+        
+		WC()->session->set( NUVEI_PFW_SESSION_PROD_DETAILS, $prod_details );
+        
+        Nuvei_Pfw_Logger::write(
 			array(
-				'$session_token'    => $session_token,
-				'$last_req_details' => $last_req_details,
-				'$product_data'     => $product_data,
+                NUVEI_PFW_SESSION_OO_DETAILS => $last_req_details,
+                NUVEI_PFW_SESSION_PROD_DETAILS => $prod_details
 			),
 			'set_nuvei_session_data'
-		);
-
-		WC()->session->set( NUVEI_PFW_SESSION_OO_DETAILS, $last_req_details );
-		WC()->session->set(
-			NUVEI_PFW_SESSION_PROD_DETAILS,
-			array(
-				$session_token => array(
-					'wc_subscr'          => $product_data['wc_subscr'],
-					'subscr_data'        => $product_data['subscr_data'],
-					'products_data_hash' => md5( serialize( $product_data ) ),
-				),
-			)
 		);
 	}
 

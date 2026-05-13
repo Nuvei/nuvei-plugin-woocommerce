@@ -419,8 +419,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 				Nuvei_Pfw_Logger::write( true, 'wc_subscr' );
 			}
-
-			WC()->session->set( NUVEI_PFW_SESSION_PROD_DETAILS, array() );
 		}
 
 		// Success
@@ -1080,39 +1078,54 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		Nuvei_Pfw_Logger::write( 'checkout_prepayment_check()' );
 
         // wakeup the WC and the session in case of API call
-        if (!function_exists('WC')) {
+        if ( !function_exists('WC') ) {
             Nuvei_Pfw_Logger::write( 'no function_exists WC.' );
             return ['success' => 0];
         }
 
-        if (is_null(WC()->session)) {
+        if ( is_null( WC()->session ) ) {
+            Nuvei_Pfw_Logger::write( 'WC Session is null - load it!' );
+            
             WC()->session = new WC_Session_Handler();
             WC()->session->init();
         }
 
-        if (is_null(WC()->cart)) {
+        if ( is_null( WC()->cart ) ) {
+            Nuvei_Pfw_Logger::write( 'WC Cart is null - load it!' );
+            
             wc_load_cart();
         }
 
         $nuvei_order_details    = [];
         $open_order_details     = [];
+        
+//        Nuvei_Pfw_Logger::write( WC()->session, 'WC()->session' );
 
-        if ( ! is_null( WC()->session ) ) {
+//        if if( isset( WC()->session ) ) {
+//            $nuvei_order_details = WC()->session->get( NUVEI_PFW_SESSION_PROD_DETAILS );
+//            $open_order_details  = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
+//        }
+        
+        try {
             $nuvei_order_details = WC()->session->get( NUVEI_PFW_SESSION_PROD_DETAILS );
             $open_order_details  = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
+        }
+        catch (Exception $ex) {
+            Nuvei_Pfw_Logger::write( $ex->getMessage(), 'A problem when try to get Nuvei data from the session' );
         }
 
 		$nuvei_helper       = new Nuvei_Pfw_Helper();
 		$products_data      = $nuvei_helper->get_products(); // the current data
         $prods_data_hash    = $nuvei_order_details[ $open_order_details['sessionToken'] ]['products_data_hash'] ?? '';
 
+        Nuvei_Pfw_Logger::write( [$nuvei_order_details, $open_order_details], 'The Session details' );
+        
 		// nothing is changed, continue
 		if ( ! empty( $open_order_details['sessionToken'] )
 			&& ! empty( $prods_data_hash )
 			&& md5( serialize( $products_data ) ) == $prods_data_hash
 		) {
             Nuvei_Pfw_Logger::write( 'checkout_prepayment_check() success' );
-
             return ['success' => 1];
 		}
 
@@ -1149,14 +1162,14 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		Nuvei_Pfw_Logger::write(
 			array(
 				'$available_gateways'  => array_keys( $available_gateways ),
-				'is_admin'             => is_admin(),
-				'is_checkout'          => is_checkout(),
-				'is_checkout_pay_page' => is_checkout_pay_page(),
-				'is_wc_endpoint_url'   => is_wc_endpoint_url(),
-				// 'is_shop()' => is_shop(),
-				// 'isset(WC()->session)'  => isset(WC()->session),
-					'isset(WC cart)'   => isset( WC()->cart ),
-				'items'                => isset( WC()->cart ) ? WC()->cart->get_cart() : null,
+//				'is_admin'             => is_admin(),
+//				'is_checkout'          => is_checkout(),
+//				'is_checkout_pay_page' => is_checkout_pay_page(),
+//				'is_wc_endpoint_url'   => is_wc_endpoint_url(),
+//				// 'is_shop()' => is_shop(),
+//				// 'isset(WC()->session)'  => isset(WC()->session),
+//					'isset(WC cart)'   => isset( WC()->cart ),
+//				'items'                => isset( WC()->cart ) ? WC()->cart->get_cart() : null,
 			// 'SCRIPT_FILENAME'       => $_SERVER['SCRIPT_FILENAME'],
 			// 'checkout_id ' => WC()->session->get('checkout_id'),
 			// 'get checkoutid ' => @$_GET['checkoutid'],

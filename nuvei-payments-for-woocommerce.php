@@ -171,13 +171,16 @@ class Nuvei_Payments_For_Woocommerce
 
         // for the thank-you page
         add_filter( 'woocommerce_thankyou_order_received_text', array (__CLASS__, 'thank_you_page_mod'), 10, 2 );
-        // for the thank-you page.
-        // in case something decide to automaticaly complete the order with auto_complete_paid_order, try to disable it.
+        
         add_action( 'woocommerce_thankyou', function($order_id) {
             $order = wc_get_order( $order_id );
 
             if ( $order && $order->get_payment_method() == NUVEI_PFW_GATEWAY_NAME ) {
+                // in case something decide to automaticaly complete the order with auto_complete_paid_order, try to disable it.
                 remove_action( 'woocommerce_thankyou', 'auto_complete_paid_order' );
+                
+                // remove the session order data
+                WC()->session->set( NUVEI_PFW_SESSION_PROD_DETAILS, array() );
             }
         }, 1 );
 

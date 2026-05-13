@@ -27,7 +27,7 @@ const NUVEI_GET_CHECKOUT_DATA_DELAY = 350; // ms — collapses bursts of calls i
  * @params {Boolean} justLoadSimply When is set to true we will check only for country and email.
  */
 function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
-    console.log('nuveiIsCheckoutClassicFormValid()', justLoadSimply);
+    console.log('nuveiIsCheckoutClassicFormValid(), justLoadSimply:', justLoadSimply);
     
     // skip - check for Admin Order
     if (!nuveiIsPayForExistingOrderPage && !document.querySelector(nuveiCheckoutClassicFormClass)) {
@@ -47,6 +47,7 @@ function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
     const nuveiFormValidEvent = new CustomEvent('nuveiPfw:isCheckoutClassicFormValidEvent', { cancelable: true });
 
     if (!document.dispatchEvent(nuveiFormValidEvent)) {
+        console.log('dispatchEvent failed.');
         return false;
     }
 
@@ -87,14 +88,6 @@ function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
     if (jQuery('#terms').length > 0 && !jQuery('#terms').is(':checked')) {
         nuveiShowErrorMsg(scTrans.TermsError);
 
-        nuveiIsFormValid = false;
-        return nuveiIsFormValid;
-    }
-    
-    // check for recaptch
-    if (jQuery('#g-recaptcha-response').length && '' == jQuery('#g-recaptcha-response').val()) {
-        nuveiShowErrorMsg(scTrans.CaptchaError);
-        
         nuveiIsFormValid = false;
         return nuveiIsFormValid;
     }
@@ -790,7 +783,7 @@ jQuery(function($) {
             jQuery('form.checkout').on('checkout_place_order_success', function (e, data) {
                 console.log('Order success.', data)
 
-                if (data.data && data.data.nuvei_try_payment && simplyConnect) {
+                if (data?.data?.nuvei_try_payment && simplyConnect) {
                     nuveiSuccessRedirect = data.data.success_url;
 
                     jQuery('#nuvei_blocker').show();
@@ -800,6 +793,8 @@ jQuery(function($) {
                     setTimeout(() => {
                         simplyConnect.submitPayment();
                     }, 500);
+                    
+                    return;
                 }
             });
 
