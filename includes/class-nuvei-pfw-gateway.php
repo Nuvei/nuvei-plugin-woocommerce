@@ -1153,15 +1153,18 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	public function hide_payment_gateways( $available_gateways ) {
 		// we expect this method to be used on the Store only
 		if ( is_admin()
-			|| ! isset( WC()->cart )
-			|| empty( WC()->cart->get_cart() )
+//			|| ! isset( WC()->cart )
+//			|| empty( WC()->cart->get_cart() )
 		) {
 			return $available_gateways;
 		}
+        
+        $order_id = absint(get_query_var('order-pay'));
 
 		Nuvei_Pfw_Logger::write(
 			array(
-				'$available_gateways'  => array_keys( $available_gateways ),
+				'$available_gateways'   => array_keys( $available_gateways ),
+                'is admin order id'     => $order_id,
 //				'is_admin'             => is_admin(),
 //				'is_checkout'          => is_checkout(),
 //				'is_checkout_pay_page' => is_checkout_pay_page(),
@@ -1176,7 +1179,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			),
 			'hide_payment_gateways'
 		);
-
+        
 		// if ( ! is_checkout() || is_wc_endpoint_url() ) {
 		// Nuvei_Pfw_Logger::write([is_checkout(), is_wc_endpoint_url()]);
 		// return $available_gateways;
@@ -1188,7 +1191,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		}
 
 		$nuvei_helper                          = new Nuvei_Pfw_Helper();
-		$items_info                            = $nuvei_helper->get_products();
+		$items_info                            = $nuvei_helper->get_products([], $order_id);
 		$filtred_gws[ NUVEI_PFW_GATEWAY_NAME ] = $available_gateways[ NUVEI_PFW_GATEWAY_NAME ];
 
 		if ( ! empty( $items_info['subscr_data'] ) ) {

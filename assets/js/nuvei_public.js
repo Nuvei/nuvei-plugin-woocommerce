@@ -420,6 +420,12 @@ function nuveiPrePaymentClassic(paymentDetails) {
             return;
         }
 
+        // On order-pay the WC order already exists — no need to verify the session hash.
+        if ( nuveiIsPayForExistingOrderPage ) {
+            resolve();
+            return;
+        }
+
         // Update the Order
         nuveiUpdateOrder(resolve, reject);
         return;
