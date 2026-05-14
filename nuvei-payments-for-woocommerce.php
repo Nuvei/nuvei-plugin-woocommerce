@@ -252,15 +252,20 @@ class Nuvei_Payments_For_Woocommerce
         // hook to show unreaded Nuvei' system messages
         add_action( 'admin_notices', array (__CLASS__, 'display_messages') );
 
-        // when save Order check for Nuvei transaction field
-        add_action('woocommerce_checkout_create_order', function($order, $data) {
-            if ( ! empty($_POST['nuvei_transaction_id'])) {
-                $order->update_meta_data(
-                    NUVEI_PFW_TR_ID,
-                    sanitize_text_field($_POST['nuvei_transaction_id'])
-                );
+        // when save Order, check for Nuvei transaction field
+        // for the Blocks Checkout only!
+        add_action( 'woocommerce_store_api_checkout_update_order_from_request', function( $order, $request ) {
+            if ( $order->get_meta( NUVEI_PFW_TR_ID, true ) ) {
+                return;
             }
-        }, 10, 2);
+
+            foreach ( (array) $request->get_param( 'payment_data' ) as $item ) {
+                if ( ( $item['key'] ?? '' ) === '_nuveiTrId' ) {
+                    $order->update_meta_data( NUVEI_PFW_TR_ID, sanitize_text_field( $item['value'] ?? '' ) );
+                    break;
+                }
+            }
+        }, 10, 2 );
     }
 
     public static function set_translated_texts() {
