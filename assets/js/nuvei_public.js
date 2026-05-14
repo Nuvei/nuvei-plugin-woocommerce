@@ -4,6 +4,7 @@ const nuveiCheckoutClassicPayBtn        = '#place_order';
 const nuveiCheckoutCustomPayBtn         = '#nuvei_place_order';
 const nuveiCheckoutClassicPMethodName   = 'input[name="payment_method"]';
 const nuveiMandatoryCheckoutFields      = '#billing_country, #billing_email';
+const NUVEI_GET_CHECKOUT_DATA_DELAY     = 350; // ms — collapses bursts of calls into one fetch
 const nuveiWallets                      = ['ppp_ApplePay', 'ppp_GooglePay', 'ppp_Paze'];
 
 var nuveiCheckoutSdkParams          = {};
@@ -11,7 +12,7 @@ var nuveiIsCheckoutLoaded           = false;
 var nuveiIsPayForExistingOrderPage  = false;
 var nuveiSuccessRedirect            = '';
 var nuveiIsFormValid                = true;
-let nuveiBlocksResolvePayment       = null;
+var nuveiBlocksResolvePayment       = null;
 // AbortController for the current openOrder fetch request
 var nuveiGetCheckoutDataController  = null;
 var nuveiCheckoutRequestId          = null; // request flag
@@ -19,7 +20,7 @@ var nuveiIsSimplyFormValid          = false;
 // Debounce timer and in-flight flag for nuveiGetCheckoutData
 var nuveiGetCheckoutDataTimer       = null;
 var nuveiGetCheckoutDataInFlight    = false;
-const NUVEI_GET_CHECKOUT_DATA_DELAY = 350; // ms — collapses bursts of calls into one fetch
+var nuveiSelectedPaymentMethod      = '';
 
 /**
  * Check if the Checkout form is valid.
@@ -411,8 +412,10 @@ function nuveiPrePaymentClassic(paymentDetails) {
 	console.log('nuveiPrePaymentClassic');
 
 	return new Promise((resolve, reject) => {
-        // check the form
-        if ( ! nuveiIsCheckoutClassicFormValid() ) {
+        // check the form only for nuveiWallets
+        if ( nuveiWallets.indexOf(nuveiSelectedPaymentMethod) >= 0
+            && ! nuveiIsCheckoutClassicFormValid() 
+        ) {
             console.log('nuveiIsCheckoutClassicFormValid - false');
             
             nuveiShowErrorMsg(scTrans.MissingRequiredFields);
@@ -444,6 +447,8 @@ function nuveiOnSimplyReady() {
 
 function nuveiPmChange(params) {
     console.log(params.paymentMethodName);
+    
+    nuveiSelectedPaymentMethod = params.paymentMethodName;
 
     if (nuveiWallets.indexOf(params.paymentMethodName) >= 0) {
         jQuery(nuveiCheckoutClassicPayBtn).hide();
