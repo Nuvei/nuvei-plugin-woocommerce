@@ -269,7 +269,6 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		do {
 			++$tries;
 
-//			$res = $this->get_order_data( $trans_id, $order_id );
 			$res = $this->get_order_data( $trans_id );
 
 			if ( empty( $res[0]->post_id ) ) {
@@ -456,106 +455,36 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	/**
 	 * Just a repeating code.
 	 *
-	 * @global $wpdb
-     *
 	 * @param string|null $transaction_id
      * @return array
 	 */
-//	private function get_order_data( $transaction_id, $order_id = 0 ) {
 	private function get_order_data( $transaction_id ) {
-		global $wpdb;
-
-		// search by clientUniqueId
-		if ( is_null( $transaction_id ) ) {
-			// old WC records
-			$query = $wpdb->prepare(
-				"SELECT post_id FROM {$wpdb->prefix}postmeta "
-				. 'WHERE meta_key = %s '
-				. 'AND meta_value = %s ;',
-				NUVEI_PFW_CLIENT_UNIQUE_ID,
-				Nuvei_Pfw_Http::get_param( 'clientUniqueId' )
-			);
-
-            // phpcs:ignore
-            $res = $wpdb->get_results( $query );
-
-			if ( ! empty( $res ) ) {
-                return $res;
-			}
-
-			// search for HPOS record
-			$query = $wpdb->prepare(
-				'SELECT order_id AS post_id '
-				. "FROM {$wpdb->prefix}wc_orders_meta  "
-				. 'WHERE meta_key = %s '
-				. 'AND meta_value = %s ;',
-				NUVEI_PFW_CLIENT_UNIQUE_ID,
-				Nuvei_Pfw_Http::get_param( 'clientUniqueId' )
-			);
-
-            // phpcs:ignore
-            $res = $wpdb->get_results( $query );
-
-			if ( ! empty( $res ) ) {
-                return $res;
-			}
+        // try to search by $transaction_id
+        if ( !empty($transaction_id) ) {
+            $orders = wc_get_orders([
+                'meta_key'   => NUVEI_PFW_TR_ID,
+                'meta_value' => $transaction_id,
+                'limit'      => 1,
+            ]);
             
-//            $orders = wc_get_orders([
-//                'meta_key'   => NUVEI_PFW_CLIENT_UNIQUE_ID,
-//                'meta_value' => Nuvei_Pfw_Http::get_param( 'clientUniqueId' ),
-//                'limit'      => 1,
-//            ]);
-//            
-//                return $orders;
-            
-			return array();
-		}
-
-		// plugin legacy search,
-        // TODO - after few versions stop search by "_transactionId" and search only by NUVEI_PFW_TR_ID
-		// search in WC legacy table
-		$query = $wpdb->prepare(
-			"SELECT post_id FROM {$wpdb->prefix}postmeta "
-			. "WHERE (meta_key = '_transactionId' OR meta_key = %s )"
-					. 'AND meta_value = %s ;',
-			NUVEI_PFW_TR_ID,
-			$transaction_id
-		);
-
-        // phpcs:ignore
-        $res = $wpdb->get_results( $query );
-
-		if ( ! empty( $res ) ) {
-			return $res;
-		}
-
-		// search for HPOS record
-		$query = $wpdb->prepare(
-			'SELECT order_id AS post_id'
-			. " FROM {$wpdb->prefix}wc_orders_meta "
-			. "WHERE (meta_key = '_transactionId' OR meta_key = %s )"
-					. 'AND meta_value = %s ;',
-			NUVEI_PFW_TR_ID,
-			$transaction_id
-		);
-
-        // phpcs:ignore
-        $res = $wpdb->get_results( $query );
-
-		if ( ! empty( $res ) ) {
-			return $res;
-		}
+            Nuvei_Pfw_Logger::write( $orders, 'Search by $transaction_id.' );
+        }
         
-//        // search by Transaction ID
-//        $orders = wc_get_orders([
-//            'meta_key'   => NUVEI_PFW_TR_ID,
-//            'meta_value' => $transaction_id,
-//            'limit'      => 1,
-//        ]);
-//
-//            return $orders;
-//
-		return array();
+        // if no results try to search by clientUniqueId
+        if ( empty($orders) ) {
+            $orders = wc_get_orders([
+                'meta_key'   => NUVEI_PFW_CLIENT_UNIQUE_ID,
+                'meta_value' => Nuvei_Pfw_Http::get_param( 'clientUniqueId' ),
+                'limit'      => 1,
+            ]);
+            
+            Nuvei_Pfw_Logger::write( $orders, 'Search by clientUniqueId.' );
+        }
+        
+        // Map WC_Order objects to the legacy {post_id} format expected by callers.
+        return array_map( function( $order ) {
+            return (object) [ 'post_id' => $order->get_id() ];
+        }, $orders );
 	}
 
 	/**

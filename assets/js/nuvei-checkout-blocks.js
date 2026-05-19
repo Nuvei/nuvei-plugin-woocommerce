@@ -7,11 +7,8 @@ const nuveiFormNotInvalidTxt = window.wp.i18n.__(
 );
 
 const nuveiCheckoutBlockContText =
-    (typeof scTrans == 'object'
-        && scTrans.hasOwnProperty('checkoutIntegration')
-        && 'sdk' === scTrans.checkoutIntegration
-    ) ? nuveiFormNotInvalidTxt :
-            window.wp.i18n.__('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce');
+    ( 'sdk' === scTrans?.checkoutIntegration ) ? nuveiFormNotInvalidTxt :
+        window.wp.i18n.__('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce');
 
 var nuveiAllowFormSubmit    = false;
 // must be outside the function so clearTimeout actually debounces
@@ -41,7 +38,23 @@ function nuveiPrePaymentBlocks(paymentDetails) {
             return;
         }
 
-        // Update the Order
+        // Wallet flow: prePayment fires before onPaymentSetup.
+        // After validation, resolve prePayment then trigger the WC Pay button so
+        // onPaymentSetup can set up nuveiBlocksResolvePayment and await onResult.
+        if ( nuveiWallets.indexOf(nuveiSelectedPaymentMethod) >= 0 ) {
+            nuveiUpdateOrder(
+                function() {
+                    nuveiWalletInProgress = true;
+                    resolve();
+                    jQuery(nuveiCheckoutBlockPayBtn).trigger('click');
+                },
+                reject
+            );
+            return;
+        }
+
+        // Default flow: onPaymentSetup already called nuveiBlocksRunTransaction()
+        // which set nuveiBlocksResolvePayment before calling submitPayment().
         nuveiUpdateOrder(resolve, reject);
         return;
 	});
@@ -63,11 +76,6 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
 
     let isFormValid     = true;
     let realFormErrors  = 0;
-
-    // no errors
-//    if (Object.keys( validationErrors ).length == 0) {
-//        return isFormValid;
-//    }
 
     // Minimal check, when need only the country and the email.
     if ( justLoadSimply ) {
@@ -148,8 +156,6 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
 
     // and scroll to the message
     setTimeout( () => {
-        console.log('try to scroll to the error');
-
         let noticeElement;
 
         if ( jQuery( '.has-error' ).length ) {
@@ -220,7 +226,7 @@ async function nuveiBlocksRunTransaction() {
 (function() {
     console.log('auto func');
 
-    const { useEffect, createElement } = window.wp.element;
+    const { useEffect, createElement }  = window.wp.element;
     const { useSelect }                 = window.wp.data;
 
     const nuveiSettings = window.wc.wcSettings.getSetting( 'nuvei_data', {} );
@@ -284,7 +290,32 @@ async function nuveiBlocksRunTransaction() {
                     };
                 }
 
-                // Simply Connect mode
+                // Wallet flow: prePayment already ran validations and nuveiUpdateOrder.
+                // Just set up the resolver and wait for onResult to call it.
+                if ( nuveiWalletInProgress ) {
+                    nuveiWalletInProgress = false;
+
+                    const payment = await new Promise(res => { nuveiBlocksResolvePayment = res; });
+
+                    if ( !payment.success ) {
+                        jQuery('#nuvei_blocker').hide();
+
+                        return {
+                            type: emitResponse.responseTypes.ERROR,
+                            message: payment.error || scTrans.paymentDeclined
+                        };
+                    }
+
+                    return {
+                        type: emitResponse.responseTypes.SUCCESS,
+                        meta: {
+                            paymentMethodData: {
+                                _nuveiTrId: payment.transaction_id
+                            }
+                        }
+                    };
+                }
+
                 // Step 1: validate your SDK fields
                 if ( !nuveiIsCheckoutBlocksFormValid() ) {
                     return {
@@ -318,15 +349,7 @@ async function nuveiBlocksRunTransaction() {
             // Cleanup on unmount
             return unsubscribe;
 
-            // Cleanup: do nothing (no destroy here)
-//            return () => { };
         }, [onPaymentSetup]);
-
-//        return window.wp.element.createElement(
-//            'div',
-//            { id: 'nuvei_checkout_container' },
-//            ''
-//        );
     };
 
     const nuveiBlocksOptions = {
@@ -368,10 +391,7 @@ jQuery(function() {
                 + scTrans.loaderUrl + '" /></div>');
     }
 
-    if (typeof scTrans == 'object'
-        && scTrans.hasOwnProperty('checkoutIntegration')
-        && 'sdk' !== scTrans.checkoutIntegration
-    ) {
+    if ( 'sdk' !== scTrans?.checkoutIntegration ) {
         return;
     }
 

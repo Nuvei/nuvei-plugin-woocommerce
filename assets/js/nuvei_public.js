@@ -13,6 +13,7 @@ var nuveiIsPayForExistingOrderPage  = false;
 var nuveiSuccessRedirect            = '';
 var nuveiIsFormValid                = true;
 var nuveiBlocksResolvePayment       = null;
+var nuveiWalletInProgress           = false;
 // AbortController for the current openOrder fetch request
 var nuveiGetCheckoutDataController  = null;
 var nuveiCheckoutRequestId          = null; // request flag
@@ -166,7 +167,7 @@ function nuveiUpdateOrder(resolve, reject) {
             console.log(data);
 
             // success
-            if (data?.success && 1 == data.success) {
+            if (1 == data?.success) {
                 console.log('prepayment resolved.');
 
                 resolve();
@@ -450,11 +451,17 @@ function nuveiPmChange(params) {
     
     nuveiSelectedPaymentMethod = params.paymentMethodName;
 
-    if (nuveiWallets.indexOf(params.paymentMethodName) >= 0) {
+    if (nuveiWallets.indexOf(nuveiSelectedPaymentMethod) >= 0) {
+        nuveiIsSimplyFormValid = true;
+        
         jQuery(nuveiCheckoutClassicPayBtn).hide();
+        jQuery(nuveiCheckoutBlockPayBtn).hide();
     }
     else {
+        nuveiIsSimplyFormValid = false;
+        
         jQuery(nuveiCheckoutClassicPayBtn).show();
+        jQuery(nuveiCheckoutBlockPayBtn).show();
     }
 }
 
