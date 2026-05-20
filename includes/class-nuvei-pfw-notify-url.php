@@ -1008,7 +1008,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
         if ( empty($order_id) ) {
             // Cashier
             if ( $merchant_unique_id ) {
-                Nuvei_Pfw_Logger::write( 'Cashier Order' );
+                Nuvei_Pfw_Logger::write( 'Cashier or Admin Order' );
                 $order_id = $merchant_unique_id;
             }
             // WCS renewal order

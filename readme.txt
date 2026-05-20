@@ -66,7 +66,8 @@ If you plan to install this plugin form the WordPress store, but use a version d
 = 3.13.4 =
 * We reverted the prePayment logic for the payment methods with its own pay buttons.
 * When search for SDK Order by DMN data, use the Transaction ID.
-* In Advanced settings were added two options to change the position of Gpay and ApplePay buttons.
+* The position of Gpay and ApplePay buttons is forced to be in the Gallery. We will add an option to be changed in some of the future versions.
+* Fixed the problem with Google ReCaptcha v2 and the Admin Orders.
 
 = 3.13.3 =
 * After admin actions like Settle, Void and Refund, do not redirect/reload, but show a message on the top of the page.
