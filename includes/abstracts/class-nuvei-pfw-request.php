@@ -1104,7 +1104,7 @@ abstract class Nuvei_Pfw_Request {
 				// Nuvei_Pfw_Logger::write($data);
 
 				if ( false === strpos( $key, NUVEI_PFW_ORDER_SUBSCR ) ) {
-						continue;
+                    continue;
 				}
 
 				$subscr_list[] = array(
