@@ -97,7 +97,7 @@ function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
     }
     
     // check for Google Recaptcha
-    if (jQuery('#g-recaptcha-response').length && '' == jQuery('#g-recaptcha-response').val()) {
+    if (jQuery('.g-recaptcha-response').length && '' == jQuery('.g-recaptcha-response').val()) {
         nuveiShowErrorMsg(scTrans.CaptchaError);
         
         nuveiIsFormValid = false;
@@ -253,7 +253,7 @@ function nuveiAfterSdkResponse(resp) {
         }
         
         // in case of admin order and recaptcha do a manual redirect
-        if (nuveiIsPayForExistingOrderPage && jQuery('.g-recaptcha').length) {
+        if ( nuveiIsPayForExistingOrderPage && jQuery('.g-recaptcha').length ) {
             fetch(scTrans.apiUrl + '/redirect-paid-existing-order/', {
                 method: 'POST',
                 headers: {
