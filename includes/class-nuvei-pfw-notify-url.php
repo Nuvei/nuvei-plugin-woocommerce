@@ -246,13 +246,13 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	/**
 	 * Get the Order data by DMN data.
 	 *
-	 * @param mixed  $trans_id         Can be the transactionId or null.
-	 * @param string $transaction_type
-	 * @param int $order_id
+	 * @param string|null   $trans_id
+	 * @param string        $transaction_type
 	 *
 	 * @return int
 	 */
-	private function search_order_by_dmn_data( $trans_id, $transaction_type = '', $order_id = 0 ) {
+//	private function search_order_by_dmn_data( $trans_id, $transaction_type = '', $order_id = 0 ) {
+	private function search_order_by_dmn_data( $trans_id, $transaction_type = '' ) {
 		Nuvei_Pfw_Logger::write(
             array(
                 '$trans_id'         => $trans_id,
@@ -269,7 +269,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		do {
 			++$tries;
 
-			$res = $this->get_order_data( $trans_id, $order_id );
+			$res = $this->get_order_data( $trans_id );
 
 			if ( empty( $res[0]->post_id ) ) {
 				sleep( $wait_time );
@@ -455,89 +455,36 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	/**
 	 * Just a repeating code.
 	 *
-	 * @global $wpdb
-     *
-	 * @param  string|null $transaction_id
-	 * @param  int $order_id
-	 *
+	 * @param string|null $transaction_id
      * @return array
 	 */
-	private function get_order_data( $transaction_id, $order_id = 0 ) {
-		global $wpdb;
-
-		// we pass null when this is SDK Order
-		if ( is_null( $transaction_id ) ) {
-			// old WC records
-			$query = $wpdb->prepare(
-				"SELECT post_id FROM {$wpdb->prefix}postmeta "
-				. 'WHERE meta_key = %s '
-				. 'AND meta_value = %s ;',
-				NUVEI_PFW_CLIENT_UNIQUE_ID,
-				Nuvei_Pfw_Http::get_param( 'clientUniqueId' )
-			);
-
-            // phpcs:ignore
-            $res = $wpdb->get_results( $query );
-
-			if ( ! empty( $res ) ) {
-					return $res;
-			}
-
-			// search for HPOS record
-			$query = $wpdb->prepare(
-				'SELECT order_id AS post_id '
-				. "FROM {$wpdb->prefix}wc_orders_meta  "
-				. 'WHERE meta_key = %s '
-				. 'AND meta_value = %s ;',
-				NUVEI_PFW_CLIENT_UNIQUE_ID,
-				Nuvei_Pfw_Http::get_param( 'clientUniqueId' )
-			);
-
-            // phpcs:ignore
-            $res = $wpdb->get_results( $query );
-
-			if ( ! empty( $res ) ) {
-					return $res;
-			}
-
-			return array();
-		}
-
-		// plugin legacy search, TODO - after few versions stop search by "_transactionId" and search only by NUVEI_PFW_TR_ID
-		// search in WC legacy table
-		$query = $wpdb->prepare(
-			"SELECT post_id FROM {$wpdb->prefix}postmeta "
-			. "WHERE (meta_key = '_transactionId' OR meta_key = %s )"
-					. 'AND meta_value = %s ;',
-			NUVEI_PFW_TR_ID,
-			$transaction_id
-		);
-
-        // phpcs:ignore
-     $res = $wpdb->get_results( $query );
-
-		if ( ! empty( $res ) ) {
-			return $res;
-		}
-
-		// search for HPOS record
-		$query = $wpdb->prepare(
-			'SELECT order_id AS post_id'
-			. " FROM {$wpdb->prefix}wc_orders_meta "
-			. "WHERE (meta_key = '_transactionId' OR meta_key = %s )"
-					. 'AND meta_value = %s ;',
-			NUVEI_PFW_TR_ID,
-			$transaction_id
-		);
-
-        // phpcs:ignore
-     $res = $wpdb->get_results( $query );
-
-		if ( ! empty( $res ) ) {
-			return $res;
-		}
-
-		return array();
+	private function get_order_data( $transaction_id ) {
+        // try to search by $transaction_id
+        if ( !empty($transaction_id) ) {
+            $orders = wc_get_orders([
+                'meta_key'   => NUVEI_PFW_TR_ID,
+                'meta_value' => $transaction_id,
+                'limit'      => 1,
+            ]);
+            
+            Nuvei_Pfw_Logger::write( $orders, 'Search by $transaction_id.' );
+        }
+        
+        // if no results try to search by clientUniqueId
+        if ( empty($orders) ) {
+            $orders = wc_get_orders([
+                'meta_key'   => NUVEI_PFW_CLIENT_UNIQUE_ID,
+                'meta_value' => Nuvei_Pfw_Http::get_param( 'clientUniqueId' ),
+                'limit'      => 1,
+            ]);
+            
+            Nuvei_Pfw_Logger::write( $orders, 'Search by clientUniqueId.' );
+        }
+        
+        // Map WC_Order objects to the legacy {post_id} format expected by callers.
+        return array_map( function( $order ) {
+            return (object) [ 'post_id' => $order->get_id() ];
+        }, $orders );
 	}
 
 	/**
@@ -1061,7 +1008,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
         if ( empty($order_id) ) {
             // Cashier
             if ( $merchant_unique_id ) {
-                Nuvei_Pfw_Logger::write( 'Cashier Order' );
+                Nuvei_Pfw_Logger::write( 'Cashier or Admin Order' );
                 $order_id = $merchant_unique_id;
             }
             // WCS renewal order
@@ -1075,7 +1022,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
             elseif ( $transaction_id ) {
                 Nuvei_Pfw_Logger::write( 'SDK Order' );
                 $is_sdk_order = true;
-                $order_id     = $this->search_order_by_dmn_data( null, $transaction_type );
+                $order_id     = $this->search_order_by_dmn_data( $transaction_id, $transaction_type );
             }
         }
 
