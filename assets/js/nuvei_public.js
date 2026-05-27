@@ -107,7 +107,7 @@ function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
     // here is additional check for the address fields
     jQuery(nuveiCheckoutClassicFormClass).find('input, select, textarea').each( function() {
         let self = jQuery(this);
-
+        
         // skip this element
         if (!self.attr('name')) {
             return true;
@@ -122,13 +122,17 @@ function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
         let theId = `#${self.attr('name')}`;
         
         // skip the shipping fields
-        if ( ! shipToDifferent && self.attr('name').indexOf('shipping') !== false ) {
+        if ( ! shipToDifferent && self.attr('name').includes('shipping') ) {
             return true;
         }
 
         // check the field
-        if ( ( jQuery(theId).attr('aria-invalid') && 'true' ==  jQuery(theId).attr('aria-invalid') )
-            || ( 'true' ==  jQuery(theId).attr('aria-required') && '' == jQuery(theId).val() )
+        if ( 
+            ( jQuery(theId).attr('aria-invalid') && 'true' == jQuery(theId).attr('aria-invalid') )
+            || ( 
+                ( 'true' == jQuery(theId).attr('aria-required') || jQuery(theId).closest('.form-row').hasClass('validate-required') )
+                && '' == jQuery(theId).val() 
+            )
             || jQuery(theId).parent().hasClass('woocommerce-invalid')
         ) {
             console.log({
