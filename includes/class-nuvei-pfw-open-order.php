@@ -132,6 +132,9 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
                     $saved_oo_details,
                     $products_data
                 );
+                
+                // in case of Admin Order update the metas which hold Subscription data
+                $this->set_subscr_meta($products_data);
 
                 Nuvei_Pfw_Logger::write( $saved_oo_details, 'updateOrder success - session open_order_details' );
 
@@ -209,6 +212,9 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
             $open_order_details,
             $products_data
         );
+        
+        // in case of Admin Order update the metas which hold Subscription data
+        $this->set_subscr_meta($products_data);
 
         Nuvei_Pfw_Logger::write( $open_order_details, 'session open_order_details' );
 
@@ -225,4 +231,30 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 	protected function get_checksum_params() {
 		return array( 'merchantId', 'merchantSiteId', 'clientRequestId', 'amount', 'currency', 'timeStamp' );
 	}
+    
+    private function set_subscr_meta( $products_data ) {
+        if ( $this->sc_order ) {
+            // save the Nuvei Subscr data to the order
+            if ( ! empty( $products_data['subscr_data'] ) ) {
+                foreach ( $products_data['subscr_data'] as $data ) {
+                    // set meta key
+                    if ( !empty( $data['product_id'] ) ) {
+                        $meta_key = NUVEI_PFW_ORDER_SUBSCR . '_product_' . $data['product_id'];
+                    }
+                    if ( !empty( $data['variation_id'] ) ) {
+                        $meta_key = NUVEI_PFW_ORDER_SUBSCR . '_variation_' . $data['variation_id'];
+                    }
+
+                    $this->sc_order->update_meta_data( $meta_key, $data );
+                }
+            }
+
+            // mark order if there is WC Subsc
+            if ( ! empty( $products_data['wc_subscr'] ) ) {
+                $this->sc_order->update_meta_data( NUVEI_PFW_WC_SUBSCR, true );
+            }
+            
+            $this->sc_order->save();
+        }
+    }
 }

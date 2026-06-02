@@ -640,8 +640,10 @@ abstract class Nuvei_Pfw_Request {
 
 			Nuvei_Pfw_Logger::write(
 				array(
-					'nuvei taxonomy name' => $nuvei_taxonomy_name,
-					'product attributes'  => $cart_prod_attr,
+					'nuvei taxonomy name'   => $nuvei_taxonomy_name,
+					'product attributes'    => $cart_prod_attr,
+					'variation'             => $item['variation'] ?? [],
+					'$variation_id'         => $variation_id,
 				)
 			);
 
@@ -651,16 +653,34 @@ abstract class Nuvei_Pfw_Request {
 				continue;
 			}
 
+			// Normalize variation attributes. Cart items carry $item['variation'] as an array,
+			// but WC_Order_Item_Product objects (admin-created or order-pay orders) do not —
+			// their variation data must be read from the WC_Product_Variation object directly.
+			$variation_attr = array();
+            
+			if ( ! empty( $item['variation'] ) ) {
+				$variation_attr = $item['variation'];
+			}
+            elseif ( $variation_id && $variation_id != $product_id ) {
+				$variation_product = wc_get_product( $variation_id );
+				
+                if ( $variation_product ) {
+					foreach ( $variation_product->get_attributes() as $attr_key => $attr_val ) {
+						$variation_attr[ 'attribute_' . $attr_key ] = $attr_val;
+					}
+				}
+			}
+
 			// check for product with Nuvei Payment Plan variation
-			if ( ! empty( $item['variation'] )
+			if ( ! empty( $variation_attr )
 				&& 0 != $variation_id
 				&& array_key_exists( $nuvei_taxonomy_name, $cart_prod_attr )
 			) {
 				// The slug comes from the selected variation, not from the attribute object
-				$variation_slug = $item['variation'][ $nuvei_plan_variation ] ?? '';
+				$variation_slug = $variation_attr[ $nuvei_plan_variation ] ?? '';
 
 				if ( empty( $variation_slug ) ) {
-					Nuvei_Pfw_Logger::write( $item['variation'], 'Missing variation slug for ' . $nuvei_plan_variation );
+					Nuvei_Pfw_Logger::write( $variation_attr, 'Missing variation slug for ' . $nuvei_plan_variation );
 					continue;
 				}
 
@@ -670,7 +690,7 @@ abstract class Nuvei_Pfw_Request {
 
 				if ( is_wp_error( $term ) || empty( $term->term_id ) ) {
 					Nuvei_Pfw_Logger::write(
-						$item['variation'][ $nuvei_plan_variation ],
+						$variation_attr[ $nuvei_plan_variation ] ?? '',
 						'Error when try to get Term by Slug'
 					);
 
@@ -713,8 +733,8 @@ abstract class Nuvei_Pfw_Request {
 
 				// if the attribute name is not nuvei taxonomy name go to next attribute
 				if ( $name != $nuvei_taxonomy_name ) {
-						Nuvei_Pfw_Logger::write( $name, 'Not Nuvei attribute, check the next one.' );
-						continue;
+                    Nuvei_Pfw_Logger::write( $name, 'Not Nuvei attribute, check the next one.' );
+                    continue;
 				}
 
 				$attr_option = current( $attr->get_options() );
@@ -794,25 +814,24 @@ abstract class Nuvei_Pfw_Request {
 	 * @param array  $product_data     Short product and subscription data.
 	 */
 	protected function set_nuvei_session_data( $session_token, $last_req_details, $product_data ) {
-		Nuvei_Pfw_Logger::write(
+		WC()->session->set( NUVEI_PFW_SESSION_OO_DETAILS, $last_req_details );
+        
+        $prod_details = array(
+            $session_token => array(
+                'wc_subscr'          => $product_data['wc_subscr'],
+                'subscr_data'        => $product_data['subscr_data'],
+                'products_data_hash' => md5( serialize( $product_data ) ),
+            ),
+        );
+        
+		WC()->session->set( NUVEI_PFW_SESSION_PROD_DETAILS, $prod_details );
+        
+        Nuvei_Pfw_Logger::write(
 			array(
-				'$session_token'    => $session_token,
-				'$last_req_details' => $last_req_details,
-				'$product_data'     => $product_data,
+                NUVEI_PFW_SESSION_OO_DETAILS => $last_req_details,
+                NUVEI_PFW_SESSION_PROD_DETAILS => $prod_details
 			),
 			'set_nuvei_session_data'
-		);
-
-		WC()->session->set( NUVEI_PFW_SESSION_OO_DETAILS, $last_req_details );
-		WC()->session->set(
-			NUVEI_PFW_SESSION_PROD_DETAILS,
-			array(
-				$session_token => array(
-					'wc_subscr'          => $product_data['wc_subscr'],
-					'subscr_data'        => $product_data['subscr_data'],
-					'products_data_hash' => md5( serialize( $product_data ) ),
-				),
-			)
 		);
 	}
 
@@ -1060,7 +1079,7 @@ abstract class Nuvei_Pfw_Request {
 				// Nuvei_Pfw_Logger::write($data);
 
 				if ( false === strpos( $key, NUVEI_PFW_ORDER_SUBSCR ) ) {
-						continue;
+                    continue;
 				}
 
 				$subscr_list[] = array(

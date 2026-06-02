@@ -68,7 +68,8 @@
 }
 
 form.wc-block-components-form #nuvei_checkout_container:empty::before,
-form.checkout.woocommerce-checkout #nuvei_checkout_container:empty::before {
+form.checkout.woocommerce-checkout #nuvei_checkout_container:empty::before,
+#nuvei_checkout_container:empty::before {
     content: attr(data-placeholder);
     /*color: red;*/
     background-image: none;

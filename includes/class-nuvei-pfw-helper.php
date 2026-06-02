@@ -20,10 +20,14 @@ class Nuvei_Pfw_Helper extends Nuvei_Pfw_Request {
 		return $this->get_order_addresses();
 	}
 
-	public function get_products( $rest_params = array() ) {
+	public function get_products( $rest_params = array(), $order_id = 0 ) {
 		if ( ! empty( $rest_params ) ) {
 			$this->rest_params = $rest_params;
 		}
+        
+        if (is_numeric($order_id) && $order_id > 0) {
+            $this->sc_order = wc_get_order($order_id);
+        }
 
 		return $this->get_products_data();
 	}

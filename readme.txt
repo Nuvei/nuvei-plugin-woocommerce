@@ -1,8 +1,8 @@
 === Nuvei Payments for Woocommerce ===
 
 Requires at least: 4.7
-Tested up to: 6.9
 Stable tag: 3.14.0
+Tested up to: 7.0
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -65,6 +65,15 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 = 3.14.0 =
 * The plugin can update the Order status based on Simply Connect response, as alternative of the DMN. Still for Nuvei Rebilling Orders the DMNs are mandatory!
+
+= 3.13.5 =
+* Fix for the Blocks Checkout form validation.
+
+= 3.13.4 =
+* We reverted the prePayment logic for the payment methods with its own pay buttons.
+* When search for SDK Order by DMN data, use the Transaction ID.
+* The position of Gpay and ApplePay buttons is forced to be in the Gallery. We will add an option to be changed in some of the future versions.
+* Fixed the problem with Google ReCaptcha v2 and the Admin Orders.
 
 = 3.13.3 =
 * After admin actions like Settle, Void and Refund, do not redirect/reload, but show a message on the top of the page.

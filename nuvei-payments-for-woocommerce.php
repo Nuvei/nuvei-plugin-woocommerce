@@ -10,10 +10,10 @@
  * Text Domain: nuvei-payments-for-woocommerce
  * Domain Path: /languages
  * Require at least: 4.7
- * Tested up to: 6.9
+ * Tested up to: 7.0
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 10.7.0
+ * WC tested up to: 10.8.0
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -171,13 +171,16 @@ class Nuvei_Payments_For_Woocommerce
 
         // for the thank-you page
         add_filter( 'woocommerce_thankyou_order_received_text', array (__CLASS__, 'thank_you_page_mod'), 10, 2 );
-        // for the thank-you page.
-        // in case something decide to automaticaly complete the order with auto_complete_paid_order, try to disable it.
+        
         add_action( 'woocommerce_thankyou', function($order_id) {
             $order = wc_get_order( $order_id );
 
             if ( $order && $order->get_payment_method() == NUVEI_PFW_GATEWAY_NAME ) {
+                // in case something decide to automaticaly complete the order with auto_complete_paid_order, try to disable it.
                 remove_action( 'woocommerce_thankyou', 'auto_complete_paid_order' );
+                
+                // remove the session order data
+                WC()->session->set( NUVEI_PFW_SESSION_PROD_DETAILS, array() );
             }
         }, 1 );
 
@@ -239,14 +242,6 @@ class Nuvei_Payments_For_Woocommerce
 			1
         );
         
-        // For Blocks Checkout, to get my custom meta data provided from the front-end.
-        add_action(
-            'woocommerce_store_api_checkout_update_order_from_request',
-            array (__CLASS__, 'update_order_from_request'),
-            10,
-			2
-        );
-
         add_action(
             'nuvei_pfwc_after_rebilling_payment',
             function () {
@@ -259,6 +254,29 @@ class Nuvei_Payments_For_Woocommerce
 
         // add Action Scheduler to check for Nuvei Transacion ID details
         add_action( 'nuvei_save_transaction_to_order', array( __CLASS__, 'save_transaction_to_order' ), 10, 1 );
+        
+        // For Blocks Checkout, to get my custom meta data provided from the front-end.
+        add_action(
+            'woocommerce_store_api_checkout_update_order_from_request',
+            array (__CLASS__, 'update_order_from_request'),
+            10,
+			2
+        );
+        
+        // when save Order, check for Nuvei transaction field
+        // for the Blocks Checkout only!
+//        add_action( 'woocommerce_store_api_checkout_update_order_from_request', function( $order, $request ) {
+//            if ( $order->get_meta( NUVEI_PFW_TR_ID, true ) ) {
+//                return;
+//            }
+//
+//            foreach ( (array) $request->get_param( 'payment_data' ) as $item ) {
+//                if ( ( $item['key'] ?? '' ) === '_nuveiTrId' ) {
+//                    $order->update_meta_data( NUVEI_PFW_TR_ID, sanitize_text_field( $item['value'] ?? '' ) );
+//                    break;
+//                }
+//            }
+//        }, 10, 2 );
     }
 
     public static function set_translated_texts() {
@@ -1485,7 +1503,7 @@ class Nuvei_Payments_For_Woocommerce
                 $msg_id     = $request->get_param( 'msgId' );
                 $messages   = get_option( 'custom_system_messages', array() );
 
-                Nuvei_Pfw_Logger::write($messages);
+                Nuvei_Pfw_Logger::write(count($messages));
 
                 if ( isset( $messages[ $msg_id ]['read'] ) ) {
     				// remove the message
@@ -1587,7 +1605,44 @@ class Nuvei_Payments_For_Woocommerce
             },
             'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
         ));
+            
+        // in case of Admin Order and ReCaptcha get the redirect link and do it in the plugin
+        register_rest_route(NUVEI_API_PATH, '/redirect-paid-existing-order/', array(
+            'methods'             => 'POST',
+            'callback'            => function($request) {
+                $order_id   = absint( $request->get_param('order_id') );
+                $order      = wc_get_order( $order_id );
+                
+                if ( $order ) {
+                    $p_method = $order->get_payment_method();
+                    
+                    if ( empty($p_method) || NUVEI_PFW_GATEWAY_NAME === $p_method ) {
+                        $order->set_payment_method( NUVEI_PFW_GATEWAY_NAME );
+                        $order->set_payment_method_title(NUVEI_PFW_GATEWAY_TITLE );
+                        $order->save();
+                        
+                        // success
+                        return rest_ensure_response([
+                            'redirect_url' => $order->get_checkout_order_received_url()
+                        ]);
+                    }
+                }
+                
+                // error
+                Nuvei_Pfw_Logger::write(
+                    [ '$order_id' => $order_id, ],
+                    'Wrong Order ID.'
+                );
 
+                return new WP_Error(
+                    'action_failed',
+                    __('Invalid Order ID.', 'nuvei-payments-for-woocommerce'),
+                    array( 'status' => 404 )
+                );
+            },
+            'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
+        ));
+        
         // Get Checkout data
         register_rest_route(NUVEI_API_PATH, '/get-checkout-data/', array(
             'methods'             => 'POST',

@@ -419,8 +419,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 				Nuvei_Pfw_Logger::write( true, 'wc_subscr' );
 			}
-
-			WC()->session->set( NUVEI_PFW_SESSION_PROD_DETAILS, array() );
 		}
 
 		// Success
@@ -925,7 +923,16 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
         // add GooglePay settings
         $google_pay_settings = array(
-            'locale' => $locale,
+            'locale'            => $locale,
+//            'buttonLocation'    => $this->get_option( 'gpay_button_position', '' ),
+            'buttonLocation'    => 'gallery',
+        );
+        
+        // add ApplePay settings
+        $apple_pay_settings = array(
+            'locale'            => $locale,
+//            'buttonLocation'    => $this->get_option( 'applepay_button_position', '' ),
+            'buttonLocation'    => 'gallery',
         );
 
         if (!empty($g_merchat_id = $this->get_option( 'gpay_merchantId' ))) {
@@ -973,9 +980,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'theme'                  => $this->get_option( 'sdk_theme', 'accordion' ),
 			'apmConfig'              => array(
 				'googlePay' => $google_pay_settings,
-				'applePay'  => array(
-					'locale'    => $locale,
-				),
+				'applePay'  => $apple_pay_settings,
 			),
 			'sourceApplication'		=> NUVEI_PFW_SOURCE_APPLICATION,
 			'fieldStyle'			=> json_decode( $this->get_option( 'simply_connect_style', '' ), true ),
@@ -1046,15 +1051,11 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			return $checkout_data;
 		}
 
-		// REST API call
-//		if ( ! empty( $this->rest_params ) ) {
-			$checkout_data['transactionType'] = $oo_data['transactionType'];
-			$checkout_data['products_data']   = $prod_details;
+        $checkout_data['transactionType'] = $oo_data['transactionType'];
+        $checkout_data['products_data']   = $prod_details;
 
-			Nuvei_Pfw_Logger::write( $checkout_data, '$checkout_data' );
+        Nuvei_Pfw_Logger::write( $checkout_data, '$checkout_data' );
 
-//			return $checkout_data;
-//		}
 
         return array(
             'result'      => 'failure', // this is just to stop WC send the form, and show APMs
@@ -1075,39 +1076,54 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		Nuvei_Pfw_Logger::write( 'checkout_prepayment_check()' );
 
         // wakeup the WC and the session in case of API call
-        if (!function_exists('WC')) {
+        if ( !function_exists('WC') ) {
             Nuvei_Pfw_Logger::write( 'no function_exists WC.' );
             return ['success' => 0];
         }
 
-        if (is_null(WC()->session)) {
+        if ( is_null( WC()->session ) ) {
+            Nuvei_Pfw_Logger::write( 'WC Session is null - load it!' );
+            
             WC()->session = new WC_Session_Handler();
             WC()->session->init();
         }
 
-        if (is_null(WC()->cart)) {
+        if ( is_null( WC()->cart ) ) {
+            Nuvei_Pfw_Logger::write( 'WC Cart is null - load it!' );
+            
             wc_load_cart();
         }
 
         $nuvei_order_details    = [];
         $open_order_details     = [];
+        
+//        Nuvei_Pfw_Logger::write( WC()->session, 'WC()->session' );
 
-        if ( ! is_null( WC()->session ) ) {
+//        if if( isset( WC()->session ) ) {
+//            $nuvei_order_details = WC()->session->get( NUVEI_PFW_SESSION_PROD_DETAILS );
+//            $open_order_details  = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
+//        }
+        
+        try {
             $nuvei_order_details = WC()->session->get( NUVEI_PFW_SESSION_PROD_DETAILS );
             $open_order_details  = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
+        }
+        catch (Exception $ex) {
+            Nuvei_Pfw_Logger::write( $ex->getMessage(), 'A problem when try to get Nuvei data from the session' );
         }
 
 		$nuvei_helper       = new Nuvei_Pfw_Helper();
 		$products_data      = $nuvei_helper->get_products(); // the current data
         $prods_data_hash    = $nuvei_order_details[ $open_order_details['sessionToken'] ]['products_data_hash'] ?? '';
 
+        Nuvei_Pfw_Logger::write( [$nuvei_order_details, $open_order_details], 'The Session details' );
+        
 		// nothing is changed, continue
 		if ( ! empty( $open_order_details['sessionToken'] )
 			&& ! empty( $prods_data_hash )
 			&& md5( serialize( $products_data ) ) == $prods_data_hash
 		) {
             Nuvei_Pfw_Logger::write( 'checkout_prepayment_check() success' );
-
             return ['success' => 1];
 		}
 
@@ -1135,21 +1151,24 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	public function hide_payment_gateways( $available_gateways ) {
 		// we expect this method to be used on the Store only
 		if ( is_admin()
-			|| ! isset( WC()->cart )
-			|| empty( WC()->cart->get_cart() )
+//			|| ! isset( WC()->cart )
+//			|| empty( WC()->cart->get_cart() )
 		) {
 			return $available_gateways;
 		}
+        
+        $order_id = absint(get_query_var('order-pay'));
 
 		Nuvei_Pfw_Logger::write(
 			array(
-				'$available_gateways'  => array_keys( $available_gateways ),
+				'$available_gateways'   => array_keys( $available_gateways ),
+                'is admin order id'     => $order_id,
 //				'is_admin'             => is_admin(),
 //				'is_checkout'          => is_checkout(),
 //				'is_checkout_pay_page' => is_checkout_pay_page(),
 //				'is_wc_endpoint_url'   => is_wc_endpoint_url(),
-				// 'is_shop()' => is_shop(),
-				// 'isset(WC()->session)'  => isset(WC()->session),
+//				// 'is_shop()' => is_shop(),
+//				// 'isset(WC()->session)'  => isset(WC()->session),
 //					'isset(WC cart)'   => isset( WC()->cart ),
 //				'items'                => isset( WC()->cart ) ? WC()->cart->get_cart() : null,
 			// 'SCRIPT_FILENAME'       => $_SERVER['SCRIPT_FILENAME'],
@@ -1158,7 +1177,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			),
 			'hide_payment_gateways'
 		);
-
+        
 		// if ( ! is_checkout() || is_wc_endpoint_url() ) {
 		// Nuvei_Pfw_Logger::write([is_checkout(), is_wc_endpoint_url()]);
 		// return $available_gateways;
@@ -1170,7 +1189,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		}
 
 		$nuvei_helper                          = new Nuvei_Pfw_Helper();
-		$items_info                            = $nuvei_helper->get_products();
+		$items_info                            = $nuvei_helper->get_products([], $order_id);
 		$filtred_gws[ NUVEI_PFW_GATEWAY_NAME ] = $available_gateways[ NUVEI_PFW_GATEWAY_NAME ];
 
 		if ( ! empty( $items_info['subscr_data'] ) ) {
@@ -1925,7 +1944,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 'title'       => '<i>' . __( 'Google Pay settings', 'nuvei-payments-for-woocommerce' ) . '</i>',
                 'type'        => 'title',
                 'class'       => 'nuvei_checkout_setting',
-//                'description' => __( 'Common settings for the Cashier and the Simply Connect', 'nuvei-payments-for-woocommerce' ),
             ),
             'gpay_merchantId'        => array(
 				'title'         => __( 'Google Merchant ID', 'nuvei-payments-for-woocommerce' ),
@@ -1939,7 +1957,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 'class'       => 'nuvei_checkout_setting',
 			),
             'gpay_buttonColor'        => array(
-				'title'     => __( 'Google button color', 'nuvei-payments-for-woocommerce' ),
+				'title'     => __( 'Google Button Color', 'nuvei-payments-for-woocommerce' ),
 				'type'      => 'select',
                 'options'   => array(
 					'black'     => __( 'Black', 'nuvei-payments-for-woocommerce' ),
@@ -1949,7 +1967,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 'class'     => 'nuvei_checkout_setting',
 			),
             'gpay_buttonType'        => array(
-				'title'     => __( 'Google button type', 'nuvei-payments-for-woocommerce' ),
+				'title'     => __( 'Google Button Type', 'nuvei-payments-for-woocommerce' ),
 				'type'      => 'select',
                 'options'   => array(
 					'buy'       => __( 'Buy', 'nuvei-payments-for-woocommerce' ),
@@ -1963,6 +1981,33 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 'default'   => 'buy',
                 'class'     => 'nuvei_checkout_setting',
 			),
+//            'gpay_button_position'  => array(
+//				'title'     => __( 'Google Button Position', 'nuvei-payments-for-woocommerce' ),
+//				'type'      => 'select',
+//                'options'   => array(
+//					'onTop'     => __( 'On Top', 'nuvei-payments-for-woocommerce' ),
+//					'gallery'   => __( 'In The APMs section', 'nuvei-payments-for-woocommerce' ),
+//				),
+//                'default'   => 'onTop',
+//                'class'     => 'nuvei_checkout_setting',
+//			),
+            
+            # ApplePay settings
+//            'advanced_applepay_settings_title' => array(
+//                'title'       => '<i>' . __( 'Apple Pay settings', 'nuvei-payments-for-woocommerce' ) . '</i>',
+//                'type'        => 'title',
+//                'class'       => 'nuvei_checkout_setting',
+//            ),
+//            'applepay_button_position'  => array(
+//				'title'     => __( 'ApplePay Button Position', 'nuvei-payments-for-woocommerce' ),
+//				'type'      => 'select',
+//                'options'   => array(
+//					'onTop'     => __( 'On Top', 'nuvei-payments-for-woocommerce' ),
+//					'gallery'   => __( 'In The APMs section', 'nuvei-payments-for-woocommerce' ),
+//				),
+//                'default'   => 'onTop',
+//                'class'     => 'nuvei_checkout_setting',
+//			),
 		);
 
 		if ( $fields_append ) {
