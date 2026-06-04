@@ -1310,7 +1310,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'paymentOption'   => array( 'userPaymentOptionId' => $helper->get_tr_upo_id( $parent_order_id ) ),
 		);
 
-		$parent_payment_method = $helper->get_payment_method( $parent_order_id );
+		$parent_payment_method = $helper->helper_get_payment_method( $parent_order_id );
 
 		if ( 'cc_card' == $parent_payment_method ) {
 			$params['isRebilling']          = 1;

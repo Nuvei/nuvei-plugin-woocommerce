@@ -61,27 +61,13 @@ class Nuvei_Pfw_Helper extends Nuvei_Pfw_Request {
 	}
 
 	/**
-	 * Temp help function until stop using old Order meta fields.
+	 * Get the payment method from the last transaction.
 	 *
 	 * @param  int|null $order_id WC Order ID
 	 * @return int
 	 */
-	public function get_payment_method( $order_id = null ) {
-		$order = $this->get_order( $order_id );
-
-		// first check for new meta data
-		$nuvei_data = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
-
-		if ( ! empty( $nuvei_data ) && is_array( $nuvei_data ) ) {
-			$last_tr = $this->get_last_transaction( $nuvei_data, array( 'Sale', 'Settle', 'Auth' ) );
-
-			if ( ! empty( $last_tr['paymentMethod'] ) ) {
-				return $last_tr['paymentMethod'];
-			}
-		}
-
-		// check for old meta data
-		return $order->get_meta( '_paymentMethod' ); // NUVEI_PAYMENT_METHOD
+	public function helper_get_payment_method( $order_id = null ) {
+		return $this->get_payment_method( $order_id );
 	}
 
 	/**

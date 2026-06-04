@@ -63,39 +63,48 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
      * This is the the main method we use for Settle and Void.
 	 *
 	 * @param int    $order_id
-	 * @param string $action
+	 * @param string $action    'settle' or 'void'.
      * @return array
 	 */
 	public function create_settle_void( $order_id, $action ) {
 		$this->is_order_valid( $order_id );
 
-		$ord_status = 0;
-		$method     = 'settle' == $action ? 'settleTransaction' : 'voidTransaction';
-		$resp       = $this->process(
+		$is_success = 0;
+		
+        $resp = $this->process(
 			array(
 				'order_id' => $order_id,
 				'action'   => $action,
-				'method'   => $method,
+				'method'   => 'settle' == $action ? 'settleTransaction' : 'voidTransaction',
 			)
 		);
 
 		if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
-			$ord_status = 1;
+			$is_success = 1;
 
 			$this->sc_order->update_meta_data( NUVEI_PFW_PREV_TRANS_STATUS, $this->sc_order->get_status() );
-			// change order status
-			$this->sc_order->update_status( $this->nuvei_gw->get_option( 'status_pending' ) );
-
-			$this->save_transaction_data( $resp );
+			
+            // change order status 
+            $new_status = $this->nuvei_gw->get_option( 'settle' == $action ? 'status_paid' : 'status_void' );
+			
+            $this->sc_order->update_status( $new_status );
+            
+            // the follow method works by default with DMN, so it expects in $resp['status'] to have the Transaction Status,
+            // as Approved, Declined, etc., so we will modify the 'status' parameter to be as expect.
+            $resp['status'] = $resp['transactionStatus'];
+            // add and payment method based on the previous transaction
+            $resp['payment_method'] = $this->get_payment_method($order_id);
+			
+            $this->save_transaction_data( $resp );
             
             $this->change_order_status( 
                 $order_id, 
-                $resp['transactionStatus'], // we need transactionStatus when works with the direct response!
+                $resp['status'], // we need transactionStatus when works with the direct response!
                 $resp['transactionType'], 
                 null, 
                 $resp['amount'], 
                 $resp['transactionId'], 
-                $pm ?? '', 
+                $resp['payment_method'] ?? '', 
                 $resp['currency'] 
             );
 
@@ -103,7 +112,7 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 		}
 
         return array(
-            'status' => $ord_status,
+            'status' => $is_success,
             'data'   => $resp,
         );
 	}

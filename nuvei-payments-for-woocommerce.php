@@ -601,7 +601,7 @@ class Nuvei_Payments_For_Woocommerce
 
 			return false;
 		}
-
+        
 		foreach ( array_reverse( $order_data, false ) as $tr ) {
             // get Refund transactions
 			if ( isset( $tr['transactionType'], $tr['status'] )
@@ -621,7 +621,7 @@ class Nuvei_Payments_For_Woocommerce
             }
 		}
 
-		$order_payment_method = $helper->get_payment_method( $order_id );
+		$order_payment_method = $helper->helper_get_payment_method( $order_id );
 
 		if ( ! is_null( $order->get_date_created() ) ) {
 			$order_time = $order->get_date_created()->getTimestamp();
@@ -661,7 +661,7 @@ class Nuvei_Payments_For_Woocommerce
 			&& (float) $order_total > 0
 			&& time() < $order_time + 172800 // 48 hours
 		) {
-			$question = sprintf(
+            			$question = sprintf(
 			/* translators: %d is replaced with "decimal" */
 				__( 'Are you sure, you want to Cancel Order #%d?', 'nuvei-payments-for-woocommerce' ),
 				$order_id
@@ -683,7 +683,8 @@ class Nuvei_Payments_For_Woocommerce
 
 			if ( $return_html ) {
 				$html_elements['voidQuestion'] = $question;
-			} else {
+			}
+            else {
 				echo '<button id="sc_void_btn" type="button" onclick="nuveiAction(\''
 					. esc_html( $question ) . '\', \'void\', ' . esc_html( $order_id )
 					. ')" class="button generate-items">'

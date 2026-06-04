@@ -966,9 +966,6 @@ abstract class Nuvei_Pfw_Request {
 		$transaction_id = Nuvei_Pfw_Http::get_param( 'TransactionID', 'int', '', $params );
 
 		if ( empty( $transaction_id ) ) {
-			$transaction_id = Nuvei_Pfw_Http::get_param( 'transactionId', 'int', '', $params );
-		}
-		if ( empty( $transaction_id ) ) {
 			Nuvei_Pfw_Logger::write( $transaction_id, 'TransactionID param is empty!', 'CRITICAL' );
 			return;
 		}
@@ -981,7 +978,7 @@ abstract class Nuvei_Pfw_Request {
 		}
 
 		$transaction_type = Nuvei_Pfw_Http::get_param( 'transactionType', 'string', '', $params );
-		$status           = Nuvei_Pfw_Http::get_request_status();
+		$status           = Nuvei_Pfw_Http::get_param( 'status', 'string', '' );
         
         if (!empty($params['status'])) {
             $status = $params['status'];
@@ -1021,7 +1018,7 @@ abstract class Nuvei_Pfw_Request {
 		if ( null !== $wc_refund_id ) {
 			$transactions_data[ $transaction_id ]['wcRefundId'] = $wc_refund_id;
 		}
-
+        
 		$this->sc_order->update_meta_data( NUVEI_PFW_TRANSACTIONS, $transactions_data );
 
 		// Update it only for Auth and Sale. They are base an we will need this TrID
@@ -1040,7 +1037,7 @@ abstract class Nuvei_Pfw_Request {
 			$this->sc_order->update_meta_data( NUVEI_PFW_WC_RENEWAL, true );
 		}
 
-        Nuvei_Pfw_Logger::write( 'The transaction was added to the Order meta data.' );
+        Nuvei_Pfw_Logger::write( $transactions_data, 'The transaction was added to the Order meta data.' );
 		// $this->sc_order->save();
 	}
 
@@ -1420,6 +1417,33 @@ abstract class Nuvei_Pfw_Request {
 		);
 
 		$this->sc_order->update_status( $status );
+	}
+    
+    /**
+	 * Get the payment method from the last transaction.
+	 *
+	 * @param  int|null $order_id WC Order ID
+	 * @return int
+	 */
+	protected function get_payment_method( $order_id = null ) {
+		$order = $this->get_order( $order_id );
+        
+        if ( ! $order ) {
+            return 0;
+        }
+
+		// first check for new meta data
+		$nuvei_data = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
+
+		if ( ! empty( $nuvei_data ) && is_array( $nuvei_data ) ) {
+			$last_tr = $this->get_last_transaction( $nuvei_data, array( 'Sale', 'Settle', 'Auth' ) );
+
+			if ( ! empty( $last_tr['paymentMethod'] ) ) {
+				return $last_tr['paymentMethod'];
+			}
+		}
+
+		return 0;
 	}
     
 	/**

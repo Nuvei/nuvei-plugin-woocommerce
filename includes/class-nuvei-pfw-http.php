@@ -22,11 +22,21 @@ class Nuvei_Pfw_Http {
 		// Normalize $key to array for uniform handling
 		$keys = is_array( $key ) ? $key : array( $key );
 		
-		// Helper: find first match from multiple keys
+		// Helper: find first match from multiple keys (case-insensitive)
 		$find_value = function( $key_list, $search_array ) {
+			// First pass: exact match (fastest)
 			foreach ( $key_list as $search_key ) {
 				if ( isset( $search_array[ $search_key ] ) ) {
 					return $search_array[ $search_key ];
+				}
+			}
+			// Second pass: case-insensitive match
+			foreach ( $key_list as $search_key ) {
+				$search_key_lower = strtolower( $search_key );
+				foreach ( $search_array as $arr_key => $arr_val ) {
+					if ( strtolower( $arr_key ) === $search_key_lower ) {
+						return $arr_val;
+					}
 				}
 			}
 			return null;
