@@ -110,7 +110,7 @@ class Nuvei_Pfw_Refund extends Nuvei_Pfw_Request {
             return array( 'status' => 1 );
 		}
 
-		// in case we have message but without status
+		// error in case we have message but without status
 		if ( ! isset( $json_arr['status'] ) && isset( $json_arr['msg'] ) ) {
 			$msg = __( 'Refund request problem: ', 'nuvei-payments-for-woocommerce' ) . $json_arr['msg'];
 

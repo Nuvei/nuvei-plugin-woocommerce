@@ -83,7 +83,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		}
 
 		// just give few seconds to WC to finish its Order
-		sleep( 3 );
+//		sleep( 3 );
 
         // error
 		if ( ! $this->validate_checksum() ) {

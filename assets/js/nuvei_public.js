@@ -765,7 +765,7 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
                 nuveiGetCheckoutDataInFlight = false;
             });
 
-    }, nuveiGetChecoutDataDelay);
+    }, NUVEI_GET_CHECKOUT_DATA_DELAY);
 
     return;
 }
@@ -834,7 +834,7 @@ jQuery(function($) {
                     nuveiDestroySimplyConnect();
 
                     // No outer setTimeout needed — nuveiGetCheckoutData() has
-                    // its own internal debounce (nuveiGetChecoutDataDelay)
+                    // its own internal debounce (NUVEI_GET_CHECKOUT_DATA_DELAY)
                     // that collapses rapid bursts.  The old 1 000 ms delay was
                     // the primary contributor to the page-load + field-change
                     // race condition (Race Window 1).

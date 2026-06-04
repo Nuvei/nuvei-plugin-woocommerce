@@ -86,15 +86,11 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 			// change order status
 			$this->sc_order->update_status( $this->nuvei_gw->get_option( 'status_pending' ) );
 
-			// save the transaction into transactions, but without status, unitl DMN come
-//			unset( $resp['status'] );
-//			$resp['transactionType'] = ucfirst( $action );
-
 			$this->save_transaction_data( $resp );
             
             $this->change_order_status( 
                 $order_id, 
-                $resp['status'], 
+                $resp['transactionStatus'], // we need transactionStatus when works with the direct response!
                 $resp['transactionType'], 
                 null, 
                 $resp['amount'], 

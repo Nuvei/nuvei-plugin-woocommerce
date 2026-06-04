@@ -9,37 +9,53 @@ class Nuvei_Pfw_Http {
 
 
 	/**
-	 * Get request parameter by key.
+	 * Get request parameter by key (or first match from array of keys).
 	 *
-	 * @param string $key         Request key.
-	 * @param string $type        Optional. Possible values: string, float, int, array, mail/email, other.
-	 * @param mixed  $default     Optional. Return value if fail.
-	 * @param array  $parent      Optional array with parameters to search in.
+	 * @param string|array $key    Request key, or array of keys to try in order.
+	 * @param string       $type   Optional. Possible values: string, float, int, array, mail/email, other.
+	 * @param mixed        $default Optional. Return value if fail.
+	 * @param array        $parent Optional array with parameters to search in.
 	 *
 	 * @return mixed
 	 */
 	public static function get_param( $key, $type = 'string', $default = '', $parent = array() ) {
-        // TODO - when check for the $key try for the exact $key and for lcfirst($key)
+		// Normalize $key to array for uniform handling
+		$keys = is_array( $key ) ? $key : array( $key );
+		
+		// Helper: find first match from multiple keys
+		$find_value = function( $key_list, $search_array ) {
+			foreach ( $key_list as $search_key ) {
+				if ( isset( $search_array[ $search_key ] ) ) {
+					return $search_array[ $search_key ];
+				}
+			}
+			return null;
+		};
         
 		switch ( $type ) {
 			case 'mail':
 			case 'email':
-				if ( ! empty( $parent[ $key ] ) ) {
-					return sanitize_email( $parent[ $key ] );
+				$value = $find_value( $keys, $parent );
+				if ( ! empty( $value ) ) {
+					return sanitize_email( $value );
 				}
 
-				if ( ! empty( $_REQUEST[ $key ] ) ) {
-					return sanitize_email( wp_unslash( $_REQUEST[ $key ] ) );
+				$value = $find_value( $keys, $_REQUEST );
+				if ( ! empty( $value ) ) {
+					return sanitize_email( wp_unslash( $value ) );
 				}
 
 				return $default;
 
 			case 'float':
-				if ( isset( $parent[ $key ] ) && is_numeric( $parent[ $key ] ) ) {
-					return (float) $parent[ $key ];
+				$value = $find_value( $keys, $parent );
+				if ( isset( $value ) && is_numeric( $value ) ) {
+					return (float) $value;
 				}
-				if ( isset( $_REQUEST[ $key ] ) && is_numeric( $_REQUEST[ $key ] ) ) {
-					return (float) $_REQUEST[ $key ];
+
+				$value = $find_value( $keys, $_REQUEST );
+				if ( isset( $value ) && is_numeric( $value ) ) {
+					return (float) $value;
 				}
 
 				if ( ! is_numeric( $default ) ) {
@@ -49,11 +65,14 @@ class Nuvei_Pfw_Http {
 				return $default;
 
 			case 'int':
-				if ( isset( $parent[ $key ] ) && is_numeric( $parent[ $key ] ) ) {
-					return (int) $parent[ $key ];
+				$value = $find_value( $keys, $parent );
+				if ( isset( $value ) && is_numeric( $value ) ) {
+					return (int) $value;
 				}
-				if ( isset( $_REQUEST[ $key ] ) && is_numeric( $_REQUEST[ $key ] ) ) {
-					return (int) $_REQUEST[ $key ];
+
+				$value = $find_value( $keys, $_REQUEST );
+				if ( isset( $value ) && is_numeric( $value ) ) {
+					return (int) $value;
 				}
 
 				if ( ! is_numeric( $default ) ) {
@@ -64,11 +83,14 @@ class Nuvei_Pfw_Http {
 
 			case 'string':
 			default:
-				if ( isset( $parent[ $key ] ) ) {
-					return sanitize_text_field( $parent[ $key ] );
+				$value = $find_value( $keys, $parent );
+				if ( isset( $value ) ) {
+					return sanitize_text_field( $value );
 				}
-				if ( isset( $_REQUEST[ $key ] ) ) {
-					return sanitize_text_field( wp_unslash( $_REQUEST[ $key ] ) );
+
+				$value = $find_value( $keys, $_REQUEST );
+				if ( isset( $value ) ) {
+					return sanitize_text_field( wp_unslash( $value ) );
 				}
 
 				return $default;
@@ -76,34 +98,17 @@ class Nuvei_Pfw_Http {
 	}
 
 	/**
-	 * We need this stupid function because as response request variable
-	 * we get 'Status' or 'status'...
+	 * Get request status (case-insensitive).
+	 * Now that get_param() supports case-insensitive matching, this is simplified.
 	 *
-	 * @param  array $params
+	 * @param  array $params Optional array to search in.
 	 * @return string
 	 */
 	public static function get_request_status( $params = array() ) {
-		$status_upper = self::get_param( 'Status' );
-		$status_lower = self::get_param( 'status' );
-
 		if ( empty( $params ) ) {
-			if ( '' != $status_upper ) {
-				return $status_upper;
-			}
-
-			if ( '' != $status_lower ) {
-				return $status_lower;
-			}
-		} else {
-			if ( isset( $params['Status'] ) ) {
-				return $params['Status'];
-			}
-
-			if ( isset( $params['status'] ) ) {
-				return $params['status'];
-			}
+			return self::get_param( 'status' );
 		}
 
-		return '';
+		return self::get_param( 'status', 'string', '', $params );
 	}
 }
