@@ -9,12 +9,13 @@
 abstract class Nuvei_Pfw_Request {
 
 	protected $rest_params = array();
+    protected $message;
 	protected $plugin_settings;
 	protected $request_base_params;
 	protected $sc_order;
 	protected $order_id;
 	protected $nuvei_gw;
-
+    
 	private $device_types = array();
 
 	abstract public function process();
@@ -53,19 +54,25 @@ abstract class Nuvei_Pfw_Request {
 	 * with Nuvei payment module.
 	 *
 	 * @param int|string $order_id
-	 * @param bool       $return   - return the order
+	 * @param bool       $return   - return response
 	 *
 	 * @return void
 	 */
-	protected function is_order_valid( $order_id ) {
+	protected function is_order_valid( $order_id, $return = false ) {
 		Nuvei_Pfw_Logger::write( $order_id, 'is_order_valid() check.' );
 
 		$this->sc_order = wc_get_order( $order_id );
 
 		// error
 		if ( ! is_a( $this->sc_order, 'WC_Order' ) ) {
-			$msg = 'Error - Provided Order ID is not a WC Order';
+			$this->message  = $msg 
+                            = 'Error - Provided Order ID is not a WC Order';
 			Nuvei_Pfw_Logger::write( $order_id, $msg );
+            
+            if ($return) {
+                return false;
+            }
+            
 			exit( esc_html( $msg ) );
 		}
 
@@ -77,9 +84,17 @@ abstract class Nuvei_Pfw_Request {
 		}
 
 		// check for 'sc' also because of the older Orders
+        if ($return) {
+            return $this->is_nuvei_order($order_id, $return);
+        }
+        
         $this->is_nuvei_order($order_id);
         
 		// can we override Order status (state)
+        if ($return) {
+            return $this->can_override_order_status($return);
+        }
+        
         $this->can_override_order_status();
 	}
 
@@ -963,7 +978,7 @@ abstract class Nuvei_Pfw_Request {
             'save_transaction_data() incoming method parameters'
         );
 
-		$transaction_id = Nuvei_Pfw_Http::get_param( 'TransactionID', 'int', '', $params );
+		$transaction_id = Nuvei_Pfw_Http::get_param( 'TransactionID', 'string', '', $params );
 
 		if ( empty( $transaction_id ) ) {
 			Nuvei_Pfw_Logger::write( $transaction_id, 'TransactionID param is empty!', 'CRITICAL' );
@@ -1120,7 +1135,8 @@ abstract class Nuvei_Pfw_Request {
         if ( ! $this->sc_order instanceof WC_Order
             || ! in_array( $this->sc_order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) ) 
         ) {
-			$msg = 'Error - the order does not belongs to Nuvei.';
+			$this->message  = $msg 
+                            = 'Error - the order does not belongs to Nuvei.';
 			
             Nuvei_Pfw_Logger::write(
 				array(
@@ -1150,28 +1166,29 @@ abstract class Nuvei_Pfw_Request {
         $ord_status = strtolower( $this->sc_order->get_status() );
 
 		if ( in_array( $ord_status, array( 'cancelled', 'refunded' ) ) ) {
-			$msg = 'Error - can not override status of Voided/Refunded Order.';
-			Nuvei_Pfw_Logger::write( $this->sc_order->get_payment_method(), $msg );
+			$this->message = 'Error - can not override status of Voided/Refunded Order.';
+			
+            Nuvei_Pfw_Logger::write( $this->sc_order->get_payment_method(), $this->message );
 
             if ($return_respons) {
                 return false;
             }
             
-			exit( esc_html( $msg ) );
+			exit( esc_html( $this->message ) );
 		}
 
 		// do not replace "completed" with "auth" status
 		if ( 'completed' == $ord_status
 			&& 'auth' == strtolower( Nuvei_Pfw_Http::get_param( 'transactionType' ) )
 		) {
-			$msg = 'Error - can not override status Completed with Auth.';
-			Nuvei_Pfw_Logger::write( $this->sc_order->get_payment_method(), $msg );
+			$this->message = 'Error - can not override status Completed with Auth.';
+			Nuvei_Pfw_Logger::write( $this->sc_order->get_payment_method(), $this->message );
 
             if ($return_respons) {
                 return false;
             }
             
-			exit( esc_html( $msg ) );
+			exit( esc_html( $this->message ) );
 		}
         
         return true;
@@ -1210,6 +1227,7 @@ abstract class Nuvei_Pfw_Request {
 	 * @param mixed|null    $tr_id              The Transaction ID according the plugin.
 	 * @param string|null   $pm                 The used payment method according the plugin.
 	 * @param string|null   $curr               The used currency according the plugin.
+	 * @param string|null   $rel_tr_id          The Related Transaction ID according the plugin.
 	 */
 	protected function change_order_status( 
         $order_id, 
@@ -1219,12 +1237,14 @@ abstract class Nuvei_Pfw_Request {
         $total = null,
         $tr_id = null,
         $pm = null,
-        $curr = null
+        $curr = null,
+        $rel_tr_id = null
     ) {
 		Nuvei_Pfw_Logger::write('Nuvei change_order_status()');
 
 		$dmn_amount     = $total ?? number_format(Nuvei_Pfw_Http::get_param( 'totalAmount', 'float' ), 2, '.', '');
         $trans_id       = $tr_id ?? Nuvei_Pfw_Http::get_param( 'TransactionID' );
+        $rel_trans_id   = $rel_tr_id ?? Nuvei_Pfw_Http::get_param( 'relatedTransactionId' );
         $payment_method = $pm ?? Nuvei_Pfw_Http::get_param( 'payment_method' );
         $currency       = $curr ?? Nuvei_Pfw_Http::get_param( 'currency' );
         $msg            = [];
@@ -1237,8 +1257,7 @@ abstract class Nuvei_Pfw_Request {
             . __( 'Response status: ', 'nuvei-payments-for-woocommerce' ) . '<b>' . $req_status . '</b>.<br/>'
             . __( 'Payment Method: ', 'nuvei-payments-for-woocommerce' ) . $payment_method . '.<br/>'
             . __( 'Transaction ID: ', 'nuvei-payments-for-woocommerce' ) . $trans_id . '.<br/>'
-            . __( 'Related Transaction ID: ', 'nuvei-payments-for-woocommerce' )
-            . Nuvei_Pfw_Http::get_param( 'relatedTransactionId', 'int' ) . '.<br/>'
+            . __( 'Related Transaction ID: ', 'nuvei-payments-for-woocommerce' ) . $rel_trans_id . '.<br/>'
             . __( 'Transaction Amount: ', 'nuvei-payments-for-woocommerce' ) . $dmn_amount . ' ' . $currency . '.';
 
 		$message = '';
@@ -1444,6 +1463,28 @@ abstract class Nuvei_Pfw_Request {
 		}
 
 		return 0;
+	}
+    
+    protected function sum_order_refunds() {
+		$sum        = 0;
+		$nuvei_data = $this->sc_order->get_meta( NUVEI_PFW_TRANSACTIONS );
+
+		if ( empty( $nuvei_data ) || ! is_array( $nuvei_data ) ) {
+			return '0.00';
+		}
+
+		foreach ( $nuvei_data as $data ) {
+			if ( ! empty( $data['transactionType'] )
+				&& in_array( $data['transactionType'], array( 'Credit', 'Refund' ) )
+				&& ! empty( $data['status'] )
+				&& strtolower( $data['status'] ) == 'approved'
+				&& isset( $data['totalAmount'] )
+			) {
+				$sum += $data['totalAmount'];
+			}
+		}
+
+		return number_format( $sum, 2, '.', '' );
 	}
     
 	/**

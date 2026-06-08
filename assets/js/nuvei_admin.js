@@ -109,7 +109,19 @@ function nuveiAction(question, action, orderId, subscrId, isWcfm) {
  * @param {string} msgType Possible values - success, info, warning, error
  */
 function nuveiShowMsg(msgText, msgType = 'info') {
-    let $notice = jQuery(`<div class="notice notice-${msgType}"><p>${msgText}</p></div>`);
+    let $notice = jQuery(
+        `<div class="notice notice-${msgType} is-dismissible">
+            <p>${msgText}</p>
+            <button type="button" class="notice-dismiss">
+                <span class="screen-reader-text">Dismiss this notice.</span>
+            </button>
+        </div>`
+    );
+    
+    $notice.on('click', '.notice-dismiss', function() {
+        $notice.remove();
+    });
+    
     jQuery('h1.wp-heading-inline').closest('.wrap').prepend($notice);
     jQuery('html, body').animate({ scrollTop: 0 }, 300);
 }
@@ -128,6 +140,15 @@ function nuveiReturnNuveiBtns() {
 	}
 }
 
+/**
+ * 
+ * @param {type} question
+ * @param {type} showMsg
+ * @param {type} isWcfm
+ * @returns {undefined}
+ * 
+ * @deprecated
+ */
 function scCreateRefund(question, showMsg, isWcfm) {
 	console.log('scCreateRefund()');
 
@@ -207,7 +228,7 @@ function scCreateRefund(question, showMsg, isWcfm) {
             }
             // error
             else if(data?.msg && '' != data.msg) {
-                nuveiShowMsg(data.data.gwErrorReason, 'error');
+                nuveiShowMsg(data.msg, 'error');
             }
             // error
             else {
@@ -514,10 +535,10 @@ jQuery(function() {
 	jQuery('.do-manual-refund').remove();
 	jQuery('.refund-actions').prepend('<span id="sc_refund_spinner" class="spinner" style="display: none; visibility: visible"></span>');
 
-	jQuery('.do-api-refund')
-		.attr('id', 'sc_api_refund')
-		.attr('onclick', "scCreateRefund('"+ scTrans.refundQuestion +"');")
-		.removeClass('do-api-refund');
+//	jQuery('.do-api-refund')
+//		.attr('id', 'sc_api_refund')
+//		.attr('onclick', "scCreateRefund('"+ scTrans.refundQuestion +"');")
+//		.removeClass('do-api-refund');
 
 	// for the Use Cashier... setting
 	nuvei_show_hide_rest_settings();

@@ -602,46 +602,6 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		}
 	}
 
-	private function sum_order_refunds() {
-		$sum        = 0;
-		$nuvei_data = $this->sc_order->get_meta( NUVEI_PFW_TRANSACTIONS );
-
-		if ( empty( $nuvei_data ) || ! is_array( $nuvei_data ) ) {
-			return '0.00';
-		}
-
-		foreach ( $nuvei_data as $data ) {
-			if ( ! empty( $data['transactionType'] )
-				&& in_array( $data['transactionType'], array( 'Credit', 'Refund' ) )
-				&& ! empty( $data['status'] )
-				&& strtolower( $data['status'] ) == 'approved'
-				&& isset( $data['totalAmount'] )
-			) {
-				$sum += $data['totalAmount'];
-			}
-		}
-
-		return number_format( $sum, 2, '.', '' );
-	}
-
-//	private function check_for_repeating_dmn() {
-//		Nuvei_Pfw_Logger::write( 'check_for_repeating_dmn' );
-//
-//		$order_data = $this->sc_order->get_meta( NUVEI_PFW_TRANSACTIONS );
-//		$dmn_tr_id  = Nuvei_Pfw_Http::get_param( 'TransactionID', 'int' );
-//		$dmn_status = Nuvei_Pfw_Http::get_request_status();
-//
-//		if ( ! empty( $order_data[ $dmn_tr_id ] )
-//			&& ! empty( $order_data[ $dmn_tr_id ]['status'] )
-//			&& $dmn_status == $order_data[ $dmn_tr_id ]['status']
-//		) {
-//			Nuvei_Pfw_Logger::write( 'Repating DMN message detected. Stop the process.' );
-//			exit( 'This DMN is already received.' );
-//		}
-//
-//		return;
-//	}
-
 	/**
 	 * Method to handle Subscription DMN logic.
 	 *
@@ -917,11 +877,10 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 			);
 
 			if ( is_a( $refund, 'WP_Error' ) ) {
-					http_response_code( 400 );
-					Nuvei_Pfw_Logger::write( (array) $refund, 'The Refund process in WC returns error: ' );
-					exit( 'The Refund process in WC returns error.' );
+                http_response_code( 400 );
+                Nuvei_Pfw_Logger::write( (array) $refund, 'The Refund process in WC returns error: ' );
+                exit( 'The Refund process in WC returns error.' );
 			}
-			// /create Refund in WC
 
 			$refund_id = $refund->get_id();
 

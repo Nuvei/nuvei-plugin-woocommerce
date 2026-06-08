@@ -7,6 +7,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 	
+    private $last_tr_id = '';
+    
     /**
 	 * Mandatory method.
 	 * Expected parameters are:
@@ -39,9 +41,12 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 
 		if ( 'voidTransaction' == $data['method'] ) {
 			$last_tr_id = $this->get_tr_id( $data['order_id'], array( 'Settle', 'Sale', 'Auth' ) );
-		} else {
+		}
+        else {
 			$last_tr_id = $this->get_tr_id( $data['order_id'], array( 'Auth' ) );
 		}
+        
+        $this->last_tr_id = $last_tr_id;
 
 		$params = array(
 			'clientUniqueId'       => $data['order_id'],
@@ -105,7 +110,8 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
                 $resp['amount'], 
                 $resp['transactionId'], 
                 $resp['payment_method'] ?? '', 
-                $resp['currency'] 
+                $resp['currency'],
+                $this->last_tr_id
             );
 
 			$this->sc_order->save();

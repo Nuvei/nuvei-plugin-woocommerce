@@ -499,11 +499,15 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	 * @return boolean
 	 */
 	public function process_refund( $order_id, $amount = null, $reason = '' ) {
-		if ( 'true' == Nuvei_Pfw_Http::get_param( 'api_refund' ) ) {
-			return true;
-		}
-
-		return false;
+//		if ( 'true' == Nuvei_Pfw_Http::get_param( 'api_refund' ) ) {
+//			return true;
+//		}
+        
+//		return false;
+        
+        $obj = new Nuvei_Pfw_Refund( $this->settings );
+        
+        return $obj->create_refund_request( $order_id, $amount );
 	}
 
 	public function return_settle_btn( $and_taxes, $order ) {

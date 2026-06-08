@@ -113,6 +113,7 @@ class Nuvei_Payments_For_Woocommerce
 
         // add void and/or settle buttons to completed orders
         add_action( 'woocommerce_order_item_add_action_buttons', array(__CLASS__, 'add_buttons'), 10, 1 );
+        // same as aboive but for WCFM plugin Order details UI
         add_action( 'after_wcfm_orders_details_items', array(__CLASS__, 'add_buttons_wcfm'), 10, 3 );
 
         // for WCFM orders, show Nuvei Order's Notes
@@ -535,28 +536,19 @@ class Nuvei_Payments_For_Woocommerce
 			return false;
 		}
 
-		// to show Nuvei buttons we must be sure the order is paid via Nuvei Paygate
-		$order_id               = $order->get_id();
-		$helper                 = new Nuvei_Pfw_Helper();
-		$ord_tr_id              = $helper->helper_get_tr_id( $order_id );
-		$order_total            = $order->get_total();
-		$order_data             = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
-		$last_tr_data           = array();
-		$last_approved_tr_data  = array();
-		$order_refunds          = array();
-		$ref_amount             = 0;
-		$order_time             = 0;
-		$html_elements          = array(
-			'showRefundBtn' => true,
-		);
-
-		// error
+        $helper     = new Nuvei_Pfw_Helper();
+		$order_id   = $order->get_id();
+        $ord_tr_id  = $helper->helper_get_tr_id( $order_id );
+        
+        // error
 		if ( empty( $ord_tr_id ) ) {
 			Nuvei_Pfw_Logger::write( $ord_tr_id, 'Invalid Transaction ID! We will not add any buttons.', 'TRACE' );
 			return false;
 		}
-
-		// error
+        
+        $order_data = $order->get_meta( NUVEI_PFW_TRANSACTIONS );
+        
+        // error
 		if ( empty( $order_data ) || ! is_array( $order_data ) ) {
 			Nuvei_Pfw_Logger::write(
 				$order_data,
@@ -573,9 +565,9 @@ class Nuvei_Payments_For_Woocommerce
 
 			return false;
 		}
-
+        
         $last_tr_data = end( $order_data );
-
+        
         /**
 		 * If the status is missing then DMN is not received or there is some error
 		 * with the transaction.
@@ -602,6 +594,15 @@ class Nuvei_Payments_For_Woocommerce
 			return false;
 		}
         
+		$order_total            = $order->get_total();
+		$last_approved_tr_data  = array();
+		$order_refunds          = array();
+		$ref_amount             = 0;
+		$order_time             = 0;
+		$html_elements          = array(
+			'showRefundBtn' => true,
+		);
+
 		foreach ( array_reverse( $order_data, false ) as $tr ) {
             // get Refund transactions
 			if ( isset( $tr['transactionType'], $tr['status'] )
@@ -661,8 +662,8 @@ class Nuvei_Payments_For_Woocommerce
 			&& (float) $order_total > 0
 			&& time() < $order_time + 172800 // 48 hours
 		) {
-            			$question = sprintf(
-			/* translators: %d is replaced with "decimal" */
+            $question = sprintf(
+                /* translators: %d is replaced with "decimal" */
 				__( 'Are you sure, you want to Cancel Order #%d?', 'nuvei-payments-for-woocommerce' ),
 				$order_id
 			);
