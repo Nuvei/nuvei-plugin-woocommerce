@@ -1,7 +1,7 @@
 === Nuvei Payments for Woocommerce ===
 
-Requires at least: 4.7
 Stable tag: 3.14.0
+Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.3
 License: GPLv2
@@ -66,6 +66,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 = 3.14.0 =
 * The plugin can update the Order status based on Simply Connect response, as alternative of the DMN. Still for Nuvei Rebilling Orders the DMNs are mandatory!
 * Update for the Refund flow.
+
+= 3.13.6 =
+* Exposed dynamicDescriptor fields as settings.
 
 = 3.13.5 =
 * Fix for the Blocks Checkout form validation.

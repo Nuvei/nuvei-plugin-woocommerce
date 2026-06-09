@@ -1747,6 +1747,14 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'default'     => 'failed',
 				'description' => __( 'The status for Nuvei Failed transactions.', 'nuvei-payments-for-woocommerce' ),
 			),
+			'dd_name'                   => array(
+				'title'       => __( 'Dynamic Descriptor Merchant Name', 'nuvei-payments-for-woocommerce' ),
+				'type'        => 'text',
+			),
+			'dd_phone'                   => array(
+				'title'       => __( 'Dynamic Descriptor Merchant Phone', 'nuvei-payments-for-woocommerce' ),
+				'type'        => 'text',
+			),
             'mask_user_data'           => array(
 				'title'       => __( 'Mask User Data into the Log', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'select',

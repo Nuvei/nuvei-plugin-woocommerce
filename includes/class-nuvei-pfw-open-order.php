@@ -181,6 +181,16 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 				'customField2' => $currency,
 			),
 		);
+        
+        $dd_name    = trim($this->plugin_settings['dd_name'] ?? '');
+        $dd_phone   = trim($this->plugin_settings['dd_phone'] ?? '');
+        
+        if ( !empty($dd_name) || !empty($dd_phone)) {
+            $oo_params['dynamicDescriptor'] = [
+                'merchantName'  => $dd_name,
+                'merchantPhone' => $dd_phone,
+            ];
+        }
 
 		// WC Subsc
 		if ( $products_data['wc_subscr'] ) {
