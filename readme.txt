@@ -1,8 +1,8 @@
 === Nuvei Payments for Woocommerce ===
 
-Requires at least: 4.7
+Requires at least: 5.9
 Tested up to: 7.0
-Stable tag: 3.13.5
+Stable tag: 3.13.6
 Requires PHP: 7.3
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -62,6 +62,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.13.6 =
+* Exposed dynamicDescriptor fields as settings.
 
 = 3.13.5 =
 * Fix for the Blocks Checkout form validation.
