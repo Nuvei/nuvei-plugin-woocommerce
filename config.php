@@ -37,7 +37,7 @@ const NUVEI_PFW_SESSION_OO_DETAILS      = 'nuvei_last_open_order_details'; // a 
 const NUVEI_PFW_SESSION_PROD_DETAILS    = 'nuvei_order_details'; // products details
 const NUVEI_PFW_LOG_REQUEST_PARAMS      = 'Request params';
 const NUVEI_API_PATH                    = 'nuvei/api/v1';
-const NUVEI_ACTION_SCHEDULER_DELAY      = 60; // in seconds
+const NUVEI_ACTION_SCHEDULER_DELAY      = 30; // in seconds
 
 define(
 	'NUVEI_PFW_LOGS_DIR',

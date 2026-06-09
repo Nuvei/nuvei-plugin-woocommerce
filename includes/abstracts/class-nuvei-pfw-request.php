@@ -1017,17 +1017,18 @@ abstract class Nuvei_Pfw_Request {
 		}
         
 		$transactions_data[ $transaction_id ] = array(
-			'authCode'             => Nuvei_Pfw_Http::get_param( 'AuthCode', 'string', '', $params ),
-			'paymentMethod'        => Nuvei_Pfw_Http::get_param( 'payment_method', 'string', '', $params ),
-			'transactionType'      => $transaction_type,
-			'transactionId'        => $transaction_id,
-			'relatedTransactionId' => Nuvei_Pfw_Http::get_param( 'relatedTransactionId', 'int', 0, $params ),
-			'totalAmount'          => Nuvei_Pfw_Http::get_param( ['totalAmount', 'amount'], 'float', 0, $params ),
-			'currency'             => Nuvei_Pfw_Http::get_param( 'currency', 'string', '', $params ),
-			'status'               => $status,
-			'userPaymentOptionId'  => Nuvei_Pfw_Http::get_param( 'userPaymentOptionId', 'int' ),
-			'wcsRenewal'           => 'renewal_order' == Nuvei_Pfw_Http::get_param( 'customField4', 'string', '', $params )
+			'authCode'              => Nuvei_Pfw_Http::get_param( 'AuthCode', 'string', '', $params ),
+			'paymentMethod'         => Nuvei_Pfw_Http::get_param( 'payment_method', 'string', '', $params ),
+			'transactionType'       => $transaction_type,
+			'transactionId'         => $transaction_id,
+			'relatedTransactionId'  => Nuvei_Pfw_Http::get_param( 'relatedTransactionId', 'int', 0, $params ),
+			'totalAmount'           => Nuvei_Pfw_Http::get_param( ['totalAmount', 'amount'], 'float', 0, $params ),
+			'currency'              => Nuvei_Pfw_Http::get_param( 'currency', 'string', '', $params ),
+			'status'                => $status,
+			'userPaymentOptionId'   => Nuvei_Pfw_Http::get_param( 'userPaymentOptionId', 'int' ),
+			'wcsRenewal'            => 'renewal_order' == Nuvei_Pfw_Http::get_param( 'customField4', 'string', '', $params )
 				? true : false,
+            'timestamp'             => time(),
 		);
 
 		if ( null !== $wc_refund_id ) {

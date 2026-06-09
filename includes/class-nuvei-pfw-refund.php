@@ -18,38 +18,12 @@ class Nuvei_Pfw_Refund extends Nuvei_Pfw_Request {
 	 *
 	 * @param int          $order_id
 	 * @param float|string $ref_amount
+     * 
+     * @return bool|WP_Error
 	 */
 	public function create_refund_request( $order_id, $ref_amount ) {
-		// error
-//		if ( $order_id < 1 ) {
-//			Nuvei_Pfw_Logger::write( $order_id, 'create_refund_request() Error - Post parameter is less than 1.' );
-//
-//            return array(
-//                'status' => 0,
-//                'msg'    => __( 'Post parameter is less than 1.', 'nuvei-payments-for-woocommerce' ),
-//                'data'   => array( $order_id ),
-//            );
-//		}
-
-//		$ref_amount = round( $ref_amount, 2 );
-//
-//		// error
-//		if ( $ref_amount < 0 ) {
-//            return array(
-//                'status' => 0,
-//                'msg'    => __( 'Invalid Refund amount.', 'nuvei-payments-for-woocommerce' ),
-//            );
-//		}
-
-//		$resp = $this->is_order_valid( $order_id, true );
-        
         // error
         if ( ! $this->is_order_valid( $order_id, true ) ) {
-//            return array(
-//                'status' => 0,
-//                'msg'    => $this->message ?? __( 'The Order is not valid or does not belogn to Nuvei.', 'nuvei-payments-for-woocommerce' ),
-//            );
-            
             return new WP_Error( 
                 'invalid_order', 
                 __( 'The Order is not valid or does not belogn to Nuvei.', 'nuvei-payments-for-woocommerce' ) 
@@ -76,11 +50,6 @@ class Nuvei_Pfw_Refund extends Nuvei_Pfw_Request {
 			$this->sc_order->add_order_note( $msg );
 			$this->sc_order->save();
 
-//            return array(
-//                'status' => 0,
-//                'msg'    => $msg,
-//            );
-            
             return new WP_Error( 'invalid_order', $msg );
 		}
 
@@ -99,11 +68,6 @@ class Nuvei_Pfw_Refund extends Nuvei_Pfw_Request {
 			$this->sc_order->add_order_note( $msg );
 			$this->sc_order->save();
 
-//            return array(
-//                'status' => 0,
-//                'msg'    => $msg,
-//            );
-            
             return new WP_Error( 'invalid_order', $msg );
 		}
 
@@ -117,69 +81,49 @@ class Nuvei_Pfw_Refund extends Nuvei_Pfw_Request {
 			);
             
             $this->sc_order->update_meta_data( NUVEI_PFW_PREV_TRANS_STATUS, $this->sc_order->get_status() );
+            
+            $pm = $this->get_payment_method($order_id);
 			
             // change order status 
-            $order_amount = number_format($this->sc_order->get_total(), 2, '.', '');
-            
-//            if ( $order_amount == $this->sum_order_refunds() + $ref_amount ) {
-//                $new_status = $this->nuvei_gw->get_option( 'status_refund' );
-//                
-//                $this->sc_order->update_status( $new_status );
-//            }
-            
+            $order_amount                   = number_format($this->sc_order->get_total(), 2, '.', '');
             // the follow method works by default with DMN, so it expects in $resp['status'] to have the Transaction Status,
             // as Approved, Declined, etc., so we will modify the 'status' parameter to be as expect.
-            $resp['status']         = $resp['transactionStatus'];
+            $resp['status']                 = $resp['transactionStatus'];
             // add and payment method based on the previous transaction
-            $resp['payment_method'] = $this->get_payment_method($order_id);
+            $resp['payment_method']         = $pm;
             // add and the refunded amount based on the response
-            $resp['totalAmount']    = $ref_amount;
+            $resp['totalAmount']            = $ref_amount;
             // add the default currency
-            $resp['currency']       = get_woocommerce_currency();
+            $resp['currency']               = get_woocommerce_currency();
+            $resp['relatedTransactionId']   = $this->last_tr_id;
 			
             $this->save_transaction_data( $resp );
             
-            // create Refund in WC
-//			$refund = wc_create_refund(
-//				array(
-//					'amount'   => $ref_amount,
-//					'order_id' => $order_id,
-//				)
-//			);
-//            
-//            if (is_wp_error($refund)) {
-//                Nuvei_Pfw_Logger::write(
-//                    [
-//                        'code'  => $refund->get_error_code(),
-//                        'msg'   => $refund->get_error_message(),
-//                    ],
-//                    'The Refund process in WC returns error: ' 
-//                );
-//                
-//                return array(
-//                    'status' => 0,
-//                    'msg'    => __( 'Error when tried to create a Refuns in WooCommerce.', 'nuvei-payments-for-woocommerce' ),
-//                );
-//			}
+            // add Order Note when the Refund is created
+            add_action( 'woocommerce_refund_created', function( $refund_id, $args ) use ( $order_id, $resp ) {
+                if ( (int) $args['order_id'] !== (int) $order_id ) {
+                    return; // not our Order
+                }
 
-            // no need to do it, WC will do it :)
-//            $this->change_order_status( 
-//                $order_id, 
-//                $resp['status'], // we need transactionStatus when works with the direct response!
-//                $resp['transactionType'], 
-////                $refund->get_id(), 
-//                null,
-//                $resp['totalAmount'], 
-//                $resp['transactionId'], 
-//                $resp['payment_method'] ?? '', 
-//                $resp['currency'],
-//                $this->last_tr_id
-//            );
-//            
+                // add the transaction id to the Refund
+                $refund = wc_get_order( $refund_id );
+                $refund->update_meta_data( '_nuvei_refund_tr_id', $resp['transactionId'] );
+                $refund->save();
+                
+                // create Order Note
+                $note = '<b>' . $resp['transactionType'] . ' </b> ' . __( 'request', 'nuvei-payments-for-woocommerce' ) . '.<br/>'
+                    . __( 'Response status: ', 'nuvei-payments-for-woocommerce' ) . '<b>' . $resp['transactionStatus'] . '</b>.<br/>'
+                    . __( 'Payment Method: ', 'nuvei-payments-for-woocommerce' ) . $resp['payment_method'] . '.<br/>'
+                    . __( 'Transaction ID: ', 'nuvei-payments-for-woocommerce' ) . $resp['transactionId'] . '.<br/>'
+                    . __( 'Related Tr. ID: ', 'nuvei-payments-for-woocommerce' ) . $resp['relatedTransactionId'] . '.<br/>'
+                    . __( 'Transaction Amount: ', 'nuvei-payments-for-woocommerce' ) . $resp['totalAmount'] . ' ' . $resp['currency'] . '.<br/>'
+                    . __( 'Refund # ', 'nuvei-payments-for-woocommerce' ) . $refund_id . '.';
+
+                $this->sc_order->add_order_note( $note );
+            }, 10, 2 );
+            
 			$this->sc_order->save();
 
-//            return array( 'status' => 1 );
-            
             return true;
 		}
 

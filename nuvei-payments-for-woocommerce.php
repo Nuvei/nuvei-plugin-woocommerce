@@ -557,11 +557,11 @@ class Nuvei_Payments_For_Woocommerce
 			);
 
 			// disable refund button
-			wp_add_inline_script(
-				'nuvei_js_admin',
-				'nuveiPfwDisableRefundBtn()',
-				'after'
-			);
+//			wp_add_inline_script(
+//				'nuvei_js_admin',
+//				'nuveiPfwDisableRefundBtn()',
+//				'after'
+//			);
 
 			return false;
 		}
@@ -585,11 +585,11 @@ class Nuvei_Payments_For_Woocommerce
 			);
 
 			// disable refund button
-			wp_add_inline_script(
-				'nuvei_js_admin',
-				'nuveiPfwDisableRefundBtn()',
-				'after'
-			);
+//			wp_add_inline_script(
+//				'nuvei_js_admin',
+//				'nuveiPfwDisableRefundBtn()',
+//				'after'
+//			);
 
 			return false;
 		}
@@ -1409,16 +1409,6 @@ class Nuvei_Payments_For_Woocommerce
                 $order_id   = $request->get_param('orderId');
                 $data       = $sv_class->create_settle_void( sanitize_text_field( $order_id ), 'void' );
                 
-                // update the order
-//                if ( ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $data ] )  ) {
-//                    // Set Action Scheduler
-//                    as_schedule_single_action( 
-//                        time() + NUVEI_ACTION_SCHEDULER_DELAY, 
-//                        'nuvei_save_transaction_to_order', 
-//                        [ $data ]
-//                    );
-//                }
-
                 return rest_ensure_response( $data );
             },
             'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
@@ -1674,23 +1664,49 @@ class Nuvei_Payments_For_Woocommerce
                     && ! empty($params['transactionId'])
                     && ! empty($params['paymentMethod'])
                 ) {
-                    $order = wc_get_order( absint( $params['orderId'] ) );
+                    $order_id   = absint( $params['orderId'] );
+                    $order      = wc_get_order( $order_id );
+                    
+                    if ( ! wc_get_order( absint( $params['orderId'] ) ) ) {
+                        return rest_ensure_response([
+                            'status'    => 'error',
+                            'msg'       => __( 'There is no Order for Order ID ', 'nuvei-payments-for-woocommerce' ) . $order_id,
+                        ]);
+                    }
+                    
                     
                     // check for existing Order and repeating task
-                    if ( $order
-                        && ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $params ] ) 
-                    ) {
+                    if ( ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $params ] )  ) {
                         // Set Action Scheduler
-                        as_schedule_single_action( 
+                        $res = as_schedule_single_action( 
                             time() + NUVEI_ACTION_SCHEDULER_DELAY, 
                             'nuvei_save_transaction_to_order', 
                             [ $params ]
                         );
+                        
+                        if ( 0 == $res ) {
+                            return rest_ensure_response([
+                                'status'    => 'error',
+                                'msg'       => __( 'Error when try to set single schedule action.', 'nuvei-payments-for-woocommerce' ),
+                            ]);
+                        }
+                        
+                        return rest_ensure_response([
+                            'status' => 'success',
+                        ]);
                     }
+                    
+                    return rest_ensure_response([
+                        'status'    => 'error',
+                        'msg'       => __( 'The single schedule action exists.', 'nuvei-payments-for-woocommerce' ),
+                    ]);
                 }
                 
                 // the front-end will not wait for the response
-                return rest_ensure_response([]);
+                return rest_ensure_response([
+                    'status'    => 'error',
+                    'msg'       => __( 'A problem with the submitted parameters.', 'nuvei-payments-for-woocommerce' ),
+                ]);
             },
             'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
         ));
@@ -1939,5 +1955,53 @@ class Nuvei_Payments_For_Woocommerce
 		Nuvei_Pfw_Logger::write( 'Order #' . $order_id . ' was updated.' );
 
 		return;
+    }
+    
+    public static function show_order_notes( $notes, $order_id ) {
+        $order = wc_get_order($order_id);
+        
+        // error
+        if ( !$order ) {
+            return $notes;
+        }
+        
+        $transactions = $order->get_meta( '_nuveiTransactions' );
+        
+        // error
+        if (empty($transactions)) {
+            return $notes;
+        }
+        
+        foreach ( $transactions as $txn_id => $txn ) {
+            if ( !isset($txn['timestamp'])) {
+                continue;
+            }
+            
+            $notes[] = (object) [
+                'id'            => 'nuvei_txn_' . $txn_id,
+                'date_created'  => $txn['timestamp'],
+                'content'       => sprintf(
+                    '<b>%s</b> ' . __('request.', 'nuvei-payments-for-woocommerce') .'<br/>'
+                        . __('Response Status: ', 'nuvei-payments-for-woocommerce') .'%s.<br/>'
+                        . __('Payment Method: ', 'nuvei-payments-for-woocommerce') .'%s.<br/>'
+                        . __('Transaction ID: ', 'nuvei-payments-for-woocommerce') .'%s.'
+                        . __('Related Tr. ID: ', 'nuvei-payments-for-woocommerce') .'%s.<br/>'
+                        . __('Transaction Amount: ', 'nuvei-payments-for-woocommerce') .'%s %s',
+                    $txn['transactionType'],
+                    $txn['status'],
+                    $txn['paymentMethod'],
+                    $txn['transactionId'],
+                    $txn['relatedTransactionId'],
+                    $txn['totalAmount'],
+                    $txn['currency']
+                ),
+                'customer_note' => false,
+                'added_by'      => 'nuvei',
+            ];
+        }
+        
+        usort( $notes, fn( $a, $b ) => $b->date_created <=> $a->date_created );
+        
+        return $notes;
     }
 }

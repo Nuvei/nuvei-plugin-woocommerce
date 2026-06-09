@@ -238,6 +238,9 @@ function nuveiAfterSdkResponse(resp) {
 		&& typeof resp.transactionId != 'undefined'
 		&& resp.transactionId != 'undefined'
 	) {
+
+        console.log(nuveiSuccessRedirect, window?._nuveiOrderId);
+        
         // the new Classic Checkout flow
         if ('' != nuveiSuccessRedirect) {
             // submit the transacion data and the related order id
