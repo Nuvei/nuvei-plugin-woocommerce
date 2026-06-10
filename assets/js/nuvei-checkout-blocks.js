@@ -341,7 +341,7 @@ async function nuveiBlocksRunTransaction() {
                     meta: {
                         paymentMethodData: {
                             _nuveiTrId: payment.transaction_id,
-                            _nuveiPm: nuveiSimplyPm
+                            _nuveiPm: nuveiSelectedPaymentMethod
                         }
                     }
                 };
