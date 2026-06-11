@@ -824,11 +824,13 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	public function call_checkout( $is_rest = false, $return_data = false, $order_id = null ) {
 		Nuvei_Pfw_Logger::write(
 			array(
-				'$is_rest'     => $is_rest,
-				'$return_data' => $return_data,
-				'rest_params'  => $this->rest_params,
+				'$is_rest'      => $is_rest,
+				'$return_data'  => $return_data,
+				'$order_id'     => $order_id,
+				'rest_params'   => $this->rest_params,
 			),
-			'call_checkout()'
+			'call_checkout()',
+            'TRACE'
 		);
 
         // wakeup the WC and the session in case of API call
@@ -850,10 +852,11 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             wc_load_cart();
         }
 
-		// OpenOrder::START
+		// OpenOrder
 		$oo_obj  = new Nuvei_Pfw_Open_Order( $this->settings, $this->rest_params );
 		$oo_data = $oo_obj->process( array( 'order_id' => $order_id ) );
 
+        // error
 		if ( ! $oo_data || empty( $oo_data['sessionToken'] ) ) {
 			$msg = __( 'Unexpected error, please try again later!', 'nuvei-payments-for-woocommerce' );
 
@@ -867,6 +870,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				$msg = $oo_data['custom_msg'];
 			}
 
+            // error
 			if ( $return_data ) {
 				return array(
 					'messages' => $msg,
@@ -881,7 +885,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 'messages' => '<ul id="sc_fake_error" class="woocommerce-error" role="alert"><li>' . $msg . '</li></ul>',
             );
 		}
-		// OpenOrder::END
 
 		$nuvei_helper          = new Nuvei_Pfw_Helper();
 		$ord_details           = $nuvei_helper->get_addresses( $this->rest_params );
@@ -1046,6 +1049,10 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		// For blocks checkout, get the data when register Nuvei gateway.
 		if ( $return_data ) {
+            if ( !empty($oo_data['ordRedirectUrl']) ) {
+                $checkout_data['ordRedirectUrl'] = $oo_data['ordRedirectUrl'];
+            }
+            
 			return $checkout_data;
 		}
 

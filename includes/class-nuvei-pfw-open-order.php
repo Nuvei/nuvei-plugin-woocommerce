@@ -7,7 +7,6 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 
-
 	/**
 	 * @param array $plugin_settings
 	 * @param array $rest_params REST call params if any.
@@ -30,10 +29,15 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 		$try_update_order   = true;
 		$method_params      = func_get_args(); // optionaly we will pass here Order ID.
         $open_order_details = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS ) ?? [];
+        $ord_redirect_url   = '';
         
 		// if we pass Order ID get the order.
 		if ( ! empty( $method_params[0]['order_id'] ) ) {
 			$this->sc_order = wc_get_order( $method_params[0]['order_id'] );
+            
+            if ($this->sc_order) {
+                $ord_redirect_url = $this->sc_order->get_checkout_order_received_url();
+            }
 		}
 
         # try to use incoming parameters
@@ -71,7 +75,7 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
                 
 		Nuvei_Pfw_Logger::write( $open_order_details, '$open_order_details' );
 
-		// do not allow WCS and Nuvei Subscription in same Order
+		// error - do not allow WCS and Nuvei Subscription in same Order
 		if ( ! empty( $products_data['subscr_data'] ) && $products_data['wc_subscr'] ) {
 			Nuvei_Pfw_Logger::write( 'It is not allowed to put product with WCS and product witn Nuvei Subscription in same Order! Please, contact the site administrator for this problem!' );
 
@@ -138,8 +142,10 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 
                 Nuvei_Pfw_Logger::write( $saved_oo_details, 'updateOrder success - session open_order_details' );
 
-                $resp['transactionType'] = $transaction_type;
+                $resp['transactionType']    = $transaction_type;
+                $resp['ordRedirectUrl']     = $ord_redirect_url;
                 
+                // success
                 return $resp;
             }
 
@@ -203,6 +209,7 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 
 		$resp = $this->call_rest_api( 'openOrder', $oo_params );
 
+        // error
         if ( empty( $resp['status'] ) || 'SUCCESS' != $resp['status'] || empty( $resp['sessionToken'] ) ) {
             Nuvei_Pfw_Logger::write( $resp, 'openOrder failed.' );
             return $resp ?: false;
@@ -228,7 +235,8 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 
         Nuvei_Pfw_Logger::write( $open_order_details, 'session open_order_details' );
 
-		$resp['products_data'] = $products_data;
+		$resp['products_data']  = $products_data;
+        $resp['ordRedirectUrl'] = $ord_redirect_url;
 
 		return array_merge( $resp, $oo_params );
 	}

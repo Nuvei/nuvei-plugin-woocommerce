@@ -1425,16 +1425,6 @@ class Nuvei_Payments_For_Woocommerce
                 // we need ot for the update
                 $data['orderId'] = $order_id;
                 
-                // update the order
-//                if ( ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $data ] )  ) {
-//                    // Set Action Scheduler
-//                    as_schedule_single_action( 
-//                        time() + NUVEI_ACTION_SCHEDULER_DELAY, 
-//                        'nuvei_save_transaction_to_order', 
-//                        [ $data ]
-//                    );
-//                }
-
                 return rest_ensure_response( $data );
             },
             'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
@@ -1567,11 +1557,12 @@ class Nuvei_Payments_For_Woocommerce
         ));
 
         // when need data to pay Existing Order for Simply Connect flow
-        register_rest_route(NUVEI_API_PATH, '/pay-for-existing-order/', array(
+        register_rest_route(NUVEI_API_PATH, '/get-data-for-existing-order/', array(
             'methods'             => 'POST',
             'callback'            => function($request) {
                 $order_id = $request->get_param('orderId');
 
+                // error
                 if (!is_numeric($order_id)
                     || $order_id <= 0
                     || 'sdk' != self::$wc_nuvei->settings['integration_type']
@@ -1667,13 +1658,26 @@ class Nuvei_Payments_For_Woocommerce
                     $order_id   = absint( $params['orderId'] );
                     $order      = wc_get_order( $order_id );
                     
-                    if ( ! wc_get_order( absint( $params['orderId'] ) ) ) {
+                    // error
+                    if ( !$order ) {
                         return rest_ensure_response([
                             'status'    => 'error',
-                            'msg'       => __( 'There is no Order for Order ID ', 'nuvei-payments-for-woocommerce' ) . $order_id,
+                            'msg'       => __( 'There is no Order with ID ', 'nuvei-payments-for-woocommerce' ) 
+                                . $order_id,
                         ]);
                     }
                     
+                    // set the used payment provider explicitly!
+                    $order->set_payment_method(NUVEI_PFW_GATEWAY_NAME);
+                    $order->save();
+                    
+                    if ( ! wc_get_order( absint( $params['orderId'] ) ) ) {
+                        return rest_ensure_response([
+                            'status'    => 'error',
+                            'msg'       => __( 'There is no Order for Order ID ', 'nuvei-payments-for-woocommerce' ) 
+                                . $order_id,
+                        ]);
+                    }
                     
                     // check for existing Order and repeating task
                     if ( ! as_has_scheduled_action( 'nuvei_save_transaction_to_order', [ $params ] )  ) {
@@ -1859,8 +1863,6 @@ class Nuvei_Payments_For_Woocommerce
         $order_id   = (int) ($params['orderId'] ?? 0);
         $tr_id      = sanitize_text_field( $params['transactionId'] ?? '' );
         $pm         = sanitize_text_field( $params['paymentMethod'] ?? '' );
-        
-        Nuvei_Pfw_Logger::write($order_id, 'save_transaction_to_order' );
         
         $handler = new Nuvei_Pfw_Order_Handler();
         

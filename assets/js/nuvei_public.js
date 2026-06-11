@@ -234,7 +234,7 @@ function nuveiAfterSdkResponse(resp) {
 		return;
 	}
 
-	if ( (resp.result == 'APPROVED' || resp.result == 'PENDING')
+	if ( (resp.result === 'APPROVED' || resp.result === 'PENDING')
 		&& typeof resp.transactionId != 'undefined'
 		&& resp.transactionId != 'undefined'
 	) {
@@ -244,7 +244,7 @@ function nuveiAfterSdkResponse(resp) {
         // the new Classic Checkout flow
         if ('' != nuveiSuccessRedirect) {
             // submit the transacion data and the related order id
-            if ( window?._nuveiOrderId && ! isNaN(window._nuveiOrderId) ) {
+            if ( ! isNaN(window?._nuveiOrderId) ) {
                 fetch(scTrans.apiUrl + '/set-transaction-checker/', {
                     method: 'POST',
                     headers: {
@@ -278,6 +278,7 @@ function nuveiAfterSdkResponse(resp) {
             return;
         }
         
+        // TODO - remove this, we will get the redirect link when get the SC data
         // in case of admin order and recaptcha do a manual redirect
         if ( nuveiIsPayForExistingOrderPage && jQuery('.g-recaptcha').length ) {
             fetch(scTrans.apiUrl + '/redirect-paid-existing-order/', {
@@ -582,7 +583,7 @@ function nuveiShowErrorMsg(text) {
 function nuveiPayForExistingOrder() {
     console.log('nuveiPayForExistingOrder');
 
-    fetch(scTrans.apiUrl + '/pay-for-existing-order/', {
+    fetch(scTrans.apiUrl + '/get-data-for-existing-order/', {
         method: 'POST',
         headers: {
             'X-WP-Nonce': scTrans.nuveiApiSec,
@@ -607,7 +608,12 @@ function nuveiPayForExistingOrder() {
             console.log(data);
 
             if (!nuveiIsCheckoutLoaded) {
-                nuveiIsCheckoutLoaded = true;
+                window._nuveiOrderId    = jQuery('#nuveiPayForExistingOrder').val();
+                nuveiSuccessRedirect    = data.ordRedirectUrl;
+                nuveiIsCheckoutLoaded   = true;
+                
+                delete(data.ordRedirectUrl);
+                
                 showNuveiCheckout(data);
             }
         })
