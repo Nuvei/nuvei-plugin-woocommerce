@@ -72,4 +72,5 @@ class Nuvei_Pfw_Order_Handler extends Nuvei_Pfw_Request {
 
         $this->sc_order->save();
     }
+    
 }

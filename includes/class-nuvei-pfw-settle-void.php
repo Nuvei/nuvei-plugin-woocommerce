@@ -113,6 +113,9 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
                 $resp['currency'],
                 $this->last_tr_id
             );
+            
+            $this->subscription_start( $resp['transactionType'], $order_id, $resp['amount'] );
+            $this->subscription_cancel( $resp['transactionType'], $order_id, $resp['amount'] );
 
 			$this->sc_order->save();
 		}

@@ -106,5 +106,31 @@ class Nuvei_Pfw_Helper extends Nuvei_Pfw_Request {
 		return $this->get_plugin_version();
 	}
     
+    /**
+     * @param string $transaction_type
+     * @param int $order_id
+     * @param float $total
+     */
+    public function helper_start_subscription( $transaction_type, $order_id, $total ) {
+        if ( ! $this->sc_order ) {
+            $this->get_order( $order_id );
+        }
+        
+        $this->subscription_start( $transaction_type, $order_id, $total );
+    }
+    
+    /**
+	 * @param int    $transaction_type
+	 * @param int    $order_id
+	 * @param string $req_status       The status of the transaction.
+	 */
+    public function helper_cancel_subscription( $transaction_type, $order_id, $req_status ) {
+        if ( ! $this->sc_order ) {
+            $this->get_order( $order_id );
+        }
+        
+        $this->subscription_cancel( $transaction_type, $order_id, $req_status );
+    }
+    
     protected function get_checksum_params() {}
 }

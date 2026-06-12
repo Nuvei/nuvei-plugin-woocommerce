@@ -1590,41 +1590,41 @@ class Nuvei_Payments_For_Woocommerce
         ));
             
         // in case of Admin Order and ReCaptcha get the redirect link and do it in the plugin
-        register_rest_route(NUVEI_API_PATH, '/redirect-paid-existing-order/', array(
-            'methods'             => 'POST',
-            'callback'            => function($request) {
-                $order_id   = absint( $request->get_param('order_id') );
-                $order      = wc_get_order( $order_id );
-                
-                if ( $order ) {
-                    $p_method = $order->get_payment_method();
-                    
-                    if ( empty($p_method) || NUVEI_PFW_GATEWAY_NAME === $p_method ) {
-                        $order->set_payment_method( NUVEI_PFW_GATEWAY_NAME );
-                        $order->set_payment_method_title(NUVEI_PFW_GATEWAY_TITLE );
-                        $order->save();
-                        
-                        // success
-                        return rest_ensure_response([
-                            'redirect_url' => $order->get_checkout_order_received_url()
-                        ]);
-                    }
-                }
-                
-                // error
-                Nuvei_Pfw_Logger::write(
-                    [ '$order_id' => $order_id, ],
-                    'Wrong Order ID.'
-                );
-
-                return new WP_Error(
-                    'action_failed',
-                    __('Invalid Order ID.', 'nuvei-payments-for-woocommerce'),
-                    array( 'status' => 404 )
-                );
-            },
-            'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
-        ));
+//        register_rest_route(NUVEI_API_PATH, '/redirect-paid-existing-order/', array(
+//            'methods'             => 'POST',
+//            'callback'            => function($request) {
+//                $order_id   = absint( $request->get_param('order_id') );
+//                $order      = wc_get_order( $order_id );
+//                
+//                if ( $order ) {
+//                    $p_method = $order->get_payment_method();
+//                    
+//                    if ( empty($p_method) || NUVEI_PFW_GATEWAY_NAME === $p_method ) {
+//                        $order->set_payment_method( NUVEI_PFW_GATEWAY_NAME );
+//                        $order->set_payment_method_title(NUVEI_PFW_GATEWAY_TITLE );
+//                        $order->save();
+//                        
+//                        // success
+//                        return rest_ensure_response([
+//                            'redirect_url' => $order->get_checkout_order_received_url()
+//                        ]);
+//                    }
+//                }
+//                
+//                // error
+//                Nuvei_Pfw_Logger::write(
+//                    [ '$order_id' => $order_id, ],
+//                    'Wrong Order ID.'
+//                );
+//
+//                return new WP_Error(
+//                    'action_failed',
+//                    __('Invalid Order ID.', 'nuvei-payments-for-woocommerce'),
+//                    array( 'status' => 404 )
+//                );
+//            },
+//            'permission_callback' => array(__CLASS__, 'validate_my_api_nonce'),
+//        ));
         
         // Get Checkout data
         register_rest_route(NUVEI_API_PATH, '/get-checkout-data/', array(
@@ -1668,7 +1668,8 @@ class Nuvei_Payments_For_Woocommerce
                     }
                     
                     // set the used payment provider explicitly!
-                    $order->set_payment_method(NUVEI_PFW_GATEWAY_NAME);
+                    $order->set_payment_method_title( self::$wc_nuvei->title );
+                    $order->set_payment_method( NUVEI_PFW_GATEWAY_NAME );
                     $order->save();
                     
                     if ( ! wc_get_order( absint( $params['orderId'] ) ) ) {
@@ -1895,17 +1896,17 @@ class Nuvei_Payments_For_Woocommerce
 
         // error - end the action, we expect this transaction to be approved.
 		if ( empty( $status ) || 'approved' !== strtolower($status) ) {
-            Nuvei_Pfw_Logger::write( $status, 'Nuvei_Pfw_Get_Trans_Details error 2' );
+            Nuvei_Pfw_Logger::write( $status, 'The transacion is not approved.' );
 			return;
 		}
 
         // few checks
         if ( ! $handler->can_override_order_status_public(true) ) {
-            Nuvei_Pfw_Logger::write( 'Nuvei_Pfw_Get_Trans_Details error 3' );
+            Nuvei_Pfw_Logger::write( 'Cannot override the Order current status.' );
             return;
         }
         if ( ! $handler->check_for_repeating_dmn_public($tr_id, $status, true) ) {
-            Nuvei_Pfw_Logger::write( 'Nuvei_Pfw_Get_Trans_Details error 4' );
+            Nuvei_Pfw_Logger::write( 'Looks like this repeating DMN.' );
             return;
         }
         
@@ -1951,6 +1952,12 @@ class Nuvei_Payments_For_Woocommerce
                 $currency
 			);
 		}
+        
+        $order  = wc_get_order($order_id);
+        $helper = new Nuvei_Pfw_Helper();
+        
+        $helper->use_order($order);
+        $helper->helper_start_subscription( $transaction_type, $order_id, $total );
         
         $handler->save_order();
         

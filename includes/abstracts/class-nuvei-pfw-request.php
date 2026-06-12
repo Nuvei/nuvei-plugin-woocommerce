@@ -48,6 +48,11 @@ abstract class Nuvei_Pfw_Request {
 
 		$this->request_base_params['merchantDetails']['customField3'] = time();
 	}
+    
+    public function use_order( WC_Order $order ) {
+        $this->sc_order = $order;
+        return $this;
+    }
 
 	/**
 	 * Checks if the Order belongs to WC_Order and if the order was made
@@ -953,13 +958,16 @@ abstract class Nuvei_Pfw_Request {
 
 	/**
 	 * A help function for the above methods.
+     * Set and return sc_order parameter.
+     * 
+     * @return WC_Order.
 	 */
 	protected function get_order( $order_id ) {
 		if ( empty( $this->sc_order ) ) {
-			return wc_get_order( $order_id );
+            $this->sc_order = wc_get_order( $order_id );
 		}
 
-			return $this->sc_order;
+        return $this->sc_order;
 	}
 
 	/**
@@ -1488,7 +1496,169 @@ abstract class Nuvei_Pfw_Request {
 		return number_format( $sum, 2, '.', '' );
 	}
     
-	/**
+    /**
+	 * The start of create subscriptions logic.
+	 * We call this method when we've got Settle or Sale DMNs.
+	 *
+	 * @param string $transaction_type
+	 * @param int    $order_id
+	 * @param float  $order_total      Pass the Order Total only for Auth.
+     * 
+     * @return void
+	 */
+	protected function subscription_start( $transaction_type, $order_id, $order_total = null ) {
+		Nuvei_Pfw_Logger::write( 'Try to start subscription.' );
+        
+        // error
+        if ( ! in_array( $transaction_type, array( 'Settle', 'Sale', 'Auth' ) ) ) {
+			Nuvei_Pfw_Logger::write(
+				array( '$transaction_type' => $transaction_type ),
+				'Can not start Subscription.'
+			);
+			return;
+		}
+        
+        // error
+		if ( $this->sc_order->get_meta( NUVEI_PFW_WC_SUBSCR ) ) {
+			Nuvei_Pfw_Logger::write( 'WC Subscription.' );
+			return;
+		}
+
+        // error
+		if ( 'Auth' == $transaction_type && 0 != (float) $order_total ) {
+			Nuvei_Pfw_Logger::write( $order_total, 'We allow Rebilling for Auth only when the Order total is 0.' );
+			return;
+		}
+
+		// The meta key for the Subscription is dynamic.
+		$order_all_meta = $this->sc_order->get_meta_data();
+
+		if ( ! is_array( $order_all_meta ) || empty( $order_all_meta ) ) {
+			Nuvei_Pfw_Logger::write( 'Order meta is not array or is empty.' );
+			return;
+		}
+
+		$all_subscr = $this->get_order_rebiling_details( $order_all_meta );
+
+		Nuvei_Pfw_Logger::write( $all_subscr, '$order_all_meta' );
+
+		// create subscription request for each subscription record
+		foreach ( $all_subscr as $data ) {
+			// this key is not for subscription
+			if ( empty( $data['subs_id'] ) ) {
+				Nuvei_Pfw_Logger::write( $data, 'This is not a subscription key' );
+				continue;
+			}
+
+			if ( empty( $data['subs_data'] ) || ! is_array( $data['subs_data'] ) ) {
+				Nuvei_Pfw_Logger::write( $data, 'There is a problem with the DMN Product Payment Plan data:' );
+				continue;
+			}
+
+			$data['subs_data']['clientRequestId'] = $order_id . $data['subs_id'];
+
+			$ns_obj = new Nuvei_Pfw_Subscription();
+            $ns_obj->use_order($this->sc_order);
+            
+			$resp   = $ns_obj->process( $data['subs_data'] );
+
+			// On Error
+			if ( ! $resp || ! is_array( $resp ) || empty( $resp['status'] ) || 'SUCCESS' != $resp['status'] ) {
+				$msg = '<b>'
+				. sprintf(
+				/* translators: %s: close bold html tag */
+					__( 'Error%s when try to start a Subscription by the Order.', 'nuvei-payments-for-woocommerce' ),
+					'</b>'
+				);
+
+				if ( ! empty( $resp['reason'] ) ) {
+						$msg .= '<br/>' . __( 'Reason: ', 'nuvei-payments-for-woocommerce' ) . $resp['reason'];
+				}
+			} else { // On Success
+				$msg = __( 'Subscription was created. ', 'nuvei-payments-for-woocommerce' ) . '<br/>'
+				. __( 'Subscription ID: ', 'nuvei-payments-for-woocommerce' ) . $resp['subscriptionId'] . '.<br/>'
+				. __( 'Recurring amount: ', 'nuvei-payments-for-woocommerce' ) . $this->sc_order->get_currency() . ' '
+				. $data['subs_data']['recurringAmount'];
+			}
+
+			$this->sc_order->add_order_note( $msg );
+			// break;
+		}
+
+		return;
+	}
+    
+    /**
+	 * @param int    $transaction_type
+	 * @param int    $order_id
+	 * @param string $req_status       The status of the transaction.
+     * 
+     * @return void
+	 */
+	protected function subscription_cancel( $transaction_type, $order_id, $req_status ) {
+		// error
+        if ( 'Void' != $transaction_type ) {
+			Nuvei_Pfw_Logger::write( $transaction_type, 'Only Void can cancel a subscription.' );
+			return;
+		}
+
+        // error
+		if ( 'approved' != strtolower( $req_status ) ) {
+			Nuvei_Pfw_Logger::write( $transaction_type, 'The void was not approved.' );
+			return;
+		}
+        
+        // error
+        if ( ! $this->sc_order ) {
+            $this->sc_order = wc_get_order($order_id);
+            
+            if ( ! $this->sc_order ) {
+                Nuvei_Pfw_Logger::write( 'There is no Order with ID ' . $order_id );
+                return;
+            }
+        }
+
+		$order_all_meta = $this->sc_order->get_meta_data();
+		$subscr_list    = $this->get_order_rebiling_details( $order_all_meta );
+
+		foreach ( $subscr_list as $data ) {
+			Nuvei_Pfw_Logger::write( $data );
+
+			if ( empty( $data['subs_data']['state'] ) || 'active' != $data['subs_data']['state'] ) {
+				Nuvei_Pfw_Logger::write( 'The subscription is not Active.' );
+				continue;
+			}
+
+			$ncs_obj = new Nuvei_Pfw_Subscription_Cancel();
+            $ncs_obj->use_order($this->sc_order);
+            
+			$ncs_obj->process( array( 'subscriptionId' => $data['subs_data']['subscr_id'] ) );
+		}
+	}
+    
+    /**
+     * @return int
+     */
+    protected function get_order_upo() {
+        $transactions = $this->sc_order->get_meta( NUVEI_PFW_TRANSACTIONS );
+            
+        foreach ( array_reverse($transactions) as $data ) {
+            if ( !in_array($data['transactionType'], ['Settle', 'Sale', 'Auth']) ) {
+                continue;
+            }
+            
+            if ( 0 == $data['userPaymentOptionId'] ) {
+                continue;
+            }
+            
+            return $data['userPaymentOptionId'];
+        }
+        
+        return 0;
+    }
+
+
+    /**
 	 * Get the request endpoint - sandbox or production.
 	 *
 	 * @return string

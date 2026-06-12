@@ -209,37 +209,16 @@ function nuveiUpdateOrder(resolve, reject) {
 function nuveiAfterSdkResponse(resp) {
 	console.log('nuveiAfterSdkResponse', resp);
 
-    // error - expired session
-    if (resp?.session_expired) {
-        window.location.reload();
-        return;
-    }
-
-    // a specific currency Error
-    if ( resp?.status == 'ERROR'
-        && resp?.reason?.toLowerCase().search('the currency is not supported') >= 0
-    ) {
-        nuveiShowErrorMsg(resp.reason);
-        return;
-    }
-    
-    if (resp?.status?.toLowerCase() == 'canceled') {
-		nuveiShowErrorMsg(scTrans.PaymentCanceled);
-		return;
-	}
-
-	if (typeof resp.result == 'undefined') {
-		console.error('Error with Checkout SDK response', resp);
-		nuveiShowErrorMsg(scTrans.unexpectedError);
-		return;
-	}
-
-	if ( (resp.result === 'APPROVED' || resp.result === 'PENDING')
-		&& typeof resp.transactionId != 'undefined'
-		&& resp.transactionId != 'undefined'
+    // Success
+	if ( (resp?.result === 'APPROVED' || resp?.result === 'PENDING')
+		&& resp?.transactionId != 'undefined'
 	) {
-
-        console.log(nuveiSuccessRedirect, window?._nuveiOrderId);
+        console.log(
+//            nuveiSuccessRedirect, 
+            window?._nuveiOrderId,
+            resp?.result,
+            resp?.transactionId,
+        );
         
         // the new Classic Checkout flow
         if ('' != nuveiSuccessRedirect) {
@@ -255,14 +234,25 @@ function nuveiAfterSdkResponse(resp) {
                         orderId: window._nuveiOrderId,
                         transactionId: resp.transactionId,
                         paymentMethod: nuveiSelectedPaymentMethod
-                    }),
-                    keepalive: true
+                    })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    console.log(data);
+                    window.location.href = nuveiSuccessRedirect;
+                })
+                .catch(err => {
+                    console.error('set-transaction-checker error', err);
+                    window.location.href = nuveiSuccessRedirect;
                 });
+                
+                return;
             }
-            
-            // continue with the redirect
-            window.location.href = nuveiSuccessRedirect;
-            return;
+            else {
+                // continue with the redirect
+                window.location.href = nuveiSuccessRedirect;
+                return;
+            }
         }
 
         // the old flow, now used from the Blocks Checkout
@@ -278,40 +268,40 @@ function nuveiAfterSdkResponse(resp) {
             return;
         }
         
-        // TODO - remove this, we will get the redirect link when get the SC data
-        // in case of admin order and recaptcha do a manual redirect
-        if ( nuveiIsPayForExistingOrderPage && jQuery('.g-recaptcha').length ) {
-            fetch(scTrans.apiUrl + '/redirect-paid-existing-order/', {
-                method: 'POST',
-                headers: {
-                    'X-WP-Nonce': scTrans.nuveiApiSec,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ order_id: jQuery('#nuveiPayForExistingOrder').val() })
-            })
-            .then(res => {
-                if (!res.ok) {
-                    // error - 401, 403, 404 or 500
-                    throw res;
-                }
-
-                // success, continue
-                return res.json();
-            })
-            .then(data => {
-                if (data.redirect_url) {
-                    window.location.href = data.redirect_url;
-                    return;
-                }
-            })
-            .catch(async err => {
-                console.error(err);
-                nuveiShowErrorMsg();
-                jQuery('#nuvei_blocker').hide();
-            });
-            
-            return;
-        }
+//        // TODO - remove this, we will get the redirect link when get the SC data
+//        // in case of admin order and recaptcha do a manual redirect
+//        if ( nuveiIsPayForExistingOrderPage && jQuery('.g-recaptcha').length ) {
+//            fetch(scTrans.apiUrl + '/redirect-paid-existing-order/', {
+//                method: 'POST',
+//                headers: {
+//                    'X-WP-Nonce': scTrans.nuveiApiSec,
+//                    'Content-Type': 'application/json'
+//                },
+//                body: JSON.stringify({ order_id: jQuery('#nuveiPayForExistingOrder').val() })
+//            })
+//            .then(res => {
+//                if (!res.ok) {
+//                    // error - 401, 403, 404 or 500
+//                    throw res;
+//                }
+//
+//                // success, continue
+//                return res.json();
+//            })
+//            .then(data => {
+//                if (data.redirect_url) {
+//                    window.location.href = data.redirect_url;
+//                    return;
+//                }
+//            })
+//            .catch(async err => {
+//                console.error(err);
+//                nuveiShowErrorMsg();
+//                jQuery('#nuvei_blocker').hide();
+//            });
+//            
+//            return;
+//        }
 
         if ( jQuery(nuveiCheckoutClassicFormClass).length > 0 || nuveiIsPayForExistingOrderPage) {
             jQuery(nuveiCheckoutClassicPayBtn).addClass('nuvei-processing');
@@ -334,6 +324,27 @@ function nuveiAfterSdkResponse(resp) {
         }
 	}
 
+    // error - expired session
+    if (resp?.session_expired) {
+        window.location.reload();
+        return;
+    }
+
+    // error - a specific currency Error
+    if ( resp?.status == 'ERROR'
+        && resp?.reason?.toLowerCase().search('the currency is not supported') >= 0
+    ) {
+        nuveiShowErrorMsg(resp.reason);
+        return;
+    }
+    
+    // error - canceled
+    if (resp?.status?.toLowerCase() == 'canceled') {
+		nuveiShowErrorMsg(scTrans.PaymentCanceled);
+		return;
+	}
+
+    // error - declined
 	if (resp?.result == 'DECLINED') {
         if (resp.hasOwnProperty('errorDescription')
             && 'insufficient funds' == resp.errorDescription.toLowerCase()
@@ -346,6 +357,7 @@ function nuveiAfterSdkResponse(resp) {
 		return;
 	}
     
+    console.error('Error with Checkout SDK response', resp);
 	nuveiShowErrorMsg(scTrans.unexpectedError);
 	return;
 }
