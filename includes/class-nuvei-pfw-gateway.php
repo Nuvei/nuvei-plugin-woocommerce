@@ -440,9 +440,13 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             $order->save();
 
             // call Update Order
-            $helper         = new Nuvei_Pfw_Helper();
-            $products_data  = $helper->get_products();
-            $uo_obj         = new Nuvei_Pfw_Update_Order( $this->rest_params );
+            $helper = new Nuvei_Pfw_Helper();
+            $helper->use_order($order);
+            
+            $products_data = $helper->get_products();
+            
+            $uo_obj = new Nuvei_Pfw_Update_Order( $this->rest_params );
+            $uo_obj->use_order($order);
 
             $resp = $uo_obj->process(array(
                 'open_order_details'    => $nuvei_oo_details,
