@@ -8,7 +8,8 @@
 	 */
 abstract class Nuvei_Pfw_Request {
 
-	protected $rest_params = array();
+	protected $rest_params  = array();
+    protected $last_tr_id   = '';
     protected $message;
 	protected $plugin_settings;
 	protected $request_base_params;
@@ -1596,6 +1597,8 @@ abstract class Nuvei_Pfw_Request {
      * @return void
 	 */
 	protected function subscription_cancel( $transaction_type, $order_id, $req_status ) {
+        Nuvei_Pfw_Logger::write( 'Try to cancel subscription.' );
+        
 		// error
         if ( 'Void' != $transaction_type ) {
 			Nuvei_Pfw_Logger::write( $transaction_type, 'Only Void can cancel a subscription.' );

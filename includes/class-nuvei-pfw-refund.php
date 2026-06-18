@@ -7,8 +7,6 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Refund extends Nuvei_Pfw_Request {
 	
-    private $last_tr_id = '';
-    
     public function process() {
         
     }
@@ -96,6 +94,11 @@ class Nuvei_Pfw_Refund extends Nuvei_Pfw_Request {
             // add the default currency
             $resp['currency']               = get_woocommerce_currency();
             $resp['relatedTransactionId']   = $this->last_tr_id;
+            
+            // in case the payment was with PP, transactionType parameter is missing....
+            if (empty($resp['transactionType'])) {
+                $resp['transactionType'] = 'Credit';
+            }
 			
             $this->save_transaction_data( $resp );
             

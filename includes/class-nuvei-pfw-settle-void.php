@@ -7,8 +7,6 @@ defined( 'ABSPATH' ) || exit;
  */
 class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
 	
-    private $last_tr_id = '';
-    
     /**
 	 * Mandatory method.
 	 * Expected parameters are:
@@ -115,7 +113,7 @@ class Nuvei_Pfw_Settle_Void extends Nuvei_Pfw_Request {
             );
             
             $this->subscription_start( $resp['transactionType'], $order_id, $resp['amount'] );
-            $this->subscription_cancel( $resp['transactionType'], $order_id, $resp['amount'] );
+            $this->subscription_cancel( $resp['transactionType'], $order_id, $resp['status'] );
 
 			$this->sc_order->save();
 		}
