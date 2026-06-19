@@ -1315,6 +1315,7 @@ abstract class Nuvei_Pfw_Request {
 					$message        .= '<br/><b>' . __( 'Refund: ', 'nuvei-payments-for-woocommerce' )
 						. '</b> #' . $refund_id;
 
+                    // TODO - test if we need this
 					if ( $order_amount == $this->sum_order_refunds() + $dmn_amount ) {
 						$status = $this->nuvei_gw->get_option( 'status_refund' );
 					}

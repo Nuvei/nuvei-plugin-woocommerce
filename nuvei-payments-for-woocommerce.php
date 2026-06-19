@@ -264,6 +264,33 @@ class Nuvei_Payments_For_Woocommerce
 			2
         );
         
+        // when the Order is total refunded
+        add_action( 'woocommerce_order_refunded', function( $order_id, $refund_id ) {
+            $order = wc_get_order( $order_id );
+            
+            // error
+            if ( !$order || NUVEI_PFW_GATEWAY_NAME != $order->get_payment_method() ) {
+                return;
+            }
+            
+            $total    = $order->get_total();
+            $refunded = $order->get_total_refunded();
+            
+            if ( $refunded < $total ) {
+                return; // partial refund
+            }
+            
+            $custom_status = self::$wc_nuvei->get_option( 'status_refund' );
+
+            // error
+            if ( ! $custom_status ) {
+                return; 
+            }
+
+            $order->update_status( $custom_status );
+
+        }, 10, 2 );
+        
         // when save Order, check for Nuvei transaction field
         // for the Blocks Checkout only!
 //        add_action( 'woocommerce_store_api_checkout_update_order_from_request', function( $order, $request ) {
