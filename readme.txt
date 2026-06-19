@@ -66,6 +66,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 = 3.14.0 =
 * The plugin can update the Order status based on Simply Connect response, as alternative of the DMN. Still for Nuvei Rebilling Orders the DMNs are mandatory!
 * Update for the Refund flow.
+* Added Dynamic Descriptor block as optional setting for Simply Connect.
 
 = 3.13.6 =
 * Exposed dynamicDescriptor fields as settings.
