@@ -63,6 +63,11 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 == Changelog ==
 
+= 3.14.1 =
+* Added a check for the possible DMN URL constant NUVEI_CUSTOM_DMN_URL.
+* Suppress Pay/Cancel action buttons on the thank-you page for all Nuvei orders, using a hook.
+* Fixed few JS errors.
+
 = 3.14.0 =
 * The plugin can update the Order status based on Simply Connect response, as alternative of the DMN. Still for Nuvei Rebilling Orders the DMNs are mandatory!
 * Update for the Refund flow.

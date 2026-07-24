@@ -13,7 +13,7 @@
  * Tested up to: 7.0
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 10.8.1
+ * WC tested up to: 10.9.4
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -179,9 +179,20 @@ class Nuvei_Payments_For_Woocommerce
             if ( $order && $order->get_payment_method() == NUVEI_PFW_GATEWAY_NAME ) {
                 // in case something decide to automaticaly complete the order with auto_complete_paid_order, try to disable it.
                 remove_action( 'woocommerce_thankyou', 'auto_complete_paid_order' );
-                
+
                 // remove the session order data
                 WC()->session->set( NUVEI_PFW_SESSION_PROD_DETAILS, array() );
+
+                // Suppress Pay/Cancel action buttons on the thank-you page for all Nuvei
+                // orders. WooCommerce renders these for pending orders, but Nuvei manages
+                // the payment flow independently (via DMN), so they should never appear.
+                add_filter(
+                    'woocommerce_my_account_my_orders_actions',
+                    function( $actions ) {
+                        unset( $actions['pay'], $actions['cancel'] );
+                        return $actions;
+                    }
+                );
             }
         }, 1 );
 

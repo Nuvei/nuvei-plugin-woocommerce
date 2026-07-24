@@ -816,9 +816,9 @@ jQuery(function($) {
     }
 
     // if there is pay button on thank you page - hide it!
-    if (scTrans.thankYouPageRemovePayBtn && jQuery("a.pay").length > 0) {
-        jQuery("a.pay").hide();
-    }
+//    if (scTrans.thankYouPageRemovePayBtn && jQuery("a.pay").length > 0) {
+//        jQuery("a.pay").hide();
+//    }
 
     // only for SDK flow
     if ('sdk' == scTrans.checkoutIntegration) {

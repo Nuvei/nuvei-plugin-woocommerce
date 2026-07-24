@@ -7,7 +7,7 @@ const nuveiFormNotInvalidTxt = window.wp.i18n.__(
 );
 
 const nuveiCheckoutBlockContText =
-    ( 'sdk' === scTrans?.checkoutIntegration ) ? nuveiFormNotInvalidTxt :
+    ( typeof window.scTrans !== 'undefined' && 'sdk' === window.scTrans?.checkoutIntegration ) ? nuveiFormNotInvalidTxt :
         window.wp.i18n.__('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce');
 
 var nuveiAllowFormSubmit    = false;
@@ -365,7 +365,9 @@ async function nuveiBlocksRunTransaction() {
     window.wc.wcBlocksRegistry.registerPaymentMethod(nuveiBlocksOptions);
     window.nuveiCheckoutSdkParams = nuveiSettings.checkoutParams;
 
-    console.log('nuveiBlocksOptions was registered', scTrans.checkoutIntegration);
+    try {
+        console.log('nuveiBlocksOptions was registered', scTrans.checkoutIntegration);
+    } catch(e) {};
 
 })();
 
@@ -392,7 +394,7 @@ jQuery(function() {
                 + scTrans.loaderUrl + '" /></div>');
     }
 
-    if ( 'sdk' !== scTrans?.checkoutIntegration ) {
+    if ( window.scTrans && 'sdk' !== scTrans?.checkoutIntegration ) {
         return;
     }
 
@@ -421,7 +423,7 @@ jQuery(function() {
 
     wp.data.subscribe(() => {
         // some errors
-        if (nuveiIsPayForExistingOrderPage || jQuery('#nuvei_checkout_container').length == 0) {
+        if (window.nuveiIsPayForExistingOrderPage || jQuery('#nuvei_checkout_container').length == 0) {
             return;
         }
 

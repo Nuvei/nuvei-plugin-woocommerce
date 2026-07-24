@@ -18,6 +18,10 @@ class Nuvei_Pfw_String {
 	 * @return string
 	 */
 	public static function get_notify_url( $plugin_settings, $use_default = false ) {
+        if (defined('NUVEI_CUSTOM_DMN_URL')) {
+            return NUVEI_CUSTOM_DMN_URL;
+        }
+        
 		if ( ! $use_default && ! empty( $plugin_settings['notify_url'] ) ) {
 			return $plugin_settings['notify_url'];
 		}
