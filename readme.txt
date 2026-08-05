@@ -1,6 +1,6 @@
 === Nuvei Payments for Woocommerce ===
 
-Stable tag: 3.14.1
+Stable tag: 3.14.2
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.3
@@ -62,6 +62,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.14.2 =
+* Updated front-end scripts versions.
 
 = 3.14.1 =
 * Added a check for the possible DMN URL constant NUVEI_CUSTOM_DMN_URL.

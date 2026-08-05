@@ -27,6 +27,8 @@ final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 
 	public function get_payment_method_script_handles() {
 		$this->plugin_dir_url = str_replace( 'includes/', '', plugin_dir_url( __FILE__ ) );
+        
+        $helper = new Nuvei_Pfw_Helper();
 
 		wp_register_script(
 			'nuvei-checkout-blocks',
@@ -39,7 +41,7 @@ final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 				'wp-i18n',
                 'wc-blocks-checkout',
 			),
-			'2026-03-10',
+			$helper->helper_get_plugin_version(),
             true
 		);
 

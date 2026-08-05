@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.14.1
+ * Version: 3.14.2
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * License: GPLv2
@@ -13,7 +13,7 @@
  * Tested up to: 7.0
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
- * WC tested up to: 10.9.4
+ * WC tested up to: 11.0.0
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -385,7 +385,7 @@ class Nuvei_Payments_For_Woocommerce
             'nuvei_checkout_sdk',
             $sdkUrl,
             array( 'jquery' ),
-            '2025-02-19',
+            $helper->helper_get_plugin_version(),
             false
         );
 
@@ -394,7 +394,7 @@ class Nuvei_Payments_For_Woocommerce
             'nuvei_js_public',
             $plugin_url . 'assets/js/nuvei_public.js',
             array( 'jquery' ),
-            '2026-04-01',
+            $helper->helper_get_plugin_version(),
             false
         );
 
@@ -465,6 +465,7 @@ class Nuvei_Payments_For_Woocommerce
 		}
 
 		$plugin_url = plugin_dir_url( __FILE__ );
+        $helper     = new Nuvei_Pfw_Helper();
 
 		if ( ( isset( $_SERVER['HTTPS'] ) && 'on' == $_SERVER['HTTPS'] )
 			&& ( isset( $_SERVER['REQUEST_SCHEME'] ) && 'https' == $_SERVER['REQUEST_SCHEME'] )
@@ -479,7 +480,7 @@ class Nuvei_Payments_For_Woocommerce
 			'nuvei_style',
 			$plugin_url . 'assets/css/nuvei_style.css',
 			'',
-			'1',
+			$helper->helper_get_plugin_version(),
 			'all'
 		);
 
@@ -502,7 +503,7 @@ class Nuvei_Payments_For_Woocommerce
 				'nuvei_admin_style',
 				$plugin_url . 'assets/css/nuvei_admin_style.css',
 				'',
-				'2026-01-28',
+				$helper->helper_get_plugin_version(),
 				'all'
 			);
 			wp_enqueue_style( 'nuvei_admin_style' );
@@ -514,7 +515,7 @@ class Nuvei_Payments_For_Woocommerce
 				'nuvei_js_admin',
 				$plugin_url . 'assets/js/nuvei_admin.js',
 				array( 'jquery' ),
-				'2026-04-24',
+				$helper->helper_get_plugin_version(),
 				true
 			);
 
