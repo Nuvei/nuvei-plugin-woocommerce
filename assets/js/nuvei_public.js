@@ -220,6 +220,8 @@ function nuveiAfterSdkResponse(resp) {
             resp?.transactionId,
         );
         
+        nuveiSuccessRedirect += '&status=' + resp.result;
+        
         // the new Classic Checkout flow
         if ('' != nuveiSuccessRedirect) {
             // submit the transacion data and the related order id
@@ -268,41 +270,6 @@ function nuveiAfterSdkResponse(resp) {
             return;
         }
         
-//        // TODO - remove this, we will get the redirect link when get the SC data
-//        // in case of admin order and recaptcha do a manual redirect
-//        if ( nuveiIsPayForExistingOrderPage && jQuery('.g-recaptcha').length ) {
-//            fetch(scTrans.apiUrl + '/redirect-paid-existing-order/', {
-//                method: 'POST',
-//                headers: {
-//                    'X-WP-Nonce': scTrans.nuveiApiSec,
-//                    'Content-Type': 'application/json'
-//                },
-//                body: JSON.stringify({ order_id: jQuery('#nuveiPayForExistingOrder').val() })
-//            })
-//            .then(res => {
-//                if (!res.ok) {
-//                    // error - 401, 403, 404 or 500
-//                    throw res;
-//                }
-//
-//                // success, continue
-//                return res.json();
-//            })
-//            .then(data => {
-//                if (data.redirect_url) {
-//                    window.location.href = data.redirect_url;
-//                    return;
-//                }
-//            })
-//            .catch(async err => {
-//                console.error(err);
-//                nuveiShowErrorMsg();
-//                jQuery('#nuvei_blocker').hide();
-//            });
-//            
-//            return;
-//        }
-
         if ( jQuery(nuveiCheckoutClassicFormClass).length > 0 || nuveiIsPayForExistingOrderPage) {
             jQuery(nuveiCheckoutClassicPayBtn).addClass('nuvei-processing');
             jQuery(nuveiCheckoutClassicPayBtn).trigger('click');
@@ -888,7 +855,7 @@ jQuery(function($) {
 
             // when the checkout form is placed successfully initiate Nuvei transaction
             jQuery('form.checkout').on('checkout_place_order_success', function (e, data) {
-                console.log('Order success.', data)
+                console.log('Order saved.', data)
 
                 if (data?.data?.nuvei_try_payment && simplyConnect) {
                     nuveiSuccessRedirect = data.data.success_url;

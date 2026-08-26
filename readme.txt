@@ -63,6 +63,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 == Changelog ==
 
+= 3.14.3 =
+* Fix message on the thank-you page after a declined, then approved transaction.
+
 = 3.14.2 =
 * Updated front-end scripts versions.
 

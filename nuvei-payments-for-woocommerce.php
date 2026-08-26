@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.14.2
+ * Version: 3.14.3
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * License: GPLv2
@@ -175,26 +175,40 @@ class Nuvei_Payments_For_Woocommerce
         
         add_action( 'woocommerce_thankyou', function($order_id) {
             $order = wc_get_order( $order_id );
-
-            if ( $order && $order->get_payment_method() == NUVEI_PFW_GATEWAY_NAME ) {
-                // in case something decide to automaticaly complete the order with auto_complete_paid_order, try to disable it.
-                remove_action( 'woocommerce_thankyou', 'auto_complete_paid_order' );
-
-                // remove the session order data
-                WC()->session->set( NUVEI_PFW_SESSION_PROD_DETAILS, array() );
-
-                // Suppress Pay/Cancel action buttons on the thank-you page for all Nuvei
-                // orders. WooCommerce renders these for pending orders, but Nuvei manages
-                // the payment flow independently (via DMN), so they should never appear.
-                add_filter(
-                    'woocommerce_my_account_my_orders_actions',
-                    function( $actions ) {
-                        unset( $actions['pay'], $actions['cancel'] );
-                        return $actions;
-                    }
-                );
+            
+            if ( ! is_a($order, 'WC_Order') || $order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME) {
+                return;
             }
-        }, 1 );
+
+            // in case something decide to automaticaly complete the order with auto_complete_paid_order, try to disable it.
+            remove_action( 'woocommerce_thankyou', 'auto_complete_paid_order' );
+
+            // remove the session order data
+            WC()->session->set( NUVEI_PFW_SESSION_PROD_DETAILS, array() );
+
+            // Suppress Pay/Cancel action buttons on the thank-you page for all Nuvei
+            // orders. WooCommerce renders these for pending orders, but Nuvei manages
+            // the payment flow independently (via DMN), so they should never appear.
+            add_filter(
+                'woocommerce_my_account_my_orders_actions',
+                function( $actions ) {
+                    unset( $actions['pay'], $actions['cancel'] );
+                    return $actions;
+                }
+            );
+            
+            // for the case Approved transaction after Declined, the Order is with status Fails
+            $request_status = mb_strtolower( Nuvei_Pfw_Http::get_request_status() );
+            
+            if ( 'failed' == $order->get_status() && in_array($request_status, ['approved', 'pending']) ) {
+                echo '<style>.wc-block-order-confirmation-status { display: none; }</style>'
+                    .'<script>jQuery(function() { '
+                        .'jQuery(".wc-block-order-confirmation-status").html("<h1>Order received</h1>"); '
+                       .' jQuery(".wc-block-order-confirmation-status").show(); '
+                    .'}); </script>';
+            }
+            
+        }, 10, 1 );
 
         # For the custom column in the Order list
         // legacy
@@ -968,9 +982,9 @@ class Nuvei_Payments_For_Woocommerce
 	    if ( ! ($order instanceof WC_Order) || $order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME ) {
 	        return $thank_you_text;
 		}
-
+        
 		$request_status = Nuvei_Pfw_Http::get_request_status();
-
+        
         if ( 'error' == $request_status
 			|| 'fail' == strtolower( wc_clean( Nuvei_Pfw_Http::get_param( 'ppp_status' ) ) )
             || 'canceled' == $request_status
@@ -981,7 +995,7 @@ class Nuvei_Payments_For_Woocommerce
                 'nuvei-payments-for-woocommerce'
             );
 		}
-
+        
         return $thank_you_text;
 	}
 
