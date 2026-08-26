@@ -203,7 +203,8 @@ class Nuvei_Payments_For_Woocommerce
             if ( 'failed' == $order->get_status() && in_array($request_status, ['approved', 'pending']) ) {
                 echo '<style>.wc-block-order-confirmation-status { display: none; }</style>'
                     .'<script>jQuery(function() { '
-                        .'jQuery(".wc-block-order-confirmation-status").html("<h1>Order received</h1>"); '
+                        .'jQuery(".wc-block-order-confirmation-status").html("<h1>'
+                            . __( 'Order received', 'nuvei-payments-for-woocommerce' ) .'</h1>"); '
                        .' jQuery(".wc-block-order-confirmation-status").show(); '
                     .'}); </script>';
             }
