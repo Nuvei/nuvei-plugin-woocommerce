@@ -1,6 +1,6 @@
 === Nuvei Payments for Woocommerce ===
 
-Stable tag: 3.14.2
+Stable tag: 3.15.0
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 7.3
@@ -63,8 +63,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 == Changelog ==
 
-= 3.14.3 =
+= 3.15.0 =
 * Fix message on the thank-you page after a declined, then approved transaction.
+* Update the clientUniqueId on each updateOrder request.
 
 = 3.14.2 =
 * Updated front-end scripts versions.

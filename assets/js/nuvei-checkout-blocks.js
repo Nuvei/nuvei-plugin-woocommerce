@@ -298,7 +298,9 @@ async function nuveiBlocksRunTransaction() {
                     const payment = await new Promise(res => { nuveiBlocksResolvePayment = res; });
 
                     if ( !payment.success ) {
-                        jQuery('#nuvei_blocker').hide();
+                        if ( !nuveiBlocksRefreshInProgress ) {
+                            jQuery('#nuvei_blocker').hide();
+                        }
 
                         return {
                             type: emitResponse.responseTypes.ERROR,
@@ -327,7 +329,9 @@ async function nuveiBlocksRunTransaction() {
                 const payment = await nuveiBlocksRunTransaction();
 
                 if ( !payment.success ) {
-                    jQuery('#nuvei_blocker').hide();
+                    if ( !nuveiBlocksRefreshInProgress ) {
+                        jQuery('#nuvei_blocker').hide();
+                    }
 
                     return {
                         type: emitResponse.responseTypes.ERROR,

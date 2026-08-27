@@ -14,6 +14,9 @@ var nuveiSuccessRedirect            = '';
 var nuveiIsFormValid                = true;
 var nuveiBlocksResolvePayment       = null;
 var nuveiWalletInProgress           = false;
+// set when a failed transaction triggers a Checkout refresh, so the blocker
+// stays visible until the SDK is ready again (nuveiOnSimplyReady)
+var nuveiBlocksRefreshInProgress    = false;
 // AbortController for the current openOrder fetch request
 var nuveiGetCheckoutDataController  = null;
 var nuveiCheckoutRequestId          = null; // request flag
@@ -202,6 +205,7 @@ function nuveiUpdateOrder(resolve, reject) {
 
 /**
  * We need to handle blocks and short-code cases.
+ * This method is for Classic Checkout only!
  *
  * @param object resp
  * @returns void
@@ -298,7 +302,7 @@ function nuveiAfterSdkResponse(resp) {
     }
 
     // error - a specific currency Error
-    if ( resp?.status == 'ERROR'
+    if ( resp?.status?.toLowerCase() == 'error'
         && resp?.reason?.toLowerCase().search('the currency is not supported') >= 0
     ) {
         nuveiShowErrorMsg(resp.reason);
@@ -312,7 +316,7 @@ function nuveiAfterSdkResponse(resp) {
 	}
 
     // error - declined
-	if (resp?.result == 'DECLINED') {
+	if (resp?.result?.toLowerCase() == 'declined') {
         if (resp.hasOwnProperty('errorDescription')
             && 'insufficient funds' == resp.errorDescription.toLowerCase()
         ) {
@@ -355,6 +359,7 @@ function showNuveiCheckout(_params) {
         }
 
         nuveiShowErrorMsg(error);
+        nuveiBlocksRefreshInProgress = false;
         jQuery('#nuvei_blocker').hide();
         return;
     }
@@ -376,34 +381,8 @@ function showNuveiCheckout(_params) {
             if ( nuveiBlocksResolvePayment ) {
                 console.log('afterSdkResponse for Blocks', resp);
 
-                // expired session
-                if (resp.hasOwnProperty('session_expired') && resp.session_expired) {
-                    nuveiBlocksResolvePayment( { success: false } );
-                    window.location.reload();
-                    return;
-                }
-
-                // a specific Error
-                if(resp.hasOwnProperty('status')
-                    && resp.status == 'ERROR'
-                    && resp.hasOwnProperty('reason')
-                    && resp.reason.toLowerCase().search('the currency is not supported') >= 0
-                ) {
-                    nuveiBlocksResolvePayment( { success: false, error: resp.reason } );
-                    nuveiShowErrorMsg(resp.reason);
-                    return;
-                }
-
-                if (typeof resp.result == 'undefined') {
-                    console.error('Error with Checkout SDK response', resp);
-                    nuveiBlocksResolvePayment( { success: false, error: scTrans.unexpectedError } );
-                    nuveiShowErrorMsg(scTrans.unexpectedError);
-                    return;
-                }
-
-                if ( (resp.result == 'APPROVED' || resp.result == 'PENDING')
-                    && typeof resp.transactionId != 'undefined'
-                    && resp.transactionId != 'undefined'
+                if ( (resp?.result?.toLowerCase() == 'approved' || resp?.result?.toLowerCase() == 'pending')
+                    && resp?.transactionId
                 ) {
                     jQuery('#nuvei_blocker').show();
                     jQuery('#nuvei_checkout_container').html('');
@@ -413,22 +392,48 @@ function showNuveiCheckout(_params) {
                     return;
                 }
 
-                if (resp.result == 'DECLINED') {
-                    if (resp.hasOwnProperty('errorDescription')
-                        && 'insufficient funds' == resp.errorDescription.toLowerCase()
-                    ) {
-                        nuveiBlocksResolvePayment( { success: false, error: scTrans.insuffFunds } );
-                        nuveiShowErrorMsg(scTrans.insuffFunds);
-                        return;
-                    }
-
-                    nuveiBlocksResolvePayment( { success: false, error: scTrans.paymentDeclined } );
-                    nuveiShowErrorMsg(scTrans.paymentDeclined);
+                // error - expired session
+                if (resp?.session_expired) {
+                    nuveiBlocksResolvePayment( { success: false } );
+                    window.location.reload();
                     return;
                 }
 
-                nuveiBlocksResolvePayment( { success: false, error: scTrans.unexpectedError } );
-                nuveiShowErrorMsg(scTrans.unexpectedError);
+                var nuveiErrMsg = scTrans.unexpectedError;
+
+                // a specific Error
+                if (resp?.status?.toLowerCase() == 'error'
+                    && resp?.reason?.toLowerCase().search('the currency is not supported') >= 0
+                ) {
+                    nuveiErrMsg = resp.reason;
+                }
+                // error - canceled
+                else if (resp?.status?.toLowerCase() == 'canceled') {
+                    nuveiErrMsg = scTrans.PaymentCanceled;
+                }
+                // error - declined
+                else if (resp?.result?.toLowerCase() == 'declined') {
+                    nuveiErrMsg = ( 'insufficient funds' == resp?.errorDescription?.toLowerCase() )
+                        ? scTrans.insuffFunds : scTrans.paymentDeclined;
+                }
+                else {
+                    console.error('Error with Checkout SDK response', resp);
+                }
+
+                nuveiBlocksResolvePayment( { success: false, error: nuveiErrMsg } );
+
+                // a transaction was made, but it is not Approved/Pending -
+                // refresh the checkout data to get a new clientUniqueId via updateOrder
+                if ( resp?.transactionId ) {
+                    console.log('update the Nuvei Order and reload the checkout.');
+
+                    nuveiBlocksRefreshInProgress = true;
+
+                    jQuery('#nuvei_blocker').show();
+                    nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
+                }
+
+                return;
             }
         };
     }
@@ -489,6 +494,8 @@ function nuveiCheckIsSimplyValid(params) {
 }
 
 function nuveiOnSimplyReady() {
+    nuveiBlocksRefreshInProgress = false;
+
     jQuery('#nuvei_blocker').hide();
 }
 
@@ -747,6 +754,7 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
 
                 console.error('Nuvei request failed.', err);
                 nuveiShowErrorMsg();
+                nuveiBlocksRefreshInProgress = false;
                 jQuery('#nuvei_blocker').hide();
             })
             .finally(() => {

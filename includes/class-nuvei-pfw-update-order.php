@@ -72,9 +72,16 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 		$url_details['successUrl'] = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
 		$url_details['failureUrl'] = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
 		$url_details['pendingUrl'] = NUVEI_PFW_POPUP_AUTOCLOSE_URL;
+        
+        $cl_un_id = $this->get_client_unique_id( $addresses['billingAddress']['email'], $products_data );
+
+		if ( ! empty( $this->sc_order ) ) {
+			$cl_un_id = $this->sc_order->get_id();
+		}
 
 		// create Order upgrade
 		$params = array(
+            'clientUniqueId'  => $cl_un_id,
 			'sessionToken'    => $session_token,
 			'orderId'         => $oo_order_id,
 			'currency'        => $currency,
@@ -98,7 +105,6 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 			),
 		);
 
-        // if the Order already exists, pass the its ID here, as we cannot update clientUniqueId
         if ( !empty($order_id) ) {
             $params['merchantDetails']['customField5'] = $order_id;
         }

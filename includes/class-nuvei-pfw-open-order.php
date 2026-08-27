@@ -128,7 +128,7 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
                     'orderId'         => $resp['orderId'],
                     'transactionType' => $transaction_type,
                     'userTokenId'     => $addresses['billingAddress']['email'],
-                    'clientUniqueId'  => $open_order_details['clientUniqueId'] ?? '',
+                    'clientUniqueId'  => $resp['clientUniqueId'] ?? '',
                 );
 
                 $this->set_nuvei_session_data(

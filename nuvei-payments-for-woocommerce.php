@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.14.3
+ * Version: 3.15.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * License: GPLv2
@@ -200,6 +200,7 @@ class Nuvei_Payments_For_Woocommerce
             // for the case Approved transaction after Declined, the Order is with status Fails
             $request_status = mb_strtolower( Nuvei_Pfw_Http::get_request_status() );
             
+            // this case is valid for the Classic Checkout only
             if ( 'failed' == $order->get_status() && in_array($request_status, ['approved', 'pending']) ) {
                 echo '<style>.wc-block-order-confirmation-status { display: none; }</style>'
                     .'<script>jQuery(function() { '
@@ -438,15 +439,14 @@ class Nuvei_Payments_For_Woocommerce
             $request_status     = Nuvei_Pfw_Http::get_request_status();
             $order_id           = wc_get_order_id_by_order_key( $order_key );
             $order              = wc_get_order( $order_id );
-            $removeWCSPayBtn    = false;
-            $new_title          = '';
 
             if ( is_a( $order, 'WC_Order' ) && $order->get_payment_method() == NUVEI_PFW_GATEWAY_NAME ) {
                 if ( 'error' == $request_status
                     || 'fail' == strtolower( wc_clean( Nuvei_Pfw_Http::get_param('ppp_status') ) )
                 ) {
                     $localizations['thankYouPageNewTitle'] = esc_html__( 'Order error', 'nuvei-payments-for-woocommerce' );
-                } elseif ( 'canceled' == $request_status ) {
+                }
+                elseif ( 'canceled' == $request_status ) {
                     $localizations['thankYouPageNewTitle'] = esc_html__( 'Order canceled', 'nuvei-payments-for-woocommerce' );
                 }
 
