@@ -361,8 +361,12 @@ function showNuveiCheckout(_params) {
         }
 
         nuveiShowErrorMsg(error);
+        
         nuveiBlocksRefreshInProgress = false;
+        
         jQuery('#nuvei_blocker').hide();
+        jQuery('#nuvei_checkout_container').html(scTrans.MissingRequiredFields);
+        
         return;
     }
 
@@ -935,7 +939,7 @@ jQuery(function($) {
 
                         nuveiShowErrorMsg(scTrans.unexpectedError);
 
-                        return;
+                        return false;
                     }
                     
                     nuveiSuccessRedirect = data.data.success_url;
@@ -954,7 +958,7 @@ jQuery(function($) {
                         nuveiShowErrorMsg(scTrans.unexpectedError);
                     });
 
-                    return;
+                    return false;
                 }
             });
 
