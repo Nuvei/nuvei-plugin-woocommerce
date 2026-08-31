@@ -66,6 +66,8 @@ If you plan to install this plugin form the WordPress store, but use a version d
 = 3.15.0 =
 * Fix message on the thank-you page after a declined, then approved transaction.
 * Update the clientUniqueId on each updateOrder request.
+* Fix the bug in the "auto-update Order status" logic, based on the response of Simply Connect.
+* Added some JS optimizations.
 
 = 3.14.2 =
 * Updated front-end scripts versions.

@@ -25,7 +25,9 @@ var nuveiIsSimplyFormValid          = false;
 var nuveiGetCheckoutDataTimer       = null;
 var nuveiGetCheckoutDataInFlight    = false;
 var nuveiSelectedPaymentMethod      = '';
-// _nuveiOrderId will be set dynamically and will hold the saved WC Order ID 
+// _nuveiOrderId will be set dynamically and will hold the saved WC Order ID
+// set to true once the SDK fires onReady - safe to call simplyConnect.submitPayment()
+var nuveiSimplyReady                = false;
 
 /**
  * Check if the Checkout form is valid.
@@ -495,8 +497,57 @@ function nuveiCheckIsSimplyValid(params) {
 
 function nuveiOnSimplyReady() {
     nuveiBlocksRefreshInProgress = false;
+    nuveiSimplyReady             = true;
 
     jQuery('#nuvei_blocker').hide();
+}
+
+/**
+ * The SDK is usable only when its script is loaded and it has fired onReady.
+ *
+ * @returns {Boolean}
+ */
+function nuveiIsSimplyReady() {
+    return nuveiSimplyReady
+        && typeof simplyConnect != 'undefined'
+        && typeof simplyConnect.submitPayment == 'function';
+}
+
+/**
+ * Wait until the Simply Connect SDK signals it's ready (nuveiOnSimplyReady)
+ * before calling submitPayment(), instead of a blind fixed timeout.
+ * Falls back to an error after maxWaitMs so the customer is never stuck.
+ *
+ * @param {Function}    onTimeout Called if the SDK never becomes ready in time.
+ * @param {Number}      maxWaitMs
+ * @param {Number}      intervalMs
+ */
+function nuveiSubmitPaymentWhenReady(onTimeout, maxWaitMs = 5000, intervalMs = 100) {
+    if (nuveiIsSimplyReady()) {
+        simplyConnect.submitPayment();
+        return;
+    }
+
+    let waited = 0;
+
+    const poll = setInterval(() => {
+        waited += intervalMs;
+
+        if (nuveiIsSimplyReady()) {
+            clearInterval(poll);
+            simplyConnect.submitPayment();
+            return;
+        }
+
+        if (waited >= maxWaitMs) {
+            clearInterval(poll);
+            console.error('Simply Connect SDK was not ready after ' + maxWaitMs + 'ms.');
+
+            if (typeof onTimeout === 'function') {
+                onTimeout();
+            }
+        }
+    }, intervalMs);
 }
 
 function nuveiPmChange(params) {
@@ -767,7 +818,13 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
 }
 
 function nuveiDestroySimplyConnect() {
-    if (typeof simplyConnect != 'undefined' && simplyConnect.hasOwnProperty('destroy')) {
+    // The SDK instance is gone - a new onReady must arrive before we can submit again.
+    // This is reset unconditionally: we may destroy an SDK that never fired onReady.
+    nuveiSimplyReady = false;
+
+    // Deliberately NOT nuveiIsSimplyReady() here - that guard means "safe to submit"
+    // and requires onReady. A half-initialized SDK must still be destroyed.
+    if (typeof simplyConnect != 'undefined' && typeof simplyConnect.destroy == 'function') {
         try {
             simplyConnect.destroy();
         }
@@ -865,19 +922,38 @@ jQuery(function($) {
             jQuery('form.checkout').on('checkout_place_order_success', function (e, data) {
                 console.log('Order saved.', data)
 
-                if (data?.data?.nuvei_try_payment && simplyConnect) {
+                if (data?.data?.nuvei_try_payment) {
+                    if (! simplyConnect) {
+                        // The order was saved successfully, but the Simply Connect
+                        // SDK isn't ready - unblock the form instead of leaving the
+                        // customer stuck, and show an error.
+                        console.error('nuvei_try_payment is set but simplyConnect is not initialized.');
+
+                        jQuery('#nuvei_blocker').hide();
+                        jQuery('form.checkout').removeClass('processing');
+                        jQuery('form.checkout').unblock();
+
+                        nuveiShowErrorMsg(scTrans.unexpectedError);
+
+                        return;
+                    }
+                    
                     nuveiSuccessRedirect = data.data.success_url;
 
                     jQuery('#nuvei_blocker').show();
                     jQuery('form.checkout').removeClass('processing');
                     jQuery('form.checkout').unblock();
                     
-                    window._nuveiOrderId = data?.order_id;
+                    window._nuveiOrderId = data?.data?.order_id;
 
-                    setTimeout(() => {
-                        simplyConnect.submitPayment();
-                    }, 500);
-                    
+                    nuveiSubmitPaymentWhenReady(() => {
+                        jQuery('#nuvei_blocker').hide();
+                        jQuery('form.checkout').removeClass('processing');
+                        jQuery('form.checkout').unblock();
+
+                        nuveiShowErrorMsg(scTrans.unexpectedError);
+                    });
+
                     return;
                 }
             });
@@ -929,13 +1005,16 @@ jQuery(function($) {
                 console.log( "Logic running on Order Pay page..." );
 
                 // our custom logic
-                setTimeout(() => {
-                    if ( nuveiIsCheckoutClassicFormValid() ) {
-                        simplyConnect.submitPayment();
-                    }
-
+                if ( ! nuveiIsCheckoutClassicFormValid() ) {
                     jQuery('form#order_review').unblock();
-                }, 500);
+                    return;
+                }
+
+                nuveiSubmitPaymentWhenReady(() => {
+                    nuveiShowErrorMsg(scTrans.unexpectedError);
+                });
+
+                jQuery('form#order_review').unblock();
             });
         }
         // on the checkout/order-pay/ page

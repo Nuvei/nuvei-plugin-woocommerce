@@ -451,7 +451,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             $resp = $uo_obj->process(array(
                 'open_order_details'    => $nuvei_oo_details,
                 'products_data'         => $products_data,
-                'order_id'              => $order->get_id(),
+                'order_id'              => $order_id,
                 'session_token'         => Nuvei_Pfw_Http::get_param( 'nuvei_session_token' ),
                 'oo_order_id'           => Nuvei_Pfw_Http::get_param( 'nuvei_oo_order_id' ),
             ));
@@ -464,6 +464,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                     'data'      => [
                         'nuvei_try_payment' => true,
                         'success_url'      => $return_success_url,
+                        'order_id'         => $order_id,
                     ]
                 ];
             }

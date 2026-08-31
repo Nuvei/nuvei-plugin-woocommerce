@@ -147,8 +147,12 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
 
         isFormValid = false;
         
-        // call this just to scroll to the problem
-        simplyConnect.submitPayment();
+        // call this just to scroll to the problem - only if the SDK is really ready,
+        // deferring it (nuveiSubmitPaymentWhenReady) makes no sense on an invalid form
+        if ( nuveiIsSimplyReady() ) {
+            simplyConnect.submitPayment();
+        }
+
         jQuery('#nuvei_blocker').hide();
         
         return isFormValid;
@@ -216,7 +220,15 @@ async function nuveiBlocksRunTransaction() {
         // set the resolver - only when actually submitting
         nuveiBlocksResolvePayment = resolve;
 
-        simplyConnect.submitPayment();
+        // nuveiSubmitPaymentWhenReady() comes from nuvei_public.js
+        nuveiSubmitPaymentWhenReady( function() {
+            nuveiBlocksResolvePayment = null;
+
+            resolve( {
+                success: false,
+                error: scTrans.unexpectedError
+            } );
+        } );
     } );
 }
 
