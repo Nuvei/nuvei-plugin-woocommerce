@@ -939,7 +939,7 @@ jQuery(function($) {
 
                         nuveiShowErrorMsg(scTrans.unexpectedError);
 
-                        return false;
+                        return;
                     }
                     
                     nuveiSuccessRedirect = data.data.success_url;
@@ -958,7 +958,7 @@ jQuery(function($) {
                         nuveiShowErrorMsg(scTrans.unexpectedError);
                     });
 
-                    return false;
+                    return;
                 }
             });
 
