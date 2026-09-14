@@ -172,7 +172,30 @@ class Nuvei_Payments_For_Woocommerce
 
         // for the thank-you page
         add_filter( 'woocommerce_thankyou_order_received_text', array (__CLASS__, 'thank_you_page_mod'), 10, 2 );
-        
+
+        // Suppress Pay/Cancel action buttons on the thank-you page for all Nuvei
+        // orders. WooCommerce renders these for pending orders, but Nuvei manages
+        // the payment flow independently (via DMN), so they should never appear.
+        // Registered unconditionally (not inside woocommerce_thankyou) because on
+        // some themes/setups the actions markup is generated before the
+        // woocommerce_thankyou hook fires, so a filter added there would be too late.
+        add_filter(
+            'woocommerce_my_account_my_orders_actions',
+            function( $actions, $order ) {
+                if ( ! is_a( $order, 'WC_Order' )
+                    || ! in_array( $order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) )
+                    || ! is_order_received_page()
+                ) {
+                    return $actions;
+                }
+
+                unset( $actions['pay'], $actions['cancel'] );
+                return $actions;
+            },
+            10,
+            2
+        );
+
         add_action( 'woocommerce_thankyou', function($order_id) {
             $order = wc_get_order( $order_id );
             
@@ -186,17 +209,6 @@ class Nuvei_Payments_For_Woocommerce
             // remove the session order data
             WC()->session->set( NUVEI_PFW_SESSION_PROD_DETAILS, array() );
 
-            // Suppress Pay/Cancel action buttons on the thank-you page for all Nuvei
-            // orders. WooCommerce renders these for pending orders, but Nuvei manages
-            // the payment flow independently (via DMN), so they should never appear.
-            add_filter(
-                'woocommerce_my_account_my_orders_actions',
-                function( $actions ) {
-                    unset( $actions['pay'], $actions['cancel'] );
-                    return $actions;
-                }
-            );
-            
             // for the case Approved transaction after Declined, the Order is with status Fails
             $request_status = mb_strtolower( Nuvei_Pfw_Http::get_request_status() );
             
