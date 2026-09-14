@@ -63,6 +63,9 @@ If you plan to install this plugin form the WordPress store, but use a version d
 
 == Changelog ==
 
+= 3.15.1 =
+* Pass webMasterId as custom parameter in the requests.
+
 = 3.15.0 =
 * Fix message on the thank-you page after a declined, then approved transaction.
 * Update the clientUniqueId on each updateOrder request.

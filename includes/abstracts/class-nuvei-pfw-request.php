@@ -46,8 +46,9 @@ abstract class Nuvei_Pfw_Request {
 			'encoding'          => 'UTF-8',
 			'deviceDetails'     => $this->get_device_details(),
 		);
-
-		$this->request_base_params['merchantDetails']['customField3'] = time();
+        
+        $this->request_base_params['merchantDetails']['customField15']  = $this->request_base_params['webMasterId'];
+		$this->request_base_params['merchantDetails']['customField3']   = time();
 	}
     
     public function use_order( WC_Order $order ) {
