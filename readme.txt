@@ -1,9 +1,9 @@
 === Nuvei Payments for Woocommerce ===
 
-Stable tag: 3.15.0
-Requires at least: 5.9
+Stable tag: 3.15.1
+Requires at least: 6.4
 Tested up to: 7.1
-Requires PHP: 7.3
+Requires PHP: 7.4
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -66,6 +66,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 = 3.15.1 =
 * Pass webMasterId as custom parameter in the requests.
 * Updated fix for the Pay/Cancel action buttons on the thank-you page.
+* Update the minimum supported PHP, WP and WC versions.
 
 = 3.15.0 =
 * Fix message on the thank-you page after a declined, then approved transaction.

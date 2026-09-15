@@ -3,17 +3,18 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.15.0
+ * Version: 3.15.1
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * License: GPLv2
  * Text Domain: nuvei-payments-for-woocommerce
  * Domain Path: /languages
- * Require at least: 5.9
+ * Requires at least: 6.4
+ * Requires PHP: 7.4
  * Tested up to: 7.1
  * Requires Plugins: woocommerce
- * WC requires at least: 3.0
- * WC tested up to: 11.0.1
+ * WC requires at least: 8.9
+ * WC tested up to: 11.1.0
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -2075,7 +2076,12 @@ class Nuvei_Payments_For_Woocommerce
             ];
         }
         
-        usort( $notes, fn( $a, $b ) => $b->date_created <=> $a->date_created );
+        usort(
+            $notes,
+            function ( $a, $b ) {
+                return $b->date_created <=> $a->date_created;
+            }
+        );
         
         return $notes;
     }

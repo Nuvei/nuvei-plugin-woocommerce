@@ -315,7 +315,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$nuvei_oo_details       = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
         // is Classic Checkout request
         $request_uri            = filter_input( INPUT_SERVER, 'REQUEST_URI', FILTER_SANITIZE_URL );
-        $is_classic             = ! str_contains( $request_uri ?? '', 'wc/store/v1/checkout' );
+        $is_classic             = false === strpos( (string) $request_uri, 'wc/store/v1/checkout' );
 
 		Nuvei_Pfw_Logger::write(
 			array(
