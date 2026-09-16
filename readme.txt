@@ -67,6 +67,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 * Pass webMasterId as custom parameter in the requests.
 * Updated fix for the Pay/Cancel action buttons on the thank-you page.
 * Update the minimum supported PHP, WP and WC versions.
+* Updated Nuvei logo.
 
 = 3.15.0 =
 * Fix message on the thank-you page after a declined, then approved transaction.
