@@ -106,6 +106,44 @@ button#nuvei_place_order {
     margin-left: -32px;
 }
 
+/* Simply Connect modal (render_to = nuvei_checkout_modal) */
+#nuvei_checkout_modal_overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+}
+
+#nuvei_checkout_modal_overlay .nuvei-modal-dialog {
+    position: relative;
+    background: #fff;
+    border-radius: 6px;
+    padding: 30px 20px 20px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 90vh;
+    margin: 0 auto;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+
+#nuvei_checkout_modal_overlay .nuvei-modal-close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+
 /* blocks style */
 .wc-block-components-form #nuvei_checkout_container {
   font-size: var(--wp--preset--font-size--small,14px);

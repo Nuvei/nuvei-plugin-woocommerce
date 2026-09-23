@@ -34,14 +34,22 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		// required for the Store
 		$this->title        = $this->get_option( 'title', NUVEI_PFW_GATEWAY_TITLE );
-        $this->description  = wp_kses_post(
-            '<div id="nuvei_checkout_container" data-placeholder="' .
-                ( 'cashier' === $this->get_option( 'integration_type' ) ?
-                    __('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce')
-                        : __('Loading...', 'nuvei-payments-for-woocommerce')
-                )
-             . '"></div>'
-        );
+        $this->description  = '';
+        
+        // we will use a container in the description when it is set from
+        // the corresponding settings or when the Cashier is selected.
+        if ($this->get_option('render_to') == 'nuvei_checkout_container'
+            || 'cashier' === $this->get_option( 'integration_type' )
+        ) {
+            $this->description  = wp_kses_post(
+                '<div id="nuvei_checkout_container" data-placeholder="' .
+                    ( 'cashier' === $this->get_option( 'integration_type' ) ?
+                        __('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce')
+                            : __('Loading...', 'nuvei-payments-for-woocommerce')
+                    )
+                 . '"></div>'
+            );
+        }
 
         $this->plugin_data  = get_plugin_data( NUVEI_PFW_PLUGIN_FILE );
 
@@ -964,7 +972,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'country'                => $ord_details['billingAddress']['country'],
 			'currency'               => get_woocommerce_currency(),
 			'amount'                 => $total,
-			'renderTo'               => '#nuvei_checkout_container',
+			'renderTo'               => '#' . $this->get_option( 'render_to' ),
 			'useDCC'                 => $use_dcc,
 			'strict'                 => false,
 			'savePM'                 => $save_pm,
@@ -1688,7 +1696,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		);
 
 		$fields = array(
-			'integration_type'         => array(
+			'integration_type' => array(
 				'title'   => __( 'Integration Type', 'nuvei-payments-for-woocommerce' ),
 				'type'    => 'select',
 				'options' => array(
@@ -1702,26 +1710,26 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             'advanced_common_settings_title' => array(
                 'title'       => '<i>' . __( 'Common settings', 'nuvei-payments-for-woocommerce' ) . '</i>',
                 'type'        => 'title',
-//                'description' => __( 'Common settings for the Cashier and the Simply Connect', 'nuvei-payments-for-woocommerce' ),
             ),
-			// pending dmn -> on-hold
-			'status_pending'           => array(
-				'title'       => __( 'Status Pending DMN', 'nuvei-payments-for-woocommerce' ),
-				'type'        => 'select',
-				'options'     => $statuses,
-				'default'     => 'on-hold',
-				'description' => __( 'The status for Nuvei transactions who still wait for a DMN. This change is triggered after Settle, Refund and Void.', 'nuvei-payments-for-woocommerce' ),
+			
+            // pending dmn -> on-hold
+			'status_pending' => array(
+				'title'         => __( 'Status Pending DMN', 'nuvei-payments-for-woocommerce' ),
+				'type'          => 'select',
+				'options'       => $statuses,
+				'default'       => 'on-hold',
+				'description'   => __( 'The status for Nuvei transactions who still wait for a DMN. This change is triggered after Settle, Refund and Void.', 'nuvei-payments-for-woocommerce' ),
 			),
 			// auth -> pending payment
-			'status_auth'              => array(
-				'title'       => __( 'Status Authorized', 'nuvei-payments-for-woocommerce' ),
-				'type'        => 'select',
-				'options'     => $statuses,
-				'default'     => 'on-hold',
-				'description' => __( 'The status for Nuvei Authorized transactions.', 'nuvei-payments-for-woocommerce' ),
+			'status_auth' => array(
+				'title'         => __( 'Status Authorized', 'nuvei-payments-for-woocommerce' ),
+				'type'          => 'select',
+				'options'       => $statuses,
+				'default'       => 'on-hold',
+				'description'   => __( 'The status for Nuvei Authorized transactions.', 'nuvei-payments-for-woocommerce' ),
 			),
 			// settle & sale -> completed
-			'status_paid'              => array(
+			'status_paid'       => array(
 				'title'       => __( 'Status Paid', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'select',
 				'options'     => $statuses,
@@ -1729,7 +1737,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'description' => __( 'The status for Settle and Sale flow is same. It shows the Order is Paid.', 'nuvei-payments-for-woocommerce' ),
 			),
 			// refund -> refunded
-			'status_refund'            => array(
+			'status_refund'     => array(
 				'title'       => __( 'Status Refunded', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'select',
 				'options'     => $statuses,
@@ -1737,7 +1745,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'description' => __( 'The status for Nuvei Refunded transactions.', 'nuvei-payments-for-woocommerce' ),
 			),
 			// void -> cancelled
-			'status_void'              => array(
+			'status_void'       => array(
 				'title'       => __( 'Status Voided', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'select',
 				'options'     => $statuses,
@@ -1745,22 +1753,31 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'description' => __( 'The status for Nuvei Voided transactions.', 'nuvei-payments-for-woocommerce' ),
 			),
 			// failed -> failed
-			'status_fail'              => array(
+			'status_fail'       => array(
 				'title'       => __( 'Status Failed', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'select',
 				'options'     => $statuses,
 				'default'     => 'failed',
 				'description' => __( 'The status for Nuvei Failed transactions.', 'nuvei-payments-for-woocommerce' ),
 			),
-			'dd_name'                   => array(
+            'render_to' => array(
+				'title'         => __( 'Choose Simply Connect place on the page', 'nuvei-payments-for-woocommerce' ),
+				'type'          => 'select',
+				'options'       => array(
+					'nuvei_checkout_container'  => __( 'In the Checkout page.', 'nuvei-payments-for-woocommerce' ),
+					'nuvei_checkout_modal'      => __( 'In a modal.', 'nuvei-payments-for-woocommerce' ),
+				),
+				'default'       => 'nuvei_checkout_container',
+			),
+			'dd_name'           => array(
 				'title'       => __( 'Dynamic Descriptor Merchant Name', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'text',
 			),
-			'dd_phone'                   => array(
+			'dd_phone'          => array(
 				'title'       => __( 'Dynamic Descriptor Merchant Phone', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'text',
 			),
-            'mask_user_data'           => array(
+            'mask_user_data'    => array(
 				'title'       => __( 'Mask User Data into the Log', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'select',
 				'options'     => array(
@@ -1776,10 +1793,10 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             'advanced_cashier_settings_title' => array(
                 'title'       => '<i>' . __( 'Cashier settings', 'nuvei-payments-for-woocommerce' ) . '</i>',
                 'type'        => 'title',
-//                'description' => __( 'Common settings for the Cashier and the Simply Connect', 'nuvei-payments-for-woocommerce' ),
                 'class'       => 'nuvei_cashier_setting',
             ),
-			'combine_cashier_products' => array(
+			
+            'combine_cashier_products' => array(
 				'title'       => __( 'Combine Cashier Products into One', 'nuvei-payments-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => __( 'Combine the products into one, to avoid eventual problems with, taxes, discounts, coupons, etc.', 'nuvei-payments-for-woocommerce' ),

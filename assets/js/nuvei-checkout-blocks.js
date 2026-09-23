@@ -109,7 +109,7 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
         });
 
         if (!isFormValid) {
-            jQuery('#nuvei_checkout_container').text(scTrans.MissingEmailCountry);
+            jQuery(nuveiCheckoutContainerSel).text(scTrans.MissingEmailCountry);
         }
 
         return isFormValid;
@@ -201,7 +201,7 @@ function nuveiBlocksReloadSimply() {
 
     nuveiDestroySimplyConnect();
 
-    jQuery('#nuvei_checkout_container').html(window.wp.i18n.__('Loading...', 'nuvei-payments-for-woocommerce'));
+    jQuery(nuveiCheckoutContainerSel).html(window.wp.i18n.__('Loading...', 'nuvei-payments-for-woocommerce'));
 
     if (nuveiIsCheckoutBlocksFormValid(true)) {
         // add small delay
@@ -272,10 +272,10 @@ async function nuveiBlocksRunTransaction() {
             console.log('Nuvei payment method element loaded. Check if the checkout form is valid.');
 
             // Append the origial Simply Connect container, in all cases, just for the message.
-            if (jQuery('#payment-method').find('#nuvei_checkout_container').length == 0) {
+            if (jQuery('#payment-method').find(nuveiCheckoutContainerSel).length == 0) {
                 jQuery('#radio-control-wc-payment-method-options-nuvei')
                     .closest('.wc-block-components-radio-control-accordion-option')
-                    .append(`<div id="nuvei_checkout_container" data-placeholder="${nuveiCheckoutBlockContText}"></div>`);
+                    .append(`<div id="${nuveiCheckoutContainerId}" data-placeholder="${nuveiCheckoutBlockContText}"></div>`);
             }
 
             if ('sdk' === scTrans?.checkoutIntegration
@@ -417,7 +417,7 @@ jQuery(function() {
     // watch the email field for changes
     let lastEmail = document.getElementById('email')?.value;
 
-    jQuery( document.body ).on( 'blur', '#email:not(#nuvei_checkout_container #email)', function(e) {
+    jQuery( document.body ).on( 'blur', `#email:not(${nuveiCheckoutContainerSel} #email)`, function(e) {
         let self = jQuery(this);
 
         // Check if the value has actually changed
@@ -439,7 +439,7 @@ jQuery(function() {
 
     wp.data.subscribe(() => {
         // some errors
-        if (window.nuveiIsPayForExistingOrderPage || jQuery('#nuvei_checkout_container').length == 0) {
+        if (window.nuveiIsPayForExistingOrderPage || jQuery(nuveiCheckoutContainerSel).length == 0) {
             return;
         }
 
@@ -448,11 +448,11 @@ jQuery(function() {
 
         if (scTrans && scTrans.paymentGatewayName !== currentpaymentMethod) {
             console.log('The selected payment method is not Nuvei.');
-            jQuery('#nuvei_checkout_container').hide();
+            jQuery(nuveiCheckoutContainerSel).hide();
             return;
         }
 
-        jQuery('#nuvei_checkout_container').show();
+        jQuery(nuveiCheckoutContainerSel).show();
 
         const currentTotals         = store.getCartTotals ? store.getCartTotals().total_price : null;
         const currentBillingCountry = store.getCartData().billingAddress.country;

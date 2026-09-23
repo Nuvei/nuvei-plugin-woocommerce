@@ -1,5 +1,11 @@
 const nuveiCheckoutBlockFormClass       = 'form.wc-block-components-form';
 const nuveiCheckoutClassicFormClass     = 'form.checkout.woocommerce-checkout';
+// the DOM id where the Simply Connect SDK renders - either the inline
+// checkout container or a modal, depending on the "render_to" plugin setting
+const nuveiCheckoutContainerId          = (typeof scTrans !== 'undefined' && scTrans.simplyDomPlace)
+    ? scTrans.simplyDomPlace : 'nuvei_checkout_container';
+const nuveiCheckoutContainerSel         = '#' + nuveiCheckoutContainerId;
+const nuveiIsModalMode                  = (nuveiCheckoutContainerId === 'nuvei_checkout_modal');
 const nuveiCheckoutClassicPayBtn        = '#place_order';
 const nuveiCheckoutCustomPayBtn         = '#nuvei_place_order';
 const nuveiCheckoutClassicPMethodName   = 'input[name="payment_method"]';
@@ -79,7 +85,7 @@ function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
 
             // Scroll to the first error
             setTimeout( () => {
-                jQuery('#nuvei_checkout_container').html(scTrans.MissingEmailCountry);
+                jQuery(nuveiCheckoutContainerSel).html(scTrans.MissingEmailCountry);
 
                 if (jQuery('.woocommerce-invalid').length) {
                     jQuery('html, body').animate({
@@ -267,7 +273,7 @@ function nuveiAfterSdkResponse(resp) {
         nuveiSetTransactionField(resp.transactionId);
 
         jQuery('#nuvei_blocker').show();
-        jQuery('#nuvei_checkout_container').html('');
+        jQuery(nuveiCheckoutContainerSel).html('');
         
         // in case of Classic Checkout or when the client will pay for an Order
         // created from the admin
@@ -365,7 +371,7 @@ function showNuveiCheckout(_params) {
         nuveiBlocksRefreshInProgress = false;
         
         jQuery('#nuvei_blocker').hide();
-        jQuery('#nuvei_checkout_container').html(scTrans.MissingRequiredFields);
+        jQuery(nuveiCheckoutContainerSel).html(scTrans.MissingRequiredFields);
         
         return;
     }
@@ -391,7 +397,7 @@ function showNuveiCheckout(_params) {
                     && resp?.transactionId
                 ) {
                     jQuery('#nuvei_blocker').show();
-                    jQuery('#nuvei_checkout_container').html('');
+                    jQuery(nuveiCheckoutContainerSel).html('');
 
                     nuveiBlocksResolvePayment( { success: true, transaction_id: resp.transactionId } );
                     nuveiBlocksResolvePayment = null;
@@ -869,6 +875,20 @@ jQuery(function($) {
                 return;
             }
 
+            // the modal lives outside the checkout form/description, so it
+            // survives WC/WP re-renders (updated_checkout, fragments, etc.)
+            if (nuveiIsModalMode && jQuery('#nuvei_checkout_modal_overlay').length == 0) {
+                jQuery('body').append(
+                    '<div id="nuvei_checkout_modal_overlay">'
+                        + '<div class="nuvei-modal-dialog">'
+                            + '<button type="button" class="nuvei-modal-close" aria-label="Close">&times;</button>'
+                            + '<div id="' + nuveiCheckoutContainerId + '" data-placeholder="'
+                                + scTrans.MissingRequiredFields + '"></div>'
+                        + '</div>'
+                    + '</div>'
+                );
+            }
+
             // on page load try to load Simply Connect
             if (nuveiIsCheckoutClassicFormValid(true)) {
                 nuveiGetCheckoutData(nuveiCheckoutClassicFormClass);
@@ -918,14 +938,14 @@ jQuery(function($) {
                 console.log('updated_checkout event');
 
                 if ( ! nuveiIsCheckoutClassicFormValid(true) ) {
-                    jQuery('#nuvei_checkout_container').html(scTrans.MissingEmailCountry);
+                    jQuery(nuveiCheckoutContainerSel).html(scTrans.MissingEmailCountry);
                     return;
                 }
                 
                 // WooCommerce may have swapped the .woocommerce-checkout-payment fragment
                 // (order total changed), destroying the live Simply Connect container.
                 // Re-render only if it's now empty, to avoid needless reloads.
-                if ( jQuery('#nuvei_checkout_container').is(':empty') ) {
+                if ( jQuery(nuveiCheckoutContainerSel).is(':empty') ) {
                     nuveiDestroySimplyConnect();
                     nuveiGetCheckoutData(nuveiCheckoutClassicFormClass);
                 }
@@ -971,8 +991,8 @@ jQuery(function($) {
                 }
             });
 
-            jQuery(document).on('load', '#nuvei_checkout_container', function() {
-                console.log('on load #nuvei_checkout_container');
+            jQuery(document).on('load', nuveiCheckoutContainerSel, function() {
+                console.log('on load ' + nuveiCheckoutContainerSel);
                 nuveiIsCheckoutClassicFormValid(true);
             });
             
