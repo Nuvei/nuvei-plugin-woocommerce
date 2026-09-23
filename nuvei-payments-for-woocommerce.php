@@ -438,7 +438,6 @@ class Nuvei_Payments_For_Woocommerce
                 'useUpos'               => self::$wc_nuvei->can_use_upos(),
                 'isUserLogged'          => is_user_logged_in() ? 1 : 0,
                 'isPluginActive'        => self::$wc_nuvei->settings['enabled'],
-                'simplyDomPlace'        => self::$wc_nuvei->settings['render_to'],
                 'loaderUrl'             => plugin_dir_url( __FILE__ ) . 'assets/icons/loader.gif',
                 'checkoutIntegration'   => self::$wc_nuvei->settings['integration_type'],
                 'webMasterId'           => 'WooCommerce ' . WOOCOMMERCE_VERSION
