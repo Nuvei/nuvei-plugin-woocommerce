@@ -919,6 +919,15 @@ jQuery(function($) {
 
                 if ( ! nuveiIsCheckoutClassicFormValid(true) ) {
                     jQuery('#nuvei_checkout_container').html(scTrans.MissingEmailCountry);
+                    return;
+                }
+                
+                // WooCommerce may have swapped the .woocommerce-checkout-payment fragment
+                // (order total changed), destroying the live Simply Connect container.
+                // Re-render only if it's now empty, to avoid needless reloads.
+                if ( jQuery('#nuvei_checkout_container').is(':empty') ) {
+                    nuveiDestroySimplyConnect();
+                    nuveiGetCheckoutData(nuveiCheckoutClassicFormClass);
                 }
             });
 
