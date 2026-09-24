@@ -447,6 +447,21 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
             $order->save();
 
+            // Modal mode: Simply Connect isn't rendered before Place Order, so
+            // there is no existing Nuvei Order to update yet - the JS will call
+            // /get-data-for-existing-order/ (openOrder) right after this response.
+            if ( 'nuvei_checkout_modal' == ( $this->settings['render_to'] ?? '' ) ) {
+                return [
+                    'result'   => 'success',
+                    'redirect' => '#',
+                    'data'     => [
+                        'nuvei_try_payment' => true,
+                        'success_url'       => $return_success_url,
+                        'order_id'          => $order_id,
+                    ],
+                ];
+            }
+
             // call Update Order
             $helper = new Nuvei_Pfw_Helper();
             $helper->use_order($order);
@@ -477,6 +492,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 ];
             }
 
+            Nuvei_Pfw_Logger::write( 'Process payment, classic checkout last error.' );
             // error
             return array(
 				'result'   => 'success',
@@ -982,8 +998,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'alwaysCollectCvv'       => true,
 			'fullName'               => $fullName,
 			'email'                  => $ord_details['billingAddress']['email'],
-//			'payButton'              => $this->get_option( 'pay_button', 'amountButton' ),
-			'payButton'              => 'noButton',
+			'payButton'              => $this->get_option( 'pay_button', 'amountButton' ),
+//			'payButton'              => 'noButton',
 			'showResponseMessage'    => false, // shows/hide the response popups
 			'locale'                 => $locale,
 			'autoOpenPM'             => (bool) $this->get_option( 'auto_open_pm', 1 ),

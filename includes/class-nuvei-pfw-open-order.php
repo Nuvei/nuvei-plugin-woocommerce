@@ -24,12 +24,12 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 	 * @return array|boolean
 	 */
 	public function process() {
-		Nuvei_Pfw_Logger::write( 'OpenOrder class process.' );
-
 		$try_update_order   = true;
 		$method_params      = func_get_args(); // optionaly we will pass here Order ID.
         $open_order_details = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS ) ?? [];
         $ord_redirect_url   = '';
+        
+        Nuvei_Pfw_Logger::write( $method_params, 'OpenOrder class process.' );
         
 		// if we pass Order ID get the order.
 		if ( ! empty( $method_params[0]['order_id'] ) ) {
@@ -39,6 +39,8 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
                 $ord_redirect_url = $this->sc_order->get_checkout_order_received_url();
             }
 		}
+        
+        Nuvei_Pfw_Logger::write( $ord_redirect_url, 'OpenOrder class process.' );
 
         # try to use incoming parameters
         if (!empty($this->rest_params['transactionType'])) {
@@ -92,10 +94,19 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 			|| empty( $addresses['billingAddress']['email'] )
 			|| $open_order_details['transactionType'] != $transaction_type
 			|| $open_order_details['userTokenId'] != $addresses['billingAddress']['email']
-			|| ! empty( $this->sc_order )
+//			|| ! empty( $this->sc_order )
 		) {
 			Nuvei_Pfw_Logger::write(
 				array(
+                    [
+                        ! is_array( $open_order_details ),
+                        empty( $open_order_details['transactionType'] ),
+                        empty( $open_order_details['userTokenId'] ),
+                        empty( $addresses['billingAddress']['email'] ),
+                        $open_order_details['transactionType'] != $transaction_type,
+                        $open_order_details['userTokenId'] != $addresses['billingAddress']['email'],
+//                        ! empty( $this->sc_order )
+                    ],
 					'$open_order_details'   => $open_order_details,
 					'$transaction_type'     => $transaction_type,
 					'$addresses'            => $addresses,

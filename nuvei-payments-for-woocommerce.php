@@ -404,6 +404,7 @@ class Nuvei_Payments_For_Woocommerce
         $plugin_url	= plugin_dir_url( __FILE__ );
         $sdkUrl     = NUVEI_PFW_SDK_URL_PROD;
 		$helper     = new Nuvei_Pfw_Helper();
+        $render_to  = self::$wc_nuvei->settings['render_to'];
 
         if ( self::$wc_nuvei->is_qa_site() ) {
             $sdkUrl = NUVEI_PFW_SDK_URL_TAG;
@@ -438,7 +439,7 @@ class Nuvei_Payments_For_Woocommerce
                 'useUpos'               => self::$wc_nuvei->can_use_upos(),
                 'isUserLogged'          => is_user_logged_in() ? 1 : 0,
                 'isPluginActive'        => self::$wc_nuvei->settings['enabled'],
-                'simplyDomPlace'        => self::$wc_nuvei->settings['render_to'],
+                'simplyDomPlace'        => $render_to,
                 'loaderUrl'             => plugin_dir_url( __FILE__ ) . 'assets/icons/loader.gif',
                 'checkoutIntegration'   => self::$wc_nuvei->settings['integration_type'],
                 'webMasterId'           => 'WooCommerce ' . WOOCOMMERCE_VERSION
@@ -476,6 +477,31 @@ class Nuvei_Payments_For_Woocommerce
 
         wp_localize_script( 'nuvei_js_public', 'scTrans', $localizations );
         wp_enqueue_script( 'nuvei_js_public' );
+        
+        // the JS files based on render_to
+        if ('nuvei_checkout_container' == $render_to) {
+            wp_register_script(
+                'nuvei-checkout-container',
+                $plugin_url . 'assets/js/nuvei-checkout-container.js',
+                array( 'jquery', 'nuvei_js_public' ),
+                $helper->helper_get_plugin_version(),
+                false
+            );
+            
+            wp_enqueue_script( 'nuvei-checkout-container' );
+        }
+            
+        if ('nuvei_checkout_modal' == $render_to) {
+            wp_register_script(
+                'nuvei-checkout-modal',
+                $plugin_url . 'assets/js/nuvei-checkout-modal.js',
+                array( 'jquery', 'nuvei_js_public' ),
+                $helper->helper_get_plugin_version(),
+                false
+            );
+            
+            wp_enqueue_script( 'nuvei-checkout-modal' );
+        }
     }
 
 	/**
@@ -690,7 +716,8 @@ class Nuvei_Payments_For_Woocommerce
             }
 		}
 
-		$order_payment_method = $helper->helper_get_payment_method( $order_id );
+		$order_payment_method   = $helper->helper_get_payment_method( $order_id );
+        $tr_type                = $last_approved_tr_data['transactionType'] ?? '';
 
 		if ( ! is_null( $order->get_date_created() ) ) {
 			$order_time = $order->get_date_created()->getTimestamp();
@@ -701,7 +728,7 @@ class Nuvei_Payments_For_Woocommerce
 
 		// hide Refund Button, it is visible by default
 		if ( ! in_array( $order_payment_method, NUVEI_PFW_REFUND_METHODS )
-			|| ! in_array( $last_approved_tr_data['transactionType'], array( 'Sale', 'Settle', 'Credit', 'Refund' ) )
+			|| ! in_array( $tr_type, array( 'Sale', 'Settle', 'Credit', 'Refund' ) )
 			|| 'approved' != strtolower( $last_approved_tr_data['status'] )
 			|| 0 == $order_total
 			|| $ref_amount >= $order_total
@@ -726,7 +753,7 @@ class Nuvei_Payments_For_Woocommerce
          */
 		if ( in_array( $order_payment_method, NUVEI_PFW_VOID_METHODS )
 			&& empty( $order_refunds )
-			&& in_array( $last_approved_tr_data['transactionType'], array( 'Sale', 'Settle', 'Auth' ) )
+			&& in_array( $tr_type, array( 'Sale', 'Settle', 'Auth' ) )
 			&& (float) $order_total > 0
 			&& time() < $order_time + 172800 // 48 hours
 		) {
@@ -762,9 +789,7 @@ class Nuvei_Payments_For_Woocommerce
 		}
 
 		// show SETTLE button ONLY if transaction type IS Auth and the Total is not 0
-		if ( 'Auth' == $last_approved_tr_data['transactionType']
-			&& $order_total > 0
-		) {
+		if ( 'Auth' == $tr_type && $order_total > 0 ) {
 			$question = sprintf(
 			/* translators: %d is replaced with "decimal" */
 				__( 'Are you sure, you want to Settle Order #%d?', 'nuvei-payments-for-woocommerce' ),
