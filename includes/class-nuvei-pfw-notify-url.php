@@ -631,7 +631,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	 */
 	private function process_auth_sale_dmn( $transaction_type, $client_request_id, $transaction_id, $req_status ) {
         // skip declined transactions, the Order is in status Pending
-        if ('approved' != $req_status) {
+        if ('approved' != strtolower($req_status) ) {
             $msg = 'Not approved transaction. We will wait for approved one.';
 
             Nuvei_Pfw_Logger::write( $msg );
