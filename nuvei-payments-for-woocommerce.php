@@ -575,6 +575,27 @@ class Nuvei_Payments_For_Woocommerce
 	}
 
 	/**
+	 * Print the JS call that disables the WooCommerce Refund button.
+	 *
+	 * We echo the <script> tag directly, as part of the action-buttons markup,
+	 * instead of using wp_add_inline_script(). This method runs on every
+	 * `woocommerce_order_item_add_action_buttons` call - not only on the normal,
+	 * full page load, but also every time WooCommerce reloads the order-items
+	 * box via AJAX (e.g. the admin "Recalculate" button), because WC re-includes
+	 * the same order-items template for that response. That AJAX response only
+	 * echoes template output and calls wp_die() - it never triggers
+	 * wp_print_footer_scripts(), so anything queued with wp_add_inline_script()
+	 * is silently lost and the Refund button gets re-enabled. Echoing the
+	 * <script> tag directly makes it part of the HTML that WooCommerce injects
+	 * into the DOM every time, on full page load and on every AJAX reload alike.
+	 *
+	 * @return void
+	 */
+	private static function print_disable_refund_btn_script() {
+		echo '<script>jQuery(function(){ nuveiPfwDisableRefundBtn(); });</script>';
+	}
+
+	/**
 	 * Add buttons for the Nuvei Order actions in Order details page.
 	 *
 	 * @param WC_Order $order
@@ -614,11 +635,9 @@ class Nuvei_Payments_For_Woocommerce
             // this is Nuvei Order, but the Nuvei Transaction ID is missing,
             // we will not add our Order Action buttons, but still we will
             // disable the refund button, as the Refund won't be possible
-			wp_add_inline_script(
-				'nuvei_js_admin',
-				'nuveiPfwDisableRefundBtn()',
-				'after'
-			);
+			if ( ! $return_html ) {
+				self::print_disable_refund_btn_script();
+			}
             
 			return false;
 		}
@@ -636,11 +655,9 @@ class Nuvei_Payments_For_Woocommerce
 			// this is Nuvei Order, but the Nuvei Transaction ID is missing,
             // we will not add our Order Action buttons, but still we will
             // disable the refund button, as the Refund won't be possible
-			wp_add_inline_script(
-				'nuvei_js_admin',
-				'nuveiPfwDisableRefundBtn()',
-				'after'
-			);
+			if ( ! $return_html ) {
+				self::print_disable_refund_btn_script();
+			}
 
 			return false;
 		}
@@ -718,11 +735,9 @@ class Nuvei_Payments_For_Woocommerce
 			|| 0 == $order_total
 			|| $ref_amount >= $order_total
 		) {
-			wp_add_inline_script(
-				'nuvei_js_admin',
-				'nuveiPfwDisableRefundBtn()',
-				'after'
-			);
+			if ( ! $return_html ) {
+				self::print_disable_refund_btn_script();
+			}
 
             $html_elements['showRefundBtn'] = false;
 		}
