@@ -630,6 +630,15 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 	 * @return void
 	 */
 	private function process_auth_sale_dmn( $transaction_type, $client_request_id, $transaction_id, $req_status ) {
+        // skip declined transactions, the Order is in status Pending
+        if ('approved' != $req_status) {
+            $msg = 'Not approved transaction. We will wait for approved one.';
+
+            Nuvei_Pfw_Logger::write( $msg );
+            http_response_code( 200 );
+            exit( esc_html( $msg ) );
+        }
+        
 		$is_sdk_order       = false;
 		$merchant_unique_id = Nuvei_Pfw_Http::get_param( 'merchant_unique_id', 'int', false );
         $order_id           = Nuvei_Pfw_Http::get_param( 'customField5', 'int' );
