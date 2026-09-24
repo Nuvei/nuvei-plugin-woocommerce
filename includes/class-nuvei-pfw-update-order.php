@@ -33,12 +33,23 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
         $order_id           = $func_params['order_id'] ?? null;
         $session_token      = $open_order_details['sessionToken'] ?? $func_params['session_token'] ?? null;
         $oo_order_id        = $open_order_details['orderId'] ?? $func_params['oo_order_id'] ?? null;
+        $cart_amount        = '';
 
         if ( ! empty(WC()->cart->total) ) {
             $cart_amount = (string) number_format( WC()->cart->total, 2, '.', '' );
         }
         else {
-			$cart_amount = (string) number_format( $products_data['totals'], 2, '.', '' );
+            Nuvei_Pfw_Logger::write( $products_data, 'update_order()', 'DEBUG' );
+            
+            if ( is_numeric($products_data['totals']) ) {
+                $cart_amount = (string) number_format( $products_data['totals'], 2, '.', '' );
+            }
+            elseif ( is_array($products_data['totals']) 
+                && isset($products_data['totals']['total']) 
+                && is_numeric($products_data['totals']['total']) 
+            ) {
+                $cart_amount = (string) number_format( $products_data['totals']['total'], 2, '.', '' );
+            }
 		}
 
 		if ( empty( $session_token ) || empty( $oo_order_id ) ) {

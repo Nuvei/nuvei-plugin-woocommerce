@@ -53,7 +53,7 @@ final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 	public function get_payment_method_data() {
 	    return array(
 	        'title'       => $this->settings['title'],
-	        'description' => $this->settings['description'],
+	        'description' => $this->settings['description'] ?? '',
 	        'icon'        => $this->plugin_dir_url . 'assets/icons/nuvei.png',
 	    );
 	}
