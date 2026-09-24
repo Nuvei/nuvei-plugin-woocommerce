@@ -610,6 +610,16 @@ class Nuvei_Payments_For_Woocommerce
         // error
 		if ( empty( $ord_tr_id ) ) {
 			Nuvei_Pfw_Logger::write( $ord_tr_id, 'Invalid Transaction ID! We will not add any buttons.', 'TRACE' );
+            
+            // this is Nuvei Order, but the Nuvei Transaction ID is missing,
+            // we will not add our Order Action buttons, but still we will
+            // disable the refund button, as the Refund won't be possible
+			wp_add_inline_script(
+				'nuvei_js_admin',
+				'nuveiPfwDisableRefundBtn()',
+				'after'
+			);
+            
 			return false;
 		}
         
@@ -623,12 +633,14 @@ class Nuvei_Payments_For_Woocommerce
                 'TRACE'
 			);
 
-			// disable refund button
-//			wp_add_inline_script(
-//				'nuvei_js_admin',
-//				'nuveiPfwDisableRefundBtn()',
-//				'after'
-//			);
+			// this is Nuvei Order, but the Nuvei Transaction ID is missing,
+            // we will not add our Order Action buttons, but still we will
+            // disable the refund button, as the Refund won't be possible
+			wp_add_inline_script(
+				'nuvei_js_admin',
+				'nuveiPfwDisableRefundBtn()',
+				'after'
+			);
 
 			return false;
 		}

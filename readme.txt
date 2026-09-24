@@ -66,6 +66,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 = 3.15.2 =
 * Added additional check for Simply Connect, in case the container is re-rendered.
 * The plugin will not process declined Auth and Sale DMNs. There will be information in the log, but not in the Order details.
+* Block the Refund button for Nuvei Orders without transaction data.
 
 = 3.15.1 =
 * Pass webMasterId as custom parameter in the requests.
