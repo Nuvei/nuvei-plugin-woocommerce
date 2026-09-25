@@ -94,15 +94,6 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
 
                 nuveiDestroySimplyConnect();
 
-//                wp.data.dispatch( 'core/notices' ).createErrorNotice(
-//                    validationErrors[id].message,
-//                    {
-//                        id: 'nuvei-form-invalid', // Use a unique ID to prevent duplicates
-//                        context: 'wc/checkout',  // Important: This tells Woo to show it in the checkout area
-//                        isDismissible: true,
-//                    }
-//                );
-
                 // just break the loop
                 return true;
             }
@@ -489,13 +480,15 @@ jQuery(function() {
         });
     }
 
-    // Disabled - was only needed for the container flow, to keep the
-    // inline SDK form in sync with every field/cart change before Pay is
-    // clicked. In modal mode the card form only exists inside the modal
-    // (rendered fresh on Pay click, inside onPaymentSetup), so there's
-    // nothing to keep in sync beforehand. Kept here, commented, in case
-    // container mode needs it restored later.
-    /*
+    // Container mode only - keeps the inline SDK form in sync with every
+    // field/cart change before Pay is clicked. Not needed in modal mode:
+    // the card form only exists inside the modal (rendered fresh on Pay
+    // click, inside onPaymentSetup), so there's nothing to keep in sync
+    // beforehand.
+    if ( nuveiIsModalMode ) {
+        return;
+    }
+
     // watch the email field for changes
     let lastEmail = document.getElementById('email')?.value;
 
@@ -555,7 +548,6 @@ jQuery(function() {
         }
 
     });
-    */
 
 });
 // document ready function end
