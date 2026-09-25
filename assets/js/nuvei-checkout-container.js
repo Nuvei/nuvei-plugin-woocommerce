@@ -8,7 +8,7 @@
  */
 jQuery(function($) {
     if ('no' === scTrans.isPluginActive) {
-        console.log('nuvei plugin is not active.');
+        console.log('[Nuvei]: nuvei plugin is not active.');
         return;
     }
 
@@ -22,7 +22,7 @@ jQuery(function($) {
         return;
     }
 
-    console.log('Classic checkout - container mode.');
+    console.log('[Nuvei]: Classic checkout - container mode.');
 
     // error missing scTrans or scTrans.paymentGatewayName
     if ( ! scTrans?.paymentGatewayName ) {
@@ -46,7 +46,7 @@ jQuery(function($) {
             // Update the storage immediately to block repeat events
             self.data('last-known-value', newVal);
 
-            console.log('Checkout form field changed: ', self.attr('id'), self.val(), e.type);
+            console.log('[Nuvei]: Checkout form field changed: ', self.attr('id'), self.val(), e.type);
 
             // My custom checks come here
             nuveiDestroySimplyConnect();
@@ -64,7 +64,7 @@ jQuery(function($) {
 
     // on payment provider change
     jQuery(document.body).on('change', nuveiCheckoutClassicPMethodName, function(e) {
-        console.log('Payment Provider change.', jQuery(nuveiCheckoutClassicPMethodName + ':checked').val());
+        console.log('[Nuvei]: Payment Provider change.', jQuery(nuveiCheckoutClassicPMethodName + ':checked').val());
 
         if (nuveiIsCheckoutClassicFormValid(true)) {
             nuveiGetCheckoutData(nuveiCheckoutClassicFormClass);
@@ -76,7 +76,7 @@ jQuery(function($) {
 
     // Listen for updated_checkout event on Classic Checkout
     jQuery(document.body).on('updated_checkout', function() {
-        console.log('updated_checkout event');
+        console.log('[Nuvei]: updated_checkout event');
 
         if ( ! nuveiIsCheckoutClassicFormValid(true) ) {
             jQuery(nuveiCheckoutContainerSel).html(scTrans.MissingEmailCountry);
@@ -94,7 +94,7 @@ jQuery(function($) {
 
     // when the checkout form is placed successfully initiate Nuvei transaction
     jQuery('form.checkout').on('checkout_place_order_success', function (e, data) {
-        console.log('Order saved.', data)
+        console.log('[Nuvei]: Order saved.', data)
 
         if (data?.data?.nuvei_try_payment) {
             if (! simplyConnect) {
@@ -133,7 +133,7 @@ jQuery(function($) {
     });
 
     jQuery(document).on('load', nuveiCheckoutContainerSel, function() {
-        console.log('on load ' + nuveiCheckoutContainerSel);
+        console.log('[Nuvei]: on load ' + nuveiCheckoutContainerSel);
         nuveiIsCheckoutClassicFormValid(true);
     });
 

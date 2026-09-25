@@ -22,7 +22,7 @@ var nuveiBlocksReloadTimer  = null;
  * @returns {Promise}
  */
 function nuveiPrePaymentBlocks(paymentDetails) {
-	console.log('nuveiPrePaymentBlocks');
+	console.log('[Nuvei]: nuveiPrePaymentBlocks');
 
 	return new Promise((resolve, reject) => {
         // check for recaptch
@@ -67,7 +67,7 @@ function nuveiPrePaymentBlocks(paymentDetails) {
  * @returns {Boolean}
  */
 function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
-    console.log('call nuveiIsCheckoutBlocksFormValid');
+    console.log('[Nuvei]: call nuveiIsCheckoutBlocksFormValid');
 
     const { validationStore }   = window.wc.wcBlocksData;
     const noticesStore          = window.wc.wcBlocksData.STORE_NOTICES_STORE_KEY;
@@ -79,7 +79,7 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
 
     // Minimal check, when need only the country and the email.
     if ( justLoadSimply ) {
-        console.log('call nuveiIsCheckoutBlocksFormValid justLoadSimply');
+        console.log('[Nuvei]: call nuveiIsCheckoutBlocksFormValid justLoadSimply');
 
         Object.keys( validationErrors ).forEach( ( id ) => {
             if (id == 'billing_email' || id == 'billing_country') {
@@ -233,10 +233,30 @@ async function nuveiBlocksRunTransaction() {
 }
 
 /**
+ * Modal mode: the SDK isn't rendered before Pay is clicked, so there is
+ * nothing to submit yet - open the modal, fetch fresh checkout data (which
+ * renders the SDK into the modal via showNuveiCheckout()), then just wait.
+ * The customer submits via the SDK's own in-modal button, which triggers
+ * prePayment -> onResult -> nuveiBlocksResolvePayment(), same as container
+ * mode's outcome handling.
+ */
+async function nuveiBlocksRunModalTransaction() {
+    return new Promise( function( resolve ) {
+        // set the resolver - only when actually submitting
+        nuveiBlocksResolvePayment = resolve;
+
+        jQuery('#nuvei_blocker').hide();
+        jQuery('#nuvei_checkout_modal_overlay').show();
+
+        nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
+    } );
+}
+
+/**
  * Integrate Nuvei payment option and button in the Blocks Chckout.
  */
 (function() {
-    console.log('auto func');
+    console.log('[Nuvei]: auto func');
 
     const { useEffect, createElement }  = window.wp.element;
     const { useSelect }                 = window.wp.data;
@@ -265,11 +285,36 @@ async function nuveiBlocksRunTransaction() {
 
     const Content = (props) => {
         const { eventRegistration, emitResponse } = props;
-        const { onPaymentSetup } = eventRegistration;
+        const { onPaymentSetup, onCheckoutFail } = eventRegistration;
+
+        // if the overall checkout ultimately fails on WC's side after we
+        // already returned SUCCESS (transaction was already approved by
+        // Nuvei by then), make sure the full-page blocker doesn't stay
+        // stuck forever.
+        useEffect(() => {
+            const unsubscribe = onCheckoutFail( function() {
+                console.log('[Nuvei]: onCheckoutFail - hide the blocker.');
+
+                jQuery('#nuvei_blocker').hide();
+
+                return {
+                    type: emitResponse.responseTypes.SUCCESS
+                };
+            } );
+
+            return unsubscribe;
+        }, [onCheckoutFail]);
 
         // only on the first load
         useEffect(() => {
-            console.log('Nuvei payment method element loaded. Check if the checkout form is valid.');
+            console.log('[Nuvei]: Nuvei payment method element loaded. Check if the checkout form is valid.');
+
+            // Modal mode: the SDK container lives in the modal overlay (built
+            // once in the doc-ready block) and is only loaded/rendered on
+            // Pay click, inside onPaymentSetup - nothing to do here.
+            if ( nuveiIsModalMode ) {
+                return;
+            }
 
             // Append the origial Simply Connect container, in all cases, just for the message.
             if (jQuery('#payment-method').find(nuveiCheckoutContainerSel).length == 0) {
@@ -288,7 +333,7 @@ async function nuveiBlocksRunTransaction() {
         // subscribe for place order event
         useEffect(() => {
             const unsubscribe = onPaymentSetup( async function() {
-                console.log('onPaymentSetup logic');
+                console.log('[Nuvei]: onPaymentSetup logic');
 
                 jQuery('#nuvei_blocker').show();
 
@@ -330,15 +375,21 @@ async function nuveiBlocksRunTransaction() {
                     };
                 }
 
-                // Step 1: validate your SDK fields
-                if ( !nuveiIsCheckoutBlocksFormValid() ) {
+                // Step 1: validate the form. Skipped in modal mode - WC
+                // Blocks already blocks onPaymentSetup from firing when its
+                // own fields are invalid, and nuveiIsSimplyFormValid is
+                // meaningless here since the SDK form doesn't exist yet
+                // (it only renders once the modal opens, below).
+                if ( !nuveiIsModalMode && !nuveiIsCheckoutBlocksFormValid() ) {
                     return {
                         type: emitResponse.responseTypes.ERROR
                     };
                 }
 
                 // Step 2: run transaction against Order ID
-                const payment = await nuveiBlocksRunTransaction();
+                const payment = nuveiIsModalMode
+                    ? await nuveiBlocksRunModalTransaction()
+                    : await nuveiBlocksRunTransaction();
 
                 if ( !payment.success ) {
                     if ( !nuveiBlocksRefreshInProgress ) {
@@ -382,13 +433,13 @@ async function nuveiBlocksRunTransaction() {
     window.nuveiCheckoutSdkParams = nuveiSettings.checkoutParams;
 
     try {
-        console.log('nuveiBlocksOptions was registered', scTrans.checkoutIntegration);
+        console.log('[Nuvei]: nuveiBlocksOptions was registered', scTrans.checkoutIntegration);
     } catch(e) {};
 
 })();
 
 jQuery(function() {
-    console.log('jquery func');
+    console.log('[Nuvei]: jquery func');
 
     // Prevent running in WP admin area
     if (typeof window.wp !== 'undefined'
@@ -400,7 +451,7 @@ jQuery(function() {
         return;
     }
 
-    console.log('document ready blocks checkout');
+    console.log('[Nuvei]: document ready blocks checkout');
 
     // append a blocker
     if ( typeof scTrans != 'undefined' && jQuery('#payment-method').length ) {
@@ -414,6 +465,37 @@ jQuery(function() {
         return;
     }
 
+    // modal mode: build the overlay once, outside the React-managed
+    // #payment-method subtree, so Blocks re-renders never touch it.
+    if ( nuveiIsModalMode && jQuery('#nuvei_checkout_modal_overlay').length == 0 ) {
+        jQuery('body').append(
+            '<div id="nuvei_checkout_modal_overlay">'
+                + '<div class="nuvei-modal-dialog">'
+                    + '<button type="button" class="nuvei-modal-close" aria-label="Close">&times;</button>'
+                    + '<div id="' + nuveiCheckoutContainerId + '" data-placeholder="Loading..."></div>'
+                + '</div>'
+            + '</div>'
+        );
+
+        jQuery(document.body).on('click', '#nuvei_checkout_modal_overlay .nuvei-modal-close', function() {
+            jQuery('#nuvei_checkout_modal_overlay').hide();
+            nuveiDestroySimplyConnect();
+
+            // cancel a pending payment promise so onPaymentSetup doesn't hang
+            if ( nuveiBlocksResolvePayment ) {
+                nuveiBlocksResolvePayment( { success: false, error: scTrans.PaymentCanceled } );
+                nuveiBlocksResolvePayment = null;
+            }
+        });
+    }
+
+    // Disabled - was only needed for the container flow, to keep the
+    // inline SDK form in sync with every field/cart change before Pay is
+    // clicked. In modal mode the card form only exists inside the modal
+    // (rendered fresh on Pay click, inside onPaymentSetup), so there's
+    // nothing to keep in sync beforehand. Kept here, commented, in case
+    // container mode needs it restored later.
+    /*
     // watch the email field for changes
     let lastEmail = document.getElementById('email')?.value;
 
@@ -422,7 +504,7 @@ jQuery(function() {
 
         // Check if the value has actually changed
         if (self.val() !== lastEmail) {
-            console.log('mail was changed', lastEmail, self.val())
+            console.log('[Nuvei]: mail was changed', lastEmail, self.val())
 
             lastEmail = self.val();
 
@@ -447,7 +529,7 @@ jQuery(function() {
         const currentpaymentMethod = wp.data.select( 'wc/store/payment' ).getActivePaymentMethod();
 
         if (scTrans && scTrans.paymentGatewayName !== currentpaymentMethod) {
-            console.log('The selected payment method is not Nuvei.');
+            console.log('[Nuvei]: The selected payment method is not Nuvei.');
             jQuery(nuveiCheckoutContainerSel).hide();
             return;
         }
@@ -461,7 +543,7 @@ jQuery(function() {
         if (currentTotals != lastTotal
             || currentBillingCountry !== lastBillingCountry
         ) {
-            console.log('Checkout changed:', {
+            console.log('[Nuvei]: Checkout changed:', {
                 'is total changed': currentTotals != lastTotal,
                 'is country changed': lastBillingCountry  != currentBillingCountry,
             });
@@ -473,6 +555,7 @@ jQuery(function() {
         }
 
     });
+    */
 
 });
 // document ready function end

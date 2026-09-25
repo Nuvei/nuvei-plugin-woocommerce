@@ -41,13 +41,13 @@ var nuveiSimplyReady                = false;
  * @params {Boolean} justLoadSimply When is set to true we will check only for country and email.
  */
 function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
-    console.log('nuveiIsCheckoutClassicFormValid(), justLoadSimply:', justLoadSimply);
+    console.log('[Nuvei]: nuveiIsCheckoutClassicFormValid(), justLoadSimply:', justLoadSimply);
     
     const shipToDifferent = jQuery('#ship-to-different-address-checkbox').is(':checked');
     
     // skip - check for Admin Order
     if (!nuveiIsPayForExistingOrderPage && !document.querySelector(nuveiCheckoutClassicFormClass)) {
-        console.log('The classic checkout form is missing', nuveiCheckoutClassicFormClass);
+        console.log('[Nuvei]: The classic checkout form is missing', nuveiCheckoutClassicFormClass);
         return false;
     }
 
@@ -55,7 +55,7 @@ function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
     if (!nuveiIsPayForExistingOrderPage
         && jQuery(nuveiCheckoutClassicPMethodName + ':checked').val() !== scTrans.paymentGatewayName
     ) {
-        console.log('Nuvei is not selected as payment provider');
+        console.log('[Nuvei]: Nuvei is not selected as payment provider');
         return false;
     }
 
@@ -63,7 +63,7 @@ function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
     const nuveiFormValidEvent = new CustomEvent('nuveiPfw:isCheckoutClassicFormValidEvent', { cancelable: true });
 
     if (!document.dispatchEvent(nuveiFormValidEvent)) {
-        console.log('dispatchEvent failed.');
+        console.log('[Nuvei]: dispatchEvent failed.');
         return false;
     }
 
@@ -79,7 +79,7 @@ function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
             || jQuery('#billing_email').val() == ''
             || !regex.test(jQuery('#billing_email').val())
         ) {
-            console.log('Form is invalid');
+            console.log('[Nuvei]: Form is invalid');
 
             nuveiDestroySimplyConnect();
 
@@ -191,7 +191,7 @@ function nuveiUpdateOrder(resolve, reject) {
 
             // success
             if (1 == data?.success) {
-                console.log('prepayment resolved.');
+                console.log('[Nuvei]: prepayment resolved.');
 
                 resolve();
                 return;
@@ -219,7 +219,7 @@ function nuveiUpdateOrder(resolve, reject) {
  * @returns void
  */
 function nuveiAfterSdkResponse(resp) {
-	console.log('nuveiAfterSdkResponse', resp);
+	console.log('[Nuvei]: nuveiAfterSdkResponse', resp);
 
     // Success
 	if ( (resp?.result === 'APPROVED' || resp?.result === 'PENDING')
@@ -278,7 +278,7 @@ function nuveiAfterSdkResponse(resp) {
         // in case of Classic Checkout or when the client will pay for an Order
         // created from the admin
         if ( jQuery(nuveiCheckoutClassicPayBtn).hasClass('nuvei-processing') ) {
-            console.log('nuveiCheckoutClassicPayBtn is already processing, skipping click');
+            console.log('[Nuvei]: nuveiCheckoutClassicPayBtn is already processing, skipping click');
             return;
         }
         
@@ -290,7 +290,7 @@ function nuveiAfterSdkResponse(resp) {
 
         // in case of Blocks Checkout
         if (jQuery(nuveiCheckoutBlockFormClass).length > 0) {
-//            console.log('clearValidationErrors and nuveiCheckoutBlockPayBtn click');
+//            console.log('[Nuvei]: clearValidationErrors and nuveiCheckoutBlockPayBtn click');
             nuveiAllowFormSubmit = true;
 
             wp.data.dispatch('wc/store/validation').clearValidationErrors();
@@ -346,7 +346,7 @@ function nuveiAfterSdkResponse(resp) {
  * @returns void
  */
 function showNuveiCheckout(_params) {
-    console.log('call showNuveiCheckout');
+    console.log('[Nuvei]: call showNuveiCheckout');
 
 	if(typeof _params != 'undefined') {
 		nuveiCheckoutSdkParams = _params;
@@ -391,13 +391,17 @@ function showNuveiCheckout(_params) {
         // dynamically attach the logic of nuveiAfterSdkResponse() in this empty method.
         nuveiCheckoutSdkParams.onResult = function( resp ) {
             if ( nuveiBlocksResolvePayment ) {
-                console.log('afterSdkResponse for Blocks', resp);
+                console.log('[Nuvei]: afterSdkResponse for Blocks', resp);
 
                 if ( (resp?.result?.toLowerCase() == 'approved' || resp?.result?.toLowerCase() == 'pending')
                     && resp?.transactionId
                 ) {
                     jQuery('#nuvei_blocker').show();
                     jQuery(nuveiCheckoutContainerSel).html('');
+
+                    if ( nuveiIsModalMode ) {
+                        jQuery('#nuvei_checkout_modal_overlay').hide();
+                    }
 
                     nuveiBlocksResolvePayment( { success: true, transaction_id: resp.transactionId } );
                     nuveiBlocksResolvePayment = null;
@@ -432,12 +436,25 @@ function showNuveiCheckout(_params) {
                     console.error('Error with Checkout SDK response', resp);
                 }
 
+                // Modal mode: onPaymentSetup's Promise only resolves once per
+                // "Place Order" click, so the customer can't retry through the
+                // SDK's own button - a second approved result would have no
+                // Promise left to fulfil, capturing money with the checkout
+                // flow stuck. Close the modal instead; the error is shown on
+                // the checkout page and the next "Place Order" click opens a
+                // fresh modal (nuveiBlocksRunModalTransaction) with new data.
+                if ( nuveiIsModalMode ) {
+                    jQuery('#nuvei_checkout_modal_overlay').hide();
+                    nuveiDestroySimplyConnect();
+                }
+
                 nuveiBlocksResolvePayment( { success: false, error: nuveiErrMsg } );
+                nuveiBlocksResolvePayment = null;
 
                 // a transaction was made, but it is not Approved/Pending -
                 // refresh the checkout data to get a new clientUniqueId via updateOrder
-                if ( resp?.transactionId ) {
-                    console.log('update the Nuvei Order and reload the checkout.');
+                if ( !nuveiIsModalMode && resp?.transactionId ) {
+                    console.log('[Nuvei]: update the Nuvei Order and reload the checkout.');
 
                     nuveiBlocksRefreshInProgress = true;
 
@@ -473,14 +490,14 @@ function showNuveiCheckout(_params) {
 }
 
 function nuveiPrePaymentClassic(paymentDetails) {
-	console.log('nuveiPrePaymentClassic');
+	console.log('[Nuvei]: nuveiPrePaymentClassic');
 
 	return new Promise((resolve, reject) => {
         // check the form only for nuveiWallets
         if ( nuveiWallets.indexOf(nuveiSelectedPaymentMethod) >= 0
             && ! nuveiIsCheckoutClassicFormValid() 
         ) {
-            console.log('nuveiIsCheckoutClassicFormValid - false');
+            console.log('[Nuvei]: nuveiIsCheckoutClassicFormValid - false');
             
             nuveiShowErrorMsg(scTrans.MissingRequiredFields);
             reject();
@@ -628,7 +645,7 @@ function nuveiShowErrorMsg(text) {
  * the client pay it from its Store profile.
  */
 function nuveiPayForExistingOrder() {
-    console.log('nuveiPayForExistingOrder');
+    console.log('[Nuvei]: nuveiPayForExistingOrder');
 
     fetch(scTrans.apiUrl + '/get-data-for-existing-order/', {
         method: 'POST',
@@ -721,7 +738,7 @@ function nuveiSetTransactionField(trId) {
  * @param {string} attrName The used attribute - id or name. It is 'name' by default.
  */
 function nuveiGetCheckoutData(formId, attrName = 'name') {
-    console.log('call nuveiGetCheckoutData', formId, attrName);
+    console.log('[Nuvei]: call nuveiGetCheckoutData', formId, attrName);
 
     if ('sdk' !== scTrans.checkoutIntegration) {
         return;
@@ -734,7 +751,7 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
 
         // ── In-flight guard ─────────────────────────────────────────────────
         if (nuveiGetCheckoutDataInFlight) {
-            console.log('nuveiGetCheckoutData: skipped – previous fetch still in-flight');
+            console.log('[Nuvei]: nuveiGetCheckoutData: skipped – previous fetch still in-flight');
             return;
         }
 
@@ -763,7 +780,7 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
         // response that we no longer care about (belt-and-suspenders alongside
         // the in-flight guard above).
         if (nuveiGetCheckoutDataController) {
-            console.log('nuveiGetCheckoutData: aborting stale controller');
+            console.log('[Nuvei]: nuveiGetCheckoutData: aborting stale controller');
             nuveiGetCheckoutDataController.abort();
         }
 
@@ -791,7 +808,7 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
                 // stale request check (handles the unlikely case where a second
                 // call sneaked past the in-flight guard due to async timing)
                 if (nuveiCheckoutRequestId !== requestId) {
-                    console.log('nuveiGetCheckoutData: stale response ignored');
+                    console.log('[Nuvei]: nuveiGetCheckoutData: stale response ignored');
                     return;
                 }
 
@@ -809,7 +826,7 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
             .catch(async err => {
                 // Do not treat an intentional abort as an error
                 if (err.name === 'AbortError') {
-                    console.log('nuveiGetCheckoutData: request was aborted');
+                    console.log('[Nuvei]: nuveiGetCheckoutData: request was aborted');
                     return;
                 }
 
@@ -828,6 +845,8 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
 }
 
 function nuveiDestroySimplyConnect() {
+    console.log('[Nuvei]: nuveiDestroySimplyConnect');
+    
     // The SDK instance is gone - a new onReady must arrive before we can submit again.
     // This is reset unconditionally: we may destroy an SDK that never fired onReady.
     nuveiSimplyReady = false;

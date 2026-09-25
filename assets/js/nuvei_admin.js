@@ -13,7 +13,7 @@ try {
  * @returns void
  */
 function nuveiAction(question, action, orderId, subscrId, isWcfm) {
-	console.log('nuveiAction', action, question, orderId, subscrId, isWcfm);
+	console.log('[Nuvei]: nuveiAction', action, question, orderId, subscrId, isWcfm);
 
 	if (!confirm(question)) {
         return;
@@ -150,7 +150,7 @@ function nuveiReturnNuveiBtns() {
  * @deprecated
  */
 function scCreateRefund(question, showMsg, isWcfm) {
-	console.log('scCreateRefund()');
+	console.log('[Nuvei]: scCreateRefund()');
 
 	let refAmountRaw = jQuery('#refund_amount').val();
 
@@ -388,7 +388,7 @@ function nuveiGetCustomSystemMsgs() {
 }
 
 function nuveiDisablePm(_value) {
-    console.log('nuveiDisablePm', _value);
+    console.log('[Nuvei]: nuveiDisablePm', _value);
 
     let selectedOptionId    = '#nuvei_block_pm_' + _value;
 	let selectedPMs			= jQuery('#woocommerce_nuvei_pm_black_list').val();

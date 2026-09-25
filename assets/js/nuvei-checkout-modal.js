@@ -9,7 +9,7 @@
  */
 jQuery(function($) {
     if ('no' === scTrans.isPluginActive) {
-        console.log('nuvei plugin is not active.');
+        console.log('[Nuvei]: nuvei plugin is not active.');
         return;
     }
 
@@ -23,7 +23,7 @@ jQuery(function($) {
         return;
     }
 
-    console.log('Classic checkout - modal mode.');
+    console.log('[Nuvei]: Classic checkout - modal mode.');
 
     // error missing scTrans or scTrans.paymentGatewayName
     if ( ! scTrans?.paymentGatewayName ) {
@@ -47,13 +47,14 @@ jQuery(function($) {
     // close the modal on demand
     jQuery(document.body).on('click', '#nuvei_checkout_modal_overlay .nuvei-modal-close', function() {
         jQuery('#nuvei_checkout_modal_overlay').hide();
+        nuveiDestroySimplyConnect();
     });
 
     // when the checkout form is placed successfully, the Order is already
     // validated and saved - fetch the Nuvei checkout data for it and open
     // the modal to run the transaction.
     jQuery('form.checkout').on('checkout_place_order_success', function (e, data) {
-        console.log('Order saved.', data);
+        console.log('[Nuvei]: Order saved.', data);
 
 //        if (! data?.data?.nuvei_try_payment) {
 //            return;
