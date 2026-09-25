@@ -97,14 +97,9 @@ jQuery(function($) {
     jQuery('form.checkout').on('checkout_place_order_success', function (e, data) {
         console.log('[Nuvei]: Order saved.', data);
 
-//        if (! data?.data?.nuvei_try_payment) {
-//            return;
-//        }
         if (! data?.data?.order_id) {
             return;
         }
-        
-//        jQuery('#nuvei_blocker').show();
 
         window._nuveiOrderId   = data?.data?.order_id;
         nuveiSuccessRedirect   = data.data.success_url;
@@ -142,32 +137,17 @@ jQuery(function($) {
                 
                 // let's keep the original data
                 let sdkParams = data;
-                
+
                 // few modifications for Classic Checkout
-//                nuveiCheckoutSdkParams.prePayment   = nuveiPrePaymentClassic; // We no need it anymore
-                sdkParams.onResult = nuveiAfterSdkResponse;
-                
-                // common params for Classic and Blocks
-//                nuveiCheckoutSdkParams.onReady                  = nuveiOnSimplyReady; // Not sure if we need it anymore
-//                nuveiCheckoutSdkParams.onSelectPaymentMethod    = nuveiPmChange; // Not need it anymore, we do not have to open modal if another PM is selected
-//                nuveiCheckoutSdkParams.onFormValidated          = nuveiCheckIsSimplyValid; // No need it. We use it before
-                sdkParams.crossBrowserApplePay     = true;
-                
+                sdkParams.onResult              = nuveiAfterSdkResponse;
+                sdkParams.crossBrowserApplePay  = true;
+
                 simplyConnect(sdkParams);
 
                 // hand off from the full-page blocker to the modal's own
                 // "Loading..." placeholder while the SDK initializes
                 jQuery('#nuvei_blocker').hide();
                 jQuery('#nuvei_checkout_modal_overlay').show();
-
-//                showNuveiCheckout(sdkParams);
-//
-//                nuveiSubmitPaymentWhenReady(() => {
-//                    jQuery('#nuvei_blocker').hide();
-//                    jQuery('#nuvei_checkout_modal_overlay').hide();
-//
-//                    nuveiShowErrorMsg(scTrans.unexpectedError);
-//                });
             })
             // error after the first check
             .catch(async err => {
