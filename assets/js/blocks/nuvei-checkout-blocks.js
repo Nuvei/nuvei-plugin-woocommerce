@@ -11,8 +11,6 @@ const nuveiCheckoutBlockContText =
         window.wp.i18n.__('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce');
 
 var nuveiAllowFormSubmit    = false;
-// must be outside the function so clearTimeout actually debounces
-var nuveiBlocksReloadTimer  = null;
 
 /**
  * We use pre-payment for the Blocks only.
@@ -177,70 +175,6 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
     }
 
     return isFormValid;
-}
-
-/**
- * Just reusing some code.
- */
-function nuveiBlocksReloadSimply() {
-    // Only proceed if Nuvei is the selected payment method
-    if (wp.data.select('wc/store/payment').getActivePaymentMethod() !== scTrans.paymentGatewayName) {
-        return;
-    }
-
-    jQuery('#nuvei_blocker').show();
-
-    nuveiDestroySimplyConnect();
-
-    jQuery(nuveiCheckoutContainerSel).html(window.wp.i18n.__('Loading...', 'nuvei-payments-for-woocommerce'));
-
-    if (nuveiIsCheckoutBlocksFormValid(true)) {
-        // add small delay
-        clearTimeout( nuveiBlocksReloadTimer );
-
-        nuveiBlocksReloadTimer = setTimeout( function() {
-            nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
-            jQuery('#nuvei_blocker').hide();
-            return;
-        }, 600 );
-    }
-}
-
-async function nuveiBlocksRunTransaction() {
-    return new Promise( function( resolve ) {
-        // set the resolver - only when actually submitting
-        nuveiBlocksResolvePayment = resolve;
-
-        // nuveiSubmitPaymentWhenReady() comes from nuvei_public.js
-        nuveiSubmitPaymentWhenReady( function() {
-            nuveiBlocksResolvePayment = null;
-
-            resolve( {
-                success: false,
-                error: scTrans.unexpectedError
-            } );
-        } );
-    } );
-}
-
-/**
- * Modal mode: the SDK isn't rendered before Pay is clicked, so there is
- * nothing to submit yet - open the modal, fetch fresh checkout data (which
- * renders the SDK into the modal via showNuveiCheckout()), then just wait.
- * The customer submits via the SDK's own in-modal button, which triggers
- * prePayment -> onResult -> nuveiBlocksResolvePayment(), same as container
- * mode's outcome handling.
- */
-async function nuveiBlocksRunModalTransaction() {
-    return new Promise( function( resolve ) {
-        // set the resolver - only when actually submitting
-        nuveiBlocksResolvePayment = resolve;
-
-        jQuery('#nuvei_blocker').hide();
-        jQuery('#nuvei_checkout_modal_overlay').show();
-
-        nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
-    } );
 }
 
 /**
@@ -444,110 +378,8 @@ jQuery(function() {
 
     console.log('[Nuvei]: document ready blocks checkout');
 
-    // append a blocker
-    if ( typeof scTrans != 'undefined' && jQuery('#payment-method').length ) {
-        jQuery('#payment-method')
-            .parent('form')
-            .append('<div id="nuvei_blocker"><img class="nuvei_loader" src="'
-                + scTrans.loaderUrl + '" /></div>');
-    }
-
-    if ( window.scTrans && 'sdk' !== scTrans?.checkoutIntegration ) {
-        return;
-    }
-
-    // modal mode: build the overlay once, outside the React-managed
-    // #payment-method subtree, so Blocks re-renders never touch it.
-    if ( nuveiIsModalMode && jQuery('#nuvei_checkout_modal_overlay').length == 0 ) {
-        jQuery('body').append(
-            '<div id="nuvei_checkout_modal_overlay">'
-                + '<div class="nuvei-modal-dialog">'
-                    + '<button type="button" class="nuvei-modal-close" aria-label="Close">&times;</button>'
-                    + '<div id="' + nuveiCheckoutContainerId + '" data-placeholder="Loading..."></div>'
-                + '</div>'
-            + '</div>'
-        );
-
-        jQuery(document.body).on('click', '#nuvei_checkout_modal_overlay .nuvei-modal-close', function() {
-            jQuery('#nuvei_checkout_modal_overlay').hide();
-            nuveiDestroySimplyConnect();
-
-            // cancel a pending payment promise so onPaymentSetup doesn't hang
-            if ( nuveiBlocksResolvePayment ) {
-                nuveiBlocksResolvePayment( { success: false, error: scTrans.PaymentCanceled } );
-                nuveiBlocksResolvePayment = null;
-            }
-        });
-    }
-
-    // Container mode only - keeps the inline SDK form in sync with every
-    // field/cart change before Pay is clicked. Not needed in modal mode:
-    // the card form only exists inside the modal (rendered fresh on Pay
-    // click, inside onPaymentSetup), so there's nothing to keep in sync
-    // beforehand.
-    if ( nuveiIsModalMode ) {
-        return;
-    }
-
-    // watch the email field for changes
-    let lastEmail = document.getElementById('email')?.value;
-
-    jQuery( document.body ).on( 'blur', `#email:not(${nuveiCheckoutContainerSel} #email)`, function(e) {
-        let self = jQuery(this);
-
-        // Check if the value has actually changed
-        if (self.val() !== lastEmail) {
-            console.log('[Nuvei]: mail was changed', lastEmail, self.val())
-
-            lastEmail = self.val();
-
-            nuveiBlocksReloadSimply();
-        }
-    });
-
-    // WP Blocks subscriber
-    const store = wp.data.select( 'wc/store/cart' );
-
-    // Subscribe for total and billign changes
-    let lastTotal           = store.getCartTotals().total_price;
-    let lastBillingCountry  = store.getCartData().billingAddress.country;
-
-    wp.data.subscribe(() => {
-        // some errors
-        if (window.nuveiIsPayForExistingOrderPage || jQuery(nuveiCheckoutContainerSel).length == 0) {
-            return;
-        }
-
-        // Do not check the totals and billing address if Nuvei is not selected
-        const currentpaymentMethod = wp.data.select( 'wc/store/payment' ).getActivePaymentMethod();
-
-        if (scTrans && scTrans.paymentGatewayName !== currentpaymentMethod) {
-            console.log('[Nuvei]: The selected payment method is not Nuvei.');
-            jQuery(nuveiCheckoutContainerSel).hide();
-            return;
-        }
-
-        jQuery(nuveiCheckoutContainerSel).show();
-
-        const currentTotals         = store.getCartTotals ? store.getCartTotals().total_price : null;
-        const currentBillingCountry = store.getCartData().billingAddress.country;
-
-        // check for changes
-        if (currentTotals != lastTotal
-            || currentBillingCountry !== lastBillingCountry
-        ) {
-            console.log('[Nuvei]: Checkout changed:', {
-                'is total changed': currentTotals != lastTotal,
-                'is country changed': lastBillingCountry  != currentBillingCountry,
-            });
-
-            lastTotal           = currentTotals;
-            lastBillingCountry  = currentBillingCountry;
-
-            nuveiBlocksReloadSimply();
-        }
-
-    });
-
+    // mode-specific logic (modal overlay build/close, or field/cart
+    // watchers) lives in blocks/nuvei-modal.js / blocks/nuvei-container.js,
+    // loaded right after this file based on the "render_to" setting.
 });
 // document ready function end

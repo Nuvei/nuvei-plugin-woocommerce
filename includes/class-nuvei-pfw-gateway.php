@@ -953,14 +953,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
         // add GooglePay settings
         $google_pay_settings = array(
             'locale'            => $locale,
-//            'buttonLocation'    => $this->get_option( 'gpay_button_position', '' ),
             'buttonLocation'    => 'gallery',
         );
         
         // add ApplePay settings
         $apple_pay_settings = array(
             'locale'            => $locale,
-//            'buttonLocation'    => $this->get_option( 'applepay_button_position', '' ),
             'buttonLocation'    => 'gallery',
         );
 
@@ -979,6 +977,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             . ' '
             . ($ord_details['billingAddress']['lastName'] ?? '')
         );
+        
+        $render_to = $this->get_option( 'render_to' );
 
 		$checkout_data = array( // use it in the template
 			'sessionToken'           => $oo_data['sessionToken'],
@@ -988,7 +988,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'country'                => $ord_details['billingAddress']['country'],
 			'currency'               => get_woocommerce_currency(),
 			'amount'                 => $total,
-			'renderTo'               => '#' . $this->get_option( 'render_to' ),
+			'renderTo'               => '#' . $render_to,
 			'useDCC'                 => $use_dcc,
 			'strict'                 => false,
 			'savePM'                 => $save_pm,
@@ -1001,6 +1001,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'payButton'              => $this->get_option( 'pay_button', 'amountButton' ),
 //			'payButton'              => 'noButton',
 			'showResponseMessage'    => false, // shows/hide the response popups
+//			'showResponseMessage'    => 'nuvei_checkout_modal' == $render_to ? true : false,
 			'locale'                 => $locale,
 			'autoOpenPM'             => (bool) $this->get_option( 'auto_open_pm', 1 ),
 			'logLevel'               => $this->get_option( 'log_level' ),

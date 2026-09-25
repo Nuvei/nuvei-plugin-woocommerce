@@ -225,12 +225,12 @@ function nuveiAfterSdkResponse(resp) {
 	if ( (resp?.result === 'APPROVED' || resp?.result === 'PENDING')
 		&& resp?.transactionId != 'undefined'
 	) {
-        console.log(
+//        console.log(
 //            nuveiSuccessRedirect, 
-            window?._nuveiOrderId,
-            resp?.result,
-            resp?.transactionId,
-        );
+//            window?._nuveiOrderId,
+//            resp?.result,
+//            resp?.transactionId,
+//        );
         
         nuveiSuccessRedirect += '&status=' + resp.result;
         
@@ -604,6 +604,15 @@ function nuveiShowErrorMsg(text) {
     // Re-enable the pay button in case it was blocked by a programmatic click
     jQuery(nuveiCheckoutClassicPayBtn).removeClass('nuvei-processing');
 
+    // Modal mode (Classic or Blocks): the checkout page is covered by our
+    // full-screen SDK modal overlay, so a plain WC notice injected behind it
+    // would be invisible to the customer. Show the message inside the modal
+    // itself instead.
+    if (nuveiIsModalMode) {
+        nuveiShowModalMessage(text);
+        return;
+    }
+
 	// short-code checkout
     if (jQuery(nuveiCheckoutClassicFormClass).length || nuveiIsPayForExistingOrderPage) {
         jQuery('.woocommerce-notices-wrapper').first().html(
@@ -687,12 +696,6 @@ function nuveiPayForExistingOrder() {
             nuveiShowErrorMsg();
             jQuery('#nuvei_blocker').hide();
         });
-        
-    // add the blocker
-    jQuery('#payment')
-        .parent('form')
-        .append('<div id="nuvei_blocker"><img class="nuvei_loader" src="'
-            + scTrans.loaderUrl + '" /></div>');
 }
 
 /**
@@ -863,13 +866,54 @@ function nuveiDestroySimplyConnect() {
     }
 }
 
+/**
+ * Closes the Simply Connect modal (render_to = nuvei_checkout_modal, Classic
+ * or Blocks), tears down the SDK so the modal is empty on the next open, and
+ * resets the inline message shown via nuveiShowModalMessage(), if any.
+ */
+function nuveiCloseCheckoutModal() {
+    jQuery('#nuvei_checkout_modal_overlay').hide();
+    jQuery('#nuvei_checkout_modal_overlay .nuvei-modal-message').hide();
+    jQuery(nuveiCheckoutContainerSel).show();
+
+    nuveiDestroySimplyConnect();
+}
+
+/**
+ * Shows an error/info message inside the Simply Connect modal, in place of
+ * the SDK form, with its own OK button. Used by nuveiShowErrorMsg() instead
+ * of the page-level WC notice, which would be hidden behind the modal's
+ * overlay. Clicking OK closes the modal (nuveiCloseCheckoutModal()).
+ */
+function nuveiShowModalMessage(text) {
+    jQuery('#nuvei_checkout_modal_overlay .nuvei-modal-message-text').text(text);
+    jQuery(nuveiCheckoutContainerSel).hide();
+    jQuery('#nuvei_checkout_modal_overlay .nuvei-modal-message').show();
+    jQuery('#nuvei_checkout_modal_overlay').show();
+}
+
 jQuery(function($) {
-    console.log('document ready');
+    console.log('[Nuvei]: document ready');
+
+    // delegated - the modal markup itself is built later, per mode, in
+    // classic/nuvei-modal.js or blocks/nuvei-modal.js
+    jQuery(document.body).on('click', '#nuvei_checkout_modal_overlay .nuvei-modal-message-ok', function() {
+        nuveiCloseCheckoutModal();
+    });
 
 	if('no' === scTrans.isPluginActive) {
-        console.log('nuvei plugin is not active.');
+        console.log('[Nuvei]: nuvei plugin is not active.');
 		return;
 	}
+
+    // build the full-page blocker once, up front, so it's always ready -
+    // covers Classic Checkout (container/modal), Blocks Checkout, and the
+    // Order-Pay page alike, instead of being created ad-hoc in different
+    // places per context.
+    if ( 'sdk' == scTrans.checkoutIntegration && jQuery('#nuvei_blocker').length == 0 ) {
+        jQuery('body').append('<div id="nuvei_blocker"><img class="nuvei_loader" src="'
+            + scTrans.loaderUrl + '" /></div>');
+    }
 
     // thankyou page modifications
     if (typeof scTrans.thankYouPageNewTitle != 'undefined') {
@@ -885,7 +929,7 @@ jQuery(function($) {
     if ('sdk' == scTrans.checkoutIntegration) {
 
         // The Classic Checkout branch (container vs modal) now lives in
-        // nuvei-checkout-container.js / nuvei-checkout-modal.js, loaded
+        // classic/nuvei-container.js / classic/nuvei-modal.js, loaded
         // depending on the "render_to" setting.
 
         // on the checkout/order-pay/ page

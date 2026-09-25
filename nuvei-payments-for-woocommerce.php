@@ -439,6 +439,7 @@ class Nuvei_Payments_For_Woocommerce
                 'useUpos'               => self::$wc_nuvei->can_use_upos(),
                 'isUserLogged'          => is_user_logged_in() ? 1 : 0,
                 'isPluginActive'        => self::$wc_nuvei->settings['enabled'],
+                'paymentGatewayTitle'   => self::$wc_nuvei->title,
                 'simplyDomPlace'        => $render_to,
                 'loaderUrl'             => plugin_dir_url( __FILE__ ) . 'assets/icons/loader.gif',
                 'checkoutIntegration'   => self::$wc_nuvei->settings['integration_type'],
@@ -482,7 +483,7 @@ class Nuvei_Payments_For_Woocommerce
         if ('nuvei_checkout_container' == $render_to) {
             wp_register_script(
                 'nuvei-checkout-container',
-                $plugin_url . 'assets/js/nuvei-checkout-container.js',
+                $plugin_url . 'assets/js/classic/nuvei-container.js',
                 array( 'jquery', 'nuvei_js_public' ),
                 $helper->helper_get_plugin_version(),
                 false
@@ -494,7 +495,7 @@ class Nuvei_Payments_For_Woocommerce
         if ('nuvei_checkout_modal' == $render_to) {
             wp_register_script(
                 'nuvei-checkout-modal',
-                $plugin_url . 'assets/js/nuvei-checkout-modal.js',
+                $plugin_url . 'assets/js/classic/nuvei-modal.js',
                 array( 'jquery', 'nuvei_js_public' ),
                 $helper->helper_get_plugin_version(),
                 false

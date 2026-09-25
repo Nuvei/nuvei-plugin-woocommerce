@@ -126,7 +126,7 @@ button#nuvei_place_order {
     position: relative;
     background: #fff;
     border-radius: 6px;
-    padding: 30px 20px 20px;
+    padding: 20px;
     width: 90%;
     max-width: 450px;
     max-height: 65vh;
@@ -136,16 +136,40 @@ button#nuvei_place_order {
     margin-top: 50px;
 }
 
+#nuvei_checkout_modal_overlay .nuvei-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+#nuvei_checkout_modal_overlay .nuvei-modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1;
+}
+
 #nuvei_checkout_modal_overlay .nuvei-modal-close {
-    position: absolute;
-    top: 8px;
-    right: 12px;
     background: none;
     border: none;
     font-size: 24px;
     line-height: 1;
     cursor: pointer;
+    padding: 0;
+    margin-left: 12px;
 }
+
+/* Error/info message shown inside the modal, in place of the SDK form
+   (see nuveiShowModalMessage() in nuvei_public.js). */
+#nuvei_checkout_modal_overlay .nuvei-modal-message {
+    text-align: center;
+    padding: 20px 0;
+}
+
+/*#nuvei_checkout_modal_overlay .nuvei-modal-message-text {
+    margin: 0 0 20px;
+    font-size: 15px;
+}*/
 
 /* blocks style */
 .wc-block-components-form #nuvei_checkout_container {

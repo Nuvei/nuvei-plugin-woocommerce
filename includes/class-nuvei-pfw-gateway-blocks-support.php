@@ -28,11 +28,12 @@ final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 	public function get_payment_method_script_handles() {
 		$this->plugin_dir_url = str_replace( 'includes/', '', plugin_dir_url( __FILE__ ) );
         
-        $helper = new Nuvei_Pfw_Helper();
+        $helper     = new Nuvei_Pfw_Helper();
+        $render_to  = $this->settings['render_to'] ?? '';
 
 		wp_register_script(
 			'nuvei-checkout-blocks',
-			$this->plugin_dir_url . 'assets/js/nuvei-checkout-blocks.js',
+			$this->plugin_dir_url . 'assets/js/blocks/nuvei-checkout-blocks.js',
 			array(
 				'wc-blocks-registry',
 				'wc-settings',
@@ -47,7 +48,21 @@ final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 
 		wp_set_script_translations( 'nuvei-checkout-blocks', 'nuvei-payments-for-woocommerce' );
 
-		return array( 'nuvei-checkout-blocks' );
+		$handles        = array( 'nuvei-checkout-blocks' );
+        // mode-specific script, based on the "render_to" setting
+        $script_type    = 'nuvei_checkout_modal' == $render_to ? 'modal' : 'container';
+        
+        wp_register_script(
+            'nuvei-checkout-blocks-' . $script_type,
+            $this->plugin_dir_url . "assets/js/blocks/nuvei-{$script_type}.js",
+            array( 'nuvei-checkout-blocks' ),
+            $helper->helper_get_plugin_version(),
+            true
+        );
+
+        $handles[] = 'nuvei-checkout-blocks-' . $script_type;
+
+		return $handles;
 	}
 
 	public function get_payment_method_data() {
