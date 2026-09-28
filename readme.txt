@@ -64,7 +64,7 @@ If you plan to install this plugin form the WordPress store, but use a version d
 == Changelog ==
 
 = 3.16.0 =
-* Added an option how to use Simply Connect - in container in the descriptions or in modal.
+* Added an option to use Simply Connect - integrated in the the page or in a modal.
 
 = 3.15.2 =
 * Added additional check for Simply Connect, in case the container is re-rendered.
