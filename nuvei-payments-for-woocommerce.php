@@ -3,7 +3,7 @@
  * Plugin Name: Nuvei Payments for Woocommerce
  * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.15.2
+ * Version: 3.16.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * License: GPLv2
@@ -405,6 +405,10 @@ class Nuvei_Payments_For_Woocommerce
         $sdkUrl     = NUVEI_PFW_SDK_URL_PROD;
 		$helper     = new Nuvei_Pfw_Helper();
         $render_to  = self::$wc_nuvei->settings['render_to'];
+        // Order-Pay page has its own form (#order_review, not
+        // form.checkout) and always uses the "in-page" package - the
+        // modal package has no Order-Pay logic at all.
+        $is_order_pay_page = is_wc_endpoint_url( 'order-pay' );
 
         if ( self::$wc_nuvei->is_qa_site() ) {
             $sdkUrl = NUVEI_PFW_SDK_URL_TAG;
@@ -419,10 +423,15 @@ class Nuvei_Payments_For_Woocommerce
             false
         );
 
-        // main JS
+        // main JS - the file depends on the "render_to" setting, except on
+        // the Order-Pay page which always uses the "in-page" package
+        $public_js_path = ( !$is_order_pay_page && 'nuvei_checkout_modal' == $render_to )
+            ? 'assets/js/store/modal/nuvei_public.js'
+            : 'assets/js/store/in-page/nuvei_public.js';
+
         wp_register_script(
             'nuvei_js_public',
-            $plugin_url . 'assets/js/nuvei_public.js',
+            $plugin_url . $public_js_path,
             array( 'jquery' ),
             $helper->helper_get_plugin_version(),
             false
@@ -479,23 +488,17 @@ class Nuvei_Payments_For_Woocommerce
         wp_localize_script( 'nuvei_js_public', 'scTrans', $localizations );
         wp_enqueue_script( 'nuvei_js_public' );
         
-        // the JS files based on render_to
-        if ('nuvei_checkout_container' == $render_to) {
-            wp_register_script(
-                'nuvei-checkout-container',
-                $plugin_url . 'assets/js/classic/nuvei-container.js',
-                array( 'jquery', 'nuvei_js_public' ),
-                $helper->helper_get_plugin_version(),
-                false
-            );
-            
-            wp_enqueue_script( 'nuvei-checkout-container' );
-        }
-            
-        if ('nuvei_checkout_modal' == $render_to) {
+        // Container mode (and always the Order-Pay page):
+        // assets/js/store/in-page/nuvei_public.js already contains the full
+        // Classic Checkout / Order-Pay logic (same as stable v3.15.2),
+        // no extra script needed.
+
+        // Modal mode: Classic Checkout modal-specific logic. Never on the
+        // Order-Pay page - it always uses the in-page package above.
+        if ( !$is_order_pay_page && 'nuvei_checkout_modal' == $render_to ) {
             wp_register_script(
                 'nuvei-checkout-modal',
-                $plugin_url . 'assets/js/classic/nuvei-modal.js',
+                $plugin_url . 'assets/js/store/modal/classic-modal.js',
                 array( 'jquery', 'nuvei_js_public' ),
                 $helper->helper_get_plugin_version(),
                 false
@@ -569,7 +572,7 @@ class Nuvei_Payments_For_Woocommerce
 		if ( ! wp_script_is( 'nuvei_js_admin' ) ) {
 			wp_register_script(
 				'nuvei_js_admin',
-				$plugin_url . 'assets/js/nuvei_admin.js',
+				$plugin_url . 'assets/js/admin/nuvei_admin.js',
 				array( 'jquery' ),
 				$helper->helper_get_plugin_version(),
 				true

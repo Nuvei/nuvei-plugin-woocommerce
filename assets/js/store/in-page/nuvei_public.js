@@ -1,11 +1,5 @@
 const nuveiCheckoutBlockFormClass       = 'form.wc-block-components-form';
 const nuveiCheckoutClassicFormClass     = 'form.checkout.woocommerce-checkout';
-// the DOM id where the Simply Connect SDK renders - either the inline
-// checkout container or a modal, depending on the "render_to" plugin setting
-const nuveiCheckoutContainerId          = (typeof scTrans !== 'undefined' && scTrans.simplyDomPlace)
-    ? scTrans.simplyDomPlace : 'nuvei_checkout_container';
-const nuveiCheckoutContainerSel         = '#' + nuveiCheckoutContainerId;
-const nuveiIsModalMode                  = (nuveiCheckoutContainerId === 'nuvei_checkout_modal');
 const nuveiCheckoutClassicPayBtn        = '#place_order';
 const nuveiCheckoutCustomPayBtn         = '#nuvei_place_order';
 const nuveiCheckoutClassicPMethodName   = 'input[name="payment_method"]';
@@ -85,7 +79,7 @@ function nuveiIsCheckoutClassicFormValid(justLoadSimply = false) {
 
             // Scroll to the first error
             setTimeout( () => {
-                jQuery(nuveiCheckoutContainerSel).html(scTrans.MissingEmailCountry);
+                jQuery('#nuvei_checkout_container').html(scTrans.MissingEmailCountry);
 
                 if (jQuery('.woocommerce-invalid').length) {
                     jQuery('html, body').animate({
@@ -225,12 +219,12 @@ function nuveiAfterSdkResponse(resp) {
 	if ( (resp?.result === 'APPROVED' || resp?.result === 'PENDING')
 		&& resp?.transactionId != 'undefined'
 	) {
-//        console.log(
+        console.log(
 //            nuveiSuccessRedirect, 
-//            window?._nuveiOrderId,
-//            resp?.result,
-//            resp?.transactionId,
-//        );
+            window?._nuveiOrderId,
+            resp?.result,
+            resp?.transactionId,
+        );
         
         nuveiSuccessRedirect += '&status=' + resp.result;
         
@@ -273,7 +267,7 @@ function nuveiAfterSdkResponse(resp) {
         nuveiSetTransactionField(resp.transactionId);
 
         jQuery('#nuvei_blocker').show();
-        jQuery(nuveiCheckoutContainerSel).html('');
+        jQuery('#nuvei_checkout_container').html('');
         
         // in case of Classic Checkout or when the client will pay for an Order
         // created from the admin
@@ -371,7 +365,7 @@ function showNuveiCheckout(_params) {
         nuveiBlocksRefreshInProgress = false;
         
         jQuery('#nuvei_blocker').hide();
-        jQuery(nuveiCheckoutContainerSel).html(scTrans.MissingRequiredFields);
+        jQuery('#nuvei_checkout_container').html(scTrans.MissingRequiredFields);
         
         return;
     }
@@ -386,85 +380,8 @@ function showNuveiCheckout(_params) {
 
     // for the Blocks only
     if ( jQuery(nuveiCheckoutBlockFormClass).length > 0 ) {
-        nuveiCheckoutSdkParams.prePayment = nuveiPrePaymentBlocks;
-
-        // dynamically attach the logic of nuveiAfterSdkResponse() in this empty method.
-        nuveiCheckoutSdkParams.onResult = function( resp ) {
-            if ( nuveiBlocksResolvePayment ) {
-                console.log('[Nuvei]: afterSdkResponse for Blocks', resp);
-
-                if ( (resp?.result?.toLowerCase() == 'approved' || resp?.result?.toLowerCase() == 'pending')
-                    && resp?.transactionId
-                ) {
-                    jQuery('#nuvei_blocker').show();
-                    jQuery(nuveiCheckoutContainerSel).html('');
-
-                    if ( nuveiIsModalMode ) {
-                        jQuery('#nuvei_checkout_modal_overlay').hide();
-                    }
-
-                    nuveiBlocksResolvePayment( { success: true, transaction_id: resp.transactionId } );
-                    nuveiBlocksResolvePayment = null;
-                    return;
-                }
-
-                // error - expired session
-                if (resp?.session_expired) {
-                    nuveiBlocksResolvePayment( { success: false } );
-                    window.location.reload();
-                    return;
-                }
-
-                var nuveiErrMsg = scTrans.unexpectedError;
-
-                // a specific Error
-                if (resp?.status?.toLowerCase() == 'error'
-                    && resp?.reason?.toLowerCase().search('the currency is not supported') >= 0
-                ) {
-                    nuveiErrMsg = resp.reason;
-                }
-                // error - canceled
-                else if (resp?.status?.toLowerCase() == 'canceled') {
-                    nuveiErrMsg = scTrans.PaymentCanceled;
-                }
-                // error - declined
-                else if (resp?.result?.toLowerCase() == 'declined') {
-                    nuveiErrMsg = ( 'insufficient funds' == resp?.errorDescription?.toLowerCase() )
-                        ? scTrans.insuffFunds : scTrans.paymentDeclined;
-                }
-                else {
-                    console.error('Error with Checkout SDK response', resp);
-                }
-
-                // Modal mode: onPaymentSetup's Promise only resolves once per
-                // "Place Order" click, so the customer can't retry through the
-                // SDK's own button - a second approved result would have no
-                // Promise left to fulfil, capturing money with the checkout
-                // flow stuck. Close the modal instead; the error is shown on
-                // the checkout page and the next "Place Order" click opens a
-                // fresh modal (nuveiBlocksRunModalTransaction) with new data.
-                if ( nuveiIsModalMode ) {
-                    jQuery('#nuvei_checkout_modal_overlay').hide();
-                    nuveiDestroySimplyConnect();
-                }
-
-                nuveiBlocksResolvePayment( { success: false, error: nuveiErrMsg } );
-                nuveiBlocksResolvePayment = null;
-
-                // a transaction was made, but it is not Approved/Pending -
-                // refresh the checkout data to get a new clientUniqueId via updateOrder
-                if ( !nuveiIsModalMode && resp?.transactionId ) {
-                    console.log('[Nuvei]: update the Nuvei Order and reload the checkout.');
-
-                    nuveiBlocksRefreshInProgress = true;
-
-                    jQuery('#nuvei_blocker').show();
-                    nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
-                }
-
-                return;
-            }
-        };
+        nuveiCheckoutSdkParams.prePayment   = nuveiPrePaymentBlocks;
+        nuveiCheckoutSdkParams.onResult     = nuveiAfterSdkResponseBlocks;
     }
     // Classic Checkout
     else {
@@ -604,15 +521,6 @@ function nuveiShowErrorMsg(text) {
     // Re-enable the pay button in case it was blocked by a programmatic click
     jQuery(nuveiCheckoutClassicPayBtn).removeClass('nuvei-processing');
 
-    // Modal mode (Classic or Blocks): the checkout page is covered by our
-    // full-screen SDK modal overlay, so a plain WC notice injected behind it
-    // would be invisible to the customer. Show the message inside the modal
-    // itself instead.
-    if (nuveiIsModalMode) {
-        nuveiShowModalMessage(text);
-        return;
-    }
-
 	// short-code checkout
     if (jQuery(nuveiCheckoutClassicFormClass).length || nuveiIsPayForExistingOrderPage) {
         jQuery('.woocommerce-notices-wrapper').first().html(
@@ -696,6 +604,12 @@ function nuveiPayForExistingOrder() {
             nuveiShowErrorMsg();
             jQuery('#nuvei_blocker').hide();
         });
+        
+    // add the blocker
+    jQuery('#payment')
+        .parent('form')
+        .append('<div id="nuvei_blocker"><img class="nuvei_loader" src="'
+            + scTrans.loaderUrl + '" /></div>');
 }
 
 /**
@@ -848,8 +762,6 @@ function nuveiGetCheckoutData(formId, attrName = 'name') {
 }
 
 function nuveiDestroySimplyConnect() {
-    console.log('[Nuvei]: nuveiDestroySimplyConnect');
-    
     // The SDK instance is gone - a new onReady must arrive before we can submit again.
     // This is reset unconditionally: we may destroy an SDK that never fired onReady.
     nuveiSimplyReady = false;
@@ -861,59 +773,16 @@ function nuveiDestroySimplyConnect() {
             simplyConnect.destroy();
         }
         catch(e) {
-            console.log('exception', e);
+            console.log('[Nuvei]: exception', e);
         }
     }
 }
 
-/**
- * Closes the Simply Connect modal (render_to = nuvei_checkout_modal, Classic
- * or Blocks), tears down the SDK so the modal is empty on the next open, and
- * resets the inline message shown via nuveiShowModalMessage(), if any.
- */
-function nuveiCloseCheckoutModal() {
-    jQuery('#nuvei_checkout_modal_overlay').hide();
-    jQuery('#nuvei_checkout_modal_overlay .nuvei-modal-message').hide();
-    jQuery(nuveiCheckoutContainerSel).show();
-
-    nuveiDestroySimplyConnect();
-}
-
-/**
- * Shows an error/info message inside the Simply Connect modal, in place of
- * the SDK form, with its own OK button. Used by nuveiShowErrorMsg() instead
- * of the page-level WC notice, which would be hidden behind the modal's
- * overlay. Clicking OK closes the modal (nuveiCloseCheckoutModal()).
- */
-function nuveiShowModalMessage(text) {
-    jQuery('#nuvei_checkout_modal_overlay .nuvei-modal-message-text').text(text);
-    jQuery(nuveiCheckoutContainerSel).hide();
-    jQuery('#nuvei_checkout_modal_overlay .nuvei-modal-message').show();
-    jQuery('#nuvei_checkout_modal_overlay').show();
-}
-
 jQuery(function($) {
-    console.log('[Nuvei]: document ready');
-
-    // delegated - the modal markup itself is built later, per mode, in
-    // classic/nuvei-modal.js or blocks/nuvei-modal.js
-    jQuery(document.body).on('click', '#nuvei_checkout_modal_overlay .nuvei-modal-message-ok', function() {
-        nuveiCloseCheckoutModal();
-    });
-
 	if('no' === scTrans.isPluginActive) {
         console.log('[Nuvei]: nuvei plugin is not active.');
 		return;
 	}
-
-    // build the full-page blocker once, up front, so it's always ready -
-    // covers Classic Checkout (container/modal), Blocks Checkout, and the
-    // Order-Pay page alike, instead of being created ad-hoc in different
-    // places per context.
-    if ( 'sdk' == scTrans.checkoutIntegration && jQuery('#nuvei_blocker').length == 0 ) {
-        jQuery('body').append('<div id="nuvei_blocker"><img class="nuvei_loader" src="'
-            + scTrans.loaderUrl + '" /></div>');
-    }
 
     // thankyou page modifications
     if (typeof scTrans.thankYouPageNewTitle != 'undefined') {
@@ -928,9 +797,127 @@ jQuery(function($) {
     // only for SDK flow
     if ('sdk' == scTrans.checkoutIntegration) {
 
-        // The Classic Checkout branch (container vs modal) now lives in
-        // classic/nuvei-container.js / classic/nuvei-modal.js, loaded
-        // depending on the "render_to" setting.
+        // In case of Classic Checkout, shortcode
+        if (jQuery(nuveiCheckoutClassicFormClass).length) {
+            console.log('[Nuvei]: Classic checkout.');
+
+            // error missing scTrans or scTrans.paymentGatewayName
+            if ( ! scTrans?.paymentGatewayName ) {
+                console.error('Missing scTrans.paymentGatewayName.')
+                return;
+            }
+
+            // on page load try to load Simply Connect
+            if (nuveiIsCheckoutClassicFormValid(true)) {
+                nuveiGetCheckoutData(nuveiCheckoutClassicFormClass);
+            }
+
+            jQuery(document.body).on('blur change focusout', nuveiMandatoryCheckoutFields, function(e) {
+                var self    = jQuery(this);
+                var newVal  = self.val();
+                // Retrieve the previous value stored on this specific element
+                var oldVal  = self.data('last-known-value');
+
+                // Check if the value has actually changed
+                if (newVal !== oldVal) {
+                    // Update the storage immediately to block repeat events
+                    self.data('last-known-value', newVal);
+
+                    console.log('[Nuvei]: Checkout form field changed: ', self.attr('id'), self.val(), e.type);
+
+                    // My custom checks come here
+                    nuveiDestroySimplyConnect();
+
+                    // No outer setTimeout needed — nuveiGetCheckoutData() has
+                    // its own internal debounce (NUVEI_GET_CHECKOUT_DATA_DELAY)
+                    // that collapses rapid bursts.  The old 1 000 ms delay was
+                    // the primary contributor to the page-load + field-change
+                    // race condition (Race Window 1).
+                    if (nuveiIsCheckoutClassicFormValid(true)) {
+                        nuveiGetCheckoutData(nuveiCheckoutClassicFormClass);
+                    }
+                }
+            });
+
+            // on payment provider change
+            jQuery(document.body).on('change', nuveiCheckoutClassicPMethodName, function(e) {
+                console.log('[Nuvei]: Payment Provider change.', jQuery(nuveiCheckoutClassicPMethodName + ':checked').val());
+
+                if (nuveiIsCheckoutClassicFormValid(true)) {
+                    nuveiGetCheckoutData(nuveiCheckoutClassicFormClass);
+                }
+                else {
+                    nuveiDestroySimplyConnect();
+                }
+            });
+
+            // Listen for updated_checkout event on Classic Checkout
+            jQuery(document.body).on('updated_checkout', function() {
+                console.log('[Nuvei]: updated_checkout event');
+
+                if ( ! nuveiIsCheckoutClassicFormValid(true) ) {
+                    jQuery('#nuvei_checkout_container').html(scTrans.MissingEmailCountry);
+                    return;
+                }
+                
+                // WooCommerce may have swapped the .woocommerce-checkout-payment fragment
+                // (order total changed), destroying the live Simply Connect container.
+                // Re-render only if it's now empty, to avoid needless reloads.
+                if ( jQuery('#nuvei_checkout_container').is(':empty') ) {
+                    nuveiDestroySimplyConnect();
+                    nuveiGetCheckoutData(nuveiCheckoutClassicFormClass);
+                }
+            });
+
+            // when the checkout form is placed successfully initiate Nuvei transaction
+            jQuery('form.checkout').on('checkout_place_order_success', function (e, data) {
+                console.log('[Nuvei]: Order saved.', data)
+
+                if (data?.data?.nuvei_try_payment) {
+                    if (! simplyConnect) {
+                        // The order was saved successfully, but the Simply Connect
+                        // SDK isn't ready - unblock the form instead of leaving the
+                        // customer stuck, and show an error.
+                        console.error('nuvei_try_payment is set but simplyConnect is not initialized.');
+
+                        jQuery('#nuvei_blocker').hide();
+                        jQuery('form.checkout').removeClass('processing');
+                        jQuery('form.checkout').unblock();
+
+                        nuveiShowErrorMsg(scTrans.unexpectedError);
+
+                        return;
+                    }
+                    
+                    nuveiSuccessRedirect = data.data.success_url;
+
+                    jQuery('#nuvei_blocker').show();
+                    jQuery('form.checkout').removeClass('processing');
+                    jQuery('form.checkout').unblock();
+                    
+                    window._nuveiOrderId = data?.data?.order_id;
+
+                    nuveiSubmitPaymentWhenReady(() => {
+                        jQuery('#nuvei_blocker').hide();
+                        jQuery('form.checkout').removeClass('processing');
+                        jQuery('form.checkout').unblock();
+
+                        nuveiShowErrorMsg(scTrans.unexpectedError);
+                    });
+
+                    return;
+                }
+            });
+
+            jQuery(document).on('load', '#nuvei_checkout_container', function() {
+                console.log('[Nuvei]: on load #nuvei_checkout_container');
+                nuveiIsCheckoutClassicFormValid(true);
+            });
+            
+            // Dispatch custom JS event
+            document.dispatchEvent(new CustomEvent('nuveiPfw:onPageLoadEvent'));
+        }
+        // the Classic Checkout block end
 
         // on the checkout/order-pay/ page
         if ( jQuery('body').hasClass('woocommerce-order-pay') ) {

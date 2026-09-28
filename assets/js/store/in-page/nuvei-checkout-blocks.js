@@ -11,6 +11,8 @@ const nuveiCheckoutBlockContText =
         window.wp.i18n.__('You will be redirected to Nuvei secure payment page.', 'nuvei-payments-for-woocommerce');
 
 var nuveiAllowFormSubmit    = false;
+// must be outside the function so clearTimeout actually debounces
+var nuveiBlocksReloadTimer  = null;
 
 /**
  * We use pre-payment for the Blocks only.
@@ -92,13 +94,22 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
 
                 nuveiDestroySimplyConnect();
 
+//                wp.data.dispatch( 'core/notices' ).createErrorNotice(
+//                    validationErrors[id].message,
+//                    {
+//                        id: 'nuvei-form-invalid', // Use a unique ID to prevent duplicates
+//                        context: 'wc/checkout',  // Important: This tells Woo to show it in the checkout area
+//                        isDismissible: true,
+//                    }
+//                );
+
                 // just break the loop
                 return true;
             }
         });
 
         if (!isFormValid) {
-            jQuery(nuveiCheckoutContainerSel).text(scTrans.MissingEmailCountry);
+            jQuery('#nuvei_checkout_container').text(scTrans.MissingEmailCountry);
         }
 
         return isFormValid;
@@ -178,11 +189,125 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
 }
 
 /**
+ * Just reusing some code.
+ */
+function nuveiBlocksReloadSimply() {
+    // Only proceed if Nuvei is the selected payment method
+    if (wp.data.select('wc/store/payment').getActivePaymentMethod() !== scTrans.paymentGatewayName) {
+        return;
+    }
+
+    jQuery('#nuvei_blocker').show();
+
+    nuveiDestroySimplyConnect();
+
+    jQuery('#nuvei_checkout_container').html(window.wp.i18n.__('Loading...', 'nuvei-payments-for-woocommerce'));
+
+    if (nuveiIsCheckoutBlocksFormValid(true)) {
+        // add small delay
+        clearTimeout( nuveiBlocksReloadTimer );
+
+        nuveiBlocksReloadTimer = setTimeout( function() {
+            nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
+            jQuery('#nuvei_blocker').hide();
+            return;
+        }, 600 );
+    }
+}
+
+/**
+ * SDK onResult callback for the Blocks Checkout flow only.
+ * Assigned to nuveiCheckoutSdkParams.onResult inside showNuveiCheckout()
+ * (nuvei_public.js). Resolves the Promise set up by nuveiBlocksRunTransaction()
+ * (or the wallet flow's own awaited Promise) so onPaymentSetup can proceed.
+ *
+ * @param {object} resp
+ * @returns {void}
+ */
+function nuveiAfterSdkResponseBlocks(resp) {
+    // TEMP DEBUG - remove once the "onResult never fires for Blocks" issue is diagnosed.
+    console.log('[Nuvei]: DEBUG onResult called. resolver set?', !!nuveiBlocksResolvePayment, resp);
+
+    if ( ! nuveiBlocksResolvePayment ) {
+        return;
+    }
+
+    console.log('[Nuvei]: afterSdkResponse for Blocks', resp);
+
+    if ( (resp?.result?.toLowerCase() == 'approved' || resp?.result?.toLowerCase() == 'pending')
+        && resp?.transactionId
+    ) {
+        jQuery('#nuvei_blocker').show();
+        jQuery('#nuvei_checkout_container').html('');
+
+        nuveiBlocksResolvePayment( { success: true, transaction_id: resp.transactionId } );
+        nuveiBlocksResolvePayment = null;
+        return;
+    }
+
+    // error - expired session
+    if (resp?.session_expired) {
+        nuveiBlocksResolvePayment( { success: false } );
+        window.location.reload();
+        return;
+    }
+
+    var nuveiErrMsg = scTrans.unexpectedError;
+
+    // a specific Error
+    if (resp?.status?.toLowerCase() == 'error'
+        && resp?.reason?.toLowerCase().search('the currency is not supported') >= 0
+    ) {
+        nuveiErrMsg = resp.reason;
+    }
+    // error - canceled
+    else if (resp?.status?.toLowerCase() == 'canceled') {
+        nuveiErrMsg = scTrans.PaymentCanceled;
+    }
+    // error - declined
+    else if (resp?.result?.toLowerCase() == 'declined') {
+        nuveiErrMsg = ( 'insufficient funds' == resp?.errorDescription?.toLowerCase() )
+            ? scTrans.insuffFunds : scTrans.paymentDeclined;
+    }
+    else {
+        console.error('Error with Checkout SDK response', resp);
+    }
+
+    nuveiBlocksResolvePayment( { success: false, error: nuveiErrMsg } );
+
+    // a transaction was made, but it is not Approved/Pending -
+    // refresh the checkout data to get a new clientUniqueId via updateOrder
+    if ( resp?.transactionId ) {
+        console.log('[Nuvei]: update the Nuvei Order and reload the checkout.');
+
+        nuveiBlocksRefreshInProgress = true;
+
+        jQuery('#nuvei_blocker').show();
+        nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
+    }
+}
+
+async function nuveiBlocksRunTransaction() {
+    return new Promise( function( resolve ) {
+        // set the resolver - only when actually submitting
+        nuveiBlocksResolvePayment = resolve;
+
+        // nuveiSubmitPaymentWhenReady() comes from nuvei_public.js
+        nuveiSubmitPaymentWhenReady( function() {
+            nuveiBlocksResolvePayment = null;
+
+            resolve( {
+                success: false,
+                error: scTrans.unexpectedError
+            } );
+        } );
+    } );
+}
+
+/**
  * Integrate Nuvei payment option and button in the Blocks Chckout.
  */
 (function() {
-    console.log('[Nuvei]: auto func');
-
     const { useEffect, createElement }  = window.wp.element;
     const { useSelect }                 = window.wp.data;
 
@@ -210,42 +335,17 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
 
     const Content = (props) => {
         const { eventRegistration, emitResponse } = props;
-        const { onPaymentSetup, onCheckoutFail } = eventRegistration;
-
-        // if the overall checkout ultimately fails on WC's side after we
-        // already returned SUCCESS (transaction was already approved by
-        // Nuvei by then), make sure the full-page blocker doesn't stay
-        // stuck forever.
-        useEffect(() => {
-            const unsubscribe = onCheckoutFail( function() {
-                console.log('[Nuvei]: onCheckoutFail - hide the blocker.');
-
-                jQuery('#nuvei_blocker').hide();
-
-                return {
-                    type: emitResponse.responseTypes.SUCCESS
-                };
-            } );
-
-            return unsubscribe;
-        }, [onCheckoutFail]);
+        const { onPaymentSetup } = eventRegistration;
 
         // only on the first load
         useEffect(() => {
             console.log('[Nuvei]: Nuvei payment method element loaded. Check if the checkout form is valid.');
 
-            // Modal mode: the SDK container lives in the modal overlay (built
-            // once in the doc-ready block) and is only loaded/rendered on
-            // Pay click, inside onPaymentSetup - nothing to do here.
-            if ( nuveiIsModalMode ) {
-                return;
-            }
-
             // Append the origial Simply Connect container, in all cases, just for the message.
-            if (jQuery('#payment-method').find(nuveiCheckoutContainerSel).length == 0) {
+            if (jQuery('#payment-method').find('#nuvei_checkout_container').length == 0) {
                 jQuery('#radio-control-wc-payment-method-options-nuvei')
                     .closest('.wc-block-components-radio-control-accordion-option')
-                    .append(`<div id="${nuveiCheckoutContainerId}" data-placeholder="${nuveiCheckoutBlockContText}"></div>`);
+                    .append(`<div id="nuvei_checkout_container" data-placeholder="${nuveiCheckoutBlockContText}"></div>`);
             }
 
             if ('sdk' === scTrans?.checkoutIntegration
@@ -300,21 +400,15 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
                     };
                 }
 
-                // Step 1: validate the form. Skipped in modal mode - WC
-                // Blocks already blocks onPaymentSetup from firing when its
-                // own fields are invalid, and nuveiIsSimplyFormValid is
-                // meaningless here since the SDK form doesn't exist yet
-                // (it only renders once the modal opens, below).
-                if ( !nuveiIsModalMode && !nuveiIsCheckoutBlocksFormValid() ) {
+                // Step 1: validate your SDK fields
+                if ( !nuveiIsCheckoutBlocksFormValid() ) {
                     return {
                         type: emitResponse.responseTypes.ERROR
                     };
                 }
 
                 // Step 2: run transaction against Order ID
-                const payment = nuveiIsModalMode
-                    ? await nuveiBlocksRunModalTransaction()
-                    : await nuveiBlocksRunTransaction();
+                const payment = await nuveiBlocksRunTransaction();
 
                 if ( !payment.success ) {
                     if ( !nuveiBlocksRefreshInProgress ) {
@@ -364,8 +458,6 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
 })();
 
 jQuery(function() {
-    console.log('[Nuvei]: jquery func');
-
     // Prevent running in WP admin area
     if (typeof window.wp !== 'undefined'
         && window.wp.data
@@ -376,10 +468,77 @@ jQuery(function() {
         return;
     }
 
-    console.log('[Nuvei]: document ready blocks checkout');
+    // append a blocker
+    if ( typeof scTrans != 'undefined' && jQuery('#payment-method').length ) {
+        jQuery('#payment-method')
+            .parent('form')
+            .append('<div id="nuvei_blocker"><img class="nuvei_loader" src="'
+                + scTrans.loaderUrl + '" /></div>');
+    }
 
-    // mode-specific logic (modal overlay build/close, or field/cart
-    // watchers) lives in blocks/nuvei-modal.js / blocks/nuvei-container.js,
-    // loaded right after this file based on the "render_to" setting.
+    if ( window.scTrans && 'sdk' !== scTrans?.checkoutIntegration ) {
+        return;
+    }
+
+    // watch the email field for changes
+    let lastEmail = document.getElementById('email')?.value;
+
+    jQuery( document.body ).on( 'blur', '#email:not(#nuvei_checkout_container #email)', function(e) {
+        let self = jQuery(this);
+
+        // Check if the value has actually changed
+        if (self.val() !== lastEmail) {
+            console.log('[Nuvei]: mail was changed', lastEmail, self.val())
+
+            lastEmail = self.val();
+
+            nuveiBlocksReloadSimply();
+        }
+    });
+
+    // WP Blocks subscriber
+    const store = wp.data.select( 'wc/store/cart' );
+
+    // Subscribe for total and billign changes
+    let lastTotal           = store.getCartTotals().total_price;
+    let lastBillingCountry  = store.getCartData().billingAddress.country;
+
+    wp.data.subscribe(() => {
+        // some errors
+        if (window.nuveiIsPayForExistingOrderPage || jQuery('#nuvei_checkout_container').length == 0) {
+            return;
+        }
+
+        // Do not check the totals and billing address if Nuvei is not selected
+        const currentpaymentMethod = wp.data.select( 'wc/store/payment' ).getActivePaymentMethod();
+
+        if (scTrans && scTrans.paymentGatewayName !== currentpaymentMethod) {
+            console.log('[Nuvei]: The selected payment method is not Nuvei.');
+            jQuery('#nuvei_checkout_container').hide();
+            return;
+        }
+
+        jQuery('#nuvei_checkout_container').show();
+
+        const currentTotals         = store.getCartTotals ? store.getCartTotals().total_price : null;
+        const currentBillingCountry = store.getCartData().billingAddress.country;
+
+        // check for changes
+        if (currentTotals != lastTotal
+            || currentBillingCountry !== lastBillingCountry
+        ) {
+            console.log('[Nuvei]: Checkout changed:', {
+                'is total changed': currentTotals != lastTotal,
+                'is country changed': lastBillingCountry  != currentBillingCountry,
+            });
+
+            lastTotal           = currentTotals;
+            lastBillingCountry  = currentBillingCountry;
+
+            nuveiBlocksReloadSimply();
+        }
+
+    });
+
 });
 // document ready function end

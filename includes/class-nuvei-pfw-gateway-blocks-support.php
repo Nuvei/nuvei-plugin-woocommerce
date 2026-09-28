@@ -30,10 +30,14 @@ final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
         
         $helper     = new Nuvei_Pfw_Helper();
         $render_to  = $this->settings['render_to'] ?? '';
+        // container mode uses the frozen, pre-modal package; modal mode uses
+        // the new package, plus its blocks-modal.js add-on
+        $is_modal   = 'nuvei_checkout_modal' == $render_to;
+        $js_folder  = $is_modal ? 'store/modal' : 'store/in-page';
 
 		wp_register_script(
 			'nuvei-checkout-blocks',
-			$this->plugin_dir_url . 'assets/js/blocks/nuvei-checkout-blocks.js',
+			$this->plugin_dir_url . "assets/js/{$js_folder}/nuvei-checkout-blocks.js",
 			array(
 				'wc-blocks-registry',
 				'wc-settings',
@@ -48,19 +52,21 @@ final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 
 		wp_set_script_translations( 'nuvei-checkout-blocks', 'nuvei-payments-for-woocommerce' );
 
-		$handles        = array( 'nuvei-checkout-blocks' );
-        // mode-specific script, based on the "render_to" setting
-        $script_type    = 'nuvei_checkout_modal' == $render_to ? 'modal' : 'container';
-        
-        wp_register_script(
-            'nuvei-checkout-blocks-' . $script_type,
-            $this->plugin_dir_url . "assets/js/blocks/nuvei-{$script_type}.js",
-            array( 'nuvei-checkout-blocks' ),
-            $helper->helper_get_plugin_version(),
-            true
-        );
+		$handles = array( 'nuvei-checkout-blocks' );
 
-        $handles[] = 'nuvei-checkout-blocks-' . $script_type;
+        // modal mode needs an extra add-on script; container mode's logic
+        // is fully self-contained in the frozen nuvei-checkout-blocks.js
+        if ( $is_modal ) {
+            wp_register_script(
+                'nuvei-blocks-modal',
+                $this->plugin_dir_url . "assets/js/{$js_folder}/blocks-modal.js",
+                array( 'nuvei-checkout-blocks' ),
+                $helper->helper_get_plugin_version(),
+                true
+            );
+
+            $handles[] = 'nuvei-blocks-modal';
+        }
 
 		return $handles;
 	}

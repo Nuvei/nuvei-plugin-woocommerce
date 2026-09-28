@@ -978,7 +978,9 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             . ($ord_details['billingAddress']['lastName'] ?? '')
         );
         
-        $render_to = $this->get_option( 'render_to' );
+        $render_to  = $this->get_option( 'render_to' );
+        $pay_button = 'nuvei_checkout_modal' == $render_to 
+            ? $this->get_option( 'pay_button', 'amountButton' ) : 'noButton';
 
 		$checkout_data = array( // use it in the template
 			'sessionToken'           => $oo_data['sessionToken'],
@@ -998,10 +1000,10 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			'alwaysCollectCvv'       => true,
 			'fullName'               => $fullName,
 			'email'                  => $ord_details['billingAddress']['email'],
-			'payButton'              => $this->get_option( 'pay_button', 'amountButton' ),
+//			'payButton'              => $this->get_option( 'pay_button', 'amountButton' ),
 //			'payButton'              => 'noButton',
+			'payButton'              => $pay_button,
 			'showResponseMessage'    => false, // shows/hide the response popups
-//			'showResponseMessage'    => 'nuvei_checkout_modal' == $render_to ? true : false,
 			'locale'                 => $locale,
 			'autoOpenPM'             => (bool) $this->get_option( 'auto_open_pm', 1 ),
 			'logLevel'               => $this->get_option( 'log_level' ),

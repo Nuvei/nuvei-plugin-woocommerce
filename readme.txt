@@ -1,6 +1,6 @@
 === Nuvei Payments for Woocommerce ===
 
-Stable tag: 3.15.2
+Stable tag: 3.16.0
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
