@@ -21,8 +21,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$this->id                 = NUVEI_PFW_GATEWAY_NAME;
 		$this->icon               = plugin_dir_url( NUVEI_PFW_PLUGIN_FILE ) . 'assets/icons/nuvei.png';
 		$this->method_title       = __( 'Nuvei Checkout', 'nuvei-payments-for-woocommerce' );
-		$this->method_description = __( 'Pay with ', 'nuvei-payments-for-woocommerce' )
-			. NUVEI_PFW_GATEWAY_TITLE . '.';
+		$this->method_description = __( 'Pay with ', 'nuvei-payments-for-woocommerce' ) . NUVEI_PFW_GATEWAY_TITLE . '.';
 		$this->method_name        = NUVEI_PFW_GATEWAY_TITLE;
 		$this->has_fields         = false;
 
@@ -33,8 +32,10 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$this->init_form_tools_fields( true );
 
 		// required for the Store
-		$this->title        = $this->get_option( 'title', NUVEI_PFW_GATEWAY_TITLE );
         $this->description  = '';
+		$this->title        = Nuvei_Pfw_String::translate_plugin_title(
+            $this->get_option( 'title', NUVEI_PFW_GATEWAY_TITLE )
+        );
         
         // we will use a container in the description when it is set from
         // the corresponding settings or when the Cashier is selected.
@@ -96,7 +97,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             || empty($this->get_option('payment_action'))
         ;
 	}
-
+    
 	/**
 	 * A method to check if the plugin is in test mode.
 	 *
@@ -1133,13 +1134,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
         $nuvei_order_details    = [];
         $open_order_details     = [];
         
-//        Nuvei_Pfw_Logger::write( WC()->session, 'WC()->session' );
-
-//        if if( isset( WC()->session ) ) {
-//            $nuvei_order_details = WC()->session->get( NUVEI_PFW_SESSION_PROD_DETAILS );
-//            $open_order_details  = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
-//        }
-        
         try {
             $nuvei_order_details = WC()->session->get( NUVEI_PFW_SESSION_PROD_DETAILS );
             $open_order_details  = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
@@ -1186,10 +1180,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 	 */
 	public function hide_payment_gateways( $available_gateways ) {
 		// we expect this method to be used on the Store only
-		if ( is_admin()
-//			|| ! isset( WC()->cart )
-//			|| empty( WC()->cart->get_cart() )
-		) {
+		if ( is_admin() ) {
 			return $available_gateways;
 		}
         

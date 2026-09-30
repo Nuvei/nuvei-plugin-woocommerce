@@ -482,7 +482,7 @@ abstract class Nuvei_Pfw_Request {
 				)
 			);
 
-				Nuvei_Pfw_Logger::write( $resp, 'Response info' );
+            Nuvei_Pfw_Logger::write( $resp, 'Response info' );
 
 			if ( false === $resp || ! is_array( $resp ) || empty( $resp['body'] ) ) {
 				return array(

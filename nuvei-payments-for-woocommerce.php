@@ -331,20 +331,18 @@ class Nuvei_Payments_For_Woocommerce
 
         }, 10, 2 );
         
-        // when save Order, check for Nuvei transaction field
-        // for the Blocks Checkout only!
-//        add_action( 'woocommerce_store_api_checkout_update_order_from_request', function( $order, $request ) {
-//            if ( $order->get_meta( NUVEI_PFW_TR_ID, true ) ) {
-//                return;
-//            }
-//
-//            foreach ( (array) $request->get_param( 'payment_data' ) as $item ) {
-//                if ( ( $item['key'] ?? '' ) === '_nuveiTrId' ) {
-//                    $order->update_meta_data( NUVEI_PFW_TR_ID, sanitize_text_field( $item['value'] ?? '' ) );
-//                    break;
-//                }
-//            }
-//        }, 10, 2 );
+        # add translation for the 
+        $title = self::$wc_nuvei->get_option( 'title', NUVEI_PFW_GATEWAY_TITLE );
+
+        // Polylang
+        if ( function_exists('pll_register_string') ) {
+            pll_register_string('Plugin Title Option', $title, 'nuvei-payments-for-woocommerce');
+        }
+
+        // WPML
+        if ( has_action('wpml_register_single_string') ) {
+            do_action('wpml_register_single_string', 'nuvei-payments-for-woocommerce', 'plugin_title_option', $title);
+        }
     }
 
     public static function set_translated_texts() {

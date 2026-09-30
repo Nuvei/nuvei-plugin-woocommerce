@@ -67,4 +67,20 @@ class Nuvei_Pfw_String {
 				return 'en';
 		}
 	}
+    
+    public static function translate_plugin_title( $title ) {
+        if ( function_exists('pll__') ) {
+            return pll__($title);
+        }
+        elseif ( has_filter('wpml_translate_single_string') ) {
+            return apply_filters(
+                'wpml_translate_single_string', 
+                $title, 
+                'nuvei-payments-for-woocommerc', 
+                'plugin_title_option'
+            );
+        }
+
+        return __($title, 'nuvei-payments-for-woocommerc');
+    }
 }
