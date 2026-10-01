@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Nuvei Payments for Woocommerce
- * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
+ * Plugin URI: https://wordpress.com/plugins/nuvei-payments-for-woocommerce
  * Description: Nuvei Gateway for WooCommerce
  * Version: 3.16.0
  * Author: Nuvei
@@ -28,6 +28,11 @@ require_once __DIR__ . '/includes/class-nuvei-pfw-autoloader.php';
 require_once ABSPATH . 'wp-admin/includes/plugin.php'; // we use it to get the data from the comment at the top
 require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-base.php';
 require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-direct.php';
+
+// custom local config file
+if ( is_file( __DIR__ . '/config.local.php' ) ) {
+    include_once __DIR__ . '/config.local.php';
+}
 
 add_action( 'plugins_loaded', function() {
     Nuvei_Payments_For_Woocommerce::plugin_loaded();

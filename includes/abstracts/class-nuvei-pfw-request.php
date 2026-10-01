@@ -1669,6 +1669,10 @@ abstract class Nuvei_Pfw_Request {
 	 * @return string
 	 */
 	private function get_endpoint_base() {
+        if (defined('NUVEI_LOCAL_CONF') && !empty(NUVEI_LOCAL_CONF['endpoint_base'])) {
+            return NUVEI_LOCAL_CONF['endpoint_base'];
+        }
+        
 		if ( 'yes' == $this->nuvei_gw->get_option( 'test' ) ) {
 			return NUVEI_PFW_REST_ENDPOINT_INT;
 		}
