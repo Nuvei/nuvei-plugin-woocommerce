@@ -30,7 +30,6 @@ const NUVEI_PFW_VOID_METHODS        = array( 'cc_card', 'ppp_ApplePay' );
 const NUVEI_PFW_REST_ENDPOINT_INT   = 'https://ppp-test.nuvei.com/ppp/api/v1/';
 const NUVEI_PFW_REST_ENDPOINT_PROD  = 'https://secure.safecharge.com/ppp/api/v1/';
 const NUVEI_PFW_SDK_URL_PROD        = 'https://cdn.safecharge.com/safecharge_resources/v1/checkout/checkout.js';
-const NUVEI_PFW_SDK_URL_TAG         = 'https://devmobile.sccdev-qa.com/checkoutNext/checkout.js';
 const NUVEI_PFW_POPUP_AUTOCLOSE_URL = 'https://cdn.safecharge.com/safecharge_resources/v1/websdk/autoclose.html';
 
 const NUVEI_PFW_SESSION_OO_DETAILS      = 'nuvei_last_open_order_details'; // a session key

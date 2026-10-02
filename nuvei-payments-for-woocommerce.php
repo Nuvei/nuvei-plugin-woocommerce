@@ -30,8 +30,8 @@ require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-base.php';
 require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-direct.php';
 
 // custom local config file
-if ( is_file( __DIR__ . '/config.local.php' ) ) {
-    include_once __DIR__ . '/config.local.php';
+if ( is_file( dirname(__DIR__) . '/nuvei.config.local.php' ) ) {
+    include_once dirname(__DIR__) . '/nuvei.config.local.php';
 }
 
 add_action( 'plugins_loaded', function() {
@@ -413,8 +413,9 @@ class Nuvei_Payments_For_Woocommerce
         // modal package has no Order-Pay logic at all.
         $is_order_pay_page = is_wc_endpoint_url( 'order-pay' );
 
-        if ( self::$wc_nuvei->is_qa_site() ) {
-            $sdkUrl = NUVEI_PFW_SDK_URL_TAG;
+        // use custom settings
+        if ( defined('NUVEI_LOCAL_CONF') && !empty(NUVEI_LOCAL_CONF['simply_url']) ) {
+            $sdkUrl = NUVEI_LOCAL_CONF['simply_url'];
         }
 
         // load the SDK

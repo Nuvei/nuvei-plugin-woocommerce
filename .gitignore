@@ -2,4 +2,3 @@ vendor/*
 composer.*
 phpcs.xml
 .github/*
-config.local.php

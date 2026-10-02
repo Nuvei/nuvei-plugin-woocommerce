@@ -1020,10 +1020,14 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             'preventScrollOnInit'   => true,
 		);
 
-		// For the QA site only
-		if ( $this->is_qa_site() ) {
-			$checkout_data['webSdkEnv'] = 'devmobile';
-		}
+        // use custom settings
+        if ( defined('NUVEI_LOCAL_CONF') && !empty(NUVEI_LOCAL_CONF['webSdk_env']) ) {
+            $checkout_data['webSdkEnv'] = NUVEI_LOCAL_CONF['webSdk_env'];
+        }
+        // use custom settings
+        if ( defined('NUVEI_LOCAL_CONF') && !empty(NUVEI_LOCAL_CONF['simply_env']) ) {
+            $checkout_data['env'] = NUVEI_LOCAL_CONF['simply_env'];
+        }
 
 		// check for product with a plan
 		if ( $is_there_subscription ) {
@@ -1357,29 +1361,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			Nuvei_Pfw_Logger::write( 'Error when try to get Session Token' );
 			WC_Subscriptions_Manager::process_subscription_payment_failure_on_order( $parent_order );
 		}
-	}
-
-	/**
-	 * Common method to check if the plugin is used on the QA site.
-	 * The method also check if NUVEI_PFW_SDK_URL_TAG constant is defined.
-	 *
-	 * @return bool
-	 */
-	public function is_qa_site() {
-		$server_name = '';
-
-		if ( isset( $_SERVER['SERVER_NAME'] ) ) {
-			$server_name = filter_var( wp_unslash( $_SERVER['SERVER_NAME'] ), FILTER_SANITIZE_URL );
-		}
-
-		if ( ! empty( $server_name )
-			&& 'woocommerceautomation.gw-4u.com' == $server_name
-			&& defined( 'NUVEI_PFW_SDK_URL_TAG' )
-		) {
-			return true;
-		}
-
-		return false;
 	}
 
     /**
