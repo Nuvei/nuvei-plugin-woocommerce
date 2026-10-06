@@ -346,6 +346,22 @@ async function nuveiBlocksRunTransaction() {
                 jQuery('#radio-control-wc-payment-method-options-nuvei')
                     .closest('.wc-block-components-radio-control-accordion-option')
                     .append(`<div id="nuvei_checkout_container" data-placeholder="${nuveiCheckoutBlockContText}"></div>`);
+            
+                    // Hide nuvei_blocker if the modal for the expired session loaded
+                    const targetNode = jQuery('#nuvei_checkout_container')[0];
+
+                    const observer = new MutationObserver(function(mutations) {
+                        if (jQuery('.sfc-timeout').length) {
+                            console.log('Елементът се появи!');
+                            jQuery('#nuvei_blocker').hide();
+
+                            // stop the observer
+                //            observer.disconnect(); 
+                        }
+                    });
+
+                    // start observing
+                    observer.observe(targetNode, { childList: true, subtree: true });
             }
 
             if ('sdk' === scTrans?.checkoutIntegration
