@@ -186,7 +186,7 @@ function nuveiUpdateOrder(resolve, reject) {
             // success
             if (1 == data?.success) {
                 console.log('[Nuvei]: prepayment resolved.');
-
+//                jQuery('#nuvei_blocker').hide();
                 resolve();
                 return;
             }
