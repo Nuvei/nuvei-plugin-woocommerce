@@ -7,6 +7,52 @@
  * Depends on the shared consts/functions defined in nuvei_public.js
  * (loaded before this file).
  */
+
+/**
+ * Simply Connect prePayment for the Classic modal. Checks the Nuvei session
+ * still belongs to the WC Order shown in the modal - it may be taken by
+ * another Order placed in a second browser tab.
+ *
+ * @returns {Promise}
+ */
+function nuveiPrePaymentClassicModal() {
+    console.log('[Nuvei]: nuveiPrePaymentClassicModal');
+
+    return new Promise((resolve, reject) => {
+        let url = scTrans.apiUrl + '/pre-payment/';
+        url     += (url.indexOf('?') > -1 ? '&' : '?') + 'orderId=' + encodeURIComponent(window._nuveiOrderId);
+
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-WP-Nonce': scTrans.nuveiApiSec,
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(res => {
+                if (!res.ok) {
+                    throw res;
+                }
+
+                return res.json();
+            })
+            .then(data => {
+                if (1 == data?.success) {
+                    resolve();
+                    return;
+                }
+
+                reject();
+                nuveiShowErrorMsg(scTrans.OrderChanged);
+            })
+            .catch(err => {
+                console.error(err);
+                reject();
+                nuveiShowErrorMsg(scTrans.unexpectedError);
+            });
+    });
+}
+
 jQuery(function($) {
     if ('no' === scTrans.isPluginActive) {
         console.log('[Nuvei]: nuvei plugin is not active.');
@@ -140,6 +186,7 @@ jQuery(function($) {
 
                 // few modifications for Classic Checkout
                 sdkParams.onResult              = nuveiAfterSdkResponse;
+                sdkParams.prePayment            = nuveiPrePaymentClassicModal;
                 sdkParams.crossBrowserApplePay  = true;
 
                 simplyConnect(sdkParams);

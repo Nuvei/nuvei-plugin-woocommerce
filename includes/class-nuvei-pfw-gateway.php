@@ -552,7 +552,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
 		if ( ! method_exists( $order, 'get_payment_method' )
 			|| empty( $order->get_payment_method() )
-			|| ! in_array( $order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) )
+			|| NUVEI_PFW_GATEWAY_NAME !== $order->get_payment_method()
 		) {
 			return false;
 		}
@@ -1120,10 +1120,13 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
      * Here we just compare the current products (as hash) with the products hash
      * from the openOrder request. If all is same - fine. If it is not - return
      * success = 0, and the front-end will reloads.
+     * When WC Order ID is passed (Classic modal) we only check if the Nuvei
+     * session still belongs to this Order.
      *
+     * @param int $order_id Optional WC Order ID.
      * @return array
      */
-	public function checkout_prepayment_check() {
+	public function checkout_prepayment_check( $order_id = 0 ) {
 		Nuvei_Pfw_Logger::write( 'checkout_prepayment_check()' );
 
         // wakeup the WC and the session in case of API call
@@ -1154,6 +1157,25 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
         }
         catch (Exception $ex) {
             Nuvei_Pfw_Logger::write( $ex->getMessage(), 'A problem when try to get Nuvei data from the session' );
+        }
+
+        // Classic modal: the Nuvei session must still belong to this WC Order.
+        if ( $order_id > 0 ) {
+            if ( ! empty( $open_order_details['sessionToken'] )
+                && (string) ( $open_order_details['clientUniqueId'] ?? '' ) === (string) $order_id
+            ) {
+                return ['success' => 1];
+            }
+
+            Nuvei_Pfw_Logger::write(
+                [
+                    '$order_id'             => $order_id,
+                    '$open_order_details'   => $open_order_details,
+                ],
+                'checkout_prepayment_check() - session belongs to another order.'
+            );
+
+            return ['success' => 0];
         }
 
 		$nuvei_helper       = new Nuvei_Pfw_Helper();

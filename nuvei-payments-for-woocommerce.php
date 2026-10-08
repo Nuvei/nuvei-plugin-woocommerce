@@ -99,7 +99,7 @@ class Nuvei_Payments_For_Woocommerce
         self::set_translated_texts();
 
         add_action( 'wp_loaded', function () {
-            if ( in_array( Nuvei_Pfw_Http::get_param( 'wc-api' ), array( 'sc_listener', 'nuvei_listener' ) ) ) {
+            if ( 'nuvei_listener' == Nuvei_Pfw_Http::get_param( 'wc-api' ) ) {
                 $nuvei_notify_dmn = new Nuvei_Pfw_Notify_Url();
                 $nuvei_notify_dmn->process();
             }
@@ -189,7 +189,7 @@ class Nuvei_Payments_For_Woocommerce
             'woocommerce_my_account_my_orders_actions',
             function( $actions, $order ) {
                 if ( ! is_a( $order, 'WC_Order' )
-                    || ! in_array( $order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) )
+                    || NUVEI_PFW_GATEWAY_NAME !== $order->get_payment_method()
                     || ! is_order_received_page()
                 ) {
                     return $actions;
@@ -378,6 +378,7 @@ class Nuvei_Payments_For_Woocommerce
                 'ReadLog'           => __( 'Read Log', 'nuvei-payments-for-woocommerce' ),
                 'RefreshLogError'   => __( 'Getting log faild, please check the console for more information!', 'nuvei-payments-for-woocommerce' ),
                 'CheckoutFormError' => __( 'Checkout form class error, please contact the site administrator!', 'nuvei-payments-for-woocommerce' ),
+                'OrderChanged'      => __( 'Your cart was changed in another window. Please refresh the page and try again.', 'nuvei-payments-for-woocommerce' ),
                 'TransactionAppr'   => __( 'The transaction was approved.', 'nuvei-payments-for-woocommerce' ),
                 'RefundAmountError' => __( 'Please, check requested Refund amount!', 'nuvei-payments-for-woocommerce' ),
                 'TermsError'        => __( 'To continue, please accept the Terms!', 'nuvei-payments-for-woocommerce' ),
@@ -649,7 +650,7 @@ class Nuvei_Payments_For_Woocommerce
 
 		// error - in case this is not Nuvei order
 		if ( empty( $order->get_payment_method() )
-			|| ! in_array( $order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) )
+			|| NUVEI_PFW_GATEWAY_NAME !== $order->get_payment_method()
 		) {
 			wp_add_inline_script(
 				'nuvei_js_admin',
@@ -1678,7 +1679,7 @@ class Nuvei_Payments_For_Woocommerce
         register_rest_route(NUVEI_API_PATH, '/pre-payment/', array(
             'methods'             => 'GET',
             'callback'            => function($request) {
-                $data = self::$wc_nuvei->checkout_prepayment_check();
+                $data = self::$wc_nuvei->checkout_prepayment_check( absint( $request->get_param( 'orderId' ) ) );
 
                 return rest_ensure_response($data);
             },

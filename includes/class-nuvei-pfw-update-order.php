@@ -41,7 +41,10 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
             $oo_order_id    = $func_params['oo_order_id'];
         }
 
-        if ( ! empty(WC()->cart->total) ) {
+        if ( is_a( $this->sc_order, 'WC_Order' ) ) {
+            $cart_amount = (string) number_format( (float) $this->sc_order->get_total(), 2, '.', '' );
+        }
+        elseif ( ! empty(WC()->cart->total) ) {
             $cart_amount = (string) number_format( WC()->cart->total, 2, '.', '' );
         }
         else {

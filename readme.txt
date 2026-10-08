@@ -64,11 +64,15 @@ If you plan to install this plugin form the WordPress store, but use a version d
 == Changelog ==
 
 = 3.16.0 =
-* Added an option to use Simply Connect - integrated in the the page or in a modal.
+* Added an option to use Simply Connect - integrated in the page or in a modal.
 * Improved order matching for payment notifications, making order status updates more reliable.
 * Improved handling of wallet payments (Google Pay, Apple Pay, Paze) on the Blocks Checkout.
 * Improved order data synchronization with Nuvei on the Classic Checkout.
 * Checkout session data is now cleared after a successful order, for a cleaner start on the next purchase.
+* Improved order linking with Nuvei when paying in the Simply Connect modal on the Classic Checkout.
+* Payment in the modal is now blocked if the cart was changed in another browser tab, preventing a mismatch between the paid and displayed order.
+* The amount sent to Nuvei for an existing order is now always taken from the order itself.
+* Removed support for the legacy "sc" payment method ID and "sc_listener" notification URL.
 
 = 3.15.2 =
 * Added additional check for Simply Connect, in case the container is re-rendered.

@@ -90,7 +90,6 @@ abstract class Nuvei_Pfw_Request {
 			return;
 		}
 
-		// check for 'sc' also because of the older Orders
         if ($return) {
             return $this->is_nuvei_order($order_id, $return);
         }
@@ -856,7 +855,7 @@ abstract class Nuvei_Pfw_Request {
 			'set_nuvei_session_data'
 		);
 	}
-
+    
 	/**
 	 * Just a helper function to extract last of Nuvei transactions.
 	 * It is possible to set array of desired types. First found will
@@ -1144,7 +1143,7 @@ abstract class Nuvei_Pfw_Request {
         }
         
         if ( ! $this->sc_order instanceof WC_Order
-            || ! in_array( $this->sc_order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) ) 
+            || NUVEI_PFW_GATEWAY_NAME !== $this->sc_order->get_payment_method()
         ) {
 			$this->message  = $msg 
                             = 'Error - the order does not belongs to Nuvei.';
