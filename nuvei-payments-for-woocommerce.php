@@ -214,6 +214,7 @@ class Nuvei_Payments_For_Woocommerce
 
             // remove the session order data
             WC()->session->set( NUVEI_PFW_SESSION_PROD_DETAILS, array() );
+            WC()->session->set( NUVEI_PFW_SESSION_OO_DETAILS, array() );
 
             // for the case Approved transaction after Declined, the Order is with status Fails
             $request_status = mb_strtolower( Nuvei_Pfw_Http::get_request_status() );

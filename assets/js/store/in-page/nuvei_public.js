@@ -398,6 +398,8 @@ function showNuveiCheckout(_params) {
 
     // add some parameters to the Classic Checkout form
     if ( jQuery(nuveiCheckoutClassicFormClass).length > 0) {
+        jQuery('#nuvei_session_token, #nuvei_oo_order_id').remove();
+
         jQuery(nuveiCheckoutClassicFormClass)
             .append(`<input id="nuvei_session_token" type="hidden" name="nuvei_session_token" value="${nuveiCheckoutSdkParams.sessionToken}" />`);
 

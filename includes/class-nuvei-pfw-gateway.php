@@ -482,6 +482,16 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 
             // success
             if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
+                // keep the Order meta in sync with the Nuvei Order we actually updated
+                if ( ! empty( $resp['orderId'] ) ) {
+                    $order->update_meta_data( NUVEI_PFW_ORDER_ID, $resp['orderId'] );
+                }
+                if ( ! empty( $resp['clientUniqueId'] ) ) {
+                    $order->update_meta_data( NUVEI_PFW_CLIENT_UNIQUE_ID, $resp['clientUniqueId'] );
+                }
+
+                $order->save();
+
                 return [
                     'result'    => 'success',
                     'redirect'  => '#',

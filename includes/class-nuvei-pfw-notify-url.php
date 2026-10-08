@@ -479,6 +479,21 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
             Nuvei_Pfw_Logger::write( $orders, 'Search by clientUniqueId.' );
         }
         
+        // if still no results try to search by the Nuvei Order ID
+        $ppp_tr_id = Nuvei_Pfw_Http::get_param( 'PPP_TransactionID' );
+        
+        if ( empty($orders) && ! empty($ppp_tr_id) ) {
+            $orders = wc_get_orders([
+                'meta_key'   => NUVEI_PFW_ORDER_ID,
+                'meta_value' => $ppp_tr_id,
+                'limit'      => 1,
+                'orderby'    => 'date',
+                'order'      => 'DESC',
+            ]);
+            
+            Nuvei_Pfw_Logger::write( $orders, 'Search by PPP_TransactionID.' );
+        }
+        
         // Map WC_Order objects to the legacy {post_id} format expected by callers.
         return array_map( function( $order ) {
             return (object) [ 'post_id' => $order->get_id() ];

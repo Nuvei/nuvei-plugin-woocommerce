@@ -410,7 +410,8 @@ async function nuveiBlocksRunTransaction() {
                         type: emitResponse.responseTypes.SUCCESS,
                         meta: {
                             paymentMethodData: {
-                                _nuveiTrId: payment.transaction_id
+                                _nuveiTrId: payment.transaction_id,
+                                _nuveiPm: nuveiSelectedPaymentMethod
                             }
                         }
                     };
