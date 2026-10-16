@@ -391,6 +391,12 @@ function showNuveiCheckout(_params) {
     nuveiCheckoutSdkParams.onSelectPaymentMethod    = nuveiPmChange;
     nuveiCheckoutSdkParams.onFormValidated          = nuveiCheckIsSimplyValid;
     nuveiCheckoutSdkParams.crossBrowserApplePay     = true;
+    
+    console.log(nuveiIsPayForExistingOrderPage, window._nuveiOrderId)
+    
+    if (nuveiIsPayForExistingOrderPage || typeof window._nuveiOrderId != 'undefined') {
+        nuveiCheckoutSdkParams.renderTo = '#nuvei_checkout_container';
+    }
 
 	simplyConnect(nuveiCheckoutSdkParams);
 
@@ -563,6 +569,29 @@ function nuveiShowErrorMsg(text) {
  */
 function nuveiPayForExistingOrder() {
     console.log('[Nuvei]: nuveiPayForExistingOrder');
+
+    // the container is missing when render_to is not "nuvei_checkout_container"
+    if ( jQuery('#nuvei_checkout_container').length == 0 ) {
+        let nuveiPmBox = jQuery('.payment_box.payment_method_nuvei').first();
+        let nuveiContainer = '<div id="nuvei_checkout_container" data-placeholder="Loading..."></div>';
+
+        // WC omits the payment box when the gateway description is empty
+        if ( nuveiPmBox.length == 0 ) {
+            nuveiPmBox = jQuery('<div class="payment_box payment_method_nuvei"></div>');
+
+            let nuveiPmItem = jQuery(`${nuveiCheckoutClassicPMethodName}[value="${scTrans.paymentGatewayName}"]`)
+                .first().closest('li');
+
+            if ( nuveiPmItem.length ) {
+                nuveiPmItem.append(nuveiPmBox);
+            }
+            else {
+                jQuery('#payment').append(nuveiPmBox);
+            }
+        }
+
+        nuveiPmBox.append(nuveiContainer);
+    }
 
     fetch(scTrans.apiUrl + '/get-data-for-existing-order/', {
         method: 'POST',
@@ -923,7 +952,7 @@ jQuery(function($) {
         if ( jQuery('body').hasClass('woocommerce-order-pay') ) {
             nuveiIsPayForExistingOrderPage = true;
 
-            console.log(jQuery(nuveiCheckoutClassicPMethodName).val());
+            console.log('[Nuvei]: selected PM ' + jQuery(nuveiCheckoutClassicPMethodName).val());
 
             // on-load, load Simply Connect if need
             if ( jQuery(nuveiCheckoutClassicPMethodName).val() == scTrans.paymentGatewayName ) {
