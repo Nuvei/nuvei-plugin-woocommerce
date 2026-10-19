@@ -28,6 +28,115 @@ async function nuveiBlocksRunModalTransaction() {
 }
 
 /**
+ * Simply Connect prePayment for the Blocks modal, order-first flow. Checks the
+ * Nuvei session still belongs to the WC Order shown in the modal - it may be
+ * taken by another Order placed in a second browser tab.
+ *
+ * @returns {Promise}
+ */
+function nuveiPrePaymentBlocksModal() {
+    console.log('[Nuvei]: nuveiPrePaymentBlocksModal');
+
+    return new Promise((resolve, reject) => {
+        let url = scTrans.apiUrl + '/pre-payment/';
+        url     += (url.indexOf('?') > -1 ? '&' : '?') + 'orderId=' + encodeURIComponent(window._nuveiOrderId);
+
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-WP-Nonce': scTrans.nuveiApiSec,
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(res => {
+                if (!res.ok) {
+                    throw res;
+                }
+
+                return res.json();
+            })
+            .then(data => {
+                if (1 == data?.success) {
+                    resolve();
+                    return;
+                }
+
+                reject();
+                nuveiShowErrorMsg(scTrans.OrderChanged);
+            })
+            .catch(err => {
+                console.error(err);
+                reject();
+                nuveiShowErrorMsg(scTrans.unexpectedError);
+            });
+    });
+}
+
+/**
+ * Order-first flow: WC already saved the Order (process_payment() returned
+ * nuvei_try_payment), so open the modal and run the transaction against it.
+ * Resolves with { success, transaction_id } or { success: false, error }.
+ *
+ * @param {int} orderId The saved WC Order ID.
+ * @returns {Promise}
+ */
+function nuveiBlocksRunModalOrderTransaction(orderId) {
+    return new Promise( function( resolve ) {
+        nuveiBlocksResolvePayment   = resolve;
+        window._nuveiOrderId        = orderId;
+
+        fetch(scTrans.apiUrl + '/get-data-for-existing-order/', {
+            method: 'POST',
+            headers: {
+                'X-WP-Nonce': scTrans.nuveiApiSec,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ orderId: orderId })
+        })
+            .then(res => {
+                if (!res.ok) {
+                    throw res;
+                }
+
+                return res.json();
+            })
+            .then(data => {
+                console.log('[Nuvei]: data for existing order', data);
+
+                if (!data?.sessionToken) {
+                    throw data;
+                }
+
+                delete(data.ordRedirectUrl);
+
+                let sdkParams = data;
+
+                sdkParams.onResult              = nuveiAfterSdkResponseBlocks;
+                sdkParams.prePayment            = nuveiPrePaymentBlocksModal;
+                sdkParams.onReady               = nuveiOnSimplyReady;
+                sdkParams.crossBrowserApplePay  = true;
+
+                simplyConnect(sdkParams);
+
+                // hand off from the full-page blocker to the modal's own
+                // "Loading..." placeholder while the SDK initializes
+                jQuery('#nuvei_blocker').hide();
+                jQuery('#nuvei_checkout_modal_overlay').show();
+            })
+            .catch(err => {
+                console.error(err);
+
+                jQuery('#nuvei_checkout_modal_overlay').hide();
+
+                if ( nuveiBlocksResolvePayment ) {
+                    nuveiBlocksResolvePayment( { success: false, error: scTrans.unexpectedError } );
+                    nuveiBlocksResolvePayment = null;
+                }
+            });
+    } );
+}
+
+/**
  * Simply Connect onResult callback for Blocks modal mode.
  *
  * @param object resp
@@ -158,8 +267,8 @@ jQuery(function() {
 
     // bail out entirely if scTrans was never localized on this page (e.g.
     // WC Blocks preloaded this payment-method script on a page/context
-    // where Nuvei isn't actually rendered) or when not in SDK mode.
-    if ( !window.scTrans || 'sdk' !== scTrans?.checkoutIntegration ) {
+    // where Nuvei isn't actually rendered).
+    if ( !window.scTrans ) {
         return;
     }
 
@@ -207,6 +316,15 @@ jQuery(function() {
             nuveiCloseCheckoutModal();
 
             // cancel a pending payment promise so onPaymentSetup doesn't hang
+            if ( nuveiBlocksResolvePayment ) {
+                nuveiBlocksResolvePayment( { success: false, error: scTrans.PaymentCanceled } );
+                nuveiBlocksResolvePayment = null;
+            }
+        });
+
+        // OK on an in-modal message (e.g. prePayment rejected) closes the
+        // modal - release the pending payment promise too.
+        jQuery(document.body).on('click', '#nuvei_checkout_modal_overlay .nuvei-modal-message-ok', function() {
             if ( nuveiBlocksResolvePayment ) {
                 nuveiBlocksResolvePayment( { success: false, error: scTrans.PaymentCanceled } );
                 nuveiBlocksResolvePayment = null;

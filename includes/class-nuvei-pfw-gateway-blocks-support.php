@@ -31,8 +31,10 @@ final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
         $helper     = new Nuvei_Pfw_Helper();
         $render_to  = $this->settings['render_to'] ?? '';
         // container mode uses the frozen, pre-modal package; modal mode uses
-        // the new package, plus its blocks-modal.js add-on
-        $is_modal   = 'nuvei_checkout_modal' == $render_to;
+        // the new package, plus its blocks-modal.js add-on. Cashier always
+        // uses the in-page package.
+        $is_modal   = 'nuvei_checkout_modal' == $render_to
+            && 'sdk' == ( $this->settings['integration_type'] ?? '' );
         $js_folder  = $is_modal ? 'store/modal' : 'store/in-page';
 
 		wp_register_script(

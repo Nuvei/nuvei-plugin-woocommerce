@@ -169,7 +169,68 @@ function nuveiIsCheckoutBlocksFormValid() {
 
     const Content = (props) => {
         const { eventRegistration, emitResponse } = props;
-        const { onPaymentSetup, onCheckoutFail } = eventRegistration;
+        const { onPaymentSetup, onCheckoutFail, onCheckoutSuccess } = eventRegistration;
+
+        // Order-first flow: nothing to pay here - let WC save the Order, the
+        // payment runs in onCheckoutSuccess below.
+        useEffect(() => {
+            const unsubscribe = onPaymentSetup( function() {
+                console.log('[Nuvei]: onPaymentSetup - let WC save the Order.');
+
+                jQuery('#nuvei_blocker').show();
+
+                return {
+                    type: emitResponse.responseTypes.SUCCESS
+                };
+            } );
+
+            return unsubscribe;
+        }, [onPaymentSetup]);
+
+        // Fires after the Order is saved and process_payment() returned, before
+        // WC redirects. Open the modal and pay; ERROR + retry stops the redirect
+        // and keeps the cart and the pending Order for the next try.
+        useEffect(() => {
+            const unsubscribe = onCheckoutSuccess( async function( data ) {
+                const details = data?.processingResponse?.paymentDetails || {};
+
+                console.log('[Nuvei]: onCheckoutSuccess', data);
+
+                // not our order-first response (e.g. Cashier) - let WC proceed
+                if ( '1' !== details.nuvei_try_payment ) {
+                    return {
+                        type: emitResponse.responseTypes.SUCCESS
+                    };
+                }
+
+                const orderId = parseInt( details.nuvei_order_id, 10 );
+                let payment   = { success: false, error: scTrans.unexpectedError };
+
+                if ( orderId > 0 ) {
+                    payment = await nuveiBlocksRunModalOrderTransaction( orderId );
+                }
+
+                if ( !payment.success ) {
+                    if ( !nuveiBlocksRefreshInProgress ) {
+                        jQuery('#nuvei_blocker').hide();
+                    }
+
+                    return {
+                        type: emitResponse.responseTypes.ERROR,
+                        message: payment.error || scTrans.paymentDeclined,
+                        retry: true,
+                        messageContext: emitResponse.noticeContexts.PAYMENTS
+                    };
+                }
+
+                // approved - WC redirects to the success URL from process_payment()
+                return {
+                    type: emitResponse.responseTypes.SUCCESS
+                };
+            } );
+
+            return unsubscribe;
+        }, [onCheckoutSuccess]);
 
         // if the overall checkout ultimately fails on WC's side after we
         // already returned SUCCESS (transaction was already approved by
@@ -190,86 +251,86 @@ function nuveiIsCheckoutBlocksFormValid() {
         }, [onCheckoutFail]);
 
         // subscribe for place order event
-        useEffect(() => {
-            const unsubscribe = onPaymentSetup( async function() {
-                console.log('[Nuvei]: onPaymentSetup logic');
-
-                jQuery('#nuvei_blocker').show();
-
-                // For redirect/cashier mode - just let WooCommerce proceed
-                if ( 'sdk' !== scTrans?.checkoutIntegration ) {
-                    // check if form is invalid, just to hide the blocker
-                    nuveiIsCheckoutBlocksFormValid();
-
-                    return {
-                        type: emitResponse.responseTypes.SUCCESS
-                    };
-                }
-
-                // Wallet flow: prePayment already ran validations and nuveiUpdateOrder.
-                // Just set up the resolver and wait for onResult to call it.
-                if ( nuveiWalletInProgress ) {
-                    nuveiWalletInProgress = false;
-
-                    const payment = await new Promise(res => { nuveiBlocksResolvePayment = res; });
-
-                    if ( !payment.success ) {
-                        if ( !nuveiBlocksRefreshInProgress ) {
-                            jQuery('#nuvei_blocker').hide();
-                        }
-
-                        return {
-                            type: emitResponse.responseTypes.ERROR,
-                            message: payment.error || scTrans.paymentDeclined
-                        };
-                    }
-
-                    return {
-                        type: emitResponse.responseTypes.SUCCESS,
-                        meta: {
-                            paymentMethodData: {
-                                _nuveiTrId: payment.transaction_id,
-                                _nuveiPm: nuveiSelectedPaymentMethod
-                            }
-                        }
-                    };
-                }
-
-                // Step 1: WC Blocks already blocks onPaymentSetup from firing
-                // when its own fields are invalid, and nuveiIsSimplyFormValid
-                // is meaningless here since the SDK form doesn't exist yet -
-                // it only renders once the modal opens, below.
-
-                // Step 2: run transaction against Order ID
-                const payment = await nuveiBlocksRunModalTransaction();
-
-                if ( !payment.success ) {
-                    if ( !nuveiBlocksRefreshInProgress ) {
-                        jQuery('#nuvei_blocker').hide();
-                    }
-
-                    return {
-                        type: emitResponse.responseTypes.ERROR,
-                        message: payment.error || scTrans.paymentDeclined
-                    };
-                }
-
-                // Step 3: approved - continue the proccess
-                return {
-                    type: emitResponse.responseTypes.SUCCESS,
-                    meta: {
-                        paymentMethodData: {
-                            _nuveiTrId: payment.transaction_id,
-                            _nuveiPm: nuveiSelectedPaymentMethod
-                        }
-                    }
-                };
-            } );
-
-            // Cleanup on unmount
-            return unsubscribe;
-
-        }, [onPaymentSetup]);
+//        useEffect(() => {
+//            const unsubscribe = onPaymentSetup( async function() {
+//                console.log('[Nuvei]: onPaymentSetup logic');
+//
+//                jQuery('#nuvei_blocker').show();
+//
+//                // For redirect/cashier mode - just let WooCommerce proceed
+//                if ( 'sdk' !== scTrans?.checkoutIntegration ) {
+//                    // check if form is invalid, just to hide the blocker
+//                    nuveiIsCheckoutBlocksFormValid();
+//
+//                    return {
+//                        type: emitResponse.responseTypes.SUCCESS
+//                    };
+//                }
+//
+//                // Wallet flow: prePayment already ran validations and nuveiUpdateOrder.
+//                // Just set up the resolver and wait for onResult to call it.
+//                if ( nuveiWalletInProgress ) {
+//                    nuveiWalletInProgress = false;
+//
+//                    const payment = await new Promise(res => { nuveiBlocksResolvePayment = res; });
+//
+//                    if ( !payment.success ) {
+//                        if ( !nuveiBlocksRefreshInProgress ) {
+//                            jQuery('#nuvei_blocker').hide();
+//                        }
+//
+//                        return {
+//                            type: emitResponse.responseTypes.ERROR,
+//                            message: payment.error || scTrans.paymentDeclined
+//                        };
+//                    }
+//
+//                    return {
+//                        type: emitResponse.responseTypes.SUCCESS,
+//                        meta: {
+//                            paymentMethodData: {
+//                                _nuveiTrId: payment.transaction_id,
+//                                _nuveiPm: nuveiSelectedPaymentMethod
+//                            }
+//                        }
+//                    };
+//                }
+//
+//                // Step 1: WC Blocks already blocks onPaymentSetup from firing
+//                // when its own fields are invalid, and nuveiIsSimplyFormValid
+//                // is meaningless here since the SDK form doesn't exist yet -
+//                // it only renders once the modal opens, below.
+//
+//                // Step 2: run transaction against Order ID
+//                const payment = await nuveiBlocksRunModalTransaction();
+//
+//                if ( !payment.success ) {
+//                    if ( !nuveiBlocksRefreshInProgress ) {
+//                        jQuery('#nuvei_blocker').hide();
+//                    }
+//
+//                    return {
+//                        type: emitResponse.responseTypes.ERROR,
+//                        message: payment.error || scTrans.paymentDeclined
+//                    };
+//                }
+//
+//                // Step 3: approved - continue the proccess
+//                return {
+//                    type: emitResponse.responseTypes.SUCCESS,
+//                    meta: {
+//                        paymentMethodData: {
+//                            _nuveiTrId: payment.transaction_id,
+//                            _nuveiPm: nuveiSelectedPaymentMethod
+//                        }
+//                    }
+//                };
+//            } );
+//
+//            // Cleanup on unmount
+//            return unsubscribe;
+//
+//        }, [onPaymentSetup]);
     };
 
     const nuveiBlocksOptions = {

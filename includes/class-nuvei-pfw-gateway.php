@@ -323,8 +323,8 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$nuvei_order_details    = WC()->session->get( NUVEI_PFW_SESSION_PROD_DETAILS );
 		$nuvei_oo_details       = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS );
         // is Classic Checkout request
-        $request_uri            = filter_input( INPUT_SERVER, 'REQUEST_URI', FILTER_SANITIZE_URL );
-        $is_classic             = false === strpos( (string) $request_uri, 'wc/store/v1/checkout' );
+        $request_uri    = filter_input( INPUT_SERVER, 'REQUEST_URI', FILTER_SANITIZE_URL );
+        $is_classic     = false === strpos( (string) $request_uri, 'wc/store/v1/checkout' );
 
 		Nuvei_Pfw_Logger::write(
 			array(
@@ -443,25 +443,36 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
          * Here we already have saved Order, but not transaction/payment.
          * At this place we will call updateOrder request, using the Order details.
          */
-        if ( empty(Nuvei_Pfw_Http::get_param( 'nuvei_transaction_id' )) && $is_classic ) {
+        $order->save();
+
+        // Blocks in-page (container) flow - the payment is already done in
+        // onPaymentSetup. WC Store API copies payment_data only into $_POST.
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $is_paid_blocks = ! $is_classic && ! empty( $_POST['_nuveiTrId'] );
+
+        // Modal mode (Classic and Blocks): Simply Connect isn't rendered before
+        // Place Order, so there is no existing Nuvei Order to update yet - the JS
+        // will call /get-data-for-existing-order/ (openOrder) right after this response.
+        if ( ! $is_paid_blocks && 'nuvei_checkout_modal' == ( $this->settings['render_to'] ?? '' ) ) {
+            Nuvei_Pfw_Logger::write( 'Process payment, modal mode.' );
+
+            return [
+                'result'            => 'success',
+                'redirect'          => $is_classic ? '#' : $return_success_url,
+                // flat keys for Blocks - WC Store API casts payment_details to strings
+                'nuvei_try_payment' => '1',
+                'nuvei_order_id'    => $order_id,
+                // Classic Checkout
+                'data'              => [
+                    'nuvei_try_payment' => true,
+                    'success_url'       => $return_success_url,
+                    'order_id'          => $order_id,
+                ],
+            ];
+        }
+
+        if ( $is_classic ) {
             Nuvei_Pfw_Logger::write( 'Process payment, classic checkout' );
-
-            $order->save();
-
-            // Modal mode: Simply Connect isn't rendered before Place Order, so
-            // there is no existing Nuvei Order to update yet - the JS will call
-            // /get-data-for-existing-order/ (openOrder) right after this response.
-            if ( 'nuvei_checkout_modal' == ( $this->settings['render_to'] ?? '' ) ) {
-                return [
-                    'result'   => 'success',
-                    'redirect' => '#',
-                    'data'     => [
-                        'nuvei_try_payment' => true,
-                        'success_url'       => $return_success_url,
-                        'order_id'          => $order_id,
-                    ],
-                ];
-            }
 
             // call Update Order
             $helper = new Nuvei_Pfw_Helper();
@@ -504,16 +515,17 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             }
 
             Nuvei_Pfw_Logger::write( 'Process payment, classic checkout last error.' );
+
             // error
+            wc_add_notice( __( 'Unexpected error, please try again later!', 'nuvei-payments-for-woocommerce' ), 'error' );
+
             return array(
-				'result'   => 'success',
-				'redirect' => array(
-					'Status' => 'error',
-				),
-				wc_get_checkout_url() . 'order-received/' . $order_id . '/',
-			);
+                'result'   => 'failure',
+                'redirect' => '',
+            );
         }
 
+        // Blocks in-page flow - the transaction is already approved.
 		$order->update_status( $this->settings['status_auth'] );
 		$order->save();
 

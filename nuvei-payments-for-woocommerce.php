@@ -414,6 +414,11 @@ class Nuvei_Payments_For_Woocommerce
         // form.checkout) and always uses the "in-page" package - the
         // modal package has no Order-Pay logic at all.
         $is_order_pay_page = is_wc_endpoint_url( 'order-pay' );
+        // the modal package is for Simply Connect only - Cashier always
+        // uses the "in-page" package
+        $use_modal_pkg = !$is_order_pay_page
+            && 'nuvei_checkout_modal' == $render_to
+            && 'sdk' == ( self::$wc_nuvei->settings['integration_type'] ?? '' );
 
         // use custom settings
         if ( defined('NUVEI_LOCAL_CONF') && !empty(NUVEI_LOCAL_CONF['simply_url']) ) {
@@ -430,8 +435,8 @@ class Nuvei_Payments_For_Woocommerce
         );
 
         // main JS - the file depends on the "render_to" setting, except on
-        // the Order-Pay page which always uses the "in-page" package
-        $public_js_path = ( !$is_order_pay_page && 'nuvei_checkout_modal' == $render_to )
+        // the Order-Pay page and for Cashier, which always use the "in-page" package
+        $public_js_path = $use_modal_pkg
             ? 'assets/js/store/modal/nuvei_public.js'
             : 'assets/js/store/in-page/nuvei_public.js';
 
@@ -494,14 +499,14 @@ class Nuvei_Payments_For_Woocommerce
         wp_localize_script( 'nuvei_js_public', 'scTrans', $localizations );
         wp_enqueue_script( 'nuvei_js_public' );
         
-        // Container mode (and always the Order-Pay page):
+        // Container mode (and always the Order-Pay page and Cashier):
         // assets/js/store/in-page/nuvei_public.js already contains the full
         // Classic Checkout / Order-Pay logic (same as stable v3.15.2),
         // no extra script needed.
 
         // Modal mode: Classic Checkout modal-specific logic. Never on the
-        // Order-Pay page - it always uses the in-page package above.
-        if ( !$is_order_pay_page && 'nuvei_checkout_modal' == $render_to ) {
+        // Order-Pay page or for Cashier - they always use the in-page package above.
+        if ( $use_modal_pkg ) {
             wp_register_script(
                 'nuvei-checkout-modal',
                 $plugin_url . 'assets/js/store/modal/classic-modal.js',

@@ -59,11 +59,6 @@ jQuery(function($) {
         return;
     }
 
-    // only for SDK flow
-    if ('sdk' != scTrans.checkoutIntegration) {
-        return;
-    }
-
     // only on Classic Checkout, shortcode
     if (! jQuery(nuveiCheckoutClassicFormClass).length) {
         return;

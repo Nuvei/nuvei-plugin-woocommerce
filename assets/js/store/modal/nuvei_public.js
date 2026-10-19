@@ -266,10 +266,6 @@ function nuveiShowErrorMsg(text) {
 function nuveiGetCheckoutData(formId, attrName = 'name') {
     console.log('[Nuvei]: call nuveiGetCheckoutData', formId, attrName);
 
-    if ('sdk' !== scTrans.checkoutIntegration) {
-        return;
-    }
-
     // ── Debounce ────────────────────────────────────────────────────────────
     clearTimeout(nuveiGetCheckoutDataTimer);
 
