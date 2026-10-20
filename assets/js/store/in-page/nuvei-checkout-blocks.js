@@ -14,6 +14,78 @@ var nuveiAllowFormSubmit    = false;
 // must be outside the function so clearTimeout actually debounces
 var nuveiBlocksReloadTimer  = null;
 
+// pending prePayment promise callbacks of the wallet flow
+var nuveiWalletPrePaymentResolve    = null;
+var nuveiWalletPrePaymentReject     = null;
+var nuveiWalletStoreUnsub           = null;
+var nuveiWalletStartTimer           = null;
+
+/**
+ * The Order was not saved or updateOrder failed: reject the pending wallet
+ * prePayment and reload the SDK with fresh data (new openOrder / session token).
+ */
+function nuveiWalletAbort( reloadSdk = true ) {
+    nuveiWalletInProgress = false;
+
+    if ( typeof nuveiWalletStoreUnsub === 'function' ) {
+        nuveiWalletStoreUnsub();
+        nuveiWalletStoreUnsub = null;
+    }
+
+    clearTimeout( nuveiWalletStartTimer );
+
+    if ( nuveiWalletPrePaymentReject ) {
+        nuveiWalletPrePaymentReject();
+        nuveiWalletPrePaymentResolve = null;
+        nuveiWalletPrePaymentReject  = null;
+
+        if ( reloadSdk ) {
+            nuveiReloadSdkAfterFailure(nuveiCheckoutBlockFormClass, 'id');
+        }
+        else {
+            jQuery('#nuvei_blocker').hide();
+        }
+    }
+}
+
+/**
+ * Wallet flow: WC can stop the checkout before the Order is saved (validation
+ * error, another payment-setup observer failing) without firing onCheckoutFail.
+ * Watch the checkout store - if it starts processing and returns to idle while
+ * the wallet prePayment is still pending, reject it. The SDK is still valid
+ * then, so no reload is needed.
+ */
+function nuveiWalletWatchCheckout() {
+    const checkoutStore = 'wc/store/checkout';
+    let wasBusy         = false;
+
+    nuveiWalletStoreUnsub = wp.data.subscribe( function() {
+        if ( ! nuveiWalletPrePaymentReject ) {
+            return;
+        }
+
+        const store = wp.data.select( checkoutStore );
+
+        if ( ! store.isIdle() ) {
+            wasBusy = true;
+            clearTimeout( nuveiWalletStartTimer );
+            return;
+        }
+
+        if ( wasBusy ) {
+            console.log('[Nuvei]: checkout returned to idle before the Order was saved.');
+            nuveiWalletAbort( false );
+        }
+    } );
+
+    // the click didn't start the checkout at all
+    nuveiWalletStartTimer = setTimeout( function() {
+        if ( nuveiWalletPrePaymentReject && ! wasBusy ) {
+            nuveiWalletAbort( false );
+        }
+    }, 3000 );
+}
+
 /**
  * We use pre-payment for the Blocks only.
  * We call this method from nuvei_public.js
@@ -38,24 +110,23 @@ function nuveiPrePaymentBlocks(paymentDetails) {
             return;
         }
 
-        // Wallet flow: prePayment fires before onPaymentSetup.
-        // After validation, resolve prePayment then trigger the WC Pay button so
-        // onPaymentSetup can set up nuveiBlocksResolvePayment and await onResult.
+        // Wallet flow, order-first: keep prePayment pending and click the WC Pay
+        // button, so WC saves the Order and process_payment() runs updateOrder
+        // with it. onCheckoutSuccess resolves this promise, onCheckoutFail rejects it.
         if ( nuveiWallets.indexOf(nuveiSelectedPaymentMethod) >= 0 ) {
-            nuveiUpdateOrder(
-                function() {
-                    nuveiWalletInProgress = true;
-                    resolve();
-                    jQuery(nuveiCheckoutBlockPayBtn).trigger('click');
-                },
-                reject
-            );
+            nuveiWalletInProgress           = true;
+            nuveiWalletPrePaymentResolve    = resolve;
+            nuveiWalletPrePaymentReject     = reject;
+
+            jQuery('#nuvei_blocker').show();
+            nuveiWalletWatchCheckout();
+            jQuery(nuveiCheckoutBlockPayBtn).trigger('click');
             return;
         }
 
-        // Default flow: onPaymentSetup already called nuveiBlocksRunTransaction()
-        // which set nuveiBlocksResolvePayment before calling submitPayment().
-        nuveiUpdateOrder(resolve, reject);
+        // Default flow: the Order is already saved and the Nuvei Order updated
+        // by process_payment(), onCheckoutSuccess called nuveiBlocksRunTransaction().
+        resolve();
         return;
 	});
 }
@@ -93,16 +164,6 @@ function nuveiIsCheckoutBlocksFormValid(justLoadSimply = false) {
                 });
 
                 nuveiDestroySimplyConnect();
-
-//                wp.data.dispatch( 'core/notices' ).createErrorNotice(
-//                    validationErrors[id].message,
-//                    {
-//                        id: 'nuvei-form-invalid', // Use a unique ID to prevent duplicates
-//                        context: 'wc/checkout',  // Important: This tells Woo to show it in the checkout area
-//                        isDismissible: true,
-//                    }
-//                );
-
                 // just break the loop
                 return true;
             }
@@ -207,11 +268,15 @@ function nuveiBlocksReloadSimply() {
         // add small delay
         clearTimeout( nuveiBlocksReloadTimer );
 
+        // the blocker stays until the new SDK fires onReady (nuveiOnSimplyReady)
+        // or the request fails (showNuveiCheckout / nuveiGetCheckoutData), so
+        // the customer can't pay against a half-loaded SDK.
         nuveiBlocksReloadTimer = setTimeout( function() {
             nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
-            jQuery('#nuvei_blocker').hide();
-            return;
         }, 600 );
+    }
+    else {
+        jQuery('#nuvei_blocker').hide();
     }
 }
 
@@ -225,14 +290,11 @@ function nuveiBlocksReloadSimply() {
  * @returns {void}
  */
 function nuveiAfterSdkResponseBlocks(resp) {
-    // TEMP DEBUG - remove once the "onResult never fires for Blocks" issue is diagnosed.
-    console.log('[Nuvei]: DEBUG onResult called. resolver set?', !!nuveiBlocksResolvePayment, resp);
-
+    console.log('[Nuvei]: afterSdkResponse for Blocks', resp);
+    
     if ( ! nuveiBlocksResolvePayment ) {
         return;
     }
-
-    console.log('[Nuvei]: afterSdkResponse for Blocks', resp);
 
     if ( (resp?.result?.toLowerCase() == 'approved' || resp?.result?.toLowerCase() == 'pending')
         && resp?.transactionId
@@ -280,10 +342,7 @@ function nuveiAfterSdkResponseBlocks(resp) {
     if ( resp?.transactionId ) {
         console.log('[Nuvei]: update the Nuvei Order and reload the checkout.');
 
-        nuveiBlocksRefreshInProgress = true;
-
-        jQuery('#nuvei_blocker').show();
-        nuveiGetCheckoutData(nuveiCheckoutBlockFormClass, 'id');
+        nuveiReloadSdkAfterFailure(nuveiCheckoutBlockFormClass, 'id');
     }
 }
 
@@ -335,7 +394,7 @@ async function nuveiBlocksRunTransaction() {
 
     const Content = (props) => {
         const { eventRegistration, emitResponse } = props;
-        const { onPaymentSetup } = eventRegistration;
+        const { onPaymentSetup, onCheckoutSuccess, onCheckoutFail } = eventRegistration;
 
         // only on the first load
         useEffect(() => {
@@ -388,31 +447,13 @@ async function nuveiBlocksRunTransaction() {
                     };
                 }
 
-                // Wallet flow: prePayment already ran validations and nuveiUpdateOrder.
-                // Just set up the resolver and wait for onResult to call it.
+                // Wallet flow: prePayment already validated and clicked the Pay
+                // button, just let WC save the Order (like the card flow below).
                 if ( nuveiWalletInProgress ) {
-                    nuveiWalletInProgress = false;
-
-                    const payment = await new Promise(res => { nuveiBlocksResolvePayment = res; });
-
-                    if ( !payment.success ) {
-                        if ( !nuveiBlocksRefreshInProgress ) {
-                            jQuery('#nuvei_blocker').hide();
-                        }
-
-                        return {
-                            type: emitResponse.responseTypes.ERROR,
-                            message: payment.error || scTrans.paymentDeclined
-                        };
-                    }
-
                     return {
                         type: emitResponse.responseTypes.SUCCESS,
                         meta: {
-                            paymentMethodData: {
-                                _nuveiTrId: payment.transaction_id,
-                                _nuveiPm: nuveiSelectedPaymentMethod
-                            }
+                            paymentMethodData: nuveiGetSessionPayload()
                         }
                     };
                 }
@@ -424,28 +465,23 @@ async function nuveiBlocksRunTransaction() {
                     };
                 }
 
-                // Step 2: run transaction against Order ID
-                const payment = await nuveiBlocksRunTransaction();
-
-                if ( !payment.success ) {
-                    if ( !nuveiBlocksRefreshInProgress ) {
-                        jQuery('#nuvei_blocker').hide();
-                    }
+                // the SDK is reloading - its session isn't the one we'd send
+                if ( !nuveiIsSimplyReady() ) {
+                    jQuery('#nuvei_blocker').hide();
 
                     return {
                         type: emitResponse.responseTypes.ERROR,
-                        message: payment.error || scTrans.paymentDeclined
+                        message: scTrans.unexpectedError
                     };
                 }
 
-                // Step 3: approved - continue the proccess
+                // Step 2: order-first flow - let WC save the Order. The payment
+                // runs in onCheckoutSuccess. Send the Nuvei session like Classic
+                // does, so process_payment() can call updateOrder.
                 return {
                     type: emitResponse.responseTypes.SUCCESS,
                     meta: {
-                        paymentMethodData: {
-                            _nuveiTrId: payment.transaction_id,
-                            _nuveiPm: nuveiSelectedPaymentMethod
-                        }
+                        paymentMethodData: nuveiGetSessionPayload()
                     }
                 };
             } );
@@ -454,6 +490,86 @@ async function nuveiBlocksRunTransaction() {
             return unsubscribe;
 
         }, [onPaymentSetup]);
+
+        // Fires after the Order is saved and process_payment() returned
+        // (updateOrder done), before WC redirects. Run the transaction now;
+        // ERROR + retry stops the redirect and keeps the cart and the Order.
+        useEffect(() => {
+            const unsubscribe = onCheckoutSuccess( async function( data ) {
+                const details = data?.processingResponse?.paymentDetails || {};
+
+                console.log('[Nuvei]: onCheckoutSuccess', data);
+
+                // Cashier - let WC proceed
+                if ( '1' !== details.nuvei_try_payment ) {
+                    nuveiWalletAbort();
+
+                    return {
+                        type: emitResponse.responseTypes.SUCCESS
+                    };
+                }
+
+                // Wallet: the Order is saved and updateOrder succeeded - release
+                // the SDK (prePayment) and wait for its onResult.
+                const isWallet = nuveiWalletInProgress && nuveiWalletPrePaymentResolve;
+
+                const payment = isWallet
+                    ? await new Promise( function( res ) {
+                        nuveiBlocksResolvePayment = res;
+
+                        nuveiWalletInProgress           = false;
+                        clearTimeout( nuveiWalletStartTimer );
+
+                        if ( typeof nuveiWalletStoreUnsub === 'function' ) {
+                            nuveiWalletStoreUnsub();
+                            nuveiWalletStoreUnsub = null;
+                        }
+                        nuveiWalletPrePaymentResolve();
+                        nuveiWalletPrePaymentResolve    = null;
+                        nuveiWalletPrePaymentReject     = null;
+                    } )
+                    : await nuveiBlocksRunTransaction();
+
+                if ( !payment.success ) {
+                    if ( !nuveiBlocksRefreshInProgress ) {
+                        jQuery('#nuvei_blocker').hide();
+                    }
+
+                    return {
+                        type: emitResponse.responseTypes.ERROR,
+                        message: payment.error || scTrans.paymentDeclined,
+                        retry: true,
+                        messageContext: emitResponse.noticeContexts.PAYMENTS
+                    };
+                }
+
+                // approved - WC redirects to the success URL from process_payment()
+                return {
+                    type: emitResponse.responseTypes.SUCCESS
+                };
+            } );
+
+            return unsubscribe;
+        }, [onCheckoutSuccess]);
+
+        // make sure the blocker doesn't stay stuck if WC fails the checkout
+        useEffect(() => {
+            const unsubscribe = onCheckoutFail( function() {
+                // wallet: Order not saved or updateOrder failed - reject prePayment
+                // and reload the SDK with a new session
+                nuveiWalletAbort();
+
+                if ( !nuveiBlocksRefreshInProgress ) {
+                    jQuery('#nuvei_blocker').hide();
+                }
+
+                return {
+                    type: emitResponse.responseTypes.SUCCESS
+                };
+            } );
+
+            return unsubscribe;
+        }, [onCheckoutFail]);
     };
 
     const nuveiBlocksOptions = {

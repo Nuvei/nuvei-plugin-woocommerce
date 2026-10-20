@@ -475,8 +475,10 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             ];
         }
 
-        if ( $is_classic ) {
-            Nuvei_Pfw_Logger::write( 'Process payment, classic checkout' );
+        // Classic Checkout and Blocks in-page (order-first): update the Nuvei
+        // Order with the saved WC Order, the payment is made by the JS afterwards.
+        if ( $is_classic || ! $is_paid_blocks ) {
+            Nuvei_Pfw_Logger::write( 'Process payment, order-first in-page flow' );
 
             // call Update Order
             $helper = new Nuvei_Pfw_Helper();
@@ -508,9 +510,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 $order->save();
 
                 return [
-                    'result'    => 'success',
-                    'redirect'  => '#',
-                    'data'      => [
+                    'result'            => 'success',
+                    'redirect'          => $is_classic ? '#' : $return_success_url,
+                    // flat keys for Blocks - WC Store API casts payment_details to strings
+                    'nuvei_try_payment' => '1',
+                    'nuvei_order_id'    => $order_id,
+                    'data'              => [
                         'nuvei_try_payment' => true,
                         'success_url'      => $return_success_url,
                         'order_id'         => $order_id,
@@ -518,7 +523,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
                 ];
             }
 
-            Nuvei_Pfw_Logger::write( 'Process payment, classic checkout last error.' );
+            Nuvei_Pfw_Logger::write( 'Process payment, order-first in-page last error.' );
 
             // error
             wc_add_notice( __( 'Unexpected error, please try again later!', 'nuvei-payments-for-woocommerce' ), 'error' );
