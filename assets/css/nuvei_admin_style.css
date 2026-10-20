@@ -71,23 +71,50 @@ th {
 }
 /* the styles for edit terms form ::END */
 
-/* For the messages in the Help Tools */
-.description .nuvei_payments_msg {
-    display: grid !important;
-    grid-template-columns: auto auto; /* Two columns: one for the child span and one for the button */
-    align-items: center; /* Aligns children vertically in the center */
+/* For the messages/transactions in the Help Tools */
+.description .nuvei_payments_msg,
+.description .nuvei_problem_tr {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
     column-gap: 10px;
-    padding-right: 0px !important;
-    margin-top: 0px !important;
+    padding: 6px 6px 6px 12px !important;
+    margin: 0 0 8px 0 !important;
 }
 
-.description .nuvei_payments_msg span:first-child {
+.description .nuvei_payments_msg span:first-child,
+.description .nuvei_problem_tr span:first-child {
     text-align: left;
 }
 
-.description .nuvei_payments_msg .notice-dismiss {
-    justify-self: end;
-    position: relative !important;
+.description .nuvei_payments_msg .notice-dismiss,
+.description .nuvei_problem_tr .notice-dismiss {
+    position: static !important;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.description .nuvei_payments_msg .notice-dismiss:before,
+.description .nuvei_problem_tr .notice-dismiss:before {
+    margin: 0;
+    color: #787c82;
+}
+
+.description .nuvei_payments_msg .notice-dismiss:hover,
+.description .nuvei_problem_tr .notice-dismiss:hover {
+    background: #f0f0f1;
+}
+
+.description .nuvei_payments_msg .notice-dismiss:hover:before,
+.description .nuvei_problem_tr .notice-dismiss:hover:before {
+    color: #d63638;
 }
 
 .nuvei-payment-ok {

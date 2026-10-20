@@ -73,6 +73,8 @@ If you plan to install this plugin form the WordPress store, but use a version d
 * Payment in the modal is now blocked if the cart was changed in another browser tab, preventing a mismatch between the paid and displayed order.
 * The amount sent to Nuvei for an existing order is now always taken from the order itself.
 * Removed support for the legacy "sc" payment method ID and "sc_listener" notification URL.
+* New Blocks Modal flow: the order is validated and saved first, and Simply Connect opens in the modal only after that.
+* Added messages in the Tools tab for transactions that have no matching Order, with the option to delete them from the list.
 
 = 3.15.2 =
 * Added additional check for Simply Connect, in case the container is re-rendered.

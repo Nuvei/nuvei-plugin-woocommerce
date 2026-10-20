@@ -33,9 +33,22 @@ final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
         // container mode uses the frozen, pre-modal package; modal mode uses
         // the new package, plus its blocks-modal.js add-on. Cashier always
         // uses the in-page package.
-        $is_modal   = 'nuvei_checkout_modal' == $render_to
-            && 'sdk' == ( $this->settings['integration_type'] ?? '' );
-        $js_folder  = $is_modal ? 'store/modal' : 'store/in-page';
+        $is_order_pay_page = is_wc_endpoint_url( 'order-pay' );
+        // the modal package is for Simply Connect only - Cashier always uses the "in-page" package
+        $use_modal_pkg = 'nuvei_checkout_modal' == $render_to;
+        
+        if ('sdk' != ( $this->settings['integration_type'] ?? '' )) {
+            $use_modal_pkg = false;
+        }
+        
+        if ($is_order_pay_page) {
+            $use_modal_pkg = false;
+        }
+        
+//        $is_modal   = 'nuvei_checkout_modal' == $render_to
+//            && 'sdk' == ( $this->settings['integration_type'] ?? '' );
+//        $js_folder  = $is_modal ? 'store/modal' : 'store/in-page';
+        $js_folder  = $use_modal_pkg ? 'store/modal' : 'store/in-page';
 
 		wp_register_script(
 			'nuvei-checkout-blocks',
@@ -57,8 +70,8 @@ final class Nuvei_Pfw_Gateway_Blocks_Support extends AbstractPaymentMethodType {
 		$handles = array( 'nuvei-checkout-blocks' );
 
         // modal mode needs an extra add-on script; container mode's logic
-        // is fully self-contained in the frozen nuvei-checkout-blocks.js
-        if ( $is_modal ) {
+//        if ( $is_modal ) {
+        if ( $use_modal_pkg ) {
             wp_register_script(
                 'nuvei-blocks-modal',
                 $this->plugin_dir_url . "assets/js/{$js_folder}/blocks-modal.js",

@@ -98,6 +98,8 @@ class Nuvei_Payments_For_Woocommerce
         // set global constant with translated texts
         self::set_translated_texts();
 
+        self::migrate_problem_transactions();
+
         add_action( 'wp_loaded', function () {
             if ( 'nuvei_listener' == Nuvei_Pfw_Http::get_param( 'wc-api' ) ) {
                 $nuvei_notify_dmn = new Nuvei_Pfw_Notify_Url();
@@ -410,16 +412,20 @@ class Nuvei_Payments_For_Woocommerce
         $sdkUrl     = NUVEI_PFW_SDK_URL_PROD;
 		$helper     = new Nuvei_Pfw_Helper();
         $render_to  = self::$wc_nuvei->settings['render_to'];
-        // Order-Pay page has its own form (#order_review, not
-        // form.checkout) and always uses the "in-page" package - the
-        // modal package has no Order-Pay logic at all.
+        // Order-Pay page has its own form (#order_review, not form.checkout) 
+        // and always uses the "in-page" package - the modal package has no Order-Pay logic at all.
         $is_order_pay_page = is_wc_endpoint_url( 'order-pay' );
-        // the modal package is for Simply Connect only - Cashier always
-        // uses the "in-page" package
-        $use_modal_pkg = !$is_order_pay_page
-            && 'nuvei_checkout_modal' == $render_to
-            && 'sdk' == ( self::$wc_nuvei->settings['integration_type'] ?? '' );
-
+        // the modal package is for Simply Connect only - Cashier always uses the "in-page" package
+        $use_modal_pkg = 'nuvei_checkout_modal' == $render_to;
+        
+        if ('sdk' != ( self::$wc_nuvei->settings['integration_type'] ?? '' )) {
+            $use_modal_pkg = false;
+        }
+        
+        if ($is_order_pay_page) {
+            $use_modal_pkg = false;
+        }
+                
         // use custom settings
         if ( defined('NUVEI_LOCAL_CONF') && !empty(NUVEI_LOCAL_CONF['simply_url']) ) {
             $sdkUrl = NUVEI_LOCAL_CONF['simply_url'];
@@ -437,8 +443,7 @@ class Nuvei_Payments_For_Woocommerce
         // main JS - the file depends on the "render_to" setting, except on
         // the Order-Pay page and for Cashier, which always use the "in-page" package
         $public_js_path = $use_modal_pkg
-            ? 'assets/js/store/modal/nuvei_public.js'
-            : 'assets/js/store/in-page/nuvei_public.js';
+            ? 'assets/js/store/modal/nuvei_public.js' : 'assets/js/store/in-page/nuvei_public.js';
 
         wp_register_script(
             'nuvei_js_public',
@@ -1364,12 +1369,80 @@ class Nuvei_Payments_For_Woocommerce
     }
 
 	/**
+	 * One-time migration of the old Auto-Void system messages (one message
+	 * per Transaction) to the problem Transactions list and a single message.
+	 */
+	public static function migrate_problem_transactions() {
+		if ( false !== get_option( NUVEI_PFW_PROBLEM_TRS_MIGRATED ) ) {
+			return;
+		}
+
+		$messages     = get_option( 'custom_system_messages', array() );
+		$transactions = get_option( NUVEI_PFW_PROBLEM_TRS_OPTION, array() );
+		$migrated     = 0;
+		$has_unread   = false;
+
+		if ( ! is_array( $messages ) ) {
+			$messages = array();
+		}
+        
+		if ( ! is_array( $transactions ) ) {
+			$transactions = array();
+		}
+
+		foreach ( $messages as $key => $msg ) {
+			// old messages have numeric keys
+			if ( ! is_int( $key )
+				|| empty( $msg['created_by'] )
+				|| 'nuvei_payments' != $msg['created_by']
+				|| empty( $msg['message'] )
+			) {
+				continue;
+			}
+
+			$text = wp_strip_all_tags( $msg['message'] );
+
+			// the Transaction ID is the last number in the old messages
+			if ( ! preg_match_all( '/\d+/', $text, $numbers ) ) {
+				continue;
+			}
+
+			$tr_id    = (int) end( $numbers[0] );
+			$order_id = preg_match( '/#(\d+)/', $text, $order_match ) ? (int) $order_match[1] : '';
+
+			if ( ! isset( $transactions[ $tr_id ] ) ) {
+				$transactions[ $tr_id ] = array(
+					'transactionId' => $tr_id,
+					'orderId'       => $order_id,
+					'status'        => 'migrated',
+					'timestamp'     => $msg['timestamp'] ?? current_time( 'mysql' ),
+					'updated'       => current_time( 'mysql' ),
+				);
+			}
+
+			if ( empty( $msg['read'] ) ) {
+				$has_unread = true;
+			}
+
+			unset( $messages[ $key ] );
+			++$migrated;
+		}
+
+		if ( $migrated > 0 ) {
+			update_option( NUVEI_PFW_PROBLEM_TRS_OPTION, $transactions, false );
+			update_option( 'custom_system_messages', $messages );
+
+			Nuvei_Pfw_Notify_Url::save_problem_trs_message( ! $has_unread );
+		}
+
+		update_option( NUVEI_PFW_PROBLEM_TRS_MIGRATED, 1 );
+	}
+
+	/**
 	 * Display Nuvei message in the admin.
 	 * At the moment we will use them only for auto-void warnings.
 	 */
 	public static function display_messages() {
-//         Nuvei_Pfw_Logger::write('display_messages');
-
 		$messages           = get_option( 'custom_system_messages', array() );
         $permission_error   = get_option('nuvei_logs_permission_error', 0);
 
@@ -1383,8 +1456,8 @@ class Nuvei_Payments_For_Woocommerce
 					continue;
 				}
 
-				echo '<div class="notice notice-info is-dismissible nuvei_payments_msg" data-index="' . esc_attr( $index ) . '">'
-					. '<p>' . wp_kses_post( $msg['message'] ) . '</p>'
+				echo '<div class="notice notice-error is-dismissible nuvei_payments_msg" data-index="' . esc_attr( $index ) . '">'
+                        . '<p>' . wp_kses_post( $msg['message'] ) . '</p>'
 					. '</div>';
 			}
 		}
@@ -1646,35 +1719,72 @@ class Nuvei_Payments_For_Woocommerce
             'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
         ));
 
-        // get custom Payment messages
+        // get the Transactions without Order
         register_rest_route(NUVEI_API_PATH, '/get-payment-custom-msg/', array(
             'methods'             => 'GET',
             'callback'            => function($request) {
-                $all_msgs   = get_option( 'custom_system_messages', array() );
-                $last_msgs  = array();
-                $cnt        = 1;
-                $msgs_cnt   = 50;
+                $transactions   = get_option( NUVEI_PFW_PROBLEM_TRS_OPTION, array() );
+                $list           = array();
 
-                Nuvei_Pfw_Logger::write($all_msgs);
-
-                if ( empty( $all_msgs ) ) {
-                    return rest_ensure_response($last_msgs);
+                if ( empty( $transactions ) || ! is_array( $transactions ) ) {
+                    return rest_ensure_response($list);
                 }
 
-                foreach ( array_reverse( $all_msgs, true ) as $index => $msg ) {
-                    if ( empty( $msg['created_by'] ) || 'nuvei_payments' != $msg['created_by'] ) {
-                        continue;
+                // newest first
+                uasort( $transactions, function( $a, $b ) {
+                    return strcmp( $b['updated'] ?? '', $a['updated'] ?? '' );
+                });
+
+                foreach ( $transactions as $tr_id => $tr ) {
+                    $text = __( 'Transaction', 'nuvei-payments-for-woocommerce' ) . ' ' . $tr_id;
+
+                    if ( ! empty( $tr['orderId'] ) ) {
+                        $text .= ' / ' . __( 'Order', 'nuvei-payments-for-woocommerce' ) . ' #' . $tr['orderId'];
                     }
 
-                    if ( $cnt >= $msgs_cnt ) {
-                        break;
-                    }
+                    $text .= ' - ' . ( $tr['updated'] ?? $tr['timestamp'] ?? '' );
 
-                    $last_msgs[ $index ] = $msg;
-                    ++$cnt;
+                    $list[] = array(
+                        // as string - the ID is bigger than the JS max safe integer
+                        'trId'    => (string) $tr_id,
+                        'message' => esc_html( $text ),
+                    );
                 }
 
-                return rest_ensure_response($last_msgs);
+                return rest_ensure_response($list);
+            },
+            'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
+        ));
+
+        // delete a Transaction without Order from the list
+        register_rest_route(NUVEI_API_PATH, '/delete-problem-tr/', array(
+            'methods'             => 'POST',
+            'callback'            => function($request) {
+                $tr_id          = absint( $request->get_param( 'trId' ) );
+                $transactions   = get_option( NUVEI_PFW_PROBLEM_TRS_OPTION, array() );
+
+                if ( ! is_array( $transactions ) || ! isset( $transactions[ $tr_id ] ) ) {
+                    return new WP_Error(
+                        'action_failed',
+                        'Something went wrong.',
+                        array( 'status' => 404 )
+                    );
+                }
+
+                unset( $transactions[ $tr_id ] );
+                update_option( NUVEI_PFW_PROBLEM_TRS_OPTION, $transactions, false );
+
+                // no more Transactions - remove the system message too
+                if ( empty( $transactions ) ) {
+                    $messages = get_option( 'custom_system_messages', array() );
+
+                    if ( is_array( $messages ) && isset( $messages[ NUVEI_PFW_PROBLEM_TRS_MSG_KEY ] ) ) {
+                        unset( $messages[ NUVEI_PFW_PROBLEM_TRS_MSG_KEY ] );
+                        update_option( 'custom_system_messages', $messages );
+                    }
+                }
+
+                return rest_ensure_response(['success' => true]);
             },
             'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
         ));

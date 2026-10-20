@@ -360,8 +360,8 @@ function nuveiGetCustomSystemMsgs() {
             let msgsHtml = '';
 
             try {
-                for (let i in data) {
-                    msgsHtml += `<span style="display: block;" class="notice is-dismissible nuvei_payments_msg" data-index="${i}">`
+                for (let i = 0; i < data.length; i++) {
+                    msgsHtml += `<span style="display: block;" class="notice is-dismissible nuvei_problem_tr" data-tr-id="${data[i].trId}">`
                         + `<span>${data[i].message}</span>`
                         + '<span class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></span>'
                         + '</span>';
@@ -596,6 +596,48 @@ jQuery(function() {
             // error after the first check
             .catch(async err => {
                 console.error(err);
+            });
+    });
+
+    // delete a Transaction without Order from the list in the Tools tab
+    jQuery(document).on('click', '.nuvei_problem_tr .notice-dismiss', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!confirm('Are you sure you want to delete this transaction from the list?')) {
+            return false;
+        }
+
+        let container = jQuery(this).closest('.nuvei_problem_tr');
+
+        fetch(scTrans.apiUrl + '/delete-problem-tr/', {
+            method: 'POST',
+            headers: {
+                'X-WP-Nonce': scTrans.nuveiApiSec,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                trId: container.attr('data-tr-id')
+            })
+        })
+            .then(res => {
+                if (!res.ok) {
+                    throw res;
+                }
+
+                return res.json();
+            })
+            .then(data => {
+                if (data?.success) {
+                    container.remove();
+                    return;
+                }
+
+                alert('Request error.');
+            })
+            .catch(async err => {
+                console.error(err);
+                alert(scTrans.RequestFail);
             });
     });
 

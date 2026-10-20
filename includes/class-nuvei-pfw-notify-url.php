@@ -319,7 +319,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
             'WARN'
 		);
 
-		// break Auto-Void process
+		# break Auto-Void process
 		// order time error
 		if ( 0 == $order_request_time || ! $order_request_time ) {
 			Nuvei_Pfw_Logger::write(
@@ -349,34 +349,13 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 			Nuvei_Pfw_Logger::write( "Let's wait one more DMN try." );
 			return 400; // lets wait more
 		}
-		// /break Auto-Void process
+		# /break Auto-Void process
 
 		$nuvei_gw = WC()->payment_gateways->payment_gateways()[ NUVEI_PFW_GATEWAY_NAME ];
-		$messages = get_option( 'custom_system_messages', array() );
-
-		// system message
-		$msg_txt = '<b>' . __( 'Nuvei Payments notification.', 'nuvei-payments-for-woocommerce' ) . '</b> '
-			. __( 'The plugin cannot find corresponding Order', 'nuvei-payments-for-woocommerce' );
-                
-        if (!empty($orderId)) {
-            $msg_txt .= ' #' . $orderId;
-        }
-        
-        $msg_txt .= __( ' for Nuvei Transaction ', 'nuvei-payments-for-woocommerce' ) . $dmn_tr_id . '. '
-			. __( 'Please, check it in the Nuvei Control Panel!', 'nuvei-payments-for-woocommerce' );
 
 		// if the auto-void is disabled
 		if ( 'no' == $nuvei_gw->get_option( 'allow_auto_void' ) ) {
-			$msg_txt .= ' ' . __( 'You can enable the "Auto Void" from the plugin settings.', 'nuvei-payments-for-woocommerce' );
-
-			$messages[] = array(
-				'message'    => $msg_txt,
-				'read'       => false,
-				'created_by' => 'nuvei_payments',
-				'timestamp'  => current_time( 'mysql' ),
-			);
-
-			update_option( 'custom_system_messages', $messages );
+			$this->save_problem_transaction( $dmn_tr_id, $orderId, 'auto_void_disabled' );
 
 			// log and response message
 			$msg = __(
@@ -389,14 +368,7 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		}
 
 		// in case the auto-void is enabled
-		$messages[] = array(
-			'message'    => $msg_txt,
-			'read'       => false,
-			'created_by' => 'nuvei_payments',
-			'timestamp'  => current_time( 'mysql' ),
-		);
-
-		update_option( 'custom_system_messages', $messages );
+		$this->save_problem_transaction( $dmn_tr_id, $orderId, 'auto_void_requested' );
 
 		$notify_url = Nuvei_Pfw_String::get_notify_url(
 			array(
@@ -423,6 +395,8 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		) {
 			Nuvei_Pfw_Logger::write( 'Auto-Void request approved.' );
 
+			$this->save_problem_transaction( $dmn_tr_id, $orderId, 'auto_void_approved' );
+
 			/**
 			 * Add custom hook after Approved Auto Void so other developers can use it.
 			 * The whole name is nuvei_payments_for_woocommerce_after_auto_void.
@@ -436,18 +410,69 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
 		}
 
 		// Void fail
-		$messages[] = array(
-			'message'    => __( 'The searched Order does not exists, and the Auto Void request was not successful! Please, check the following transaction ID in the Nuvei Control Panel: ', 'nuvei-payments-for-woocommerce' ) . $dmn_tr_id,
-			'read'       => false,
+		$this->save_problem_transaction( $dmn_tr_id, $orderId, 'auto_void_failed' );
+
+		Nuvei_Pfw_Logger::write( $resp, 'Problem with Auto-Void request.', "WARN" );
+
+		wp_send_json_success('Problem with Auto-Void request.');
+	}
+
+	/**
+	 * Save a Transaction without corresponding Order. The list is keyed by the
+	 * Transaction ID, so repeating DMNs only update the record. All of them
+	 * share a single system message, instead of one message per Transaction.
+	 *
+	 * @param int        $tr_id    The Nuvei Transaction ID.
+	 * @param int|string $order_id The Order ID from the DMN, if any.
+	 * @param string     $status   The Auto-Void result.
+	 * @return void
+	 */
+	private function save_problem_transaction( $tr_id, $order_id, $status ) {
+		$transactions = get_option( NUVEI_PFW_PROBLEM_TRS_OPTION, array() );
+
+		if ( ! is_array( $transactions ) ) {
+			$transactions = array();
+		}
+
+		$transactions[ $tr_id ] = array(
+			'transactionId' => $tr_id,
+			'orderId'       => $order_id,
+			'status'        => $status,
+			'timestamp'     => $transactions[ $tr_id ]['timestamp'] ?? current_time( 'mysql' ),
+			'updated'       => current_time( 'mysql' ),
+		);
+
+		update_option( NUVEI_PFW_PROBLEM_TRS_OPTION, $transactions, false );
+
+		self::save_problem_trs_message();
+	}
+
+	/**
+	 * Set the single system message for all Transactions without Order.
+	 * Replace the old one instead of adding a new one.
+	 *
+	 * @param bool $read Save the message as read.
+	 * @return void
+	 */
+	public static function save_problem_trs_message( $read = false ) {
+		$messages = get_option( 'custom_system_messages', array() );
+
+		if ( ! is_array( $messages ) ) {
+			$messages = array();
+		}
+
+		// remove and add it again, so the message is the newest one
+		unset( $messages[ NUVEI_PFW_PROBLEM_TRS_MSG_KEY ] );
+
+		$messages[ NUVEI_PFW_PROBLEM_TRS_MSG_KEY ] = array(
+			'message'    => '<b>' . __( 'Nuvei Payments notification.', 'nuvei-payments-for-woocommerce' ) . '</b> '
+				. __( 'The plugin received payments for which it cannot find a corresponding Order. Please, review them in the plugin settings - Tools - Transactions without Order.', 'nuvei-payments-for-woocommerce' ),
+			'read'       => (bool) $read,
 			'created_by' => 'nuvei_payments',
 			'timestamp'  => current_time( 'mysql' ),
 		);
 
 		update_option( 'custom_system_messages', $messages );
-
-		Nuvei_Pfw_Logger::write( $resp, 'Problem with Auto-Void request.', "WARN" );
-
-		wp_send_json_success('Problem with Auto-Void request.');
 	}
 
 	/**
@@ -680,7 +705,17 @@ class Nuvei_Pfw_Notify_Url extends Nuvei_Pfw_Request {
         }
 
         // here we eventually populate $this->sc_order
-		$this->is_order_valid( $order_id );
+		$isValid = $this->is_order_valid( $order_id, true );
+        
+        if ( ! $isValid ) {
+            $resp_code = $this->create_auto_void( $transaction_type );
+
+            http_response_code( $resp_code );
+            exit( 'The searched Order does not exists.' );
+        }
+
+        // with $return = true is_order_valid() skips this check
+        $this->can_override_order_status();
 
 		// error check for SDK orders only
 		if ( $is_sdk_order

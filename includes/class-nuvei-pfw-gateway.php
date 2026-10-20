@@ -453,7 +453,11 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
         // Modal mode (Classic and Blocks): Simply Connect isn't rendered before
         // Place Order, so there is no existing Nuvei Order to update yet - the JS
         // will call /get-data-for-existing-order/ (openOrder) right after this response.
-        if ( ! $is_paid_blocks && 'nuvei_checkout_modal' == ( $this->settings['render_to'] ?? '' ) ) {
+        // Order-Pay is always in-page, so it never takes this branch.
+        if ( ! $is_paid_blocks
+            && ! is_wc_endpoint_url( 'order-pay' )
+            && 'nuvei_checkout_modal' == ( $this->settings['render_to'] ?? '' )
+        ) {
             Nuvei_Pfw_Logger::write( 'Process payment, modal mode.' );
 
             return [
@@ -1001,8 +1005,9 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             . ($ord_details['billingAddress']['lastName'] ?? '')
         );
         
-        $render_to  = $this->get_option( 'render_to' );
-        $pay_button = 'nuvei_checkout_modal' == $render_to 
+        // an existing order (Order-Pay) is always rendered in-page
+        $render_to  = $order_id ? 'nuvei_checkout_container' : $this->get_option( 'render_to' );
+        $pay_button = 'nuvei_checkout_modal' == $render_to
             ? $this->get_option( 'pay_button', 'amountButton' ) : 'noButton';
 
 		$checkout_data = array( // use it in the template
@@ -2104,7 +2109,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'description' => Nuvei_Pfw_String::get_notify_url( $this->settings, true ),
 			),
 			'read_msgs'     => array(
-				'title' => __( 'Read Payment messages', 'nuvei-payments-for-woocommerce' ),
+				'title' => __( 'Transactions without Order', 'nuvei-payments-for-woocommerce' ),
 				'type'  => 'payment_custom_msg',
 			),
 		);

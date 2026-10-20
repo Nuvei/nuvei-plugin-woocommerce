@@ -37,6 +37,9 @@ const NUVEI_PFW_SESSION_PROD_DETAILS    = 'nuvei_order_details'; // products det
 const NUVEI_PFW_LOG_REQUEST_PARAMS      = 'Request params';
 const NUVEI_API_PATH                    = 'nuvei/api/v1';
 const NUVEI_ACTION_SCHEDULER_DELAY      = 30; // in seconds
+const NUVEI_PFW_PROBLEM_TRS_OPTION      = 'nuvei_pfw_problem_transactions'; // WP option with transactions without Order
+const NUVEI_PFW_PROBLEM_TRS_MSG_KEY     = 'nuvei_problem_transactions'; // key of the single system message for them
+const NUVEI_PFW_PROBLEM_TRS_MIGRATED    = 'nuvei_pfw_problem_trs_migrated'; // flag - old system messages were migrated
 
 define(
 	'NUVEI_PFW_LOGS_DIR',
