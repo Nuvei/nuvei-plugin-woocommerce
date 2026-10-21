@@ -331,8 +331,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 				'$order_id'                     => $order_id,
 				NUVEI_PFW_SESSION_PROD_DETAILS  => $nuvei_order_details,
 				NUVEI_PFW_SESSION_OO_DETAILS    => $nuvei_oo_details,
-//                '$_REQUEST' => $_REQUEST,
-//                '$_SERVER'  => $_SERVER
 			),
 			'Process payment(), Order'
 		);
@@ -352,6 +350,20 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		}
 
 		$key = $order->get_order_key();
+        
+        // error - not Nuvei Order
+		if ( $order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME ) {
+			Nuvei_Pfw_Logger::write( 'Process payment Error - Order payment does not belongs to ' . NUVEI_PFW_GATEWAY_NAME );
+
+			return array(
+				'result'   => 'success',
+				'redirect' => array(
+					'Status' => 'error',
+					'key'    => $key,
+				),
+				wc_get_checkout_url() . 'order-received/' . $order_id . '/',
+			);
+		}
 
 		$return_success_url = add_query_arg(
 			array( 'key' => $key ),
@@ -365,20 +377,6 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 			),
 			$this->get_return_url( $order )
 		);
-
-		// error - not Nuvei Order
-		if ( $order->get_payment_method() != NUVEI_PFW_GATEWAY_NAME ) {
-			Nuvei_Pfw_Logger::write( 'Process payment Error - Order payment does not belongs to ' . NUVEI_PFW_GATEWAY_NAME );
-
-			return array(
-				'result'   => 'success',
-				'redirect' => array(
-					'Status' => 'error',
-					'key'    => $key,
-				),
-				wc_get_checkout_url() . 'order-received/' . $order_id . '/',
-			);
-		}
 
 		// in case we use Cashier
 		if ( isset( $this->settings['integration_type'] )
@@ -478,7 +476,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
         // Classic Checkout and Blocks in-page (order-first): update the Nuvei
         // Order with the saved WC Order, the payment is made by the JS afterwards.
         if ( $is_classic || ! $is_paid_blocks ) {
-            Nuvei_Pfw_Logger::write( 'Process payment, order-first in-page flow' );
+            Nuvei_Pfw_Logger::write( 'Process payment, in-page flow.' );
 
             // call Update Order
             $helper = new Nuvei_Pfw_Helper();
@@ -498,7 +496,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             ));
 
             // success
-            if ( ! empty( $resp['status'] ) && 'SUCCESS' == $resp['status'] ) {
+            if ( ! empty( $resp['status'] ) && 'success' == strtolower($resp['status']) ) {
                 // keep the Order meta in sync with the Nuvei Order we actually updated
                 if ( ! empty( $resp['orderId'] ) ) {
                     $order->update_meta_data( NUVEI_PFW_ORDER_ID, $resp['orderId'] );

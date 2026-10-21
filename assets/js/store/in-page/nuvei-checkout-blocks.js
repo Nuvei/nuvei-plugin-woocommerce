@@ -517,14 +517,17 @@ async function nuveiBlocksRunTransaction() {
                     ? await new Promise( function( res ) {
                         nuveiBlocksResolvePayment = res;
 
-                        nuveiWalletInProgress           = false;
+                        nuveiWalletInProgress = false;
+                        
                         clearTimeout( nuveiWalletStartTimer );
 
                         if ( typeof nuveiWalletStoreUnsub === 'function' ) {
                             nuveiWalletStoreUnsub();
                             nuveiWalletStoreUnsub = null;
                         }
+                        
                         nuveiWalletPrePaymentResolve();
+                        
                         nuveiWalletPrePaymentResolve    = null;
                         nuveiWalletPrePaymentReject     = null;
                     } )

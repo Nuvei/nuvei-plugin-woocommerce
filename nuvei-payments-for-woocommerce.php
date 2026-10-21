@@ -283,12 +283,23 @@ class Nuvei_Payments_For_Woocommerce
             2
         );
 
-        // Add this hook to catch Zero Total Orders in WC Blocks. The others still go through process_payment().
-        add_action(
-            'woocommerce_store_api_checkout_order_processed',
-            array (__CLASS__, 'checkout_order_processed'),
+        // Force zero-total Nuvei orders through process_payment(), so in WC Blocks the gateway result reaches paymentDetails.
+        add_filter(
+            'woocommerce_order_needs_payment',
+            function( $needs_payment, $order, $valid_statuses ) {
+                if ( $needs_payment
+                    || ! is_a( $order, 'WC_Order' )
+                    || NUVEI_PFW_GATEWAY_NAME !== $order->get_payment_method()
+                    || 0 != (float) $order->get_total()
+                    || ! $order->has_status( $valid_statuses )
+                ) {
+                    return $needs_payment;
+                }
+
+                return true;
+            },
             10,
-			1
+            3
         );
         
         add_action(
@@ -1303,6 +1314,13 @@ class Nuvei_Payments_For_Woocommerce
 		}
 	}
 
+    /**
+     * 
+     * @param WC_Order $order
+     * @return type
+     * 
+     * @deprecated since version 3.6.0
+     */
  	public static function checkout_order_processed($order) {
         // error
         if ( ! $order instanceof WC_Order ) {

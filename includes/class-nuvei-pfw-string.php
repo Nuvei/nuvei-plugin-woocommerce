@@ -76,11 +76,11 @@ class Nuvei_Pfw_String {
             return apply_filters(
                 'wpml_translate_single_string', 
                 $title, 
-                'nuvei-payments-for-woocommerc', 
+                'nuvei-payments-for-woocommerce', 
                 'plugin_title_option'
             );
         }
 
-        return __($title, 'nuvei-payments-for-woocommerc');
+        return $title;
     }
 }
