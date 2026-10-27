@@ -412,8 +412,6 @@ function nuveiShowModalMessage(text) {
 }
 
 jQuery(function($) {
-    console.log('[Nuvei]: document ready');
-
     // delegated - the modal markup itself is built later, per mode, in
     // classic-modal.js or blocks-modal.js
     jQuery(document.body).on('click', '#nuvei_checkout_modal_overlay .nuvei-modal-message-ok', function() {

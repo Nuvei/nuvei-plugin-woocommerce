@@ -1008,8 +1008,12 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
             . ($ord_details['billingAddress']['lastName'] ?? '')
         );
         
+        $render_to = $this->get_option( 'render_to' ) ?? 'nuvei_checkout_container';
         // an existing order (Order-Pay) is always rendered in-page
-        $render_to  = $order_id ? 'nuvei_checkout_container' : $this->get_option( 'render_to' );
+        if ( Nuvei_Pfw_Http::get_param( 'pay_for_order' ) == 'true' ) {
+            $render_to = 'nuvei_checkout_container';
+        }
+        
         $pay_button = 'nuvei_checkout_modal' == $render_to
             ? $this->get_option( 'pay_button', 'amountButton' ) : 'noButton';
 
@@ -1111,7 +1115,7 @@ class Nuvei_Pfw_Gateway extends WC_Payment_Gateway {
 		$resp_data['nuveiSiteUrl']   = get_site_url();
         $checkout_data['orderId']    = $oo_data['orderId'];
         
-//        Nuvei_Pfw_Logger::write( $checkout_data, '$checkout_data' );
+        Nuvei_Pfw_Logger::write( $checkout_data, '$checkout_data' );
 
 		// For blocks checkout, get the data when register Nuvei gateway.
 		if ( $return_data ) {

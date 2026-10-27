@@ -140,8 +140,6 @@ function nuveiIsCheckoutBlocksFormValid() {
  * Integrate Nuvei payment option and button in the Blocks Chckout.
  */
 (function() {
-    console.log('[Nuvei]: auto func');
-
     const { useEffect, createElement }  = window.wp.element;
     const { useSelect }                 = window.wp.data;
 
@@ -363,8 +361,6 @@ jQuery(function() {
         // In admin, do not run checkout JS
         return;
     }
-
-    console.log('[Nuvei]: document ready blocks checkout');
 
     // append a blocker
     if ( typeof scTrans != 'undefined' && jQuery('#payment-method').length ) {

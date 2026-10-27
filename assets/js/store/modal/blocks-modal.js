@@ -277,6 +277,8 @@ jQuery(function() {
     if ( jQuery('#nuvei_checkout_modal_overlay').length == 0 ) {
         const nuveiModalTitle = window.wc?.wcSettings?.getSetting( 'nuvei_data', {} )?.title || '';
 
+        console.log('[Nuvei]: call showNuveiCheckout');
+
         jQuery('body').append(
             '<div id="nuvei_checkout_modal_overlay">'
                 + '<div class="nuvei-modal-dialog">'
