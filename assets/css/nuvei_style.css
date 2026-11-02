@@ -177,3 +177,7 @@ button#nuvei_place_order {
   line-height: 20px;
   padding: 0 16px 16px;
 }
+
+#sfc-main label {
+  margin-bottom: 0;
+}
