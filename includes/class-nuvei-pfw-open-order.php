@@ -24,12 +24,12 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 	 * @return array|boolean
 	 */
 	public function process() {
-		Nuvei_Pfw_Logger::write( 'OpenOrder class process.' );
-
 		$try_update_order   = true;
 		$method_params      = func_get_args(); // optionaly we will pass here Order ID.
         $open_order_details = WC()->session->get( NUVEI_PFW_SESSION_OO_DETAILS ) ?? [];
         $ord_redirect_url   = '';
+        
+        Nuvei_Pfw_Logger::write( $method_params, 'OpenOrder class process.' );
         
 		// if we pass Order ID get the order.
 		if ( ! empty( $method_params[0]['order_id'] ) ) {
@@ -39,6 +39,8 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
                 $ord_redirect_url = $this->sc_order->get_checkout_order_received_url();
             }
 		}
+        
+        Nuvei_Pfw_Logger::write( $ord_redirect_url, 'OpenOrder class process.' );
 
         # try to use incoming parameters
         if (!empty($this->rest_params['transactionType'])) {
@@ -92,10 +94,19 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 			|| empty( $addresses['billingAddress']['email'] )
 			|| $open_order_details['transactionType'] != $transaction_type
 			|| $open_order_details['userTokenId'] != $addresses['billingAddress']['email']
-			|| ! empty( $this->sc_order )
+//			|| ! empty( $this->sc_order )
 		) {
 			Nuvei_Pfw_Logger::write(
 				array(
+                    [
+                        ! is_array( $open_order_details ),
+                        empty( $open_order_details['transactionType'] ),
+                        empty( $open_order_details['userTokenId'] ),
+                        empty( $addresses['billingAddress']['email'] ),
+                        $open_order_details['transactionType'] != $transaction_type,
+                        $open_order_details['userTokenId'] != $addresses['billingAddress']['email'],
+//                        ! empty( $this->sc_order )
+                    ],
 					'$open_order_details'   => $open_order_details,
 					'$transaction_type'     => $transaction_type,
 					'$addresses'            => $addresses,
@@ -112,6 +123,11 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
             Nuvei_Pfw_Logger::write( $products_data, 'updateOrder $products_data' );
             
 			$uo_obj = new Nuvei_Pfw_Update_Order( $this->rest_params );
+
+			if ( is_a( $this->sc_order, 'WC_Order' ) ) {
+				$uo_obj->use_order( $this->sc_order );
+			}
+
 			$resp   = $uo_obj->process(
 				array(
 					'open_order_details' => $open_order_details,
@@ -137,6 +153,8 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
                     $products_data
                 );
                 
+                $this->set_nuvei_order_meta( $resp['orderId'], $resp['clientUniqueId'] ?? '' );
+
                 // in case of Admin Order update the metas which hold Subscription data
                 $this->set_subscr_meta($products_data);
 
@@ -185,6 +203,7 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
 			'merchantDetails' => array(
 				'customField1' => $amount,
 				'customField2' => $currency,
+				'customField5' => is_a( $this->sc_order, 'WC_Order' ) ? $this->sc_order->get_id() : '',
 			),
 		);
         
@@ -230,6 +249,8 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
             $products_data
         );
         
+        $this->set_nuvei_order_meta( $resp['orderId'], $oo_params['clientUniqueId'] );
+
         // in case of Admin Order update the metas which hold Subscription data
         $this->set_subscr_meta($products_data);
 
@@ -275,4 +296,18 @@ class Nuvei_Pfw_Open_Order extends Nuvei_Pfw_Request {
             $this->sc_order->save();
         }
     }
+    
+    private function set_nuvei_order_meta( $oo_order_id, $cl_un_id ) {
+        if ( ! is_a( $this->sc_order, 'WC_Order' ) ) {
+            return;
+        }
+
+        if ( ! empty( $oo_order_id ) ) {
+            $this->sc_order->update_meta_data( NUVEI_PFW_ORDER_ID, $oo_order_id );
+        }
+        if ( ! empty( $cl_un_id ) ) {
+            $this->sc_order->update_meta_data( NUVEI_PFW_CLIENT_UNIQUE_ID, $cl_un_id );
+        }
+    }
+    
 }

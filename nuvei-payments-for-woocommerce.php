@@ -1,9 +1,9 @@
 <?php
 /**
  * Plugin Name: Nuvei Payments for Woocommerce
- * Plugin URI: https://github.com/Nuvei/nuvei-plugin-woocommerce
+ * Plugin URI: https://wordpress.com/plugins/nuvei-payments-for-woocommerce
  * Description: Nuvei Gateway for WooCommerce
- * Version: 3.15.2
+ * Version: 3.16.0
  * Author: Nuvei
  * Author URI: https://nuvei.com
  * License: GPLv2
@@ -14,7 +14,7 @@
  * Tested up to: 7.1
  * Requires Plugins: woocommerce
  * WC requires at least: 8.9
- * WC tested up to: 11.1.2
+ * WC tested up to: 11.2.1
  */
 
 defined( 'ABSPATH' ) || die( 'die' );
@@ -28,6 +28,11 @@ require_once __DIR__ . '/includes/class-nuvei-pfw-autoloader.php';
 require_once ABSPATH . 'wp-admin/includes/plugin.php'; // we use it to get the data from the comment at the top
 require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-base.php';
 require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-direct.php';
+
+// custom local config file
+if ( is_file( dirname(__DIR__) . '/nuvei.config.local.php' ) ) {
+    include_once dirname(__DIR__) . '/nuvei.config.local.php';
+}
 
 add_action( 'plugins_loaded', function() {
     Nuvei_Payments_For_Woocommerce::plugin_loaded();
@@ -93,8 +98,10 @@ class Nuvei_Payments_For_Woocommerce
         // set global constant with translated texts
         self::set_translated_texts();
 
+        self::migrate_problem_transactions();
+
         add_action( 'wp_loaded', function () {
-            if ( in_array( Nuvei_Pfw_Http::get_param( 'wc-api' ), array( 'sc_listener', 'nuvei_listener' ) ) ) {
+            if ( 'nuvei_listener' == Nuvei_Pfw_Http::get_param( 'wc-api' ) ) {
                 $nuvei_notify_dmn = new Nuvei_Pfw_Notify_Url();
                 $nuvei_notify_dmn->process();
             }
@@ -184,7 +191,7 @@ class Nuvei_Payments_For_Woocommerce
             'woocommerce_my_account_my_orders_actions',
             function( $actions, $order ) {
                 if ( ! is_a( $order, 'WC_Order' )
-                    || ! in_array( $order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) )
+                    || NUVEI_PFW_GATEWAY_NAME !== $order->get_payment_method()
                     || ! is_order_received_page()
                 ) {
                     return $actions;
@@ -209,6 +216,7 @@ class Nuvei_Payments_For_Woocommerce
 
             // remove the session order data
             WC()->session->set( NUVEI_PFW_SESSION_PROD_DETAILS, array() );
+            WC()->session->set( NUVEI_PFW_SESSION_OO_DETAILS, array() );
 
             // for the case Approved transaction after Declined, the Order is with status Fails
             $request_status = mb_strtolower( Nuvei_Pfw_Http::get_request_status() );
@@ -275,12 +283,23 @@ class Nuvei_Payments_For_Woocommerce
             2
         );
 
-        // Add this hook to catch Zero Total Orders in WC Blocks. The others still go through process_payment().
-        add_action(
-            'woocommerce_store_api_checkout_order_processed',
-            array (__CLASS__, 'checkout_order_processed'),
+        // Force zero-total Nuvei orders through process_payment(), so in WC Blocks the gateway result reaches paymentDetails.
+        add_filter(
+            'woocommerce_order_needs_payment',
+            function( $needs_payment, $order, $valid_statuses ) {
+                if ( $needs_payment
+                    || ! is_a( $order, 'WC_Order' )
+                    || NUVEI_PFW_GATEWAY_NAME !== $order->get_payment_method()
+                    || 0 != (float) $order->get_total()
+                    || ! $order->has_status( $valid_statuses )
+                ) {
+                    return $needs_payment;
+                }
+
+                return true;
+            },
             10,
-			1
+            3
         );
         
         add_action(
@@ -331,20 +350,18 @@ class Nuvei_Payments_For_Woocommerce
 
         }, 10, 2 );
         
-        // when save Order, check for Nuvei transaction field
-        // for the Blocks Checkout only!
-//        add_action( 'woocommerce_store_api_checkout_update_order_from_request', function( $order, $request ) {
-//            if ( $order->get_meta( NUVEI_PFW_TR_ID, true ) ) {
-//                return;
-//            }
-//
-//            foreach ( (array) $request->get_param( 'payment_data' ) as $item ) {
-//                if ( ( $item['key'] ?? '' ) === '_nuveiTrId' ) {
-//                    $order->update_meta_data( NUVEI_PFW_TR_ID, sanitize_text_field( $item['value'] ?? '' ) );
-//                    break;
-//                }
-//            }
-//        }, 10, 2 );
+        # add translation for the 
+        $title = self::$wc_nuvei->get_option( 'title', NUVEI_PFW_GATEWAY_TITLE );
+
+        // Polylang
+        if ( function_exists('pll_register_string') ) {
+            pll_register_string('Plugin Title Option', $title, 'nuvei-payments-for-woocommerce');
+        }
+
+        // WPML
+        if ( has_action('wpml_register_single_string') ) {
+            do_action('wpml_register_single_string', 'nuvei-payments-for-woocommerce', 'plugin_title_option', $title);
+        }
     }
 
     public static function set_translated_texts() {
@@ -374,6 +391,7 @@ class Nuvei_Payments_For_Woocommerce
                 'ReadLog'           => __( 'Read Log', 'nuvei-payments-for-woocommerce' ),
                 'RefreshLogError'   => __( 'Getting log faild, please check the console for more information!', 'nuvei-payments-for-woocommerce' ),
                 'CheckoutFormError' => __( 'Checkout form class error, please contact the site administrator!', 'nuvei-payments-for-woocommerce' ),
+                'OrderChanged'      => __( 'Your cart was changed in another window. Please refresh the page and try again.', 'nuvei-payments-for-woocommerce' ),
                 'TransactionAppr'   => __( 'The transaction was approved.', 'nuvei-payments-for-woocommerce' ),
                 'RefundAmountError' => __( 'Please, check requested Refund amount!', 'nuvei-payments-for-woocommerce' ),
                 'TermsError'        => __( 'To continue, please accept the Terms!', 'nuvei-payments-for-woocommerce' ),
@@ -404,9 +422,24 @@ class Nuvei_Payments_For_Woocommerce
         $plugin_url	= plugin_dir_url( __FILE__ );
         $sdkUrl     = NUVEI_PFW_SDK_URL_PROD;
 		$helper     = new Nuvei_Pfw_Helper();
-
-        if ( self::$wc_nuvei->is_qa_site() ) {
-            $sdkUrl = NUVEI_PFW_SDK_URL_TAG;
+        $render_to  = self::$wc_nuvei->settings['render_to'];
+        // Order-Pay page has its own form (#order_review, not form.checkout) 
+        // and always uses the "in-page" package - the modal package has no Order-Pay logic at all.
+        $is_order_pay_page = is_wc_endpoint_url( 'order-pay' );
+        // the modal package is for Simply Connect only - Cashier always uses the "in-page" package
+        $use_modal_pkg = 'nuvei_checkout_modal' == $render_to;
+        
+        if ('sdk' != ( self::$wc_nuvei->settings['integration_type'] ?? '' )) {
+            $use_modal_pkg = false;
+        }
+        
+        if ($is_order_pay_page) {
+            $use_modal_pkg = false;
+        }
+                
+        // use custom settings
+        if ( defined('NUVEI_LOCAL_CONF') && !empty(NUVEI_LOCAL_CONF['simply_url']) ) {
+            $sdkUrl = NUVEI_LOCAL_CONF['simply_url'];
         }
 
         // load the SDK
@@ -418,10 +451,14 @@ class Nuvei_Payments_For_Woocommerce
             false
         );
 
-        // main JS
+        // main JS - the file depends on the "render_to" setting, except on
+        // the Order-Pay page and for Cashier, which always use the "in-page" package
+        $public_js_path = $use_modal_pkg
+            ? 'assets/js/store/modal/nuvei_public.js' : 'assets/js/store/in-page/nuvei_public.js';
+
         wp_register_script(
             'nuvei_js_public',
-            $plugin_url . 'assets/js/nuvei_public.js',
+            $plugin_url . $public_js_path,
             array( 'jquery' ),
             $helper->helper_get_plugin_version(),
             false
@@ -438,6 +475,8 @@ class Nuvei_Payments_For_Woocommerce
                 'useUpos'               => self::$wc_nuvei->can_use_upos(),
                 'isUserLogged'          => is_user_logged_in() ? 1 : 0,
                 'isPluginActive'        => self::$wc_nuvei->settings['enabled'],
+                'paymentGatewayTitle'   => self::$wc_nuvei->title,
+                'simplyDomPlace'        => $render_to,
                 'loaderUrl'             => plugin_dir_url( __FILE__ ) . 'assets/icons/loader.gif',
                 'checkoutIntegration'   => self::$wc_nuvei->settings['integration_type'],
                 'webMasterId'           => 'WooCommerce ' . WOOCOMMERCE_VERSION
@@ -475,6 +514,25 @@ class Nuvei_Payments_For_Woocommerce
 
         wp_localize_script( 'nuvei_js_public', 'scTrans', $localizations );
         wp_enqueue_script( 'nuvei_js_public' );
+        
+        // Container mode (and always the Order-Pay page and Cashier):
+        // assets/js/store/in-page/nuvei_public.js already contains the full
+        // Classic Checkout / Order-Pay logic (same as stable v3.15.2),
+        // no extra script needed.
+
+        // Modal mode: Classic Checkout modal-specific logic. Never on the
+        // Order-Pay page or for Cashier - they always use the in-page package above.
+        if ( $use_modal_pkg ) {
+            wp_register_script(
+                'nuvei-checkout-modal',
+                $plugin_url . 'assets/js/store/modal/classic-modal.js',
+                array( 'jquery', 'nuvei_js_public' ),
+                $helper->helper_get_plugin_version(),
+                false
+            );
+            
+            wp_enqueue_script( 'nuvei-checkout-modal' );
+        }
     }
 
 	/**
@@ -541,7 +599,7 @@ class Nuvei_Payments_For_Woocommerce
 		if ( ! wp_script_is( 'nuvei_js_admin' ) ) {
 			wp_register_script(
 				'nuvei_js_admin',
-				$plugin_url . 'assets/js/nuvei_admin.js',
+				$plugin_url . 'assets/js/admin/nuvei_admin.js',
 				array( 'jquery' ),
 				$helper->helper_get_plugin_version(),
 				true
@@ -613,7 +671,7 @@ class Nuvei_Payments_For_Woocommerce
 
 		// error - in case this is not Nuvei order
 		if ( empty( $order->get_payment_method() )
-			|| ! in_array( $order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) )
+			|| NUVEI_PFW_GATEWAY_NAME !== $order->get_payment_method()
 		) {
 			wp_add_inline_script(
 				'nuvei_js_admin',
@@ -1256,6 +1314,13 @@ class Nuvei_Payments_For_Woocommerce
 		}
 	}
 
+    /**
+     * 
+     * @param WC_Order $order
+     * @return type
+     * 
+     * @deprecated since version 3.6.0
+     */
  	public static function checkout_order_processed($order) {
         // error
         if ( ! $order instanceof WC_Order ) {
@@ -1322,12 +1387,80 @@ class Nuvei_Payments_For_Woocommerce
     }
 
 	/**
+	 * One-time migration of the old Auto-Void system messages (one message
+	 * per Transaction) to the problem Transactions list and a single message.
+	 */
+	public static function migrate_problem_transactions() {
+		if ( false !== get_option( NUVEI_PFW_PROBLEM_TRS_MIGRATED ) ) {
+			return;
+		}
+
+		$messages     = get_option( 'custom_system_messages', array() );
+		$transactions = get_option( NUVEI_PFW_PROBLEM_TRS_OPTION, array() );
+		$migrated     = 0;
+		$has_unread   = false;
+
+		if ( ! is_array( $messages ) ) {
+			$messages = array();
+		}
+        
+		if ( ! is_array( $transactions ) ) {
+			$transactions = array();
+		}
+
+		foreach ( $messages as $key => $msg ) {
+			// old messages have numeric keys
+			if ( ! is_int( $key )
+				|| empty( $msg['created_by'] )
+				|| 'nuvei_payments' != $msg['created_by']
+				|| empty( $msg['message'] )
+			) {
+				continue;
+			}
+
+			$text = wp_strip_all_tags( $msg['message'] );
+
+			// the Transaction ID is the last number in the old messages
+			if ( ! preg_match_all( '/\d+/', $text, $numbers ) ) {
+				continue;
+			}
+
+			$tr_id    = (int) end( $numbers[0] );
+			$order_id = preg_match( '/#(\d+)/', $text, $order_match ) ? (int) $order_match[1] : '';
+
+			if ( ! isset( $transactions[ $tr_id ] ) ) {
+				$transactions[ $tr_id ] = array(
+					'transactionId' => $tr_id,
+					'orderId'       => $order_id,
+					'status'        => 'migrated',
+					'timestamp'     => $msg['timestamp'] ?? current_time( 'mysql' ),
+					'updated'       => current_time( 'mysql' ),
+				);
+			}
+
+			if ( empty( $msg['read'] ) ) {
+				$has_unread = true;
+			}
+
+			unset( $messages[ $key ] );
+			++$migrated;
+		}
+
+		if ( $migrated > 0 ) {
+			update_option( NUVEI_PFW_PROBLEM_TRS_OPTION, $transactions, false );
+			update_option( 'custom_system_messages', $messages );
+
+			Nuvei_Pfw_Notify_Url::save_problem_trs_message( ! $has_unread );
+		}
+
+		update_option( NUVEI_PFW_PROBLEM_TRS_MIGRATED, 1 );
+	}
+
+	/**
 	 * Display Nuvei message in the admin.
 	 * At the moment we will use them only for auto-void warnings.
 	 */
 	public static function display_messages() {
-//         Nuvei_Pfw_Logger::write('display_messages');
-
 		$messages           = get_option( 'custom_system_messages', array() );
         $permission_error   = get_option('nuvei_logs_permission_error', 0);
 
@@ -1341,8 +1474,8 @@ class Nuvei_Payments_For_Woocommerce
 					continue;
 				}
 
-				echo '<div class="notice notice-info is-dismissible nuvei_payments_msg" data-index="' . esc_attr( $index ) . '">'
-					. '<p>' . wp_kses_post( $msg['message'] ) . '</p>'
+				echo '<div class="notice notice-error is-dismissible nuvei_payments_msg" data-index="' . esc_attr( $index ) . '">'
+                        . '<p>' . wp_kses_post( $msg['message'] ) . '</p>'
 					. '</div>';
 			}
 		}
@@ -1604,35 +1737,72 @@ class Nuvei_Payments_For_Woocommerce
             'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
         ));
 
-        // get custom Payment messages
+        // get the Transactions without Order
         register_rest_route(NUVEI_API_PATH, '/get-payment-custom-msg/', array(
             'methods'             => 'GET',
             'callback'            => function($request) {
-                $all_msgs   = get_option( 'custom_system_messages', array() );
-                $last_msgs  = array();
-                $cnt        = 1;
-                $msgs_cnt   = 50;
+                $transactions   = get_option( NUVEI_PFW_PROBLEM_TRS_OPTION, array() );
+                $list           = array();
 
-                Nuvei_Pfw_Logger::write($all_msgs);
-
-                if ( empty( $all_msgs ) ) {
-                    return rest_ensure_response($last_msgs);
+                if ( empty( $transactions ) || ! is_array( $transactions ) ) {
+                    return rest_ensure_response($list);
                 }
 
-                foreach ( array_reverse( $all_msgs, true ) as $index => $msg ) {
-                    if ( empty( $msg['created_by'] ) || 'nuvei_payments' != $msg['created_by'] ) {
-                        continue;
+                // newest first
+                uasort( $transactions, function( $a, $b ) {
+                    return strcmp( $b['updated'] ?? '', $a['updated'] ?? '' );
+                });
+
+                foreach ( $transactions as $tr_id => $tr ) {
+                    $text = __( 'Transaction', 'nuvei-payments-for-woocommerce' ) . ' ' . $tr_id;
+
+                    if ( ! empty( $tr['orderId'] ) ) {
+                        $text .= ' / ' . __( 'Order', 'nuvei-payments-for-woocommerce' ) . ' #' . $tr['orderId'];
                     }
 
-                    if ( $cnt >= $msgs_cnt ) {
-                        break;
-                    }
+                    $text .= ' - ' . ( $tr['updated'] ?? $tr['timestamp'] ?? '' );
 
-                    $last_msgs[ $index ] = $msg;
-                    ++$cnt;
+                    $list[] = array(
+                        // as string - the ID is bigger than the JS max safe integer
+                        'trId'    => (string) $tr_id,
+                        'message' => esc_html( $text ),
+                    );
                 }
 
-                return rest_ensure_response($last_msgs);
+                return rest_ensure_response($list);
+            },
+            'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
+        ));
+
+        // delete a Transaction without Order from the list
+        register_rest_route(NUVEI_API_PATH, '/delete-problem-tr/', array(
+            'methods'             => 'POST',
+            'callback'            => function($request) {
+                $tr_id          = absint( $request->get_param( 'trId' ) );
+                $transactions   = get_option( NUVEI_PFW_PROBLEM_TRS_OPTION, array() );
+
+                if ( ! is_array( $transactions ) || ! isset( $transactions[ $tr_id ] ) ) {
+                    return new WP_Error(
+                        'action_failed',
+                        'Something went wrong.',
+                        array( 'status' => 404 )
+                    );
+                }
+
+                unset( $transactions[ $tr_id ] );
+                update_option( NUVEI_PFW_PROBLEM_TRS_OPTION, $transactions, false );
+
+                // no more Transactions - remove the system message too
+                if ( empty( $transactions ) ) {
+                    $messages = get_option( 'custom_system_messages', array() );
+
+                    if ( is_array( $messages ) && isset( $messages[ NUVEI_PFW_PROBLEM_TRS_MSG_KEY ] ) ) {
+                        unset( $messages[ NUVEI_PFW_PROBLEM_TRS_MSG_KEY ] );
+                        update_option( 'custom_system_messages', $messages );
+                    }
+                }
+
+                return rest_ensure_response(['success' => true]);
             },
             'permission_callback' => array(__CLASS__, 'check_admin_or_store_owner'),
         ));
@@ -1642,7 +1812,7 @@ class Nuvei_Payments_For_Woocommerce
         register_rest_route(NUVEI_API_PATH, '/pre-payment/', array(
             'methods'             => 'GET',
             'callback'            => function($request) {
-                $data = self::$wc_nuvei->checkout_prepayment_check();
+                $data = self::$wc_nuvei->checkout_prepayment_check( absint( $request->get_param( 'orderId' ) ) );
 
                 return rest_ensure_response($data);
             },

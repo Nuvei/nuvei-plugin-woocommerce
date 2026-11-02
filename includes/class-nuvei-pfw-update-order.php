@@ -31,11 +31,20 @@ class Nuvei_Pfw_Update_Order extends Nuvei_Pfw_Request {
 		$products_data      = $func_params['products_data'] ?? array();
 		$open_order_details = $func_params['open_order_details'] ?? array();
         $order_id           = $func_params['order_id'] ?? null;
-        $session_token      = $open_order_details['sessionToken'] ?? $func_params['session_token'] ?? null;
-        $oo_order_id        = $open_order_details['orderId'] ?? $func_params['oo_order_id'] ?? null;
         $cart_amount        = '';
+        $session_token      = $open_order_details['sessionToken'] ?? null;
+        $oo_order_id        = $open_order_details['orderId'] ?? null;
 
-        if ( ! empty(WC()->cart->total) ) {
+        // Prefer the posted pair - it belongs to the SDK session the customer actually pays with.
+        if ( ! empty( $func_params['session_token'] ) && ! empty( $func_params['oo_order_id'] ) ) {
+            $session_token  = $func_params['session_token'];
+            $oo_order_id    = $func_params['oo_order_id'];
+        }
+
+        if ( is_a( $this->sc_order, 'WC_Order' ) ) {
+            $cart_amount = (string) number_format( (float) $this->sc_order->get_total(), 2, '.', '' );
+        }
+        elseif ( ! empty(WC()->cart->total) ) {
             $cart_amount = (string) number_format( WC()->cart->total, 2, '.', '' );
         }
         else {

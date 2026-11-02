@@ -57,7 +57,8 @@
 }
 
 /* Show a text in case the container is empty by some reason. */
-#nuvei_checkout_container:empty::before {
+#nuvei_checkout_container:empty::before,
+#nuvei_checkout_modal:empty::before {
     content: "";
     display: inline-block;
     background-image: url(../icons/loader.gif);
@@ -69,7 +70,8 @@
 
 form.wc-block-components-form #nuvei_checkout_container:empty::before,
 form.checkout.woocommerce-checkout #nuvei_checkout_container:empty::before,
-#nuvei_checkout_container:empty::before {
+#nuvei_checkout_container:empty::before,
+#nuvei_checkout_modal:empty::before {
     content: attr(data-placeholder);
     /*color: red;*/
     background-image: none;
@@ -106,9 +108,76 @@ button#nuvei_place_order {
     margin-left: -32px;
 }
 
+/* Simply Connect modal (render_to = nuvei_checkout_modal) */
+#nuvei_checkout_modal_overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+}
+
+#nuvei_checkout_modal_overlay .nuvei-modal-dialog {
+    position: relative;
+    background: #fff;
+    border-radius: 6px;
+    padding: 20px;
+    width: 90%;
+    max-width: 450px;
+    max-height: 88vh;
+    margin: 0 auto;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    margin-top: 50px;
+}
+
+#nuvei_checkout_modal_overlay .nuvei-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+#nuvei_checkout_modal_overlay .nuvei-modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+#nuvei_checkout_modal_overlay .nuvei-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 12px;
+}
+
+/* Error/info message shown inside the modal, in place of the SDK form
+   (see nuveiShowModalMessage() in nuvei_public.js). */
+#nuvei_checkout_modal_overlay .nuvei-modal-message {
+    text-align: center;
+    padding: 20px 0;
+}
+
+/*#nuvei_checkout_modal_overlay .nuvei-modal-message-text {
+    margin: 0 0 20px;
+    font-size: 15px;
+}*/
+
 /* blocks style */
 .wc-block-components-form #nuvei_checkout_container {
   font-size: var(--wp--preset--font-size--small,14px);
   line-height: 20px;
   padding: 0 16px 16px;
+}
+
+#sfc-main label {
+  margin-bottom: 0;
 }

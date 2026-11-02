@@ -90,7 +90,6 @@ abstract class Nuvei_Pfw_Request {
 			return;
 		}
 
-		// check for 'sc' also because of the older Orders
         if ($return) {
             return $this->is_nuvei_order($order_id, $return);
         }
@@ -482,7 +481,7 @@ abstract class Nuvei_Pfw_Request {
 				)
 			);
 
-				Nuvei_Pfw_Logger::write( $resp, 'Response info' );
+            Nuvei_Pfw_Logger::write( $resp, 'Response info' );
 
 			if ( false === $resp || ! is_array( $resp ) || empty( $resp['body'] ) ) {
 				return array(
@@ -856,7 +855,7 @@ abstract class Nuvei_Pfw_Request {
 			'set_nuvei_session_data'
 		);
 	}
-
+    
 	/**
 	 * Just a helper function to extract last of Nuvei transactions.
 	 * It is possible to set array of desired types. First found will
@@ -1144,7 +1143,7 @@ abstract class Nuvei_Pfw_Request {
         }
         
         if ( ! $this->sc_order instanceof WC_Order
-            || ! in_array( $this->sc_order->get_payment_method(), array( NUVEI_PFW_GATEWAY_NAME, 'sc' ) ) 
+            || NUVEI_PFW_GATEWAY_NAME !== $this->sc_order->get_payment_method()
         ) {
 			$this->message  = $msg 
                             = 'Error - the order does not belongs to Nuvei.';
@@ -1669,6 +1668,10 @@ abstract class Nuvei_Pfw_Request {
 	 * @return string
 	 */
 	private function get_endpoint_base() {
+        if (defined('NUVEI_LOCAL_CONF') && !empty(NUVEI_LOCAL_CONF['endpoint_base'])) {
+            return NUVEI_LOCAL_CONF['endpoint_base'];
+        }
+        
 		if ( 'yes' == $this->nuvei_gw->get_option( 'test' ) ) {
 			return NUVEI_PFW_REST_ENDPOINT_INT;
 		}

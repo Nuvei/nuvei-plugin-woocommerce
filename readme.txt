@@ -1,6 +1,6 @@
 === Nuvei Payments for Woocommerce ===
 
-Stable tag: 3.15.2
+Stable tag: 3.16.0
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -62,6 +62,20 @@ If you plan to install this plugin form the WordPress store, but use a version d
 4. screenshot-4.png.
 
 == Changelog ==
+
+= 3.16.0 =
+* Added an option to use Simply Connect - integrated in the page or in a modal.
+* Improved order matching for payment notifications, making order status updates more reliable.
+* Improved order data synchronization with Nuvei on the Classic Checkout.
+* Checkout session data is now cleared after a successful order, for a cleaner start on the next purchase.
+* Improved order linking with Nuvei when paying in the Simply Connect modal on the Classic Checkout.
+* Payment in the modal is now blocked if the cart was changed in another browser tab, preventing a mismatch between the paid and displayed order.
+* The amount sent to Nuvei for an existing order is now always taken from the order itself.
+* Removed support for the legacy "sc" payment method ID and "sc_listener" notification URL.
+* New Blocks Modal flow: the order is validated and saved first, and Simply Connect opens in the modal only after that.
+* Improved handling of wallet payments (Google Pay, Apple Pay, Paze) on the Blocks and Classic Checkout: the order is now saved first and the payment starts after that. The Blocks Checkout with Simply Connect integrated in the page works the same way for all payment methods, as the Classic Checkout.
+* The checkout is now blocked while Simply Connect reloads after a change of the email, country or cart total, to prevent a payment with an outdated session.
+* Added messages in the Tools tab for transactions that have no matching Order, with the option to delete them from the list.
 
 = 3.15.2 =
 * Added additional check for Simply Connect, in case the container is re-rendered.
